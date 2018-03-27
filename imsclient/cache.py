@@ -1,0 +1,132 @@
+import pandas as pd
+from path import Path
+import os
+from readertype import ReaderType
+import re
+
+class SmartCache():
+    filename = ''
+
+    def __init__(self, filename, path='.'):
+        self.filename = os.path.splitext(filename)[0] + '.h5'
+        self.filename = os.path.join(path, self.filename)
+        #self.open(self.filename)
+
+    # def open(self, filename=None):
+    #     if filename is None:
+    #         filename = self.filename
+    #     self.hdfstore = pd.HDFStore(filename)
+    #
+    # def close(self):
+    #     self.hdfstore.close()
+
+    def safe_tagname(self, tagname):
+        tagname = "".join(c for c in tagname if c.isalnum() or c in ('.', '_')).strip()
+        if tagname[0].isnumeric(): tagname = '_' + tagname # Avoid NaturalNameWarning
+        return tagname
+
+    def key_path(self, df, readtype, ts = None):
+        """Return a string on the form
+        XXX/sYY/ZZZ where XXX is the ReadType, YY is the interval between samples (in seconds) and ZZZ is a safe tagname.
+        """
+        if isinstance(df, pd.DataFrame):
+            name = list(df)[0]
+        else:
+            name = df
+        name = self.safe_tagname(name)
+        ts = ts.seconds if isinstance(ts, pd.Timedelta) else ts
+        if readtype.name != 'RAW':
+            if ts is None:
+                interval = str(int(df[0:2].index.to_series().diff().mean().value/1e9))
+            else:
+                interval = str(int(ts))
+            path = f'{readtype.name}/s{interval}/{name}'
+        else:
+            path = f'{readtype.name}/{name}'
+        return path
+
+    def store(self, df, readtype, ts=None):
+        key = self.key_path(df, readtype, ts)
+        with pd.HDFStore(self.filename, mode='a') as f:
+            if key in f:
+                idx = f.select(key, where="index in df.index", columns=['index']).index
+                f.append(key, df.query("index not in @idx"))
+            else:
+                f.append(key, df)
+
+    def fetch(self, tagname, readtype, ts=None, start_time=None, stop_time=None):
+        df = pd.DataFrame()
+        if not os.path.isfile(self.filename):
+            return df
+        key = self.key_path(tagname, readtype, ts)
+        where = []
+        if start_time is not None:
+            where.append("index >= start_time")
+        if stop_time is not None:
+            where.append("index < stop_time")
+        where = " and ".join(where)
+        with pd.HDFStore(self.filename, mode='r') as f:
+            if key in f:
+                if where:
+                    df = f.select(key, where=where)
+                else:
+                    df = f.select(key)
+        return df
+
+    def remove(self, filename=None):
+        if not filename:
+            filename = self.filename
+            #self.close()
+        if os.path.isfile(filename):
+            Path.unlink(filename)
+
+    def _match_tag(self, key, readtype=None, ts=None, tagname=None):
+        def readtype_to_str(rt):
+            if isinstance(rt, ReaderType):
+                return rt.name
+            return rt
+        def timedelta_to_str(t):
+            if isinstance(t, pd.Timedelta):
+                return str(t.seconds)
+            return t
+        key = '/'+key.lstrip('/') # Ensure absolute path
+        readtype = readtype if isinstance(readtype, list) else [readtype]
+        ts = ts if isinstance(ts, list) else [ts]
+        tagname = tagname if isinstance(tagname, list) else [tagname]
+        readtype = list(map(readtype_to_str, readtype))
+        ts = list(map(timedelta_to_str, ts))
+        if tagname[0] is not None: tagname = list(map(self.safe_tagname, tagname))
+        #print(f"Readtype: {readtype}, ts: {ts}, tagname: {tagname}")
+        elements = key.split('/')[1:]
+        if len(elements) == 2:
+            elements.insert(1, None)
+        else:
+            elements[1] = int(elements[1][1:]) # Discard the initial s
+        if elements[0] not in readtype and readtype[0] is not None:
+            #print(f"{elements[0]} not in {readtype}")
+            return False
+        if elements[1] not in ts and ts[0] is not None:
+            #print(f"{elements[1]} not in {ts}")
+            return False
+        if elements[2] not in tagname and tagname[0] is not None:
+            #print(f"{elements[2]} not in {tagname}")
+            return False
+        return True
+
+    def delete_key(self, tagname=None, readtype=None, ts=None):
+        with pd.HDFStore(self.filename) as f:
+            for key in f:
+                if self._match_tag(key, tagname=tagname, readtype=readtype, ts=ts):
+                    f.remove(key)
+
+    def _get_hdfstore(self, mode='r'):
+        f = pd.HDFStore(self.filename, mode)
+        return f
+
+if __name__ == "__main__":
+    df1 = pd.DataFrame({'tag1': range(0, 10)},
+         index = pd.date_range(start="2018-01-18 05:00:00", freq="600s", periods=10, name="time"))
+    c = SmartCache('hei.h5py')
+    c.store(df1, ReaderType.INT)
+    df1_read = c.fetch(df1, ReaderType.INT, pd.to_timedelta(60, unit='s'))
+    print(df1)
