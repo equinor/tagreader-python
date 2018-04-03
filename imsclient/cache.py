@@ -1,7 +1,7 @@
 import pandas as pd
 from path import Path
 import os
-from readertype import ReaderType
+from .readertype import ReaderType
 import re
 
 class SmartCache():
