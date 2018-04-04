@@ -1,5 +1,4 @@
 import pandas as pd
-from path import Path
 import os
 from .readertype import ReaderType
 import re
@@ -78,7 +77,7 @@ class SmartCache():
             filename = self.filename
             #self.close()
         if os.path.isfile(filename):
-            Path.unlink(filename)
+            os.unlink(filename)
 
     def _match_tag(self, key, readtype=None, ts=None, tagname=None):
         def readtype_to_str(rt):
