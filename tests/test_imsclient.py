@@ -5,7 +5,7 @@ from readertype import ReaderType
 @pytest.fixture(scope="module")
 def client():
     from imsclient.clients import IMSClient
-    yield IMSClient('')
+    yield IMSClient('dummy')
 
 def test_get_next_timeslice(client):
     start_time = pd.to_datetime('2018-01-02 14:00:00')

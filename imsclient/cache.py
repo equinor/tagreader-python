@@ -81,9 +81,8 @@ class SmartCache():
 
     def _match_tag(self, key, readtype=None, ts=None, tagname=None):
         def readtype_to_str(rt):
-            if isinstance(rt, ReaderType):
-                return rt.name
-            return rt
+            return getattr(rt, 'name', rt) # if isinstance(rt, ReaderType) always returns False
+
         def timedelta_to_str(t):
             if isinstance(t, pd.Timedelta):
                 return str(t.seconds)
