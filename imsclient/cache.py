@@ -120,11 +120,3 @@ class SmartCache():
     def _get_hdfstore(self, mode='r'):
         f = pd.HDFStore(self.filename, mode)
         return f
-
-if __name__ == "__main__":
-    df1 = pd.DataFrame({'tag1': range(0, 10)},
-         index = pd.date_range(start="2018-01-18 05:00:00", freq="600s", periods=10, name="time"))
-    c = SmartCache('hei.h5py')
-    c.store(df1, ReaderType.INT)
-    df1_read = c.fetch(df1, ReaderType.INT, pd.to_timedelta(60, unit='s'))
-    print(df1)
