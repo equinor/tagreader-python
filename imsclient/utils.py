@@ -8,6 +8,7 @@ def __init__():
                 'find_registry_key_from_name',
                 'datestr_to_datetime']
 
+
 def find_registry_key(base_key, search_key_name):
     if base_key is not None:
         num_keys, _, _ = winreg.QueryInfoKey(base_key)
@@ -20,6 +21,7 @@ def find_registry_key(base_key, search_key_name):
             if key is not None:
                 return key
     return None
+
 
 def find_registry_key_from_name(base_key, search_key_name):
     num_keys, _, _ = winreg.QueryInfoKey(base_key)
@@ -37,10 +39,6 @@ def find_registry_key_from_name(base_key, search_key_name):
             logging.error('{}: {}'.format(i, err))
     return key, key_string
 
-def datestr_to_datetime(datestr):
-    try:
-        date_stamp = pd.to_datetime(datestr, dayfirst=True)
-        return date_stamp
-    except Exception as err:
-        logging.error(f'{err}: {datestr}')
-        sys.exit(1)
+
+def datestr_to_datetime(date_stamp):
+    return pd.to_datetime(date_stamp, dayfirst=True) if isinstance(date_stamp, str) else date_stamp

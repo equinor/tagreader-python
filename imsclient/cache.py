@@ -28,21 +28,21 @@ class SmartCache():
         """Return a string on the form
         XXX/sYY/ZZZ where XXX is the ReadType, YY is the interval between samples (in seconds) and ZZZ is a safe tagname.
         """
-        if isinstance(df, pd.DataFrame):
-            name = list(df)[0]
-        else:
-            name = df
+        name = list(df)[0] if isinstance(df, pd.DataFrame) else df
         name = self.safe_tagname(name)
         ts = ts.seconds if isinstance(ts, pd.Timedelta) else ts
-        if readtype.name != 'RAW':
+        if readtype != ReaderType.RAW:
             if ts is None:
-                interval = str(int(df[0:2].index.to_series().diff().mean().value/1e9))
+                # User didn't provide sample time? Determine it by reading interval between first two samples if dataframe.
+                if isinstance(df, pd.DataFrame):
+                    interval = int(df[0:2].index.to_series().diff().mean().value/1e9)
+                else:
+                    raise TypeError
             else:
-                interval = str(int(ts))
-            path = f'{readtype.name}/s{interval}/{name}'
+                interval = int(ts)
+            return f'{readtype.name}/s{interval}/{name}'
         else:
-            path = f'{readtype.name}/{name}'
-        return path
+            return f'{readtype.name}/{name}'
 
     def store(self, df, readtype, ts=None):
         key = self.key_path(df, readtype, ts)
@@ -81,7 +81,7 @@ class SmartCache():
 
     def _match_tag(self, key, readtype=None, ts=None, tagname=None):
         def readtype_to_str(rt):
-            return getattr(rt, 'name', rt) # if isinstance(rt, ReaderType) always returns False
+            return getattr(rt, 'name', rt) # if isinstance(rt, ReaderType) always returns False...?
 
         def timedelta_to_str(t):
             if isinstance(t, pd.Timedelta):
