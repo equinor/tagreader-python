@@ -1,11 +1,11 @@
 import enum
-"""
-Enumerates available types of data to read.
 
-For members with more than one name per value, the first member (the original) needs to be untouched since it may be 
-used as back-reference (specifically for cache hierarchies). 
-"""
 class ReaderType(enum.IntEnum):
+    """Enumerates available types of data to read.
+
+    For members with more than one name per value, the first member (the original) needs to
+    be untouched since it may be used as back-reference (specifically for cache hierarchies).
+    """
     RAW = SAMPLED = enum.auto()                     # Raw sampled data
     SHAPEPRESERVING = enum.auto()                   # Minimum data points while preserving shape
     INT = INTERPOLATE = INTERPOLATED = enum.auto()  # Interpolated data

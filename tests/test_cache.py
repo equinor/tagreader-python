@@ -2,6 +2,9 @@ import pytest
 import pandas as pd
 from readertype import ReaderType
 
+from imsclient.cache import SmartCache, \
+    safe_tagname
+
 @pytest.fixture()
 def data():
     length = 10
@@ -12,13 +15,12 @@ def data():
 
 @pytest.fixture()
 def cache(request):
-    from imsclient.cache import SmartCache
     cache = SmartCache('testcache.h5')
     yield cache
     cache.remove()
 
-def test_safe_tagname(cache):
-    assert cache.safe_tagname('ASGB.tt-___56_ _%_') == 'ASGB.tt___56___'
+def test_safe_tagname():
+    assert safe_tagname('ASGB.tt-___56_ _%_') == 'ASGB.tt___56___'
 
 def test_key_path(cache):
     pass

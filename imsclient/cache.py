@@ -1,7 +1,14 @@
-import pandas as pd
 import os
+import pandas as pd
 from .readertype import ReaderType
-import re
+
+
+def safe_tagname(tagname):
+    tagname = "".join(c for c in tagname if c.isalnum() or c in ('.', '_')).strip()
+    if tagname[0].isnumeric():
+        tagname = '_' + tagname  # Conform to NaturalName
+    return tagname
+
 
 class SmartCache():
     filename = ''
@@ -19,21 +26,18 @@ class SmartCache():
     # def close(self):
     #     self.hdfstore.close()
 
-    def safe_tagname(self, tagname):
-        tagname = "".join(c for c in tagname if c.isalnum() or c in ('.', '_')).strip()
-        if tagname[0].isnumeric(): tagname = '_' + tagname # Avoid NaturalNameWarning
-        return tagname
 
-    def key_path(self, df, readtype, ts = None):
+    def key_path(self, df, readtype, ts=None):
         """Return a string on the form
-        XXX/sYY/ZZZ where XXX is the ReadType, YY is the interval between samples (in seconds) and ZZZ is a safe tagname.
+        XXX/sYY/ZZZ where XXX is the ReadType, YY is the interval between samples (in seconds)
+        and ZZZ is a safe tagname.
         """
         name = list(df)[0] if isinstance(df, pd.DataFrame) else df
-        name = self.safe_tagname(name)
+        name = safe_tagname(name)
         ts = ts.seconds if isinstance(ts, pd.Timedelta) else ts
         if readtype != ReaderType.RAW:
             if ts is None:
-                # User didn't provide sample time? Determine it by reading interval between first two samples if dataframe.
+                # Determine sample tamie by reading interval between first two samples of dataframe.
                 if isinstance(df, pd.DataFrame):
                     interval = int(df[0:2].index.to_series().diff().mean().value/1e9)
                 else:
@@ -93,7 +97,8 @@ class SmartCache():
         tagname = tagname if isinstance(tagname, list) else [tagname]
         readtype = list(map(readtype_to_str, readtype))
         ts = list(map(timedelta_to_str, ts))
-        if tagname[0] is not None: tagname = list(map(self.safe_tagname, tagname))
+        if tagname[0] is not None:
+            tagname = list(map(safe_tagname, tagname))
         #print(f"Readtype: {readtype}, ts: {ts}, tagname: {tagname}")
         elements = key.split('/')[1:]
         if len(elements) == 2:
