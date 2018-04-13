@@ -1,4 +1,4 @@
-name: imsclient-env
+name: pyims-env
 dependencies:
   - python>=3.6
   - pandas

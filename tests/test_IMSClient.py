@@ -1,18 +1,18 @@
 import pytest
 #import pandas as pd
-#from imsclient import utils
-#from imsclient.readertype import ReaderType
-from imsclient import IMSClient, \
-    get_aspen_servers, \
-    get_pi_servers
+#from pyims import utils
+#from pyims.readertype import ReaderType
+from pyims import IMSClient, \
+    list_aspen_servers, \
+    list_pi_servers
 
-from imsclient.clients import get_server_address_aspen, \
+from pyims.clients import get_server_address_aspen, \
     get_server_address_pi, \
     AspenHandler, \
     PIHandler
 
 def test_list_all_aspen_servers():
-    res = get_aspen_servers()
+    res = list_aspen_servers()
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)
@@ -20,7 +20,7 @@ def test_list_all_aspen_servers():
         assert 3 <= len(r) <= 10
 
 def test_list_all_pi_servers():
-    res = get_pi_servers()
+    res = list_pi_servers()
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)

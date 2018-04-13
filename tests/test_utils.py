@@ -1,5 +1,5 @@
 import datetime
-from imsclient import utils
+from pyims import utils
 
 def test_datestr_to_datetime():
     assert utils.datestr_to_datetime('10. jan. 2018 13:45:15') == datetime.datetime(2018,1,10,13,45,15)

@@ -1,11 +1,11 @@
 import pytest
 import pandas as pd
-from imsclient import utils
-from imsclient.readertype import ReaderType
+from pyims import utils
+from pyims.readertype import ReaderType
 
 @pytest.fixture(scope="module")
 def handler():
-    from imsclient.clients import AspenHandler
+    from pyims.clients import AspenHandler
     yield AspenHandler()
     # Insert any teardown functionality here
 

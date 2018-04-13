@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 from readertype import ReaderType
 
-from imsclient.cache import SmartCache, \
+from pyims.cache import SmartCache, \
     safe_tagname
 
 @pytest.fixture()
