@@ -1,0 +1,6 @@
+name: imsclient-env
+dependencies:
+  - python>=3.6
+  - pandas
+  - pytables
+  - pyodbc

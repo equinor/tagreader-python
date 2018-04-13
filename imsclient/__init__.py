@@ -1,3 +1,3 @@
 from .clients import IMSClient, \
-    list_all_aspen_servers, \
-    list_all_pi_servers
+    get_aspen_servers, \
+    get_pi_servers

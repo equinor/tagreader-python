@@ -3,8 +3,8 @@ import pytest
 #from imsclient import utils
 #from imsclient.readertype import ReaderType
 from imsclient import IMSClient, \
-    list_all_aspen_servers, \
-    list_all_pi_servers
+    get_aspen_servers, \
+    get_pi_servers
 
 from imsclient.clients import get_server_address_aspen, \
     get_server_address_pi, \
@@ -12,7 +12,7 @@ from imsclient.clients import get_server_address_aspen, \
     PIHandler
 
 def test_list_all_aspen_servers():
-    res = list_all_aspen_servers()
+    res = get_aspen_servers()
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)
@@ -20,7 +20,7 @@ def test_list_all_aspen_servers():
         assert 3 <= len(r) <= 10
 
 def test_list_all_pi_servers():
-    res = list_all_pi_servers()
+    res = get_pi_servers()
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)
