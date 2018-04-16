@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from .readertype import ReaderType
+from .utils import ReaderType
 
 
 def safe_tagname(tagname):

@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from readertype import ReaderType
+from pyims.utils import ReaderType
 from pyims.clients import get_missing_intervals, get_next_timeslice
 
 def test_get_next_timeslice():

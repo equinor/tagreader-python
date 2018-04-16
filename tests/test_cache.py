@@ -1,7 +1,6 @@
 import pytest
 import pandas as pd
-from readertype import ReaderType
-
+from pyims.utils import ReaderType
 from pyims.cache import SmartCache, \
     safe_tagname
 

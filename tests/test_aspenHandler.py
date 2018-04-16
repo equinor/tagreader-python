@@ -1,7 +1,8 @@
 import pytest
 import pandas as pd
 from pyims import utils
-from pyims.readertype import ReaderType
+from pyims.utils import ReaderType
+
 
 @pytest.fixture(scope="module")
 def handler():
