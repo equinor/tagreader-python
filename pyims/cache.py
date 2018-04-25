@@ -11,8 +11,6 @@ def safe_tagname(tagname):
 
 
 class SmartCache():
-    filename = ''
-
     def __init__(self, filename, path='.'):
         self.filename = os.path.splitext(filename)[0] + '.h5'
         self.filename = os.path.join(path, self.filename)
