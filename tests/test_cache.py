@@ -19,7 +19,7 @@ def cache(request):
     cache.remove()
 
 def test_safe_tagname():
-    assert safe_tagname('ASGB.tt-___56_ _%_') == 'ASGB.tt___56___'
+    assert safe_tagname('ASGB.tt-___56_ _%_/_') == 'ASGB_tt___56____'
 
 def test_key_path(cache):
     pass

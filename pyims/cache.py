@@ -4,7 +4,8 @@ from .utils import ReaderType
 
 
 def safe_tagname(tagname):
-    tagname = "".join(c for c in tagname if c.isalnum() or c in ('.', '_')).strip()
+    tagname = tagname.replace('.', '_')
+    tagname = "".join(c for c in tagname if c.isalnum() or c == '_').strip()
     if tagname[0].isnumeric():
         tagname = '_' + tagname  # Conform to NaturalName
     return tagname
