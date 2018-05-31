@@ -86,3 +86,11 @@ def test_delete_tag(cache, data):
     with cache._get_hdfstore() as f:
         assert 'INT/s60/tag1' not in f
         assert 'RAW/tag1' not in f
+
+def test_store_empty_df(cache, data):
+    # Empty dataframes should not be stored (note: df full of NaN is not empty!)
+    cache.store(data, readtype=ReaderType.INT)
+    d=pd.DataFrame({'tag1': []})
+    cache.store(d, readtype=ReaderType.INT, ts=60)  # Specify ts to ensure correct key /if/ stored
+    df_read = cache.fetch('tag1', ReaderType.INT, 60)
+    pd.testing.assert_frame_equal(data, df_read)

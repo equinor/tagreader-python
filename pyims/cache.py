@@ -49,6 +49,7 @@ class SmartCache():
 
     def store(self, df, readtype, ts=None):
         key = self.key_path(df, readtype, ts)
+        if df.empty: return # Weirdness ensues when using empty df in select statement below
         with pd.HDFStore(self.filename, mode='a') as f:
             if key in f:
                 idx = f.select(key, where="index in df.index", columns=['index']).index
