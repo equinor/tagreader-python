@@ -74,7 +74,7 @@ class SmartCache():
                     df = f.select(key, where=where)
                 else:
                     df = f.select(key)
-        return df
+        return df.sort_index()
 
     def remove(self, filename=None):
         if not filename:
