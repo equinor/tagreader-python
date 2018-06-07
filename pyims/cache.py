@@ -66,7 +66,7 @@ class SmartCache():
         if start_time is not None:
             where.append("index >= start_time")
         if stop_time is not None:
-            where.append("index < stop_time")
+            where.append("index <= stop_time")
         where = " and ".join(where)
         with pd.HDFStore(self.filename, mode='r') as f:
             if key in f:

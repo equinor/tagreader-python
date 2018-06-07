@@ -50,13 +50,13 @@ def test_interval_reads(cache, data):
     df_read = cache.fetch('tag1', ReaderType.INT, ts=60, start_time=start_time)
     pd.testing.assert_frame_equal(data[start_time:], df_read)
     df_read = cache.fetch('tag1', ReaderType.INT, ts=60, stop_time=stop_time)
-    pd.testing.assert_frame_equal(data[:stop_time].iloc[:-1], df_read)
+    pd.testing.assert_frame_equal(data[:stop_time], df_read)
     df_read = cache.fetch('tag1', ReaderType.INT, ts=60, start_time=start_time_oob)
     pd.testing.assert_frame_equal(data, df_read)
     df_read = cache.fetch('tag1', ReaderType.INT, ts=60, stop_time=stop_time_oob)
     pd.testing.assert_frame_equal(data, df_read)
     df_read = cache.fetch('tag1', ReaderType.INT, ts=60, start_time=start_time, stop_time=stop_time)
-    pd.testing.assert_frame_equal(data[start_time:stop_time].iloc[:-1], df_read)
+    pd.testing.assert_frame_equal(data[start_time:stop_time], df_read)
 
 def test_match_tag(cache):
     assert True == cache._match_tag('INT/s60/tag1', readtype=ReaderType.INT, ts=60, tagname='tag1')

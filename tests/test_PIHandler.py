@@ -21,7 +21,7 @@ def test_generate_tag_read_query(handler):
     stop_time = utils.datestr_to_datetime('2018-01-17 17:00:00')
     ts = pd.Timedelta(1, unit='m')
     res = handler.generate_read_query('thetag', start_time, stop_time, ts, ReaderType.INT)
-    expected = ("SELECT CAST(value as FLOAT32) AS value, FORMAT(time, 'yyyy-MM-dd HH:mm:ss') AS time "
+    expected = ("SELECT CAST(value as FLOAT32) AS value, __utctime AS timestamp "
                 "FROM [piarchive]..[piinterp2] WHERE tag='thetag' AND "
-                "(time BETWEEN '17-Jan-18 16:00:00' AND '17-Jan-18 17:00:00') AND (timestep = '60s') ORDER BY time")
+                "(time BETWEEN '17-Jan-18 16:00:00' AND '17-Jan-18 17:00:00') AND (timestep = '60s') ORDER BY timestamp")
     assert expected == res
