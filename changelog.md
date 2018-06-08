@@ -1,3 +1,10 @@
+# 0.0.6
+* Aspen now supports avg, min, max, rng, std and var queries. These currently have timestamps in 
+the middle of the period.
+* Started preparation for supporting more read types for both Aspen and PI.
+* Defined max_rows = 100000 for PI to (hopefully) avoid timeouts.
+* Fixed indexing issue (duplicate indices appeared in some cases, but are now removed).
+
 # 0.0.5
 * Now properly handles DST (Daylight savings time), both to and from. 
 * Introduced time zones. Start- and stop time for queries are always performed relative to server 
