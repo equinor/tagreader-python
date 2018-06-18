@@ -1,3 +1,8 @@
+# 0.0.7
+* Fixed bug where timezone was fixed to Europe/Oslo
+* Discovered that Pandas 0.23 is required. 0.22 causes a weird timezone bug during DST folds when 
+using cache.
+
 # 0.0.6
 * Aspen now supports avg, min, max, rng, std and var queries. These currently have timestamps in 
 the middle of the period.
@@ -18,7 +23,8 @@ of the client.
 * Interpolated queries for IP.21 now return extrapolated values after last valid datapoint.
  
 # 0.0.4 
-* Fixed cache sorting issue when reading across two segments that were previously written in nonchronological order. 
+* Fixed cache sorting issue when reading across two segments that were previously written in 
+nonchronological order. 
 
 # 0.0.3
 * Added support for tags with mappings (relevant for SNA and SNB) by specifying tags on the form `tag;map`
