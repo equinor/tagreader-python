@@ -1,6 +1,6 @@
 name: pyims-env
 dependencies:
   - python>=3.6
-  - pandas
+  - pandas>=0.23
   - pytables
   - pyodbc
