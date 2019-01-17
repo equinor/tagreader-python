@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 
-from setuptools import setup, find_packages
+from setuptools import setup
+
+version = {}
+with open('pyims/version.py') as f:
+    exec(f.read(), version)
 
 setup(name='pyims',
       description='Library for reading from Aspen IP21 and OSIsoft PI IMS servers',
-      version='0.0.7',
+      version=version['__version__'],
       author='Einar S. Idso',
       author_email="eiids@statoil.com",
       packages=['pyims'],
       platforms=['Windows'],
       package_data={'': ['*.md']},
-      install_requires=['pandas',
-                        'tables']
+      python_requires='~=3.6',
+      install_requires=['pandas >=0.23',
+                        'tables',
+                        'pyodbc']
       )
