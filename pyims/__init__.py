@@ -1,3 +1,3 @@
-from .clients import IMSClient, \
-    list_aspen_servers, \
+from .clients import IMSClient
+from .odbc_handlers import list_aspen_servers, \
     list_pi_servers

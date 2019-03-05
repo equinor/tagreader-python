@@ -6,13 +6,12 @@ from pyims.utils import ReaderType
 
 @pytest.fixture(scope="module")
 def handler():
-    from pyims.clients import PIHandler
-    yield PIHandler()
-    # Insert any teardown functionality here
+    from pyims.odbc_handlers import PIHandlerODBC
+    yield PIHandlerODBC('thehostname.statoil.net', 1234)
 
 def test_generate_connection_string(handler):
-    res = handler.generate_connection_string('thehostname.statoil.net', 1234)
-    expected = ("DRIVER={PI ODBC Driver};Server=ST-W4189.statoil.net;Trusted_Connection=Yes;Command Timeout=1800;"
+    res = handler.generate_connection_string(handler.host, handler.port, 'das_server')
+    expected = ("DRIVER={PI ODBC Driver};Server=das_server;Trusted_Connection=Yes;Command Timeout=1800;"
             "Provider Type=PIOLEDB;Provider String={Data source=thehostname;Integrated_Security=SSPI;};")
     assert expected == res
 

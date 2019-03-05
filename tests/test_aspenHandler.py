@@ -6,12 +6,12 @@ from pyims.utils import ReaderType
 
 @pytest.fixture(scope="module")
 def handler():
-    from pyims.clients import AspenHandler
-    yield AspenHandler()
+    from pyims.odbc_handlers import AspenHandlerODBC
+    yield AspenHandlerODBC('thehostname', 1234)
     # Insert any teardown functionality here
 
 def test_generate_connection_string(handler):
-    res = handler.generate_connection_string('thehostname', '1234', 567890)
+    res = handler.generate_connection_string(handler.host, handler.port, 567890)
     assert "DRIVER={AspenTech SQLPlus};HOST=thehostname;PORT=1234;READONLY=Y;MAXROWS=567890" == res
 
 

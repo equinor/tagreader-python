@@ -2,14 +2,15 @@ import pytest
 #import pandas as pd
 #from pyims import utils
 #from pyims.readertype import ReaderType
-from pyims import IMSClient, \
-    list_aspen_servers, \
-    list_pi_servers
+from pyims import IMSClient
 
-from pyims.clients import get_server_address_aspen, \
-    get_server_address_pi, \
-    AspenHandler, \
-    PIHandler
+from pyims.odbc_handlers import list_aspen_servers,\
+    list_pi_servers,\
+    PIHandlerODBC,\
+    AspenHandlerODBC
+
+from pyims.clients import get_server_address_aspen,\
+    get_server_address_pi
 
 def test_list_all_aspen_servers():
     res = list_aspen_servers()
@@ -21,6 +22,7 @@ def test_list_all_aspen_servers():
 
 def test_list_all_pi_servers():
     res = list_pi_servers()
+    print(res)
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)
@@ -48,7 +50,7 @@ def test_init():
         c = IMSClient('ono-ims', 'aspen')
     with pytest.raises(ValueError):
         c = IMSClient('sna', 'pi')
-    c = IMSClient('onO-iMs')
-    assert isinstance(c.handler, PIHandler)
-    c = IMSClient('snA')
-    assert isinstance(c.handler, AspenHandler)
+    c = IMSClient('onO-iMs', 'pi')
+    assert isinstance(c.handler, PIHandlerODBC)
+    c = IMSClient('snA', 'aspen')
+    assert isinstance(c.handler, AspenHandlerODBC)
