@@ -36,9 +36,9 @@ class SmartCache():
         ts = ts.seconds if isinstance(ts, pd.Timedelta) else ts
         if readtype != ReaderType.RAW:
             if ts is None:
-                # Determine sample tamie by reading interval between first two samples of dataframe.
+                # Determine sample time by reading interval between first two samples of dataframe.
                 if isinstance(df, pd.DataFrame):
-                    interval = int(df[0:2].index.to_series().diff().mean().value/1e9)
+                    interval = int(df[0:2].index.to_series(keep_tz=False).diff().mean().value/1e9)
                 else:
                     raise TypeError
             else:
