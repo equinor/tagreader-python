@@ -9,6 +9,10 @@ except:
 logging.basicConfig(format=' %(asctime)s %(levelname)s: %(message)s', level=logging.INFO)
 
 def list_pi_servers(host=r'https://pivision.statoil.no/piwebapi'):
+    ## Suppress warning concerning use of verifySsl = False
+    import warnings
+    from urllib3.exceptions import InsecureRequestWarning
+    warnings.simplefilter("ignore", InsecureRequestWarning)
     c = PIWebApiClient(host, useKerberos=True, verifySsl=False)
     server_list = []
     dataServers = c.dataServer.list()
@@ -28,7 +32,7 @@ class PIHandlerWeb:
         self._max_rows = max_rows
         self.host = host
         self.port = port
-        ## Suppress warning concering use of verifySsl = False
+        ## Suppress warning concerning use of verifySsl = False
         #from urllib3.exceptions import InsecureRequestWarning
         #warnings.simplefilter("ignore", InsecureRequestWarning)
         self.client = PIWebApiClient(host, useKerberos=True, verifySsl=False)
