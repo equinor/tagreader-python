@@ -156,6 +156,12 @@ class AspenHandlerODBC:
     def _get_tag_metadata(self, tag):
         return None
 
+    def _get_tag_unit(self, tag):
+        raise NotImplementedError
+
+    def _get_tag_description(self, tag):
+        raise NotImplementedError
+
     def read_tag(self, tag, start_time, stop_time, sample_time, read_type, metadata):
         (cleantag, mapping) = tag.split(';') if ';' in tag else (tag, None)
         map_historyvalue = None
@@ -293,6 +299,18 @@ class PIHandlerODBC:
         metadata = dict(zip(col_names, self.cursor.fetchone()))
         return metadata
 
+    def _get_tag_description(self, tag):
+        query = f"SELECT descriptor FROM pipoint.classic WHERE tag='{tag}'"
+        self.cursor.execute(query)
+        desc = self.cursor.fetchone()
+        return desc[0]
+
+    def _get_tag_unit(self, tag):
+        query = f"SELECT engunits FROM pipoint.classic WHERE tag='{tag}'"
+        self.cursor.execute(query)
+        unit = self.cursor.fetchone()
+        return unit[0]
+
     def read_tag(self, tag, start_time, stop_time, sample_time, read_type, metadata=None):
         query = self.generate_read_query(tag, start_time, stop_time, sample_time, read_type)
         #logging.debug(f'Executing SQL query {query!r}')
@@ -311,6 +329,8 @@ class PIHandlerODBC:
             code = [x[0] for x in digitalset]
             offset = [x[1] for x in digitalset]
             df = df.replace(code, offset)
-
+        #cols = tuple(['value', metadata['engunits'], metadata['descriptor']])
+        #df.columns = cols
+        #df.columns.names = ['Tag', 'Unit', 'Description']
         return df.rename(columns={'value': tag})
 
