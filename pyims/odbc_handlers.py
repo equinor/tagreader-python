@@ -27,6 +27,7 @@ def list_pi_servers():
             server_list.append(winreg.EnumKey(reg_key, i))
     return server_list
 
+
 class AspenHandlerODBC:
 
     def __init__(self, host, port, options={}):
@@ -152,7 +153,10 @@ class AspenHandlerODBC:
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
-    def read_tag(self, tag, start_time, stop_time, sample_time, read_type):
+    def _get_tag_metadata(self, tag):
+        return None
+
+    def read_tag(self, tag, start_time, stop_time, sample_time, read_type, metadata):
         (cleantag, mapping) = tag.split(';') if ';' in tag else (tag, None)
         map_historyvalue = None
         if mapping is not None:
@@ -168,7 +172,6 @@ class AspenHandlerODBC:
         else:
             df = df.tz_localize(start_time.tzinfo)
         return df.rename(columns={'value': tag})
-
 
 
 class PIHandlerODBC:
@@ -196,7 +199,7 @@ class PIHandlerODBC:
         return query
 
     @staticmethod
-    def generate_read_query(tag, start_time, stop_time, sample_time, read_type):
+    def generate_read_query(tag, start_time, stop_time, sample_time, read_type, metadata=None):
         timecast_format_query = "%d-%b-%y %H:%M:%S"  # 05-jan-18 14:00:00
         timecast_format_output = 'yyyy-MM-dd HH:mm:ss'
 
@@ -282,7 +285,15 @@ class PIHandlerODBC:
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
-    def read_tag(self, tag, start_time, stop_time, sample_time, read_type):
+    def _get_tag_metadata(self, tag):
+        query = f"SELECT digitalset, engunits, descriptor FROM pipoint.classic WHERE tag='{tag}'"
+        self.cursor.execute(query)
+        desc = self.cursor.description
+        col_names = [col[0] for col in desc]
+        metadata = dict(zip(col_names, self.cursor.fetchone()))
+        return metadata
+
+    def read_tag(self, tag, start_time, stop_time, sample_time, read_type, metadata=None):
         query = self.generate_read_query(tag, start_time, stop_time, sample_time, read_type)
         #logging.debug(f'Executing SQL query {query!r}')
         df = pd.read_sql(query, self.conn, index_col='timestamp',
@@ -294,6 +305,12 @@ class PIHandlerODBC:
         #     df = df.tz_localize(start_time.tzinfo)
         #df = df.tz_localize(start_time.tzinfo)
         df = df.tz_localize('UTC').tz_convert(start_time.tzinfo)
+        if len(metadata['digitalset']) > 0:
+            self.cursor.execute(f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'")
+            digitalset = self.cursor.fetchall()
+            code = [x[0] for x in digitalset]
+            offset = [x[1] for x in digitalset]
+            df = df.replace(code, offset)
 
         return df.rename(columns={'value': tag})
 
