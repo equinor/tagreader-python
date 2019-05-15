@@ -191,7 +191,8 @@ class PIHandlerODBC:
     def generate_search_query(tag=None, desc=None):
         if desc is not None:
             raise NotImplementedError("Description search not implemented")
-        query = "SELECT tag FROM pipoint.classic WHERE tag LIKE '{tag}'".format(tag=tag.replace('*', '%'))
+        query = "SELECT tag, descriptor AS description FROM pipoint.classic WHERE tag LIKE '{tag}'".format(tag=tag.replace('*', '%')) # Addme
+        #query = "SELECT tag FROM pipoint.classic WHERE tag LIKE '{tag}'".format(tag=tag.replace('*', '%'))
         return query
 
     @staticmethod
