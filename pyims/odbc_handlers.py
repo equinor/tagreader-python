@@ -157,10 +157,16 @@ class AspenHandlerODBC:
         return None
 
     def _get_tag_unit(self, tag):
-        raise NotImplementedError
+        query = f'SELECT "Engineering Unit" FROM "{tag}"'  # TODO: Add mapping
+        self.cursor.execute(query)
+        unit = self.cursor.fetchone()
+        return unit[0]
 
     def _get_tag_description(self, tag):
-        raise NotImplementedError
+        query = f'SELECT "Description" FROM "{tag}"'  # TODO: Add mapping
+        self.cursor.execute(query)
+        unit = self.cursor.fetchone()
+        return unit[0]
 
     def read_tag(self, tag, start_time, stop_time, sample_time, read_type, metadata):
         (cleantag, mapping) = tag.split(';') if ';' in tag else (tag, None)
