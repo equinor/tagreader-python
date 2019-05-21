@@ -4,7 +4,7 @@ from .utils import *
 try:
     from osisoft.pidevclub.piwebapi.pi_web_api_client import PIWebApiClient
 except:
-    raise Warning
+    warnings.warn("Unable to import PIWebApiClient")
 
 logging.basicConfig(format=' %(asctime)s %(levelname)s: %(message)s', level=logging.INFO)
 
