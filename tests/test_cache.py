@@ -90,7 +90,15 @@ def test_delete_tag(cache, data):
 def test_store_empty_df(cache, data):
     # Empty dataframes should not be stored (note: df full of NaN is not empty!)
     cache.store(data, readtype=ReaderType.INT)
-    d=pd.DataFrame({'tag1': []})
-    cache.store(d, readtype=ReaderType.INT, ts=60)  # Specify ts to ensure correct key /if/ stored
+    df = pd.DataFrame({'tag1': []})
+    cache.store(df, readtype=ReaderType.INT, ts=60)  # Specify ts to ensure correct key /if/ stored
     df_read = cache.fetch('tag1', ReaderType.INT, 60)
     pd.testing.assert_frame_equal(data, df_read)
+
+def test_store_metadata(cache):
+    cache.store_tag_metadata('tag1', {'unit': '%', 'desc': 'Some description'})
+    r = cache.fetch_tag_metadata('tag1', 'unit')
+    assert '%' == r['unit']
+    r = cache.fetch_tag_metadata('tag1', ['unit', 'noworky'])
+    assert r['unit'] == '%'
+    assert 'noworky' not in r

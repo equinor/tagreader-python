@@ -76,6 +76,28 @@ class SmartCache():
                     df = f.select(key)
         return df.sort_index()
 
+    def store_tag_metadata(self, tagname, metadata):
+        tagname = safe_tagname(tagname)
+        key = f'metadata/{tagname}'
+        with pd.HDFStore(self.filename, mode='w') as f:
+            if key not in f:
+                f.put(key, pd.DataFrame())
+            for i in metadata:
+                f.get_storer(key).attrs['meta_'+i] = metadata[i]
+
+    def fetch_tag_metadata(self, tagname, properties):
+        tagname = safe_tagname(tagname)
+        key = f'/metadata/{tagname}'
+        if isinstance(properties, str): properties = [properties]
+        with pd.HDFStore(self.filename, mode='r') as f:
+            if key not in f:
+                return {}
+            metadata = {}
+            for i in properties:
+                if 'meta_'+i in f.get_storer(key).attrs:
+                    metadata[i] = f.get_storer(key).attrs['meta_'+i]
+            return metadata
+
     def remove(self, filename=None):
         if not filename:
             filename = self.filename
