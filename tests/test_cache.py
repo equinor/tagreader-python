@@ -97,8 +97,10 @@ def test_store_empty_df(cache, data):
 
 def test_store_metadata(cache):
     cache.store_tag_metadata('tag1', {'unit': '%', 'desc': 'Some description'})
+    cache.store_tag_metadata('tag1', {'max': 60})
     r = cache.fetch_tag_metadata('tag1', 'unit')
     assert '%' == r['unit']
-    r = cache.fetch_tag_metadata('tag1', ['unit', 'noworky'])
-    assert r['unit'] == '%'
+    r = cache.fetch_tag_metadata('tag1', ['unit', 'max', 'noworky'])
+    assert '%' == r['unit']
+    assert 60 == r['max']
     assert 'noworky' not in r
