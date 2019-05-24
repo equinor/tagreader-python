@@ -39,7 +39,6 @@ class AspenHandlerODBC:
 
     @staticmethod
     def generate_connection_string(host, port, max_rows=100000):
-        port = str(port)
         return f'DRIVER={{AspenTech SQLPlus}};HOST={host};PORT={port};READONLY=Y;MAXROWS={max_rows}'
 
     @staticmethod
@@ -148,8 +147,8 @@ class AspenHandlerODBC:
         self.conn = pyodbc.connect(connection_string, autocommit=True)
         self.cursor = self.conn.cursor()
 
-    def search_tag(self, tag):
-        query = self.generate_search_query(tag)
+    def search_tag(self, tag=None, desc=None):
+        query = self.generate_search_query(tag, desc)
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
@@ -204,11 +203,14 @@ class PIHandlerODBC:
 
     @staticmethod
     def generate_search_query(tag=None, desc=None):
+        query = ["SELECT tag, descriptor as description FROM pipoint.classic WHERE"]
+        if tag is not None:
+            query.extend(["tag LIKE '{tag}'".format(tag=tag.replace('*', '%'))])
+        if tag is not None and desc is not None:
+            query.extend(["AND"])
         if desc is not None:
-            raise NotImplementedError("Description search not implemented")
-        query = "SELECT tag, descriptor AS description FROM pipoint.classic WHERE tag LIKE '{tag}'".format(tag=tag.replace('*', '%')) # Addme
-        #query = "SELECT tag FROM pipoint.classic WHERE tag LIKE '{tag}'".format(tag=tag.replace('*', '%'))
-        return query
+            query.extend(["descriptor LIKE '{desc}'".format(desc=desc.replace('*', '%'))])
+        return ' '.join(query)
 
     @staticmethod
     def generate_read_query(tag, start_time, stop_time, sample_time, read_type, metadata=None):
@@ -292,8 +294,8 @@ class PIHandlerODBC:
         self.conn = pyodbc.connect(connection_string, autocommit=True)
         self.cursor = self.conn.cursor()
 
-    def search_tag(self, tag):
-        query = self.generate_search_query(tag)
+    def search_tag(self, tag=None, desc=None):
+        query = self.generate_search_query(tag, desc)
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
