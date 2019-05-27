@@ -2,3 +2,4 @@ pandas>=0.23
 tables
 pyodbc
 git+https://github.com/dcbark01/PI-Web-API-Client-Python.git
+requests_ntlm # Required for PI-Web-API-Client-Python
