@@ -1,10 +1,11 @@
+import sys
 import warnings
 from .utils import *
 
 try:
     from osisoft.pidevclub.piwebapi.pi_web_api_client import PIWebApiClient
 except:
-    warnings.warn("Unable to import PIWebApiClient")
+    pass
 
 logging.basicConfig(format=' %(asctime)s %(levelname)s: %(message)s', level=logging.INFO)
 
@@ -29,6 +30,9 @@ class AspenHandlerWeb:
 class PIHandlerWeb:
 
     def __init__(self, host=r'https://pivision.statoil.no/piwebapi', port=443, max_rows=100000, options={}):
+        if 'osisoft.pidevclub.piwebapi.pi_web_api_client' not in sys.modules:
+            raise ModuleNotFoundError("You need to install the PI Web API from OSISoft to use the PI web handler.")
+        warnings.warn("Unable to import PIWebApiClient")
         self._max_rows = max_rows
         self.host = host
         self.port = port
