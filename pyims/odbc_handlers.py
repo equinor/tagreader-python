@@ -36,6 +36,7 @@ class AspenHandlerODBC:
         self.conn = None
         self.cursor = None
         self._max_rows = options.get('max_rows', 100000)
+        self._field_engineering_unit = ["Engineering Unit", "IP_ENG_UNITS"]
 
     @staticmethod
     def generate_connection_string(host, port, max_rows=100000):
@@ -156,9 +157,24 @@ class AspenHandlerODBC:
         return None
 
     def _get_tag_unit(self, tag):
-        query = f'SELECT "Engineering Unit" FROM "{tag}"'  # TODO: Add mapping
-        self.cursor.execute(query)
-        unit = self.cursor.fetchone()
+        if isinstance(self._field_engineering_unit, str):
+            query = f'SELECT "{self._field_engineering_unit}" FROM "{tag}"'  # TODO: Add mapping
+            self.cursor.execute(query)
+            unit = self.cursor.fetchone()
+        else:
+            for field in self._field_engineering_unit:
+                query = f'SELECT "{field}" FROM "{tag}"'  # TODO: Add mapping
+                unit = None
+                try:
+                    self.cursor.execute(query)
+                    unit = self.cursor.fetchone()
+                except Exception as e:
+                    logging.debug(e)
+                if unit:  # We discovered which field to use, so no need to check next time
+                    self._field_engineering_unit = field
+                    break
+        if not unit:
+            raise Exception(f'Failed to fetch units. I tried these fields: "{self._field_engineering_unit}"')
         return unit[0]
 
     def _get_tag_description(self, tag):
