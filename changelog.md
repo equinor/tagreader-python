@@ -1,3 +1,19 @@
+# 0.2
+* Major rewrite to accommodate for other types of connections than ODBC in the future.
+    * Breaking change: It is now necessary to specify imstype when initiating a client.
+* Updated to new DAS server address. 
+* Forced keep_tz=False to suppress FutureWarning in Pandas >= 0.24
+* Fixed reading of digital states from PI. 
+* Added get_units() and get_descriptions() methods to fetch engineering units and description for
+specified tags. 
+* Enabled tag search by description.
+* pyims.__version__ can be used to check package version.
+
+# 0.0.8
+* Improved documentation
+* Added commonly requested documentation, including docstring, for specifying query method for 
+read_tags.
+
 # 0.0.7
 * Fixed bug where timezone was fixed to Europe/Oslo
 * Discovered that Pandas 0.23 is required. 0.22 causes a weird timezone bug during DST folds when 

@@ -210,7 +210,10 @@ class PIHandlerODBC:
         self.cursor = None
         self._max_rows = options.get('max_rows', 100000)
         # TODO: Find default das_server under HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PISystem\Analytics\InstallData/AFServer
-        self._das_server = options.get('das_server', 'ST-W4189.statoil.net')
+        # It seems that is actually not possible anymore.
+        self._das_server = options.get('das_server', 'ws3099.statoil.net')
+
+        #print(self._das_server)
 
     @staticmethod
     def generate_connection_string(host, port, das_server):
