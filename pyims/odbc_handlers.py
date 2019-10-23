@@ -222,7 +222,7 @@ class PIHandlerODBC:
 
     @staticmethod
     def generate_search_query(tag=None, desc=None):
-        query = ["SELECT tag, descriptor as description FROM pipoint.classic WHERE"]
+        query = ["SELECT tag, descriptor as description FROM pipoint.pipoint2 WHERE"]
         if tag is not None:
             query.extend(["tag LIKE '{tag}'".format(tag=tag.replace('*', '%'))])
         if tag is not None and desc is not None:
@@ -319,7 +319,7 @@ class PIHandlerODBC:
         return self.cursor.fetchall()
 
     def _get_tag_metadata(self, tag):
-        query = f"SELECT digitalset, engunits, descriptor FROM pipoint.classic WHERE tag='{tag}'"
+        query = f"SELECT digitalset, engunits, descriptor FROM pipoint.pipoint2 WHERE tag='{tag}'"
         self.cursor.execute(query)
         desc = self.cursor.description
         col_names = [col[0] for col in desc]
@@ -327,13 +327,13 @@ class PIHandlerODBC:
         return metadata
 
     def _get_tag_description(self, tag):
-        query = f"SELECT descriptor FROM pipoint.classic WHERE tag='{tag}'"
+        query = f"SELECT descriptor FROM pipoint.pipoint2 WHERE tag='{tag}'"
         self.cursor.execute(query)
         desc = self.cursor.fetchone()
         return desc[0]
 
     def _get_tag_unit(self, tag):
-        query = f"SELECT engunits FROM pipoint.classic WHERE tag='{tag}'"
+        query = f"SELECT engunits FROM pipoint.pipoint2 WHERE tag='{tag}'"
         self.cursor.execute(query)
         unit = self.cursor.fetchone()
         return unit[0]
@@ -360,4 +360,3 @@ class PIHandlerODBC:
         #df.columns = cols
         #df.columns.names = ['Tag', 'Unit', 'Description']
         return df.rename(columns={'value': tag})
-
