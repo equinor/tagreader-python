@@ -88,6 +88,9 @@ class SmartCache():
             f.get_storer(key).attrs.metadata = {**origmetadata, **metadata}
 
     def fetch_tag_metadata(self, tagname, properties):
+        res = {}
+        if not os.path.isfile(self.filename):
+            return res
         tagname = safe_tagname(tagname)
         key = f'/metadata/{tagname}'
         if isinstance(properties, str): properties = [properties]
@@ -95,7 +98,6 @@ class SmartCache():
             if key not in f or 'metadata' not in f.get_storer(key).attrs:
                 return {}
             metadata = f.get_storer(key).attrs.metadata
-        res = {}
         for p in properties:
             if p in metadata.keys():
                 res[p] = metadata.get(p)
