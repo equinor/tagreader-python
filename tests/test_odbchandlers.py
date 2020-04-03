@@ -76,8 +76,4 @@ def test_generate_tag_read_query(PIHandler):
     assert expected == res
 
 
-def test_get_pi_server_address():
-    host, port = get_server_address_pi('ONO-IMS')
-    assert 'stj-w22.statoil.net' == host
-    assert 5450 == port
 
