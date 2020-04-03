@@ -1,4 +1,6 @@
 import pytest
+import os
+os.environ['NUMEXPR_MAX_THREADS'] = '8'
 import pandas as pd
 from pyims.utils import ReaderType
 from pyims.cache import SmartCache, \
