@@ -48,13 +48,6 @@ def test_generate_tag_read_query(AspenHandler):
                 "(request = 6) AND (period = 600) ORDER BY ts")
     assert expected == res
 
-def test_list_all_aspen_servers():
-    res = list_aspen_servers()
-    assert isinstance(res, list)
-    assert len(res) >= 1
-    assert isinstance(res[0], str)
-    for r in res:
-        assert 3 <= len(r) <= 10
 
 def test_get_aspen_server_address():
     host, port = get_server_address_aspen('SNA')
@@ -82,13 +75,6 @@ def test_generate_tag_read_query(PIHandler):
                 "(time BETWEEN '17-Jan-18 16:00:00' AND '17-Jan-18 17:00:00') AND (timestep = '60s') ORDER BY timestamp")
     assert expected == res
 
-def test_list_all_pi_servers():
-    res = list_pi_servers()
-    assert isinstance(res, list)
-    assert len(res) >= 1
-    assert isinstance(res[0], str)
-    for r in res:
-        assert 3 <= len(r) <= 11
 
 def test_get_pi_server_address():
     host, port = get_server_address_pi('ONO-IMS')
