@@ -1,5 +1,5 @@
 
-# pyIMS #
+# tagreader-python #
 
 ## Index ##
 
@@ -13,13 +13,13 @@
 
 ## Introduction ##
 
-pytagreader is a Python package for reading trend data from the OSIsoft PI and Aspen IP21 IMS systems. pytagreader is
+Tagreader is a Python package for reading trend data from the OSIsoft PI and Aspen IP21 IMS systems. Tagreader is
 intended to be easy to use, and present as similar as possible interfaces to the backend historians.   
 
 Queries are performed using ODBC and proprietary drivers from Aspen and OSIsoft, but code has been structured in such
 a way as to allow for other interfaces, e.g. REST APIs, in the future.
   
-pytagreader is based on Pandas for Python, and uses the HDF5 file format to cache results. 
+Tagreader is based on Pandas for Python, and uses the HDF5 file format to cache results. 
 
 ## Requirements ##
 
@@ -32,7 +32,7 @@ pytagreader is based on Pandas for Python, and uses the HDF5 file format to cach
  
 ## Installation ##
 
-pytagreader will in the not-so-distant future be made available from PyPi. Until then, installation can be performed
+Tagreader will in the not-so-distant future be made available from PyPi. Until then, installation can be performed
 as follows:
 
 * Download the package contents from GitHub using either a tagged release or
@@ -41,13 +41,13 @@ as follows:
 * Extract the zip-file anywhere, e.g. `C:\Appl\`. 
 * Open a command-line with python/pip in path.
 * Activate your preferred environment or create a new environment. 
-* Navigate to where you extracted the package and enter the top directory (e.g `C:\Appl\pytagreader\`)
+* Navigate to where you extracted the package and enter the top directory (e.g `C:\Appl\tagreader\`)
 * Install the package, letting pip resolve dependencies: `pip install .` 
 
 ### ODBC Drivers ###
 
 If you work in Equinor, you can find further information and links to download the drivers on our 
-[wiki](https://wiki.equinor.com/wiki/index.php/pytagreader).
+[wiki](https://wiki.equinor.com/wiki/index.php/tagreader).
 
 If you do not work in Equinor: In order to fetch data from OSISoft PI or Aspen IP21, you need to obtain and install
 proprietary ODBC drivers. Check with your employer/organisation whether these are available. If not, you may be able
@@ -56,7 +56,7 @@ to obtain them directly from the vendors.
 ## Uninstallation ##
 
  * Activate the relevant environment 
- * `pip uninstall pytagreader`
+ * `pip uninstall tagreader`
 
 ## Contributing ##
 

@@ -1,5 +1,5 @@
 import datetime
-from pytagreader import utils
+from tagreader import utils
 from pytz import timezone
 
 

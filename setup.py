@@ -3,16 +3,16 @@
 from setuptools import setup
 
 version = {}
-with open("pytagreader/version.py") as f:
+with open("tagreader/version.py") as f:
     exec(f.read(), version)
 
 setup(
-    name="pytagreader",
+    name="tagreader",
     description="Library for reading from Aspen IP21 and OSIsoft PI IMS servers",
     version=version["__version__"],
     author="Einar S. Idso",
     author_email="eiids@equinor.com",
-    packages=["pytagreader"],
+    packages=["tagreader"],
     platforms=["Windows"],
     package_data={"": ["*.md"]},
     python_requires="~=3.6",

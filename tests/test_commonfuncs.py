@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
-from pytagreader.utils import ReaderType
-from pytagreader.clients import get_missing_intervals, get_next_timeslice
+from tagreader.utils import ReaderType
+from tagreader.clients import get_missing_intervals, get_next_timeslice
 
 
 def test_get_next_timeslice():

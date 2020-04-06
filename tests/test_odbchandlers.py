@@ -1,18 +1,18 @@
 import os
 import pytest
 import pandas as pd
-from pytagreader import utils
-from pytagreader.utils import ReaderType
-from pytagreader import IMSClient
+from tagreader import utils
+from tagreader.utils import ReaderType
+from tagreader import IMSClient
 
-from pytagreader.odbc_handlers import (
+from tagreader.odbc_handlers import (
     list_aspen_servers,
     list_pi_servers,
     PIHandlerODBC,
     AspenHandlerODBC,
 )
 
-from pytagreader.clients import get_server_address_aspen, get_server_address_pi
+from tagreader.clients import get_server_address_aspen, get_server_address_pi
 
 is_CI = "GITHUB_ACTION" in os.environ
 
@@ -40,7 +40,7 @@ def test_init_drivers():
 
 @pytest.fixture(scope="module")
 def AspenHandler():
-    from pytagreader.odbc_handlers import AspenHandlerODBC
+    from tagreader.odbc_handlers import AspenHandlerODBC
 
     yield AspenHandlerODBC("thehostname", 1234)
     # Insert any teardown functionality here
@@ -73,7 +73,7 @@ def test_generate_tag_read_query(AspenHandler):
 
 @pytest.fixture(scope="module")
 def PIHandler():
-    from pytagreader.odbc_handlers import PIHandlerODBC
+    from tagreader.odbc_handlers import PIHandlerODBC
 
     yield PIHandlerODBC("thehostname.statoil.net", 1234)
 
