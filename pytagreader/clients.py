@@ -9,11 +9,15 @@ from .cache import SmartCache
 from .odbc_handlers import PIHandlerODBC, AspenHandlerODBC
 from .web_handlers import PIHandlerWeb, AspenHandlerWeb
 
-logging.basicConfig(format=' %(asctime)s %(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(
+    format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
+)
 
 
 def get_missing_intervals(df, start_time, stop_time, ts, read_type):
-    if read_type == ReaderType.RAW:  # Fixme: How to check for completeness for RAW data?
+    if (
+        read_type == ReaderType.RAW
+    ):  # Fixme: How to check for completeness for RAW data?
         return [[start_time, stop_time]]
     tvec = pd.date_range(start=start_time, end=stop_time, freq=f"{ts}s")
     if len(df) == len(tvec):  # Short-circuit if dataset is complete
@@ -23,7 +27,9 @@ def get_missing_intervals(df, start_time, stop_time, ts, read_type):
     for k, g in groupby(enumerate(values_in_df), lambda ix: ix[1]):
         if not k:
             seq = list(map(itemgetter(0), g))
-            missing_intervals.append((pd.Timestamp(tvec[seq[0]]), pd.Timestamp(tvec[seq[-1]])))
+            missing_intervals.append(
+                (pd.Timestamp(tvec[seq[0]]), pd.Timestamp(tvec[seq[-1]]))
+            )
             # Shouldn't be necessary to fetch overlapping points since get_next_timeslice
             # ensures start <= t <= stop
             # missing_intervals.append((pd.Timestamp(tvec[seq[0]]),
@@ -40,8 +46,10 @@ def get_next_timeslice(start_time, stop_time, ts, max_steps=None):
     # Ensure we include the last data point.
     # Discrepancies between Aspen and Pi for +ts
     # Discrepancies between IMS and cache for e.g. ts.
-    if calc_stop_time == stop_time: calc_stop_time += ts/2
+    if calc_stop_time == stop_time:
+        calc_stop_time += ts / 2
     return start_time, calc_stop_time
+
 
 def get_server_address_aspen(assetname):
     """Assets are listed under
@@ -52,23 +60,27 @@ def get_server_address_aspen(assetname):
     the UUID.
     """
 
-    regkey_clsid = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                  r'SOFTWARE\Classes\Wow6432Node\CLSID')
-    regkey, _ = find_registry_key_from_name(regkey_clsid,
-                                            'Aspen SQLplus service component')
-    regkey_implemented_categories = winreg.OpenKeyEx(regkey,
-                                                     'Implemented Categories')
+    regkey_clsid = winreg.OpenKey(
+        winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Classes\Wow6432Node\CLSID"
+    )
+    regkey, _ = find_registry_key_from_name(
+        regkey_clsid, "Aspen SQLplus service component"
+    )
+    regkey_implemented_categories = winreg.OpenKeyEx(regkey, "Implemented Categories")
 
-    _, aspen_UUID = find_registry_key_from_name(regkey_implemented_categories,
-                                                'Aspen SQLplus services')
+    _, aspen_UUID = find_registry_key_from_name(
+        regkey_implemented_categories, "Aspen SQLplus services"
+    )
 
-    reg_adsa = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-                              r'Software\AspenTech\ADSA\Caches\AspenADSA\\' + os.getlogin())
+    reg_adsa = winreg.OpenKey(
+        winreg.HKEY_CURRENT_USER,
+        r"Software\AspenTech\ADSA\Caches\AspenADSA\\" + os.getlogin(),
+    )
 
     try:
-        reg_site_key = winreg.OpenKey(reg_adsa, assetname + '\\' + aspen_UUID)
-        host = winreg.QueryValueEx(reg_site_key, 'Host')[0]
-        port = int(winreg.QueryValueEx(reg_site_key, 'Port')[0])
+        reg_site_key = winreg.OpenKey(reg_adsa, assetname + "\\" + aspen_UUID)
+        host = winreg.QueryValueEx(reg_site_key, "Host")[0]
+        port = int(winreg.QueryValueEx(reg_site_key, "Port")[0])
         return host, port
     except FileNotFoundError:
         return None
@@ -85,60 +97,73 @@ def get_server_address_pi(assetname):
     :type: tuple(string, int)
     """
     try:
-        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Wow6432Node\PISystem\PI-SDK')
-        reg_key_handles = find_registry_key(reg_key, 'ServerHandles')
+        reg_key = winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\PISystem\PI-SDK"
+        )
+        reg_key_handles = find_registry_key(reg_key, "ServerHandles")
         reg_site_key = find_registry_key(reg_key_handles, assetname)
         if reg_site_key is None:
-            reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\PISystem\PI-SDK')
-            reg_key_handles = find_registry_key(reg_key, 'ServerHandles')
+            reg_key = winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\PISystem\PI-SDK"
+            )
+            reg_key_handles = find_registry_key(reg_key, "ServerHandles")
             reg_site_key = find_registry_key(reg_key_handles, assetname)
         if reg_site_key is not None:
-            host = winreg.QueryValueEx(reg_site_key, 'path')[0]
-            port = int(winreg.QueryValueEx(reg_site_key, 'port')[0])
+            host = winreg.QueryValueEx(reg_site_key, "path")[0]
+            port = int(winreg.QueryValueEx(reg_site_key, "port")[0])
             return host, port
     except FileNotFoundError:
         return None
 
 
 def get_handler(imstype, asset, options={}):
-    accepted_values = ['pi', 'aspen', 'ip21', 'piweb', 'aspenweb', 'ip21web']
+    accepted_values = ["pi", "aspen", "ip21", "piweb", "aspenweb", "ip21web"]
 
     if not imstype or imstype.lower() not in accepted_values:
         raise ValueError(f"`imstype` must be one of {accepted_values}")
 
-    if imstype.lower() == 'pi':
-        if 'PI ODBC Driver' not in pyodbc.drivers():
-            raise RuntimeError("No PI ODBC driver detected. "
-                               "Either switch to Web API ('piweb') or install appropriate driver.")
+    if imstype.lower() == "pi":
+        if "PI ODBC Driver" not in pyodbc.drivers():
+            raise RuntimeError(
+                "No PI ODBC driver detected. "
+                "Either switch to Web API ('piweb') or install appropriate driver."
+            )
         hostport = get_server_address_pi(asset)
         if not hostport:
-            raise ValueError(f"Unable to locate asset '{asset}'. Do you have the correct permissions?")
+            raise ValueError(
+                f"Unable to locate asset '{asset}'. Do you have the correct permissions?"
+            )
         host, port = hostport
         return PIHandlerODBC(host, port, options)
 
-    if imstype.lower() in ['aspen', 'ip21']:
-        if 'AspenTech SQLplus' not in pyodbc.drivers():
-            raise RuntimeError("No Aspen SQLplus ODBC driver detected. Either switch to Web API ('aspenweb') or "
-                               "install appropriate driver.")
+    if imstype.lower() in ["aspen", "ip21"]:
+        if "AspenTech SQLplus" not in pyodbc.drivers():
+            raise RuntimeError(
+                "No Aspen SQLplus ODBC driver detected. Either switch to Web API ('aspenweb') or "
+                "install appropriate driver."
+            )
         hostport = get_server_address_aspen(asset)
         if not hostport:
-            raise ValueError(f"Unable to locate asset '{asset}'. Do you have the correct permissions?")
+            raise ValueError(
+                f"Unable to locate asset '{asset}'. Do you have the correct permissions?"
+            )
         host, port = hostport
         return AspenHandlerODBC(host, port, options)
 
-    if imstype.lower() == 'piweb':
-        if 'osisoft.pidevclub.piwebapi' not in sys.modules:
-            raise RuntimeError("PI WEB API module not found. Either switch to ODBC ('pi') or install "
-                               "'PI-Web-API-Client-Python'")
+    if imstype.lower() == "piweb":
+        if "osisoft.pidevclub.piwebapi" not in sys.modules:
+            raise RuntimeError(
+                "PI WEB API module not found. Either switch to ODBC ('pi') or install "
+                "'PI-Web-API-Client-Python'"
+            )
         return PIHandlerWeb()
 
-    if imstype.lower() in ['aspenweb', 'ip21web']:
+    if imstype.lower() in ["aspenweb", "ip21web"]:
         raise NotImplementedError
 
 
 class IMSClient:
-
-    def __init__(self, asset, imstype=None, tz='Europe/Oslo', handler_options={}):
+    def __init__(self, asset, imstype=None, tz="Europe/Oslo", handler_options={}):
         self.handler = None
         self.asset = asset.lower()
         self.tz = tz
@@ -159,8 +184,16 @@ class IMSClient:
         df = pd.DataFrame()
         if cache is not None:
             time_slice = get_next_timeslice(start_time, stop_time, ts)
-            df = cache.fetch(tag, readtype=read_type, ts=ts, start_time=time_slice[0], stop_time=time_slice[1])
-            missing_intervals = get_missing_intervals(df, start_time, stop_time, ts.seconds, read_type)
+            df = cache.fetch(
+                tag,
+                readtype=read_type,
+                ts=ts,
+                start_time=time_slice[0],
+                stop_time=time_slice[1],
+            )
+            missing_intervals = get_missing_intervals(
+                df, start_time, stop_time, ts.seconds, read_type
+            )
             if not missing_intervals:
                 return df
         metadata = self._get_metadata(tag)
@@ -168,45 +201,51 @@ class IMSClient:
         for (start, stop) in missing_intervals:
             time_slice = [start, start]
             while time_slice[1] < stop:
-                time_slice = get_next_timeslice(time_slice[1], stop, ts, self.handler._max_rows)
-                df = self.handler.read_tag(tag, time_slice[0], time_slice[1], ts, read_type, metadata)
+                time_slice = get_next_timeslice(
+                    time_slice[1], stop, ts, self.handler._max_rows
+                )
+                df = self.handler.read_tag(
+                    tag, time_slice[0], time_slice[1], ts, read_type, metadata
+                )
                 if cache is not None:
                     cache.store(df, read_type, ts)
                 frames.append(df)
-        #df = pd.concat(frames, verify_integrity=True)
+        # df = pd.concat(frames, verify_integrity=True)
         df = pd.concat(frames)
         df.sort_index(inplace=True)
-        df = df[~df.index.duplicated(keep='first')] # Deduplicate on index
-        df = df.rename(columns={'value': tag})
+        df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
+        df = df.rename(columns={"value": tag})
         return df
 
     def get_units(self, tags):
-        if isinstance(tags, str): tags = [tags]
+        if isinstance(tags, str):
+            tags = [tags]
         units = {}
         for tag in tags:
             if self.cache is not None:
-                r = self.cache.fetch_tag_metadata(tag, 'unit')
-                if 'unit' in r:
-                    units[tag] = r['unit']
+                r = self.cache.fetch_tag_metadata(tag, "unit")
+                if "unit" in r:
+                    units[tag] = r["unit"]
             if tag not in units:
                 unit = self.handler._get_tag_unit(tag)
                 if self.cache is not None:
-                    self.cache.store_tag_metadata(tag, {'unit': unit})
+                    self.cache.store_tag_metadata(tag, {"unit": unit})
                 units[tag] = unit
         return units
 
     def get_descriptions(self, tags):
-        if isinstance(tags, str): tags = [tags]
+        if isinstance(tags, str):
+            tags = [tags]
         descriptions = {}
         for tag in tags:
             if self.cache is not None:
-                r = self.cache.fetch_tag_metadata(tag, 'description')
-                if 'description' in r:
-                    descriptions[tag] = r['description']
+                r = self.cache.fetch_tag_metadata(tag, "description")
+                if "description" in r:
+                    descriptions[tag] = r["description"]
             if tag not in descriptions:
                 desc = self.handler._get_tag_description(tag)
                 if self.cache is not None:
-                    self.cache.store_tag_metadata(tag, {'description': desc})
+                    self.cache.store_tag_metadata(tag, {"description": desc})
                 descriptions[tag] = desc
         return descriptions
 
@@ -223,15 +262,22 @@ class IMSClient:
 
         Values for Readertype.* that should work are: INT, MIN, MAX, RNG, AVG, VAR and STD
         """
-        if isinstance(tags, str): tags = [tags]
+        if isinstance(tags, str):
+            tags = [tags]
         if read_type == ReaderType.SAMPLED and len(tags) > 1:
-            raise RuntimeError('Unable to read raw/sampled data for multiple tags since they don\'t share time vector')
+            raise RuntimeError(
+                "Unable to read raw/sampled data for multiple tags since they don't share time vector"
+            )
         start_time = datestr_to_datetime(start_time, tz=self.tz)
         stop_time = datestr_to_datetime(stop_time, tz=self.tz)
-        if not isinstance(ts, pd.Timedelta): ts = pd.Timedelta(ts, unit='s')
+        if not isinstance(ts, pd.Timedelta):
+            ts = pd.Timedelta(ts, unit="s")
 
         cols = []
         for tag in tags:
-            cols.append(self._read_single_tag(tag, start_time, stop_time, ts, read_type, cache=self.cache))
+            cols.append(
+                self._read_single_tag(
+                    tag, start_time, stop_time, ts, read_type, cache=self.cache
+                )
+            )
         return pd.concat(cols, axis=1)
-

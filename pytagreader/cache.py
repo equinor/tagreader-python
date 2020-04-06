@@ -4,18 +4,18 @@ from .utils import ReaderType
 
 
 def safe_tagname(tagname):
-    tagname = tagname.replace('.', '_')
-    tagname = "".join(c for c in tagname if c.isalnum() or c == '_').strip()
+    tagname = tagname.replace(".", "_")
+    tagname = "".join(c for c in tagname if c.isalnum() or c == "_").strip()
     if tagname[0].isnumeric():
-        tagname = '_' + tagname  # Conform to NaturalName
+        tagname = "_" + tagname  # Conform to NaturalName
     return tagname
 
 
-class SmartCache():
-    def __init__(self, filename, path='.'):
-        self.filename = os.path.splitext(filename)[0] + '.h5'
+class SmartCache:
+    def __init__(self, filename, path="."):
+        self.filename = os.path.splitext(filename)[0] + ".h5"
         self.filename = os.path.join(path, self.filename)
-        #self.open(self.filename)
+        # self.open(self.filename)
 
     # def open(self, filename=None):
     #     if filename is None:
@@ -24,7 +24,6 @@ class SmartCache():
     #
     # def close(self):
     #     self.hdfstore.close()
-
 
     def key_path(self, df, readtype, ts=None):
         """Return a string on the form
@@ -38,21 +37,24 @@ class SmartCache():
             if ts is None:
                 # Determine sample time by reading interval between first two samples of dataframe.
                 if isinstance(df, pd.DataFrame):
-                    interval = int(df[0:2].index.to_series(keep_tz=False).diff().mean().value/1e9)
+                    interval = int(
+                        df[0:2].index.to_series(keep_tz=False).diff().mean().value / 1e9
+                    )
                 else:
                     raise TypeError
             else:
                 interval = int(ts)
-            return f'{readtype.name}/s{interval}/{name}'
+            return f"{readtype.name}/s{interval}/{name}"
         else:
-            return f'{readtype.name}/{name}'
+            return f"{readtype.name}/{name}"
 
     def store(self, df, readtype, ts=None):
         key = self.key_path(df, readtype, ts)
-        if df.empty: return # Weirdness ensues when using empty df in select statement below
-        with pd.HDFStore(self.filename, mode='a') as f:
+        if df.empty:
+            return  # Weirdness ensues when using empty df in select statement below
+        with pd.HDFStore(self.filename, mode="a") as f:
             if key in f:
-                idx = f.select(key, where="index in df.index", columns=['index']).index
+                idx = f.select(key, where="index in df.index", columns=["index"]).index
                 f.append(key, df.query("index not in @idx"))
             else:
                 f.append(key, df)
@@ -68,7 +70,7 @@ class SmartCache():
         if stop_time is not None:
             where.append("index <= stop_time")
         where = " and ".join(where)
-        with pd.HDFStore(self.filename, mode='r') as f:
+        with pd.HDFStore(self.filename, mode="r") as f:
             if key in f:
                 if where:
                     df = f.select(key, where=where)
@@ -78,12 +80,12 @@ class SmartCache():
 
     def store_tag_metadata(self, tagname, metadata):
         tagname = safe_tagname(tagname)
-        key = f'/metadata/{tagname}'
-        with pd.HDFStore(self.filename, mode='a') as f:
+        key = f"/metadata/{tagname}"
+        with pd.HDFStore(self.filename, mode="a") as f:
             if key not in f:
                 f.put(key, pd.DataFrame())
             origmetadata = {}
-            if 'metadata' in f.get_storer(key).attrs:
+            if "metadata" in f.get_storer(key).attrs:
                 origmetadata = f.get_storer(key).attrs.metadata
             f.get_storer(key).attrs.metadata = {**origmetadata, **metadata}
 
@@ -92,10 +94,11 @@ class SmartCache():
         if not os.path.isfile(self.filename):
             return res
         tagname = safe_tagname(tagname)
-        key = f'/metadata/{tagname}'
-        if isinstance(properties, str): properties = [properties]
-        with pd.HDFStore(self.filename, mode='r') as f:
-            if key not in f or 'metadata' not in f.get_storer(key).attrs:
+        key = f"/metadata/{tagname}"
+        if isinstance(properties, str):
+            properties = [properties]
+        with pd.HDFStore(self.filename, mode="r") as f:
+            if key not in f or "metadata" not in f.get_storer(key).attrs:
                 return {}
             metadata = f.get_storer(key).attrs.metadata
         for p in properties:
@@ -106,19 +109,22 @@ class SmartCache():
     def remove(self, filename=None):
         if not filename:
             filename = self.filename
-            #self.close()
+            # self.close()
         if os.path.isfile(filename):
             os.unlink(filename)
 
     def _match_tag(self, key, readtype=None, ts=None, tagname=None):
         def readtype_to_str(rt):
-            return getattr(rt, 'name', rt) # if isinstance(rt, ReaderType) always returns False...?
+            return getattr(
+                rt, "name", rt
+            )  # if isinstance(rt, ReaderType) always returns False...?
 
         def timedelta_to_str(t):
             if isinstance(t, pd.Timedelta):
                 return str(t.seconds)
             return t
-        key = '/'+key.lstrip('/') # Ensure absolute path
+
+        key = "/" + key.lstrip("/")  # Ensure absolute path
         readtype = readtype if isinstance(readtype, list) else [readtype]
         ts = ts if isinstance(ts, list) else [ts]
         tagname = tagname if isinstance(tagname, list) else [tagname]
@@ -126,20 +132,20 @@ class SmartCache():
         ts = list(map(timedelta_to_str, ts))
         if tagname[0] is not None:
             tagname = list(map(safe_tagname, tagname))
-        #print(f"Readtype: {readtype}, ts: {ts}, tagname: {tagname}")
-        elements = key.split('/')[1:]
+        # print(f"Readtype: {readtype}, ts: {ts}, tagname: {tagname}")
+        elements = key.split("/")[1:]
         if len(elements) == 2:
             elements.insert(1, None)
         else:
-            elements[1] = int(elements[1][1:]) # Discard the initial s
+            elements[1] = int(elements[1][1:])  # Discard the initial s
         if elements[0] not in readtype and readtype[0] is not None:
-            #print(f"{elements[0]} not in {readtype}")
+            # print(f"{elements[0]} not in {readtype}")
             return False
         if elements[1] not in ts and ts[0] is not None:
-            #print(f"{elements[1]} not in {ts}")
+            # print(f"{elements[1]} not in {ts}")
             return False
         if elements[2] not in tagname and tagname[0] is not None:
-            #print(f"{elements[2]} not in {tagname}")
+            # print(f"{elements[2]} not in {tagname}")
             return False
         return True
 
@@ -149,6 +155,6 @@ class SmartCache():
                 if self._match_tag(key, tagname=tagname, readtype=readtype, ts=ts):
                     f.remove(key)
 
-    def _get_hdfstore(self, mode='r'):
+    def _get_hdfstore(self, mode="r"):
         f = pd.HDFStore(self.filename, mode)
         return f
