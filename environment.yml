@@ -1,4 +1,4 @@
-name: pyims-env
+name: pytagreader-env
 dependencies:
   - python>=3.6
   - pandas>=0.23

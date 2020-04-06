@@ -1,15 +1,15 @@
 import pytest
 import pandas as pd
-from pyims import utils
-from pyims.utils import ReaderType
-from pyims import IMSClient
+from pytagreader import utils
+from pytagreader.utils import ReaderType
+from pytagreader import IMSClient
 
-from pyims.odbc_handlers import list_aspen_servers,\
+from pytagreader.odbc_handlers import list_aspen_servers,\
     list_pi_servers,\
     PIHandlerODBC,\
     AspenHandlerODBC
 
-from pyims.clients import get_server_address_aspen,\
+from pytagreader.clients import get_server_address_aspen,\
     get_server_address_pi
 
 def test_init():
@@ -30,7 +30,7 @@ def test_init():
 
 @pytest.fixture(scope="module")
 def AspenHandler():
-    from pyims.odbc_handlers import AspenHandlerODBC
+    from pytagreader.odbc_handlers import AspenHandlerODBC
     yield AspenHandlerODBC('thehostname', 1234)
     # Insert any teardown functionality here
 
@@ -56,7 +56,7 @@ def test_get_aspen_server_address():
 
 @pytest.fixture(scope="module")
 def PIHandler():
-    from pyims.odbc_handlers import PIHandlerODBC
+    from pytagreader.odbc_handlers import PIHandlerODBC
     yield PIHandlerODBC('thehostname.statoil.net', 1234)
 
 def test_generate_connection_string(PIHandler):

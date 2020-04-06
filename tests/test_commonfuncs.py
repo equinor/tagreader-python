@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
-from pyims.utils import ReaderType
-from pyims.clients import get_missing_intervals, get_next_timeslice
+from pytagreader.utils import ReaderType
+from pytagreader.clients import get_missing_intervals, get_next_timeslice
 
 def test_get_next_timeslice():
     start_time = pd.to_datetime('2018-01-02 14:00:00')

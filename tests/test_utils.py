@@ -1,5 +1,5 @@
 import datetime
-from pyims import utils
+from pytagreader import utils
 from pytz import timezone
 
 def test_datestr_to_datetime():

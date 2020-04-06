@@ -3,15 +3,15 @@
 from setuptools import setup
 
 version = {}
-with open('pyims/version.py') as f:
+with open('pytagreader/version.py') as f:
     exec(f.read(), version)
 
-setup(name='pyims',
+setup(name='pytagreader',
       description='Library for reading from Aspen IP21 and OSIsoft PI IMS servers',
       version=version['__version__'],
       author='Einar S. Idso',
       author_email="eiids@equinor.com",
-      packages=['pyims'],
+      packages=['pytagreader'],
       platforms=['Windows'],
       package_data={'': ['*.md']},
       python_requires='~=3.6',
