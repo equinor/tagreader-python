@@ -48,12 +48,6 @@ def test_generate_tag_read_query(AspenHandler):
                 "(request = 6) AND (period = 600) ORDER BY ts")
     assert expected == res
 
-
-def test_get_aspen_server_address():
-    host, port = get_server_address_aspen('SNA')
-    assert 'SNA-IMS.statoil.net' == host
-    assert 10014 == port
-
 @pytest.fixture(scope="module")
 def PIHandler():
     from pytagreader.odbc_handlers import PIHandlerODBC
