@@ -1,3 +1,4 @@
+import os
 import pytest
 import pandas as pd
 from pytagreader import utils
@@ -12,9 +13,14 @@ from pytagreader.odbc_handlers import list_aspen_servers,\
 from pytagreader.clients import get_server_address_aspen,\
     get_server_address_pi
 
-def test_init():
+is_CI = 'GITHUB_ACTION' in os.environ
+
+def test_init_numargs():
     with pytest.raises(ValueError):
         c = IMSClient('xyz')
+
+@pytest.mark.skipif(is_CI, reason="ODBC drivers unavailable in CI")
+def test_init_drivers():
     with pytest.raises(ValueError):
         c = IMSClient('sNa', 'pi')
     with pytest.raises(ValueError):
