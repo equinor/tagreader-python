@@ -1,6 +1,8 @@
 
 # tagreader-python #
 
+![Build](https://github.com/equinor/tagreader-python/workflows/Build/badge.svg)
+
 ## Index ##
 
 * [Introduction](#introduction)
@@ -47,7 +49,7 @@ as follows:
 ### ODBC Drivers ###
 
 If you work in Equinor, you can find further information and links to download the drivers on our 
-[wiki](https://wiki.equinor.com/wiki/index.php/tagreader).
+[wiki](https://wiki.equinor.com/wiki/index.php/tagreader-python).
 
 If you do not work in Equinor: In order to fetch data from OSISoft PI or Aspen IP21, you need to obtain and install
 proprietary ODBC drivers. Check with your employer/organisation whether these are available. If not, you may be able
