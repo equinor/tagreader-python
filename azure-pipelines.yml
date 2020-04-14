@@ -23,12 +23,12 @@ steps:
   displayName: 'Use Python $(python.version)'
 
 - script: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
+    python -m pip install --proxy="%HTTP_PROXY%"" --upgrade pip
+    pip install --proxy="%HTTP_PROXY%" -r requirements.txt
   displayName: 'Install dependencies'
 
 - script: |
-    pip install -r test-requirements.txt
-    pip install pytest-azurepipelines
+    pip install --proxy="%HTTP_PROXY%" -r test-requirements.txt
+    pip install --proxy="%HTTP_PROXY%" pytest-azurepipelines
     pytest
   displayName: 'pytest'
