@@ -23,6 +23,7 @@ steps:
   displayName: 'Use Python $(python.version)'
 
 - script: |
+    echo "%HTTP_PROXY%"
     python -m pip --proxy="%HTTP_PROXY%" install --upgrade pip
     pip --proxy="%HTTP_PROXY%" install  -r requirements.txt
   displayName: 'Install dependencies'
