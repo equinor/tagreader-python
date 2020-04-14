@@ -27,6 +27,8 @@ steps:
     python -m pip --proxy="%HTTP_PROXY%" install --upgrade pip
     pip --proxy="%HTTP_PROXY%" install  -r requirements.txt
   displayName: 'Install dependencies'
+  env: 
+    HTTP_PROXY: $(var_http_proxy)
 
 - script: |
     pip --proxy="%HTTP_PROXY%" install -r test-requirements.txt
