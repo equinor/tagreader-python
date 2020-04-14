@@ -33,7 +33,7 @@ steps:
     pip install -r test-requirements.txt
     pip install pytest-azurepipelines
     curl --header "PRIVATE-TOKEN: %PAT%" --remote-header-name --output extratests.zip https://git.equinor.com/api/v4/projects/2801/repository/archive.zip
-    unzip extratests.zip
+    unzip -j -d extratests extratests.zip */tests/test_*.py
     pytest
   displayName: 'pytest'
   env: 
