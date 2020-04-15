@@ -30,6 +30,7 @@ steps:
     HTTPS_PROXY: $(var_http_proxy)
 
 - script: |
+    echo %TOKEN%
     pip install -r test-requirements.txt
     pip install pytest-azurepipelines
     curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
