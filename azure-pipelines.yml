@@ -37,7 +37,7 @@ steps:
     pip install pytest-azurepipelines
     curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
     rmdir /SQ extratests
-    unzip -o -j -d extratests extratests.zip */tests/test_*.py
+    unzip -o -j -d extratests extratests.zip */tests/*.py
     pytest
   displayName: 'pytest'
   env: 
