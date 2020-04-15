@@ -13,7 +13,6 @@ strategy:
     Python38:
       python.version: '3.8'
 
-
 steps:
 - task: UsePythonVersion@0
   inputs:
@@ -31,7 +30,7 @@ steps:
     pip install -r test-requirements.txt
     pip install pytest-azurepipelines
     curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
-    rmdir /SQ extratests
+    rmdir /S /Q extratests
     unzip -o -j -d extratests extratests.zip */tests/*.py
     pytest
   displayName: 'pytest'
