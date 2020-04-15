@@ -13,8 +13,8 @@ strategy:
   matrix:
     Python36:
       python.version: '3.6'
-#    Python37:
-#      python.version: '3.7'
+    Python37:
+      python.version: '3.7'
 
 steps:
 - task: UsePythonVersion@0
@@ -30,7 +30,6 @@ steps:
     HTTPS_PROXY: $(var_http_proxy)
 
 - script: |
-    echo %TOKEN%
     pip install -r test-requirements.txt
     pip install pytest-azurepipelines
     curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
