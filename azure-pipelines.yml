@@ -1,22 +1,17 @@
-# Python package
-# Create and test a Python package on multiple Python versions.
-# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/python
-
 #trigger:
 #- master
 
 pool:
   name: default
-#  vmImage: 'windows-latest'
+
 strategy:
   matrix:
     Python36:
       python.version: '3.6'
     Python37:
       python.version: '3.7'
-#    Python38:
-#      python.version: '3.8'
+    Python38:
+      python.version: '3.8'
 
 
 steps:
@@ -34,15 +29,12 @@ steps:
 
 - script: |
     pip install -r test-requirements.txt
-    pip install tox
+    pip install pytest-azurepipelines
     curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
     rmdir /SQ extratests
     unzip -o -j -d extratests extratests.zip */tests/*.py
-  displayName: 'Install test dependencies'
+    pytest
+  displayName: 'pytest'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
     TOKEN: $(github_token)
-
-- script: tox -e py
-  displayName: 'Run tox'
-
