@@ -14,8 +14,9 @@ from tagreader.odbc_handlers import (
 
 from tagreader.clients import get_server_address_aspen, get_server_address_pi
 
-is_CI = "GITHUB_ACTION" in os.environ
-
+is_GITHUBACTION = "GITHUB_ACTION" in os.environ
+is_AZUREPIPELINE = "TF_BUILD" in os.environ
+is_CI = is_GITHUBACTION or is_AZUREPIPELINE
 
 def test_init_numargs():
     with pytest.raises(ValueError):

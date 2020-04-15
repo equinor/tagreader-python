@@ -1,0 +1,39 @@
+#trigger:
+#- master
+
+pool:
+  name: default
+
+strategy:
+  matrix:
+    Python36:
+      python.version: '3.6'
+    Python37:
+      python.version: '3.7'
+    Python38:
+      python.version: '3.8'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(python.version)'
+  displayName: 'Use Python $(python.version)'
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install  -r requirements.txt
+  displayName: 'Install dependencies'
+  env: 
+    HTTPS_PROXY: $(var_http_proxy)
+
+- script: |
+    pip install -r test-requirements.txt
+    pip install pytest-azurepipelines
+    curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
+    rmdir /S /Q extratests
+    unzip -o -j -d extratests extratests.zip */tests/*.py
+    pytest
+  displayName: 'pytest'
+  env: 
+    HTTPS_PROXY: $(var_http_proxy)
+    TOKEN: $(github_token)
