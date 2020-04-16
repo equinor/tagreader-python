@@ -1,6 +1,7 @@
 
 # tagreader-python #
 
+[![PyPI version](https://badge.fury.io/py/tagreader.svg)](https://badge.fury.io/py/tagreader)
 ![Build](https://github.com/equinor/tagreader-python/workflows/Build/badge.svg)
 [![Build Status](https://dev.azure.com/EIIDS/tagreader/_apis/build/status/equinor.tagreader-python?branchName=master)](https://dev.azure.com/EIIDS/tagreader/_build/latest?definitionId=5&branchName=master)
 
