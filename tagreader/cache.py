@@ -38,7 +38,7 @@ class SmartCache:
                 # Determine sample time by reading interval between first two samples of dataframe.
                 if isinstance(df, pd.DataFrame):
                     interval = int(
-                        df[0:2].index.to_series(keep_tz=False).diff().mean().value / 1e9
+                        df[0:2].index.to_series().diff().mean().value / 1e9
                     )
                 else:
                     raise TypeError
