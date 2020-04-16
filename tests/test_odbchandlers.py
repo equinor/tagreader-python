@@ -23,7 +23,7 @@ def test_init_numargs():
         c = IMSClient("xyz")
 
 
-@pytest.mark.skipif(is_CI, reason="ODBC drivers unavailable in CI")
+@pytest.mark.skipif(is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions")
 def test_init_drivers():
     with pytest.raises(ValueError):
         c = IMSClient("sNa", "pi")
