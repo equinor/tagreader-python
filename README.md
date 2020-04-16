@@ -2,7 +2,7 @@
 # tagreader-python #
 
 ![Build](https://github.com/equinor/tagreader-python/workflows/Build/badge.svg)
-[![Build Status](https://dev.azure.com/EIIDS/vscode-septic/_apis/build/status/equinor.tagreader-python?branchName=master)](https://dev.azure.com/EIIDS/vscode-septic/_build/latest?definitionId=4&branchName=master)
+[![Build Status](https://dev.azure.com/EIIDS/tagreader/_apis/build/status/equinor.tagreader-python?branchName=master)](https://dev.azure.com/EIIDS/tagreader/_build/latest?definitionId=5&branchName=master)
 
 ## Index ##
 
