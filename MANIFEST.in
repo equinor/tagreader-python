@@ -1,0 +1,5 @@
+exclude .*
+exclude requirements.txt test-requirements.txt environment.yml
+exclude azure-pipelines.yml
+recursive-exclude tests *
+recursive-exclude .github *

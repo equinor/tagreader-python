@@ -131,3 +131,7 @@ dmypy.json
 # pycharm
 .idea/
 
+# version handled by setuptools_scm
+**/version.py
+
+extratests/*
