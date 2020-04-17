@@ -134,4 +134,6 @@ dmypy.json
 # version handled by setuptools_scm
 **/version.py
 
+# Sometimes symlink, so treat as both dir and "file"
+extratests
 extratests/*
