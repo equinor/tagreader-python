@@ -64,4 +64,5 @@ way of submitting a contribution is to either make an issue on GitHub or by fork
 pull request.
   
 ## Usage examples ##
-TBW
+
+Please see the [quickstart](docs/quickstart.ipynb) example file.
