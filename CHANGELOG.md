@@ -36,7 +36,7 @@ specified tags.
 - Enable tag search by description.
 - Package version made available in `pyims.__version__`.
 
-## 0.0.8 - 2019-01-17
+## [0.0.8] - 2019-01-17
 
 ### Changed
 
@@ -44,7 +44,7 @@ specified tags.
 - Add commonly requested documentation, including docstring, for specifying query method for 
 read_tags.
 
-## 0.0.7 - 2018-06-18
+## [0.0.7] - 2018-06-18
 
 ### Fixed
 
@@ -52,7 +52,7 @@ read_tags.
 - Discovered that Pandas >=0.23 is required. 0.22 causes a weird timezone bug during DST folds when 
 using cache.
 
-## 0.0.6 - 2018-06-08
+## [0.0.6] - 2018-06-08
 
 ### Added
 
@@ -116,4 +116,3 @@ Initial release. Supports the most common tag read queries for IP.21 and PI.
 [0.0.5]: https://github.com/equinor/tagreader-python/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/equinor/tagreader-python/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/equinor/tagreader-python/compare/v0.0.2...v0.0.3
-
