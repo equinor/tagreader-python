@@ -1,10 +1,10 @@
 import pytest
 import os
-
-os.environ["NUMEXPR_MAX_THREADS"] = "8"
 import pandas as pd
 from tagreader.utils import ReaderType
 from tagreader.cache import SmartCache, safe_tagname
+
+os.environ["NUMEXPR_MAX_THREADS"] = "8"
 
 
 @pytest.fixture()
@@ -74,46 +74,65 @@ def test_interval_reads(cache, data):
 
 
 def test_match_tag(cache):
-    assert True == cache._match_tag(
-        "INT/s60/tag1", readtype=ReaderType.INT, ts=60, tagname="tag1"
+    assert (
+        cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=60, tagname="tag1")
+        is True
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1", readtype=ReaderType.RAW, ts=60, tagname="tag1"
+    assert (
+        cache._match_tag("INT/s60/tag1", readtype=ReaderType.RAW, ts=60, tagname="tag1")
+        is False
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1", readtype=ReaderType.INT, ts=10, tagname="tag1"
+    assert (
+        cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=10, tagname="tag1")
+        is False
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1", readtype=ReaderType.INT, ts=60, tagname="tag2"
+    assert (
+        cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=60, tagname="tag2")
+        is False
     )
-    assert True == cache._match_tag("INT/s60/tag1", ts=60, tagname="tag1")
-    assert True == cache._match_tag(
-        "INT/s60/tag1", readtype=ReaderType.INTERPOLATE, tagname="tag1"
+    assert cache._match_tag("INT/s60/tag1", ts=60, tagname="tag1") is True
+    assert (
+        cache._match_tag(
+            "INT/s60/tag1", readtype=ReaderType.INTERPOLATE, tagname="tag1"
+        )
+        is True
     )
-    assert True == cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=60)
-    assert True == cache._match_tag(
-        "INT/s60/tag1",
-        readtype=[ReaderType.INT, ReaderType.RAW],
-        ts=[60, 10],
-        tagname=["tag1", "tag2"],
+    assert cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=60) is True
+    assert (
+        cache._match_tag(
+            "INT/s60/tag1",
+            readtype=[ReaderType.INT, ReaderType.RAW],
+            ts=[60, 10],
+            tagname=["tag1", "tag2"],
+        )
+        is True
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1",
-        readtype=[ReaderType.AVERAGE, ReaderType.RAW],
-        ts=[60, 10],
-        tagname=["tag1", "tag2"],
+    assert (
+        cache._match_tag(
+            "INT/s60/tag1",
+            readtype=[ReaderType.AVERAGE, ReaderType.RAW],
+            ts=[60, 10],
+            tagname=["tag1", "tag2"],
+        )
+        is False
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1",
-        readtype=[ReaderType.INT, ReaderType.RAW],
-        ts=[120, 10],
-        tagname=["tag1", "tag2"],
+    assert (
+        cache._match_tag(
+            "INT/s60/tag1",
+            readtype=[ReaderType.INT, ReaderType.RAW],
+            ts=[120, 10],
+            tagname=["tag1", "tag2"],
+        )
+        is False
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1",
-        readtype=[ReaderType.INT, ReaderType.RAW],
-        ts=[60, 10],
-        tagname=["tag3", "tag2"],
+    assert (
+        cache._match_tag(
+            "INT/s60/tag1",
+            readtype=[ReaderType.INT, ReaderType.RAW],
+            ts=[60, 10],
+            tagname=["tag3", "tag2"],
+        )
+        is False
     )
 
 

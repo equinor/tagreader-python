@@ -137,3 +137,6 @@ dmypy.json
 # Sometimes symlink, so treat as both dir and "file"
 extratests
 extratests/*
+
+# tagreader cache file
+.h5

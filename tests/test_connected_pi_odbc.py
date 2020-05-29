@@ -1,11 +1,9 @@
 import pytest
-import pandas as pd
 import os
-import sys
 
 from tagreader.utils import ReaderType
 from tagreader.odbc_handlers import list_pi_servers
-from tagreader.clients import IMSClient, get_server_address_pi
+from tagreader.clients import IMSClient
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 
@@ -47,7 +45,6 @@ def test_list_all_pi_servers():
 def test_search(Client):
     res = Client.search_tag("BA:*.1")
     assert 5 == len(res)
-
     [taglist, desclist] = zip(*res)
     assert "BA:CONC.1" in taglist
     assert desclist[taglist.index("BA:CONC.1")] == "Concentration Reactor 1"

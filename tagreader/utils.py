@@ -4,14 +4,6 @@ import winreg
 import pandas as pd
 
 
-def __init__():
-    __all__ == [
-        "ReaderType," "find_registry_key",
-        "find_registry_key_from_name",
-        "datestr_to_datetime",
-    ]
-
-
 def find_registry_key(base_key, search_key_name):
     search_key_name = search_key_name.lower()
     if base_key is not None:
@@ -63,8 +55,9 @@ def datestr_to_datetime(date_stamp, tz="Europe/Oslo"):
 class ReaderType(enum.IntEnum):
     """Enumerates available types of data to read.
 
-    For members with more than one name per value, the first member (the original) needs to
-    be untouched since it may be used as back-reference (specifically for cache hierarchies).
+    For members with more than one name per value, the first member (the
+    original) needs to be untouched since it may be used as back-reference
+    (specifically for cache hierarchies).
     """
 
     RAW = SAMPLED = enum.auto()  # Raw sampled data

@@ -1,7 +1,8 @@
 import os
 import pyodbc
+import pandas as pd
 
-from .utils import *
+from .utils import logging, winreg, find_registry_key, ReaderType
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
@@ -47,7 +48,7 @@ class AspenHandlerODBC:
 
     @staticmethod
     def generate_connection_string(host, port, max_rows=100000):
-        return f"DRIVER={{AspenTech SQLPlus}};HOST={host};PORT={port};READONLY=Y;MAXROWS={max_rows}"
+        return f"DRIVER={{AspenTech SQLPlus}};HOST={host};PORT={port};READONLY=Y;MAXROWS={max_rows}"  # noqa: E501
 
     @staticmethod
     def generate_search_query(tag=None, desc=None):
@@ -99,7 +100,8 @@ class AspenHandlerODBC:
             ReaderType.INT: "history",
             ReaderType.SNAPSHOT: '"' + str(tag) + '"',
         }.get(read_type, "aggregates")
-        # For RAW: historyevent? Ref https://help.sap.com/saphelp_pco151/helpdata/en/4c/72e34ee631469ee10000000a15822d/content.htm?no_cache=true
+        # For RAW: historyevent?
+        # Ref https://help.sap.com/saphelp_pco151/helpdata/en/4c/72e34ee631469ee10000000a15822d/content.htm?no_cache=true  # noqa: E501
 
         value = {
             ReaderType.MIN: "min",
@@ -128,7 +130,7 @@ class AspenHandlerODBC:
         }.get(read_type, "ts")
 
         query = [
-            f'SELECT CAST({ts_actual} AS CHAR FORMAT {timecast_format_output!r}) AS "time",',
+            f'SELECT CAST({ts_actual} AS CHAR FORMAT {timecast_format_output!r}) AS "time",',  # noqa: E501
             f'{value} AS "value" FROM {from_column}',
         ]
         # Query is actually slower without cast(time) regardless of whether post-fetch
@@ -145,7 +147,7 @@ class AspenHandlerODBC:
                 [
                     f"AND (ts BETWEEN {start!r} AND {stop!r})",
                     f"AND (request = {request_num}) AND (period = {sample_time*10})",
-                    f"ORDER BY ts",
+                    "ORDER BY ts",
                 ]
             )
 
@@ -170,7 +172,8 @@ class AspenHandlerODBC:
 
     def _get_tag_unit(self, tag):
         if isinstance(self._field_engineering_unit, str):
-            query = f'SELECT "{self._field_engineering_unit}" FROM "{tag}"'  # TODO: Add mapping
+            query = f'SELECT "{self._field_engineering_unit}" FROM "{tag}"'
+            # TODO: Add mapping
             self.cursor.execute(query)
             unit = self.cursor.fetchone()
         else:
@@ -189,7 +192,8 @@ class AspenHandlerODBC:
                     break
         if not unit:
             raise Exception(
-                f'Failed to fetch units. I tried these fields: "{self._field_engineering_unit}"'
+                "Failed to fetch units. "
+                f'I tried these fields: "{self._field_engineering_unit}"'  # noqa: E501
             )
         return unit[0]
 
@@ -232,7 +236,8 @@ class PIHandlerODBC:
         self.conn = None
         self.cursor = None
         self._max_rows = options.get("max_rows", 100000)
-        # TODO: Find default das_server under HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PISystem\Analytics\InstallData/AFServer
+        # TODO: Find default das_server under
+        # HKLM\SOFTWARE\Wow6432Node\PISystem\Analytics\InstallData/AFServer
         # It seems that is actually not possible anymore.
         self._das_server = options.get("das_server", "ws3099.statoil.net")
 
@@ -241,8 +246,10 @@ class PIHandlerODBC:
     @staticmethod
     def generate_connection_string(host, port, das_server):
         return (
-            f"DRIVER={{PI ODBC Driver}};Server={das_server};Trusted_Connection=Yes;Command Timeout=1800;"
-            f'Provider Type=PIOLEDB;Provider String={{Data source={host.replace(".statoil.net", "")};Integrated_Security=SSPI;}};'
+            f"DRIVER={{PI ODBC Driver}};Server={das_server};"
+            "Trusted_Connection=Yes;Command Timeout=1800;Provider Type=PIOLEDB;"
+            f'Provider String={{Data source={host.replace(".statoil.net", "")};'
+            "Integrated_Security=SSPI;};"
         )
 
     @staticmethod
@@ -263,7 +270,7 @@ class PIHandlerODBC:
         tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
         timecast_format_query = "%d-%b-%y %H:%M:%S"  # 05-jan-18 14:00:00
-        timecast_format_output = "yyyy-MM-dd HH:mm:ss"
+        # timecast_format_output = "yyyy-MM-dd HH:mm:ss"
 
         if read_type in [
             ReaderType.COUNT,
@@ -311,7 +318,7 @@ class PIHandlerODBC:
         else:
             query = ["SELECT CAST(value as FLOAT32)"]
 
-        # query.extend([f"AS value, FORMAT(time, '{timecast_format_output}') AS timestamp FROM {source} WHERE tag='{tag}'"])
+        # query.extend([f"AS value, FORMAT(time, '{timecast_format_output}') AS timestamp FROM {source} WHERE tag='{tag}'"])  # noqa E501
         query.extend(
             [f"AS value, __utctime AS timestamp FROM {source} WHERE tag='{tag}'"]
         )
@@ -322,13 +329,13 @@ class PIHandlerODBC:
             query.extend([f"AND (time BETWEEN '{start}' AND '{stop}')"])
 
         if ReaderType.GOOD == read_type:
-            query.extend([f"AND questionable = FALSE"])
+            query.extend(["AND questionable = FALSE"])
         elif ReaderType.NOTGOOD == read_type:
-            query.extend([f"AND questionable = TRUE"])
+            query.extend(["AND questionable = TRUE"])
         elif ReaderType.SHAPEPRESERVING == read_type:
             query.extend(
                 [
-                    f"AND (intervalcount = {int((stop_time-start_time).seconds/sample_time)})"
+                    f"AND (intervalcount = {int((stop_time-start_time).seconds/sample_time)})" # noqa E501
                 ]
             )
         elif ReaderType.RAW == read_type:
@@ -337,7 +344,7 @@ class PIHandlerODBC:
             query.extend([f"AND (timestep = '{sample_time}s')"])
 
         if ReaderType.SNAPSHOT != read_type:
-            query.extend([f"ORDER BY timestamp"])
+            query.extend(["ORDER BY timestamp"])
 
         return " ".join(query)
 
@@ -358,7 +365,7 @@ class PIHandlerODBC:
         return self.cursor.fetchall()
 
     def _get_tag_metadata(self, tag):
-        query = f"SELECT digitalset, engunits, descriptor FROM pipoint.pipoint2 WHERE tag='{tag}'"
+        query = f"SELECT digitalset, engunits, descriptor FROM pipoint.pipoint2 WHERE tag='{tag}'"  # noqa E501
         self.cursor.execute(query)
         desc = self.cursor.description
         col_names = [col[0] for col in desc]
@@ -391,7 +398,8 @@ class PIHandlerODBC:
             parse_dates={"timestamp": {"format": "%Y-%m-%d %H:%M:%S"}},
         )
         df.index.name = "time"
-        # if len(df) > len(df.index.unique()):  # One hour repeated during transition from DST to standard time.
+        # One hour repeated during transition from DST to standard time:
+        # if len(df) > len(df.index.unique()):
         #     df = df.tz_localize(start_time.tzinfo, ambiguous='infer')
         # else:
         #     df = df.tz_localize(start_time.tzinfo)
@@ -399,7 +407,7 @@ class PIHandlerODBC:
         df = df.tz_localize("UTC").tz_convert(start_time.tzinfo)
         if len(metadata["digitalset"]) > 0:
             self.cursor.execute(
-                f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'"
+                f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'"  # noqa E501
             )
             digitalset = self.cursor.fetchall()
             code = [x[0] for x in digitalset]
