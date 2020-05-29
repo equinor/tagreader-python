@@ -140,3 +140,6 @@ extratests/*
 
 # tagreader cache file
 .h5
+
+# vscode
+.vscode/
