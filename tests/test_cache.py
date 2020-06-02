@@ -1,10 +1,10 @@
 import pytest
 import os
-
-os.environ["NUMEXPR_MAX_THREADS"] = "8"
 import pandas as pd
 from tagreader.utils import ReaderType
 from tagreader.cache import SmartCache, safe_tagname
+
+os.environ["NUMEXPR_MAX_THREADS"] = "8"
 
 
 @pytest.fixture()
@@ -74,46 +74,65 @@ def test_interval_reads(cache, data):
 
 
 def test_match_tag(cache):
-    assert True == cache._match_tag(
-        "INT/s60/tag1", readtype=ReaderType.INT, ts=60, tagname="tag1"
+    assert (
+        cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=60, tagname="tag1")
+        is True
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1", readtype=ReaderType.RAW, ts=60, tagname="tag1"
+    assert (
+        cache._match_tag("INT/s60/tag1", readtype=ReaderType.RAW, ts=60, tagname="tag1")
+        is False
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1", readtype=ReaderType.INT, ts=10, tagname="tag1"
+    assert (
+        cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=10, tagname="tag1")
+        is False
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1", readtype=ReaderType.INT, ts=60, tagname="tag2"
+    assert (
+        cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=60, tagname="tag2")
+        is False
     )
-    assert True == cache._match_tag("INT/s60/tag1", ts=60, tagname="tag1")
-    assert True == cache._match_tag(
-        "INT/s60/tag1", readtype=ReaderType.INTERPOLATE, tagname="tag1"
+    assert cache._match_tag("INT/s60/tag1", ts=60, tagname="tag1") is True
+    assert (
+        cache._match_tag(
+            "INT/s60/tag1", readtype=ReaderType.INTERPOLATE, tagname="tag1"
+        )
+        is True
     )
-    assert True == cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=60)
-    assert True == cache._match_tag(
-        "INT/s60/tag1",
-        readtype=[ReaderType.INT, ReaderType.RAW],
-        ts=[60, 10],
-        tagname=["tag1", "tag2"],
+    assert cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=60) is True
+    assert (
+        cache._match_tag(
+            "INT/s60/tag1",
+            readtype=[ReaderType.INT, ReaderType.RAW],
+            ts=[60, 10],
+            tagname=["tag1", "tag2"],
+        )
+        is True
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1",
-        readtype=[ReaderType.AVERAGE, ReaderType.RAW],
-        ts=[60, 10],
-        tagname=["tag1", "tag2"],
+    assert (
+        cache._match_tag(
+            "INT/s60/tag1",
+            readtype=[ReaderType.AVERAGE, ReaderType.RAW],
+            ts=[60, 10],
+            tagname=["tag1", "tag2"],
+        )
+        is False
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1",
-        readtype=[ReaderType.INT, ReaderType.RAW],
-        ts=[120, 10],
-        tagname=["tag1", "tag2"],
+    assert (
+        cache._match_tag(
+            "INT/s60/tag1",
+            readtype=[ReaderType.INT, ReaderType.RAW],
+            ts=[120, 10],
+            tagname=["tag1", "tag2"],
+        )
+        is False
     )
-    assert False == cache._match_tag(
-        "INT/s60/tag1",
-        readtype=[ReaderType.INT, ReaderType.RAW],
-        ts=[60, 10],
-        tagname=["tag3", "tag2"],
+    assert (
+        cache._match_tag(
+            "INT/s60/tag1",
+            readtype=[ReaderType.INT, ReaderType.RAW],
+            ts=[60, 10],
+            tagname=["tag3", "tag2"],
+        )
+        is False
     )
 
 
@@ -150,3 +169,44 @@ def test_store_metadata(cache):
     assert "%" == r["unit"]
     assert 60 == r["max"]
     assert "noworky" not in r
+
+
+def test_to_DST_skips_time(cache):
+    index = pd.date_range(
+        start="2018-03-25 01:50:00",
+        end="2018-03-25 03:30:00",
+        tz="Europe/Oslo",
+        freq="600s",
+        name="time",
+    )
+    df = pd.DataFrame({"tag1": range(0, len(index))}, index=index)
+    assert (
+        df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6
+    )
+    cache.store(df, readtype=ReaderType.INT)
+    df_read = cache.fetch("tag1", ReaderType.INT, 600)
+    pd.testing.assert_frame_equal(df_read, df)
+
+
+def test_from_DST_folds_time(cache):
+    index = pd.date_range(
+        start="2017-10-29 00:30:00",
+        end="2017-10-29 04:30:00",
+        tz="Europe/Oslo",
+        freq="600s",
+        name="time",
+    )
+    df = pd.DataFrame({"tag1": range(0, len(index))}, index=index)
+    assert len(df) == (4 + 1) * 6 + 1
+    # Time exists inside fold:
+    assert (
+        df["tag1"].loc["2017-10-29 01:10:00+02:00":"2017-10-29 01:50:00+02:00"].size
+        == 5
+    )
+    # Time inside fold is always included:
+    assert (
+        df.loc["2017-10-29 01:50:00":"2017-10-29 03:10:00"].size == 2 + (1 + 1) * 6 + 1
+    )
+    cache.store(df, readtype=ReaderType.INT)
+    df_read = cache.fetch("tag1", ReaderType.INT, 600)
+    pd.testing.assert_frame_equal(df_read, df)

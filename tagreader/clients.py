@@ -1,13 +1,20 @@
 import os
 import sys
+import pyodbc
+import pandas as pd
 from itertools import groupby
 from operator import itemgetter
-import pyodbc
-
-from .utils import *
+from .utils import (
+    datestr_to_datetime,
+    find_registry_key,
+    find_registry_key_from_name,
+    logging,
+    ReaderType,
+    winreg,
+)
 from .cache import SmartCache
 from .odbc_handlers import PIHandlerODBC, AspenHandlerODBC
-from .web_handlers import PIHandlerWeb, AspenHandlerWeb
+from .web_handlers import PIHandlerWeb
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
@@ -30,10 +37,10 @@ def get_missing_intervals(df, start_time, stop_time, ts, read_type):
             missing_intervals.append(
                 (pd.Timestamp(tvec[seq[0]]), pd.Timestamp(tvec[seq[-1]]))
             )
-            # Shouldn't be necessary to fetch overlapping points since get_next_timeslice
+            # Should be unnecessary to fetch overlapping points since get_next_timeslice
             # ensures start <= t <= stop
-            # missing_intervals.append((pd.Timestamp(tvec[seq[0]]),
-            #                           pd.Timestamp(tvec[min(seq[-1]+1, len(tvec)-1)])))
+            # missingintervals.append((pd.Timestamp(tvec[seq[0]]),
+            #                          pd.Timestamp(tvec[min(seq[-1]+1, len(tvec)-1)])))
     return missing_intervals
 
 
@@ -54,10 +61,10 @@ def get_next_timeslice(start_time, stop_time, ts, max_steps=None):
 def get_server_address_aspen(assetname):
     """Assets are listed under
     HKEY_CURRENT_USER\\Software\\AspenTech\\ADSA\\Caches\\AspenADSA\\username.
-    For each asset there are multiple keys with Host entries. We start by identifying the
-    correct key to use by locating the UUID for Aspen SQLplus services located under Aspen
-    SQLplus service component. Then we find the host and port based on the path above and
-    the UUID.
+    For each asset there are multiple keys with Host entries. We start by
+    identifying the correct key to use by locating the UUID for Aspen SQLplus
+    services located under Aspen SQLplus service component. Then we find the
+    host and port based on the path above and the UUID.
     """
 
     regkey_clsid = winreg.OpenKey(
@@ -131,7 +138,7 @@ def get_handler(imstype, asset, options={}):
         hostport = get_server_address_pi(asset)
         if not hostport:
             raise ValueError(
-                f"Unable to locate asset '{asset}'. Do you have the correct permissions?"
+                f"Unable to locate asset '{asset}'. Do you have correct permissions?"
             )
         host, port = hostport
         return PIHandlerODBC(host, port, options)
@@ -139,13 +146,13 @@ def get_handler(imstype, asset, options={}):
     if imstype.lower() in ["aspen", "ip21"]:
         if "AspenTech SQLplus" not in pyodbc.drivers():
             raise RuntimeError(
-                "No Aspen SQLplus ODBC driver detected. Either switch to Web API ('aspenweb') or "
-                "install appropriate driver."
+                "No Aspen SQLplus ODBC driver detected. Either switch to Web API "
+                "('aspenweb') or install appropriate driver."
             )
         hostport = get_server_address_aspen(asset)
         if not hostport:
             raise ValueError(
-                f"Unable to locate asset '{asset}'. Do you have the correct permissions?"
+                f"Unable to locate asset '{asset}'. Do you have correct permissions?"
             )
         host, port = hostport
         return AspenHandlerODBC(host, port, options)
@@ -250,23 +257,27 @@ class IMSClient:
         return descriptions
 
     def read_tags(self, tags, start_time, stop_time, ts, read_type=ReaderType.INT):
-        """Reads values for the specified [tags] from the IMS server for the time interval from [start_time]
-        to [stop_time] in intervals [ts].
+        """Reads values for the specified [tags] from the IMS server for the
+        time interval from [start_time] to [stop_time] in intervals [ts].
 
-        The interval [ts] can be specified as pd.Timedelta or as an integer, in which case it will be interpreted
-        as seconds.
+        The interval [ts] can be specified as pd.Timedelta or as an integer,
+        in which case it will be interpreted as seconds.
 
-        The default value for [read_type] is ReaderType.INT, which interpolates the raw data.
-        All possible values for read_type are defined in the ReaderType class, which can be imported as follows:
-           from utils import ReaderType
+        Default value for [read_type] is ReaderType.INT, which interpolates
+        the raw data.
+        All possible values for read_type are defined in the ReaderType class,
+        which can be imported as follows:
+            from utils import ReaderType
 
-        Values for Readertype.* that should work are: INT, MIN, MAX, RNG, AVG, VAR and STD
+        Values for Readertype.* that should work are:
+            INT, MIN, MAX, RNG, AVG, VAR and STD
         """
         if isinstance(tags, str):
             tags = [tags]
         if read_type == ReaderType.SAMPLED and len(tags) > 1:
             raise RuntimeError(
-                "Unable to read raw/sampled data for multiple tags since they don't share time vector"
+                "Unable to read raw/sampled data for multiple tags since they don't "
+                "share time vector"
             )
         start_time = datestr_to_datetime(start_time, tz=self.tz)
         stop_time = datestr_to_datetime(stop_time, tz=self.tz)

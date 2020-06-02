@@ -1,7 +1,20 @@
+import os
 import pytest
 import pandas as pd
 from tagreader.utils import ReaderType
-from tagreader.clients import get_missing_intervals, get_next_timeslice
+from tagreader.clients import (
+    get_missing_intervals,
+    get_next_timeslice,
+    IMSClient,
+)
+from tagreader.odbc_handlers import (
+    AspenHandlerODBC,
+    PIHandlerODBC,
+)
+
+is_GITHUBACTION = "GITHUB_ACTION" in os.environ
+is_AZUREPIPELINE = "TF_BUILD" in os.environ
+is_CI = is_GITHUBACTION or is_AZUREPIPELINE
 
 
 def test_get_next_timeslice():
@@ -15,7 +28,7 @@ def test_get_next_timeslice():
     assert start_time, stop_time == res
 
 
-def test_get_missing_interval():
+def test_get_missing_intervals():
     length = 10
     ts = 60
     data = {"tag1": range(0, length)}
@@ -37,3 +50,23 @@ def test_get_missing_interval():
         pd.Timestamp("2018-01-18 05:10:00"),
         pd.Timestamp("2018-01-18 06:00:00"),
     )
+
+
+@pytest.mark.skipif(
+    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
+)
+def test_init_odbc_clients():
+    with pytest.raises(ValueError):
+        c = IMSClient("xyz")
+    with pytest.raises(ValueError):
+        c = IMSClient("sNa", "pi")
+    with pytest.raises(ValueError):
+        c = IMSClient("Ono-imS", "aspen")
+    with pytest.raises(ValueError):
+        c = IMSClient("ono-ims", "aspen")
+    with pytest.raises(ValueError):
+        c = IMSClient("sna", "pi")
+    c = IMSClient("onO-iMs", "pi")
+    assert isinstance(c.handler, PIHandlerODBC)
+    c = IMSClient("snA", "aspen")
+    assert isinstance(c.handler, AspenHandlerODBC)
