@@ -52,6 +52,19 @@ def datestr_to_datetime(date_stamp, tz="Europe/Oslo"):
     return date_stamp
 
 
+def urljoin(*args):
+    """Joins components of URL. Ensures slashes are inserted or removed where
+    needed, and does not strip trailing slash of last element.
+
+    Arguments:
+        str
+    Returns:
+        str -- Generated URL
+    """
+    trailing_slash = "/" if args[-1].endswith("/") else ""
+    return "/".join(map(lambda x: str(x).strip("/"), args)) + trailing_slash
+
+
 class ReaderType(enum.IntEnum):
     """Enumerates available types of data to read.
 
