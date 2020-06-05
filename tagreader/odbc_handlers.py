@@ -38,7 +38,7 @@ def list_pi_servers():
 
 
 class AspenHandlerODBC:
-    def __init__(self, host, port, options={}):
+    def __init__(self, host=None, port=None, options={}):
         self.host = host
         self.port = port
         self.conn = None
@@ -230,7 +230,7 @@ class AspenHandlerODBC:
 
 
 class PIHandlerODBC:
-    def __init__(self, host, port, options={}):
+    def __init__(self, host=None, port=None, options={}):
         self.host = host
         self.port = port
         self.conn = None

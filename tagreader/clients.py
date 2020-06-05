@@ -1,5 +1,4 @@
 import os
-import sys
 import pyodbc
 import pandas as pd
 from itertools import groupby
@@ -123,7 +122,7 @@ def get_server_address_pi(assetname):
         return None
 
 
-def get_handler(imstype, asset, options={}):
+def get_handler(imstype, asset, host=None, port=None, options={}):
     accepted_values = ["pi", "aspen", "ip21", "piweb", "aspenweb", "ip21web"]
 
     if not imstype or imstype.lower() not in accepted_values:
@@ -141,7 +140,7 @@ def get_handler(imstype, asset, options={}):
                 f"Unable to locate asset '{asset}'. Do you have correct permissions?"
             )
         host, port = hostport
-        return PIHandlerODBC(host, port, options)
+        return PIHandlerODBC(host=host, port=port, options=options)
 
     if imstype.lower() in ["aspen", "ip21"]:
         if "AspenTech SQLplus" not in pyodbc.drivers():
@@ -155,26 +154,23 @@ def get_handler(imstype, asset, options={}):
                 f"Unable to locate asset '{asset}'. Do you have correct permissions?"
             )
         host, port = hostport
-        return AspenHandlerODBC(host, port, options)
+        return AspenHandlerODBC(host=host, port=port, options=options)
 
     if imstype.lower() == "piweb":
-        if "osisoft.pidevclub.piwebapi" not in sys.modules:
-            raise RuntimeError(
-                "PI WEB API module not found. Either switch to ODBC ('pi') or install "
-                "'PI-Web-API-Client-Python'"
-            )
-        return PIHandlerWeb()
+        return PIHandlerWeb(host=host, port=port, options=options)
 
     if imstype.lower() in ["aspenweb", "ip21web"]:
         raise NotImplementedError
 
 
 class IMSClient:
-    def __init__(self, asset, imstype=None, tz="Europe/Oslo", handler_options={}):
+    def __init__(
+        self, asset, imstype=None, tz="Europe/Oslo", host=None, handler_options={}
+    ):
         self.handler = None
         self.asset = asset.lower()
         self.tz = tz
-        self.handler = get_handler(imstype, asset, handler_options)
+        self.handler = get_handler(imstype, asset, None, 443, options=handler_options)
         self.cache = SmartCache(asset)
 
     def connect(self):
