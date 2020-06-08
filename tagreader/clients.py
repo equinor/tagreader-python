@@ -122,7 +122,7 @@ def get_server_address_pi(assetname):
         return None
 
 
-def get_handler(imstype, asset, host=None, port=None, options={}):
+def get_handler(imstype, server, url=None, options={}):
     accepted_values = ["pi", "aspen", "ip21", "piweb", "aspenweb", "ip21web"]
 
     if not imstype or imstype.lower() not in accepted_values:
@@ -134,10 +134,10 @@ def get_handler(imstype, asset, host=None, port=None, options={}):
                 "No PI ODBC driver detected. "
                 "Either switch to Web API ('piweb') or install appropriate driver."
             )
-        hostport = get_server_address_pi(asset)
+        hostport = get_server_address_pi(server)
         if not hostport:
             raise ValueError(
-                f"Unable to locate asset '{asset}'. Do you have correct permissions?"
+                f"Unable to locate server '{server}'. Do you have correct permissions?"
             )
         host, port = hostport
         return PIHandlerODBC(host=host, port=port, options=options)
@@ -148,16 +148,16 @@ def get_handler(imstype, asset, host=None, port=None, options={}):
                 "No Aspen SQLplus ODBC driver detected. Either switch to Web API "
                 "('aspenweb') or install appropriate driver."
             )
-        hostport = get_server_address_aspen(asset)
+        hostport = get_server_address_aspen(server)
         if not hostport:
             raise ValueError(
-                f"Unable to locate asset '{asset}'. Do you have correct permissions?"
+                f"Unable to locate server '{server}'. Do you have correct permissions?"
             )
         host, port = hostport
         return AspenHandlerODBC(host=host, port=port, options=options)
 
     if imstype.lower() == "piweb":
-        return PIHandlerWeb(host=host, port=port, options=options)
+        return PIHandlerWeb(url=url, server=server, options=options)
 
     if imstype.lower() in ["aspenweb", "ip21web"]:
         raise NotImplementedError
@@ -165,13 +165,18 @@ def get_handler(imstype, asset, host=None, port=None, options={}):
 
 class IMSClient:
     def __init__(
-        self, asset, imstype=None, tz="Europe/Oslo", host=None, handler_options={}
+        self, server, imstype=None, tz="Europe/Oslo", url=None, handler_options={}
     ):
         self.handler = None
-        self.asset = asset.lower()
+        self.asset = server.lower()  # FIXME
         self.tz = tz
-        self.handler = get_handler(imstype, asset, None, 443, options=handler_options)
-        self.cache = SmartCache(asset)
+        self.handler = get_handler(
+            imstype,
+            server,
+            url=url,
+            options=handler_options
+        )
+        self.cache = SmartCache(server)
 
     def connect(self):
         self.handler.connect()

@@ -1,9 +1,11 @@
 import pytest
 import os
 
-from tagreader.web_handlers import list_pi_servers
 from tagreader.clients import IMSClient
-from tagreader.web_handlers import PIHandlerWeb
+from tagreader.web_handlers import (
+    list_pi_servers,
+    PIHandlerWeb,
+)
 
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
@@ -12,6 +14,7 @@ if is_GITHUBACTION:
     pytest.skip(
         "All tests in module require connection to PI server", allow_module_level=True
     )
+
 asset = "PINO"
 
 tags = {
@@ -25,12 +28,18 @@ interval = ["2020-04-01 11:05:00", "2020-04-01 12:05:00"]
 
 @pytest.fixture()
 def Client():
-    c = IMSClient(asset, "piweb")
+    c = IMSClient(asset, imstype="piweb")
     c.cache = None
     c.connect()
     yield c
     if os.path.exists(asset + ".h5"):
         os.remove(asset + ".h5")
+
+
+@pytest.fixture()
+def PIHandler():
+    h = PIHandlerWeb(server=asset)
+    yield h
 
 
 def test_escape_chars():
@@ -39,28 +48,29 @@ def test_escape_chars():
     )
 
 
+def test_verify_connection(PIHandler):
+    assert PIHandler.verify_connection("PIMAM") is True
+    assert PIHandler.verify_connection("somerandomstuffhere") is False
+
+
 def test_generate_search_query():
     assert PIHandlerWeb.generate_search_query("SINUSOID") == {
-        "q": "name:SINUSOID",
-        "scope": "pi:PINO",
+        "q": "name:SINUSOID"
     }
-    assert PIHandlerWeb.generate_search_query(r"BA:*.1") == {
+    assert PIHandlerWeb.generate_search_query(r"BA:*.1", server="PINO") == {
         "q": r"name:BA\:*.1",
         "scope": "pi:PINO",
     }
     assert PIHandlerWeb.generate_search_query(tag="BA:*.1") == {
         "q": r"name:BA\:*.1",
-        "scope": "pi:PINO",
     }
     assert PIHandlerWeb.generate_search_query(desc="Concentration Reactor 1") == {
         "q": r"description:Concentration\ Reactor\ 1",
-        "scope": "pi:PINO",
     }
     assert PIHandlerWeb.generate_search_query(
         tag="BA:*.1", desc="Concentration Reactor 1"
     ) == {
-        "q": r"name:BA\:*.1 AND description:Concentration\ Reactor\ 1",
-        "scope": "pi:PINO",
+        "q": r"name:BA\:*.1 AND description:Concentration\ Reactor\ 1"
     }
 
 
