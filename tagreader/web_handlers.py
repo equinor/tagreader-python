@@ -101,10 +101,18 @@ class PIHandlerWeb:
         raise NotImplementedError
 
     def verify_connection(self, server):
+        """Connects to the URL and verifies that the provided server exists.
+
+        :param server: Data server to look for
+        :type server: String
+        :raises ConnectionError: If connection fails
+        :return: True if server exists, False if not.
+        :rtype: Bool
+        """
         url = urljoin(self.base_url, "dataservers")
         res = self.session.get(url)
         if res.status_code != 200:
-            raise Exception
+            raise ConnectionError
         j = res.json()
         for item in j["Items"]:
             if item["Name"] == server:
