@@ -13,7 +13,7 @@ def get_auth():
 
 
 def list_pi_servers(host=r"https://pivision.equinor.com/piwebapi"):
-    url = urljoin(host, "/assetservers")
+    url = urljoin(host, "/dataservers")
     response = requests.get(url, auth=get_auth())
     if response.status_code == 200:
         server_list = []
@@ -27,7 +27,7 @@ def list_pi_servers(host=r"https://pivision.equinor.com/piwebapi"):
 class AspenHandlerWeb:
     def __init__(
         self,
-        host=r"https://aspenone.equinor.com/ProcessData",
+        host=r"https://aspenone.equinor.com/ProcessData/AtProcessDataREST.dll",
         port=443,
         options={},
     ):
@@ -101,9 +101,6 @@ class PIHandlerWeb:
     def search_tag(self, tag=None, desc=None):
         params = self.generate_search_query(tag, desc)
         url = urljoin(self.base_url, "search", "query")
-        print("******************************************")
-        print(url)
-        print(self.base_url)
         done = False
         ret = []
         while not done:
