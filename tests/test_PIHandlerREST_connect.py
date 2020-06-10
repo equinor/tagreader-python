@@ -87,18 +87,16 @@ def test_search_tag(Client):
     res = Client.search_tag("SINUSOID")
     assert 1 == len(res)
     res = Client.search_tag("BA:*.1")
-    assert 5 == len(res)
+    assert 5 <= len(res)
     [taglist, desclist] = zip(*res)
     assert "BA:CONC.1" in taglist
     assert desclist[taglist.index("BA:CONC.1")] == "Concentration Reactor 1"
     res = Client.search_tag(tag="BA:*.1")
-    assert 5 == len(res)
+    assert 5 <= len(res)
     res = Client.search_tag(desc="Concentration Reactor 1")
-    assert 1 == len(res)
+    assert 1 <= len(res)
     res = Client.search_tag("BA*.1", "*Active*")
-    assert 1 == len(res)
-    res = Client.search_tag("BAS*")
-    assert 30 < len(res)
+    assert 1 <= len(res)
 
 
 def test_tag_to_webid(PIHandler):
@@ -114,10 +112,10 @@ def test_tag_to_webid(PIHandler):
 @pytest.mark.parametrize(
     "read_type",
     [
-#        pytest.param("RAW", marks=pytest.mark.skip(reason="Not implemented")),
-#        pytest.param(
-#            "SHAPEPRESERVING", marks=pytest.mark.skip(reason="Not implemented")
-#        ),
+        # pytest.param("RAW", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param(
+        #     "SHAPEPRESERVING", marks=pytest.mark.skip(reason="Not implemented")
+        # ),
         "INT",
         "MIN",
         "MAX",
@@ -125,12 +123,12 @@ def test_tag_to_webid(PIHandler):
         "AVG",
         "STD",
         "VAR",
-#        pytest.param("COUNT", marks=pytest.mark.skip(reason="Not implemented")),
-#        pytest.param("GOOD", marks=pytest.mark.skip(reason="Not implemented")),
-#        pytest.param("BAD", marks=pytest.mark.skip(reason="Not implemented")),
-#        pytest.param("TOTAL", marks=pytest.mark.skip(reason="Not implemented")),
-#        pytest.param("SUM", marks=pytest.mark.skip(reason="Not implemented")),
-#        pytest.param("SNAPSHOT", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("COUNT", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("GOOD", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("BAD", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("TOTAL", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("SUM", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("SNAPSHOT", marks=pytest.mark.skip(reason="Not implemented")),
     ],
 )
 def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test*connect
@@ -161,32 +159,52 @@ def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test
             "STD": "StdDev",
             "VAR": "StdDev",
         }.get(read_type) == params["summaryType"]
+        assert params["summaryDuration"] == f"{SAMPLE_TIME}s"
+
+
+def test_is_summary(PIHandler):
+    assert PIHandler._is_summary(ReaderType.AVG)
+    assert PIHandler._is_summary(ReaderType.MIN)
+    assert PIHandler._is_summary(ReaderType.MAX)
+    assert PIHandler._is_summary(ReaderType.RNG)
+    assert PIHandler._is_summary(ReaderType.STD)
+    assert PIHandler._is_summary(ReaderType.VAR)
+    assert not PIHandler._is_summary(ReaderType.RAW)
+    assert not PIHandler._is_summary(ReaderType.SHAPEPRESERVING)
+    assert not PIHandler._is_summary(ReaderType.INT)
+    assert not PIHandler._is_summary(ReaderType.GOOD)
+    assert not PIHandler._is_summary(ReaderType.BAD)
+    assert not PIHandler._is_summary(ReaderType.SNAPSHOT)
 
 
 @pytest.mark.parametrize(
     ("read_type", "size"),
     [
-#         pytest.param("RAW", 0, marks=pytest.mark.skip(reason="Not implemented")),
-#         pytest.param(
-#             "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
-#         ),
+        # pytest.param("RAW", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param(
+        #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
+        # ),
         ("INT", 61),
-#         ("MIN", 61),
-#         ("MAX", 61),
-#         ("RNG", 61),
-#         ("AVG", 61),
-#         ("VAR", 61),
-#         ("STD", 61),
-#         pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
-#         pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
-#         pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
-#         pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
-#         pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
-#         pytest.param("SNAPSHOT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        ("MIN", 60),
+        ("MAX", 60),
+        ("RNG", 60),
+        ("AVG", 60),
+        ("VAR", 60),
+        ("STD", 60),
+        # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("SNAPSHOT", 0, marks=pytest.mark.skip(reason="Not implemented")),
     ],
 )
 def test_read(Client, read_type, size):
     df = Client.read_tags(
-        TAGS["Float32"], START_TIME, STOP_TIME, SAMPLE_TIME, getattr(ReaderType, read_type)
+        TAGS["Float32"],
+        START_TIME,
+        STOP_TIME,
+        SAMPLE_TIME,
+        getattr(ReaderType, read_type),
     )
     assert df.size == size

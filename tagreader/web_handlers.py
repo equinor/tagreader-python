@@ -123,22 +123,16 @@ class PIHandlerWeb:
 
         sample_time = sample_time.seconds
 
-        get_action = {ReaderType.INT: "interpolated", ReaderType.RAW: "recorded"}.get(
-            read_type, "summary"
-        )
+        get_action = {
+            ReaderType.INT: "interpolated",
+            ReaderType.RAW: "recorded"
+        }.get(read_type, "summary")
 
         url = f"streams/{webid}/{get_action}"
         params = {}
 
         params["startTime"] = starttime
         params["endTime"] = stoptime
-
-        if ReaderType.INT == read_type:
-            params["interval"] = f"{sample_time}s"
-        else:
-            # https://techsupport.osisoft.com/Documentation/PI-Web-API/help/topics/sample-type.html
-            params["sampleType"] = "Interval"
-            params["sampleInterval"] = f"{sample_time}s"
 
         summary_type = {
             ReaderType.MIN: "Minimum",
@@ -149,8 +143,11 @@ class PIHandlerWeb:
             ReaderType.RNG: "Range",
         }.get(read_type, None)
 
-        if summary_type:
+        if ReaderType.INT == read_type:
+            params["interval"] = f"{sample_time}s"
+        elif summary_type:
             params["summaryType"] = summary_type
+            params["summaryDuration"] = f"{sample_time}s"
 
         return (url, params)
 
@@ -215,7 +212,7 @@ class PIHandlerWeb:
         :return: WebId
         :rtype: str
         """
-        if not tag in self.webidcache:
+        if tag not in self.webidcache:
             params = self.generate_search_query(tag=tag, server=self.dataserver)
             params["fields"] = "name;webid"
             url = urljoin(self.base_url, "search", "query")
@@ -223,15 +220,38 @@ class PIHandlerWeb:
             if res.status_code != 200:
                 raise ConnectionError
             j = res.json()
+
+            if len(j["Errors"]) > 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+
             if len(j["Items"]) > 1:
-                raise AssertionError(
-                    f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."
-                )
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
             elif len(j["Items"]) == 0:
                 raise AssertionError(f"No WebId found for {tag}.")
+
             webid = j["Items"][0]["WebId"]
             self.webidcache[tag] = webid
         return self.webidcache[tag]
+
+    @staticmethod
+    def _is_summary(read_type):
+        if read_type in [
+            ReaderType.AVG,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.STD,
+            ReaderType.VAR,
+        ]:
+            return True
+        return False
 
     def read_tag(
         self, tag, start_time, stop_time, sample_time, read_type, metadata=None
@@ -240,18 +260,32 @@ class PIHandlerWeb:
         (url, params) = self.generate_read_query(
             webid, start_time, stop_time, sample_time, read_type
         )
-        params["selectedFields"] = "Links;Items.TimeStamp;Items.Value"
+        if self._is_summary(read_type):
+            params["selectedFields"] = "Links;Items.Value.Timestamp;Items.Value.Value"
+        else:
+            params["selectedFields"] = "Links;Items.Timestamp;Items.Value"
         url = urljoin(self.base_url, url)
         res = self.session.get(url, params=params)
         if res.status_code != 200:
             raise ConnectionError
+
         j = res.json()
 
-        df = pd.DataFrame.from_dict(j["Items"])
+        if self._is_summary(read_type):
+            df = pd.json_normalize(
+                data=j,
+                record_path="Items"
+            ).rename(
+                columns={
+                    "Value.Value": "Value",
+                    "Value.Timestamp": "Timestamp"
+                }
+            )
+        else:
+            df = pd.DataFrame.from_dict(j["Items"])
         df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="%Y-%m-%dT%H:%M:%SZ")
         df = df.set_index("Timestamp")
         df.index.name = "time"
         df = df.tz_localize("UTC").tz_convert(start_time.tzinfo)
         # TODO: Handle digitalset
         return df.rename(columns={"Value": tag})
-
