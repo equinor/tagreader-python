@@ -17,7 +17,7 @@ def get_auth():
     return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
 
-def list_pi_servers(url=r"https://pivision.equinor.com/piwebapi"):
+def list_pi_servers(url=r"https://piwebapi.equinor.com/piwebapi"):
     url_ = urljoin(url, "/dataservers")
     response = requests.get(url_, auth=get_auth())
     if response.status_code == 200:
@@ -45,7 +45,7 @@ class PIHandlerWeb:
     ):
         self._max_rows = options.get("max_rows", 100000)
         if url is None:
-            url = r"https://pivision.equinor.com/piwebapi"
+            url = r"https://piwebapi.equinor.com/piwebapi"
         self.base_url = url
         self.dataserver = server
         self.session = requests.Session()

@@ -17,7 +17,7 @@ if is_GITHUBACTION:
     )
 
 
-BASE_URL = "https://pivision.equinor.com/piwebapi"
+BASE_URL = "https://piwebapi.equinor.com/piwebapi"
 ASSET = "PIMAM"
 TAGS = {
     "Float32": "BA:CONC.1",

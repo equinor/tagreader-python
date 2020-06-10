@@ -239,7 +239,8 @@ class PIHandlerODBC:
         # TODO: Find default das_server under
         # HKLM\SOFTWARE\Wow6432Node\PISystem\Analytics\InstallData/AFServer
         # It seems that is actually not possible anymore.
-        self._das_server = options.get("das_server", "ws3099.statoil.net")
+        # ws3099.statoil.net
+        self._das_server = options.get("das_server", "piwebapi.equinor.com")
 
         # print(self._das_server)
 
