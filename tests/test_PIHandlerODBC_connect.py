@@ -83,7 +83,7 @@ def test_read(Client, read_type, size):
     df = Client.read_tags(
         tags["Float32"], interval[0], interval[1], 60, getattr(ReaderType, read_type)
     )
-    assert df.size == size
+    assert df.shape == (size, 1)
 
 
 def test_digitalread_is_one_or_zero(Client):

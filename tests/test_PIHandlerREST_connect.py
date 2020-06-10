@@ -117,4 +117,4 @@ def test_read(Client, read_type, size):
         SAMPLE_TIME,
         getattr(ReaderType, read_type),
     )
-    assert df.size == size
+    assert df.shape == (size, 1)
