@@ -60,10 +60,10 @@ def test_search(Client):
 @pytest.mark.parametrize(
     ("read_type", "size"),
     [
-        pytest.param("RAW", 0, marks=pytest.mark.skip(reason="Not implemented")),
-        pytest.param(
-            "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
-        ),
+        # pytest.param("RAW", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param(
+        #     "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
+        # ),
         ("INT", 61),
         ("MIN", 61),
         ("MAX", 61),
@@ -71,12 +71,12 @@ def test_search(Client):
         ("AVG", 61),
         ("VAR", 61),
         ("STD", 61),
-        pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
-        pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
-        pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
-        pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
-        pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
-        pytest.param("SNAPSHOT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("SNAPSHOT", 0, marks=pytest.mark.skip(reason="Not implemented")),
     ],
 )
 def test_read(Client, read_type, size):
