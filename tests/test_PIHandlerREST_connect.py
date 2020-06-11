@@ -120,6 +120,29 @@ def test_read(Client, read_type, size):
     assert df.shape == (size, 1)
 
 
+def test_read_only_invalid_data_yields_nan_for_invalid(Client):
+    tag = TAGS["Float32"]
+    df = Client.read_tags(
+        tag,
+        "2012-10-09 10:30:00",
+        "2012-10-09 11:00:00",
+        600)
+    assert df.shape == (4, 1)
+    assert df[tag].isna().all()
+
+
+def test_read_invalid_data_mixed_with_valid_yields_nan_for_invalid(Client):
+    tag = TAGS["Float32"]
+    df = Client.read_tags(
+        tag,
+        "2012-10-09 11:00:00",
+        "2012-10-09 11:30:00",
+        600)
+    assert df.shape == (4, 1)
+    assert df[tag].iloc[[0, 1]].isna().all()
+    assert df[tag].iloc[[2, 3]].notnull().all()
+
+
 def test_digitalread_is_one_or_zero(Client):
     tag = TAGS["Digital"]
     df = Client.read_tags(tag, START_TIME, STOP_TIME, SAMPLE_TIME, ReaderType.INT)

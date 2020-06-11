@@ -285,22 +285,32 @@ class PIHandlerWeb:
 
         j = res.json()
         # Summary (aggregated) data and DigitalSets return Value as dict
-        if isinstance(j["Items"][0]["Value"], dict):
-            df = pd.json_normalize(
-                data=j,
-                record_path="Items"
-            ).rename(
+        df = pd.json_normalize(
+            data=j,
+            record_path="Items"
+        )
+        if self._is_summary(read_type):
+            df = df.rename(
                 columns={
-                    "Value.Value": "Value",
-                    "Value.Timestamp": "Timestamp"
+                    "Value.Timestamp": "Timestamp",
+                    "Value.Value": "Value"
                 }
             )
-        # INT return Value as actual value
-        else:
-            df = pd.DataFrame.from_dict(j["Items"])
+
+        # Missing data or digitalset:
+        if "Value.Name" in df.columns:
+            # Missing data in all rows or digitalset.
+            # Assume digitalset and replace any missing data with None.
+            # TODO: What happens for digital values with missing data?
+            # TODO: And what about summaries with digital values (with missing data)...?
+            if "Value" not in df.columns:
+                df["Value"] = df["Value.Value"]
+                df.loc[df["Value.Name"].str.contains("No Data"), "Value"] = None
+            df = df.drop(columns=["Value.Name", "Value.Value", "Value.IsSystem"])
         df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="%Y-%m-%dT%H:%M:%SZ")
-        df = df.set_index("Timestamp")
+
+        df = df.set_index("Timestamp", drop=True)
         df.index.name = "time"
         df = df.tz_localize("UTC").tz_convert(start_time.tzinfo)
-        # TODO: Handle digitalset
+
         return df.rename(columns={"Value": tag})
