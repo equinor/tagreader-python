@@ -197,11 +197,25 @@ class PIHandlerWeb:
     def _get_tag_metadata(self, tag):
         return {}  # FIXME
 
-    def _get_tag_description(self, tag):
-        raise NotImplementedError
-
     def _get_tag_unit(self, tag):
-        raise NotImplementedError
+        webid = self.tag_to_webid(tag)
+        url = urljoin(self.base_url, "points", webid)
+        res = self.session.get(url)
+        if res.status_code != 200:
+            raise ConnectionError
+        j = res.json()
+        unit = j['EngineeringUnits']
+        return unit
+
+    def _get_tag_description(self, tag):
+        webid = self.tag_to_webid(tag)
+        url = urljoin(self.base_url, "points", webid)
+        res = self.session.get(url)
+        if res.status_code != 200:
+            raise ConnectionError
+        j = res.json()
+        description = j['Descriptor']
+        return description
 
     def tag_to_webid(self, tag):
         """Given a tag, returns the WebId.
@@ -270,8 +284,8 @@ class PIHandlerWeb:
             raise ConnectionError
 
         j = res.json()
-
-        if self._is_summary(read_type):
+        # Summary (aggregated) data and DigitalSets return Value as dict
+        if isinstance(j["Items"][0]["Value"], dict):
             df = pd.json_normalize(
                 data=j,
                 record_path="Items"
@@ -281,6 +295,7 @@ class PIHandlerWeb:
                     "Value.Timestamp": "Timestamp"
                 }
             )
+        # INT return Value as actual value
         else:
             df = pd.DataFrame.from_dict(j["Items"])
         df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="%Y-%m-%dT%H:%M:%SZ")
