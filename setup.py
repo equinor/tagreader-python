@@ -10,7 +10,7 @@ setup(
     keywords=[
         "Aspen InfoPlus.21",
         "OSIsoft PI"
-        ],
+    ],
     url="https://github.com/equinor/tagreader-python",
     author="Einar S. Idsø",
     author_email="eiids@equinor.com",
@@ -27,12 +27,18 @@ setup(
         "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Utilities",
-        ],
+    ],
     packages=["tagreader"],
     platforms=["Windows"],
     package_data={"": ["*.md"]},
     python_requires="~=3.6",
     setup_requires=["setuptools_scm"],
     use_scm_version={"write_to": "tagreader/version.py"},
-    install_requires=["pandas >=0.23", "tables", "pyodbc"],
+    install_requires=[
+        "pandas >=0.23",
+        "tables",
+        "pyodbc",
+        "requests",
+        "requests_kerberos"
+    ],
 )
