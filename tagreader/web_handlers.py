@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
+
 from .utils import (
     logging,
     ReaderType,
@@ -13,19 +14,41 @@ logging.basicConfig(
 )
 
 
-def get_auth():
+def get_auth_pi():
     return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
 
-def list_pi_servers(url=r"https://piwebapi.equinor.com/piwebapi"):
-    url_ = urljoin(url, "/dataservers")
-    response = requests.get(url_, auth=get_auth())
-    if response.status_code == 200:
-        server_list = []
-        for r in response.json()["Items"]:
-            server_list.append(r["Name"])
+def get_auth_aspen():
+    return HTTPKerberosAuth(service="HTTPS")
+
+
+def list_aspen_servers(
+    url=r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll",
+    auth=get_auth_aspen(),
+    verify=False,
+):
+    url_ = urljoin(url, "DataSources")
+    params = {"service": "ProcessData", "allQuotes": 1}
+
+    import urllib3
+
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    res = requests.get(url_, params=params, auth=auth, verify=False)
+    if res.status_code == 200:
+        server_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
         return server_list
-    elif response.status_code == 404:
+    elif res.status_code == 404:
+        print("Not found")
+
+
+def list_pi_servers(url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_pi()):
+    url_ = urljoin(url, "/dataservers")
+    res = requests.get(url_, auth=auth)
+    if res.status_code == 200:
+        server_list = [r["Name"] for r in res.json()["Items"]]
+        return server_list
+    elif res.status_code == 404:
         print("Not found")
 
 
@@ -49,7 +72,7 @@ class PIHandlerWeb:
         self.base_url = url
         self.dataserver = server
         self.session = requests.Session()
-        self.session.auth = get_auth()
+        self.session.auth = get_auth_pi()
         self.webidcache = {}
 
     @staticmethod
@@ -123,10 +146,9 @@ class PIHandlerWeb:
 
         sample_time = sample_time.seconds
 
-        get_action = {
-            ReaderType.INT: "interpolated",
-            ReaderType.RAW: "recorded"
-        }.get(read_type, "summary")
+        get_action = {ReaderType.INT: "interpolated", ReaderType.RAW: "recorded"}.get(
+            read_type, "summary"
+        )
 
         url = f"streams/{webid}/{get_action}"
         params = {}
@@ -204,7 +226,7 @@ class PIHandlerWeb:
         if res.status_code != 200:
             raise ConnectionError
         j = res.json()
-        unit = j['EngineeringUnits']
+        unit = j["EngineeringUnits"]
         return unit
 
     def _get_tag_description(self, tag):
@@ -214,7 +236,7 @@ class PIHandlerWeb:
         if res.status_code != 200:
             raise ConnectionError
         j = res.json()
-        description = j['Descriptor']
+        description = j["Descriptor"]
         return description
 
     def tag_to_webid(self, tag):
@@ -285,17 +307,12 @@ class PIHandlerWeb:
 
         j = res.json()
         # Summary (aggregated) data and DigitalSets return Value as dict
-        df = pd.json_normalize(
-            data=j,
-            record_path="Items"
-        )
+        df = pd.json_normalize(data=j, record_path="Items")
         if self._is_summary(read_type):
             df = df.rename(
-                columns={
-                    "Value.Timestamp": "Timestamp",
-                    "Value.Value": "Value"
-                }
+                columns={"Value.Timestamp": "Timestamp", "Value.Value": "Value"}
             )
+            # TODO: Square Value if read_type is VAR
 
         # Missing data or digitalset:
         if "Value.Name" in df.columns:
