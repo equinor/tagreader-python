@@ -68,9 +68,21 @@ class AspenHandlerWeb:
     def generate_connection_string(host, *_, **__):
         raise NotImplementedError
 
+
     @staticmethod
     def generate_search_query(tag=None, desc=None, server=None):
-        raise NotImplementedError
+        if not server:
+            raise ValueError("Server is required argument")
+        if desc: # TODO
+            raise NotImplementedError
+        params = {
+            "datasource": server,
+            "tag": tag,
+            "max": 100,
+            "getTrendable": 0
+        }
+        return params
+
 
     @staticmethod
     def generate_read_query(
@@ -102,7 +114,20 @@ class AspenHandlerWeb:
         self.verify_connection(self.dataserver)
 
     def search_tag(self, tag=None, desc=None):
-        raise NotImplementedError
+        params = self.generate_search_query(tag, desc, self.dataserver)
+        url = urljoin(self.base_url, "Browse")
+        res = self.session.get(url, params=params)
+        print(params)
+        print(res.url)
+        if res.status_code != 200:
+            raise ConnectionError
+        j = res.json()
+        ret = []
+        if "tags" not in j["data"]:
+            return []
+        for item in j["data"]["tags"]:
+            ret.append((item["t"], ""))
+        return ret
 
     def _get_tag_metadata(self, tag):
         return {}  # FIXME
