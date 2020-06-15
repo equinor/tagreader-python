@@ -13,7 +13,7 @@ from .utils import (
 )
 from .cache import SmartCache
 from .odbc_handlers import PIHandlerODBC, AspenHandlerODBC
-from .web_handlers import PIHandlerWeb
+from .web_handlers import PIHandlerWeb, AspenHandlerWeb
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
@@ -160,7 +160,7 @@ def get_handler(imstype, server, url=None, options={}):
         return PIHandlerWeb(url=url, server=server, options=options)
 
     if imstype.lower() in ["aspenweb", "ip21web"]:
-        raise NotImplementedError
+        return AspenHandlerWeb(url=url, server=server, options=options)
 
 
 class IMSClient:
