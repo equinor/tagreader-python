@@ -39,7 +39,7 @@ def test_list_all_pi_servers():
     assert len(res) >= 1
     assert isinstance(res[0], str)
     for r in res:
-        assert 3 <= len(r) <= 11
+        assert 3 <= len(r)
 
 
 def test_search(Client):

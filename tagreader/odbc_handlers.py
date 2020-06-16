@@ -51,15 +51,6 @@ class AspenHandlerODBC:
         return f"DRIVER={{AspenTech SQLPlus}};HOST={host};PORT={port};READONLY=Y;MAXROWS={max_rows}"  # noqa: E501
 
     @staticmethod
-    def generate_search_query(tag=None, desc=None):
-        if desc is not None:
-            raise NotImplementedError("Description search not implemented")
-        query = "SELECT name FROM all_records WHERE name LIKE '{tag}'".format(
-            tag=tag.replace("*", "%")
-        )
-        return query
-
-    @staticmethod
     def generate_read_query(
         tag, mapping, start_time, stop_time, sample_time, read_type
     ):
@@ -162,10 +153,57 @@ class AspenHandlerODBC:
         self.conn = pyodbc.connect(connection_string, autocommit=True)
         self.cursor = self.conn.cursor()
 
+    @staticmethod
+    def _generate_query_get_mapdef_for_tag(tag):
+        query = [
+            "SELECT DISTINCT a.name, m.map_definitionrecord, m.map_description",
+            "FROM all_records a",
+            "LEFT JOIN atmapdef m ON a.definition = m.MAP_DefinitionRecord",
+            f"WHERE a.name LIKE '{tag}'"
+        ]
+        return " ".join(query)
+
+    @staticmethod
+    def _generate_query_search_tag(tagmapcombo, desc=None):
+        if tagmapcombo['map_definitionrecord'] is None:
+            return None
+        tagname = tagmapcombo['name']
+        query = f"SELECT {tagmapcombo['map_description']} FROM {tagmapcombo['map_definitionrecord']} WHERE name = '{tagname}'"
+        if desc is not None:
+            query += f" AND {tagmapcombo['map_description']} like '{desc}'"
+        return query
+
+
     def search_tag(self, tag=None, desc=None):
-        query = self.generate_search_query(tag, desc)
+        if tag is None:
+            raise ValueError('Tag is a required argument')
+
+        tag = tag.replace("*", "%") if isinstance(tag, str) else None
+        desc = desc.replace("*", "%") if isinstance(desc, str) else None
+
+        query = self._generate_query_get_mapdef_for_tag(tag)
         self.cursor.execute(query)
-        return self.cursor.fetchall()
+        colnames = [col[0] for col in self.cursor.description]
+        rows = self.cursor.fetchall()
+        tagmapcombos = [dict(zip(colnames, row)) for row in rows]
+
+        res = []
+        for m in tagmapcombos:
+            query = self._generate_query_search_tag(m, desc)
+            # Some records have no associated mapping. Ignore.
+            if query is None:
+                continue
+            self.cursor.execute(query)
+            r = self.cursor.fetchone()
+            # No matches
+            if r is None:
+                continue
+            description = ""
+            # Match, but no value for description
+            if r[0] is not None:
+                description = r[0] 
+            res.append((m['name'], description))
+        return res
 
     def _get_tag_metadata(self, tag):
         return None
