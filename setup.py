@@ -2,15 +2,49 @@
 
 from setuptools import setup
 
+long_description = """
+# tagreader #
+
+Tagreader is a Python package for reading trend data from the OSIsoft
+PI and Aspen Infoplus.21 IMS systems. It is intended to be easy to use,
+and present as similar as possible interfaces to the backend historians.
+
+Queries are performed using ODBC using proprietary drivers from Aspen
+and OSIsoft, but code has been structured in such a way as to allow for
+other interfaces, e.g. REST APIs, in the future. Stay tuned!
+
+Tagreader outputs trend data as Pandas Dataframes, and uses the HDF5
+file format to cache results.
+
+## Requirements ##
+* Python >= 3.6 with the following packages:
+  * pandas >= 0.23
+  * pytables
+  * pyodbc
+* PI ODBC driver and/or Aspen IP.21 SQLPlus ODBC driver
+* Microsoft Windows (Sorry. This is due to the proprietary ODBC drivers for OSIsoft PI and Aspen IP.21)
+
+## Installation ##
+To install and/or upgrade:
+```
+pip install --upgrade tagreader
+```
+
+## Usage example ##
+```
+import tagreader
+c = tagreader.IMSClient("mysource", "ip21")
+print(c.search("mytag%"))
+df = s.read_tags(["mytag_1", "mytag_2;with map"], "18.06.2020 08:00:00", "18.06.2020 09:00:00", 60)
+```
+"""
+
 setup(
     name="tagreader",
     description="Library for reading from Aspen InfoPlus.21 and OSIsoft PI IMS servers",
-    long_description=open("README.md").read(),
+    long_description=long_description,
     long_description_content_type="text/markdown",
-    keywords=[
-        "Aspen InfoPlus.21",
-        "OSIsoft PI"
-    ],
+    keywords=["Aspen InfoPlus.21", "OSIsoft PI"],
     url="https://github.com/equinor/tagreader-python",
     author="Einar S. Idsø",
     author_email="eiids@equinor.com",

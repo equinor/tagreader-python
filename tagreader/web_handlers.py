@@ -50,6 +50,8 @@ def list_pi_servers(url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_
     elif res.status_code == 404:
         print("Not found")
 
+def list_aspen_servers():
+    pass
 
 class AspenHandlerWeb:
     def __init__(
