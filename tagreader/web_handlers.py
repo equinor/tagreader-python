@@ -1,4 +1,5 @@
 import requests
+import urllib
 import pandas as pd
 
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
@@ -51,6 +52,15 @@ def list_pi_servers(url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_
         print("Not found")
 
 
+class NoEncodeSession(requests.Session):
+    """Override requests.Session to avoid percent-encoding asterisk,
+    which causes Aspen Web API to fail.
+    """
+    def send(self, *args, **kwargs):
+        args[0].url = args[0].url.replace(urllib.parse.quote("*"), "*")
+        return requests.Session.send(self, *args, **kwargs)
+
+
 class AspenHandlerWeb:
     def __init__(
         self, url=None, server=None, options={},
@@ -60,9 +70,25 @@ class AspenHandlerWeb:
             url = r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll"
         self.base_url = url
         self.dataserver = server
-        self.session = requests.Session()
+        self.session = NoEncodeSession()
         self.session.verify = False
         self.session.auth = get_auth_aspen()
+
+    @staticmethod
+    def stringify(params):
+        """Aspen web api doesn't like percent-encoded arguments.
+        This method converts a set of parameters on dict-form to
+        a continuous string, compatible with Aspen WEB API.
+
+        Chose to use NoEncodeSession() instead, but keeping this
+        method in case it is needed at some point.
+
+        :param params: Parameters to request's get()
+        :type params: dict
+        :return: String-based parameter to send to get()
+        :rtype: str
+        """
+        return "&".join("%s=%s" % (k, v) for k, v in params.items())
 
     @staticmethod
     def generate_connection_string(host, *_, **__):
