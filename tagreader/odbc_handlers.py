@@ -44,7 +44,6 @@ class AspenHandlerODBC:
         self.conn = None
         self.cursor = None
         self._max_rows = options.get("max_rows", 100000)
-        self._field_engineering_unit = ["Engineering Unit", "IP_ENG_UNITS"]
 
     @staticmethod
     def generate_connection_string(host, port, max_rows=100000):
@@ -156,23 +155,57 @@ class AspenHandlerODBC:
     @staticmethod
     def _generate_query_get_mapdef_for_tag(tag):
         query = [
-            "SELECT DISTINCT a.name, m.map_definitionrecord, m.map_description",
+            "SELECT DISTINCT a.name as tagname, m.NAME, m.MAP_DefinitionRecord,",
+            "m.MAP_IsDefault, m.MAP_Description, m.MAP_Units, m.MAP_Base, m.MAP_Range",
             "FROM all_records a",
             "LEFT JOIN atmapdef m ON a.definition = m.MAP_DefinitionRecord",
-            f"WHERE a.name LIKE '{tag}'"
+            "WHERE a.name"
         ]
+        if '%' in tag:
+            query.append(f"LIKE '{tag}'")
+        else:
+            query.append(f"='{tag}'")
+        query.append("AND m.MAP_IsDefault = 'TRUE'")
         return " ".join(query)
 
     @staticmethod
-    def _generate_query_search_tag(tagmapcombo, desc=None):
-        if tagmapcombo['map_definitionrecord'] is None:
+    def _generate_query_search_tag(mapdef, desc=None):
+        if mapdef['MAP_DefinitionRecord'] is None:
             return None
-        tagname = tagmapcombo['name']
-        query = f"SELECT {tagmapcombo['map_description']} FROM {tagmapcombo['map_definitionrecord']} WHERE name = '{tagname}'"
+        query = [
+            f"SELECT \"{mapdef['MAP_Description']}\"",
+            f"FROM {mapdef['MAP_DefinitionRecord']}",
+            f"WHERE name = '{mapdef['tagname']}'"
+        ]
         if desc is not None:
-            query += f" AND {tagmapcombo['map_description']} like '{desc}'"
-        return query
+            query.append(f"AND {mapdef['MAP_Description']} like '{desc}'")
+        return " ".join(query)
 
+    def _get_mapdef(self, tag):
+        query = self._generate_query_get_mapdef_for_tag(tag)
+        self.cursor.execute(query)
+        colnames = [col[0] for col in self.cursor.description]
+        rows = self.cursor.fetchall()
+        temp = [dict(zip(colnames, row)) for row in rows]
+        mapdef = {}
+        for t in temp:
+            if t['tagname'] not in mapdef:
+                mapdef[t['tagname']] = [t]
+            else:
+                mapdef[t['tagname']].append(t)
+        return mapdef
+
+    def _get_specific_mapdef(self, tagname, mapping):
+        mapdef = self._get_mapdef(tagname)
+        for m in mapdef[tagname]:
+            if m['NAME'] == mapping:
+                return m
+        return None
+
+    def _get_default_mapdef(self, tagname):
+        (tagname, _) = tagname.split(";") if ";" in tagname else (tagname, None)
+        mapdef = self._get_mapdef(tagname)
+        return mapdef[tagname][0]
 
     def search_tag(self, tag=None, desc=None):
         if tag is None:
@@ -181,16 +214,12 @@ class AspenHandlerODBC:
         tag = tag.replace("*", "%") if isinstance(tag, str) else None
         desc = desc.replace("*", "%") if isinstance(desc, str) else None
 
-        query = self._generate_query_get_mapdef_for_tag(tag)
-        self.cursor.execute(query)
-        colnames = [col[0] for col in self.cursor.description]
-        rows = self.cursor.fetchall()
-        tagmapcombos = [dict(zip(colnames, row)) for row in rows]
+        mapdef = self._get_mapdef(tag)
 
         res = []
-        for m in tagmapcombos:
-            query = self._generate_query_search_tag(m, desc)
-            # Some records have no associated mapping. Ignore.
+        for tagname in mapdef:  # TODO: Refactor
+            query = self._generate_query_search_tag(mapdef[tagname][0], desc)
+            # Ignore records with no associated mapping.
             if query is None:
                 continue
             self.cursor.execute(query)
@@ -201,45 +230,41 @@ class AspenHandlerODBC:
             description = ""
             # Match, but no value for description
             if r[0] is not None:
-                description = r[0] 
-            res.append((m['name'], description))
+                description = r[0]
+            res.append((tagname, description))
+        res = list(set(res))
         return res
 
     def _get_tag_metadata(self, tag):
         return None
 
     def _get_tag_unit(self, tag):
-        if isinstance(self._field_engineering_unit, str):
-            query = f'SELECT "{self._field_engineering_unit}" FROM "{tag}"'
-            # TODO: Add mapping
-            self.cursor.execute(query)
-            unit = self.cursor.fetchone()
+        (tagname, mapping) = tag.split(";") if ";" in tag else (tag, None)
+        if mapping is None:
+            mapping = self._get_default_mapdef(tagname)
         else:
-            for field in self._field_engineering_unit:
-                query = f'SELECT "{field}" FROM "{tag}"'  # TODO: Add mapping
-                unit = None
-                try:
-                    self.cursor.execute(query)
-                    unit = self.cursor.fetchone()
-                except Exception as e:
-                    logging.debug(e)
-                if (
-                    unit
-                ):  # We discovered which field to use, so no need to check next time
-                    self._field_engineering_unit = field
-                    break
-        if not unit:
-            raise Exception(
-                "Failed to fetch units. "
-                f'I tried these fields: "{self._field_engineering_unit}"'  # noqa: E501
-            )
-        return unit[0]
+            mapping = self._get_specific_mapdef(tagname, mapping)
+        query = f"SELECT name, \"{mapping['MAP_Units']}\" as engunit FROM \"{tagname}\""
+        self.cursor.execute(query)
+        res = self.cursor.fetchone()
+        if not res.engunit:
+            res.engunit = ""
+        return res.engunit
 
     def _get_tag_description(self, tag):
-        query = f'SELECT "Description" FROM "{tag}"'  # TODO: Add mapping
+        (tagname, mapping) = tag.split(";") if ";" in tag else (tag, None)
+        if mapping is None:
+            mapping = self._get_default_mapdef(tagname)
+        else:
+            mapping = self._get_specific_mapdef(tagname, mapping)
+        query = [
+            f"SELECT name, \"{mapping['MAP_Description']}\" as description",
+            f" FROM \"{tagname}\""
+        ]
+        query = " ".join(query)
         self.cursor.execute(query)
-        desc = self.cursor.fetchone()
-        return desc[0]
+        res = self.cursor.fetchall()
+        return res[0][1]
 
     def read_tag(self, tag, start_time, stop_time, sample_time, read_type, metadata):
         (cleantag, mapping) = tag.split(";") if ";" in tag else (tag, None)
