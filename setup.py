@@ -35,7 +35,7 @@ pip install --upgrade tagreader
 import tagreader
 c = tagreader.IMSClient("mysource", "ip21")
 print(c.search("mytag%"))
-df = s.read_tags(["mytag_1", "mytag_2;with map", "18.06.2020 08:00:00", "18.06.2020 09:00:00", 60])
+df = s.read_tags(["mytag_1", "mytag_2;with map"], "18.06.2020 08:00:00", "18.06.2020 09:00:00", 60)
 ```
 """
 
