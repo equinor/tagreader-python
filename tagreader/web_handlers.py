@@ -25,6 +25,8 @@ def list_pi_servers(host=r"https://pivision.statoil.no/piwebapi"):
         server_list.append(ds.name)
     return server_list
 
+def list_aspen_servers():
+    pass
 
 class AspenHandlerWeb:
     def __init__(self, max_rows=100000):

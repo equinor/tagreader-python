@@ -143,3 +143,9 @@ extratests/*
 
 # vscode
 .vscode/
+
+test_scripts/*
+
+# Certificate files
+*.pem
+*.cer
