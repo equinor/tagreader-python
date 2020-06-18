@@ -50,8 +50,6 @@ def list_pi_servers(url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_
     elif res.status_code == 404:
         print("Not found")
 
-def list_aspen_servers():
-    pass
 
 class AspenHandlerWeb:
     def __init__(
@@ -70,12 +68,11 @@ class AspenHandlerWeb:
     def generate_connection_string(host, *_, **__):
         raise NotImplementedError
 
-
     @staticmethod
     def generate_search_query(tag=None, desc=None, server=None):
         if not server:
             raise ValueError("Server is required argument")
-        if desc: # TODO
+        if desc:  # TODO
             raise NotImplementedError
         params = {
             "datasource": server,
@@ -84,7 +81,6 @@ class AspenHandlerWeb:
             "getTrendable": 0
         }
         return params
-
 
     @staticmethod
     def generate_read_query(
