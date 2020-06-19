@@ -1,5 +1,6 @@
 import requests
 import urllib
+import re
 import pandas as pd
 
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
@@ -56,6 +57,7 @@ class NoEncodeSession(requests.Session):
     """Override requests.Session to avoid percent-encoding asterisk,
     which causes Aspen Web API to fail.
     """
+
     def send(self, *args, **kwargs):
         args[0].url = args[0].url.replace(urllib.parse.quote("*"), "*")
         return requests.Session.send(self, *args, **kwargs)
@@ -98,14 +100,7 @@ class AspenHandlerWeb:
     def generate_search_query(tag=None, desc=None, server=None):
         if not server:
             raise ValueError("Server is required argument")
-        if desc:  # TODO
-            raise NotImplementedError
-        params = {
-            "datasource": server,
-            "tag": tag,
-            "max": 100,
-            "getTrendable": 0
-        }
+        params = {"datasource": server, "tag": tag, "max": 100, "getTrendable": 0}
         return params
 
     @staticmethod
@@ -137,20 +132,71 @@ class AspenHandlerWeb:
     def connect(self):
         self.verify_connection(self.dataserver)
 
-    def search_tag(self, tag=None, desc=None):
-        params = self.generate_search_query(tag, desc, self.dataserver)
-        url = urljoin(self.base_url, "Browse")
-        res = self.session.get(url, params=params)
-        print(params)
-        print(res.url)
+    @staticmethod
+    def split_tagmap(tagmap):
+        return tuple(tagmap.split(";") if ";" in tagmap else (tagmap, None))
+
+    def generate_get_description_query(self, tag):
+        tagname, _ = self.split_tagmap(tag)
+        parts = [
+            '<Q allQuotes="1" attributeData="1">',
+            "<Tag>",
+            f"<N><![CDATA[{tagname}]]></N>",
+            "<T>0</T>",  # What is this?
+            f"<G><![CDATA[{tagname}]]></G>",
+            f"<D><![CDATA[{self.dataserver}]]></D>",
+            "<AL>",
+            "<A>DSCR</A>",
+            "<VS>0</VS>",  # What is this?
+            "</AL>",
+            "</Tag>" "</Q>",
+        ]
+        return "".join(parts)
+
+    def get_tag_description(self, tag):
+        query = self.generate_get_description_query(tag)
+        url = urljoin(self.base_url, "TagInfo")
+        res = self.session.get(url, params=query)
         if res.status_code != 200:
             raise ConnectionError
         j = res.json()
-        ret = []
+        try:
+            desc = j["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
+        except Exception:
+            desc = ""
+        return desc
+
+    def search_tag(self, tag=None, desc=None):
+        if tag is None:
+            raise ValueError("Tag is a required argument")
+
+        tag = tag.replace("%", "*") if isinstance(tag, str) else None
+        # Prepare for regex
+        desc = desc.replace("%", "*") if isinstance(desc, str) else None
+        desc = desc.replace("*", ".*") if isinstance(desc, str) else None
+
+        params = self.generate_search_query(tag, desc, self.dataserver)
+        url = urljoin(self.base_url, "Browse")
+        res = self.session.get(url, params=params)
+
+        if res.status_code != 200:
+            raise ConnectionError
+        j = res.json()
+
         if "tags" not in j["data"]:
             return []
+
+        ret = []
         for item in j["data"]["tags"]:
-            ret.append((item["t"], ""))
+            tagname = item["t"]
+            description = self.get_tag_description(tagname)
+            ret.append((tagname, description))
+
+        if not desc:
+            return ret
+
+        r = re.compile(desc)
+        ret = [x for x in ret if r.search(x[1])]
         return ret
 
     def _get_tag_metadata(self, tag):
