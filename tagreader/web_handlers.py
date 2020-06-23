@@ -156,6 +156,42 @@ class AspenHandlerWeb:
         ]
         return "".join(parts)
 
+    def generate_get_map_query(self, tagname):
+        parts = [
+            '<Q allQuotes="1" categoryInfo="1">',
+            "<Tag>",
+            f"<N><![CDATA[{tagname}]]></N>",
+            "<T>0</T>",  # What is this?
+            f"<G><![CDATA[{tagname}]]></G>",
+            f"<D><![CDATA[{self.dataserver}]]></D>",
+            "</Tag>",
+            "</Q>",
+        ]
+        return "".join(parts)
+
+    def _get_maps(self, tagname):
+        params = self.generate_get_map_query(tagname)
+        url = urljoin(self.base_url, "TagInfo")
+        res = self.session.get(url, params=params)
+        if res.status_code != 200:
+            raise ConnectionError
+        j = res.json()
+
+        if "tags" not in j["data"]:
+            return {}
+
+        ret = {}
+        for item in j["data"]["tags"][0]["categories"][0]["ta"]:
+            ret[item["m"]] = True if item["d"] == "True" else False
+        return ret
+
+    def _get_default_mapname(self, tagname):
+        (tagname, _) = self.split_tagmap(tagname)
+        allmaps = self._get_maps(tagname)
+        for k, v in allmaps.items():
+            if v:
+                return k
+
     def search_tag(self, tag=None, desc=None):
         if tag is None:
             raise ValueError("Tag is a required argument")
@@ -200,9 +236,15 @@ class AspenHandlerWeb:
             raise ConnectionError
         j = res.json()
         try:
-            unit = j["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
+            attrdata = j["data"]["tags"][0]["attrData"]
         except Exception:
-            unit = ""
+            print(f"Error. I got this: {j}")
+            raise KeyError
+        unit = ""
+        for a in attrdata:
+            if a['g'] == 'Units':
+                unit = a["samples"][0]['v']
+                break
         return unit
 
     def generate_get_description_query(self, tag):
