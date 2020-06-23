@@ -136,7 +136,7 @@ class AspenHandlerWeb:
     def split_tagmap(tagmap):
         return tuple(tagmap.split(";") if ";" in tagmap else (tagmap, None))
 
-    def generate_get_description_query(self, tag):
+    def generate_get_unit_query(self, tag):
         tagname, _ = self.split_tagmap(tag)
         parts = [
             '<Q allQuotes="1" attributeData="1">',
@@ -146,25 +146,15 @@ class AspenHandlerWeb:
             f"<G><![CDATA[{tagname}]]></G>",
             f"<D><![CDATA[{self.dataserver}]]></D>",
             "<AL>",
-            "<A>DSCR</A>",
+            # Units only or MAP_Units only: ATCAI=>3. Both: Units=psig, MAP_Units=3
+            "<A>Units</A>",
+            "<A>MAP_Units</A>",
             "<VS>0</VS>",  # What is this?
             "</AL>",
-            "</Tag>" "</Q>",
+            "</Tag>",
+            "</Q>",
         ]
         return "".join(parts)
-
-    def get_tag_description(self, tag):
-        query = self.generate_get_description_query(tag)
-        url = urljoin(self.base_url, "TagInfo")
-        res = self.session.get(url, params=query)
-        if res.status_code != 200:
-            raise ConnectionError
-        j = res.json()
-        try:
-            desc = j["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
-        except Exception:
-            desc = ""
-        return desc
 
     def search_tag(self, tag=None, desc=None):
         if tag is None:
@@ -189,7 +179,7 @@ class AspenHandlerWeb:
         ret = []
         for item in j["data"]["tags"]:
             tagname = item["t"]
-            description = self.get_tag_description(tagname)
+            description = self._get_tag_description(tagname)
             ret.append((tagname, description))
 
         if not desc:
@@ -203,10 +193,48 @@ class AspenHandlerWeb:
         return {}  # FIXME
 
     def _get_tag_unit(self, tag):
-        raise NotImplementedError
+        query = self.generate_get_unit_query(tag)
+        url = urljoin(self.base_url, "TagInfo")
+        res = self.session.get(url, params=query)
+        if res.status_code != 200:
+            raise ConnectionError
+        j = res.json()
+        try:
+            unit = j["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
+        except Exception:
+            unit = ""
+        return unit
+
+    def generate_get_description_query(self, tag):
+        tagname, _ = self.split_tagmap(tag)
+        parts = [
+            '<Q allQuotes="1" attributeData="1">',
+            "<Tag>",
+            f"<N><![CDATA[{tagname}]]></N>",
+            "<T>0</T>",  # What is this?
+            f"<G><![CDATA[{tagname}]]></G>",
+            f"<D><![CDATA[{self.dataserver}]]></D>",
+            "<AL>",
+            "<A>DSCR</A>",
+            "<VS>0</VS>",  # What is this?
+            "</AL>",
+            "</Tag>",
+            "</Q>",
+        ]
+        return "".join(parts)
 
     def _get_tag_description(self, tag):
-        raise NotImplementedError
+        query = self.generate_get_description_query(tag)
+        url = urljoin(self.base_url, "TagInfo")
+        res = self.session.get(url, params=query)
+        if res.status_code != 200:
+            raise ConnectionError
+        j = res.json()
+        try:
+            desc = j["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
+        except Exception:
+            desc = ""
+        return desc
 
     def read_tag(
         self, tag, start_time, stop_time, sample_time, read_type, metadata=None
