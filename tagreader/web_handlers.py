@@ -35,12 +35,14 @@ def list_aspen_servers(
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
 
-    res = requests.get(url_, params=params, auth=auth, verify=False)
+    res = requests.get(url_, params=params, auth=auth, verify=verify)
     if res.status_code == 200:
         server_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
         return server_list
     elif res.status_code == 404:
         print("Not found")
+    elif res.status_code == 401:
+        print("Not authorized")
 
 
 def list_pi_servers(url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_pi()):
@@ -51,6 +53,8 @@ def list_pi_servers(url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_
         return server_list
     elif res.status_code == 404:
         print("Not found")
+    elif res.status_code == 401:
+        print("Not authorized")
 
 
 class NoEncodeSession(requests.Session):
@@ -69,6 +73,7 @@ class AspenHandlerWeb:
     ):
         self._max_rows = options.get("max_rows", 100000)
         if url is None:
+            url = r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll"
             url = r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll"
         self.base_url = url
         self.dataserver = server
