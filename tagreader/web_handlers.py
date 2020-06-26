@@ -25,9 +25,9 @@ def get_auth_aspen():
 
 
 def list_aspen_servers(
-    url=r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll",
+    url=r"https://aspenone.equinor.com/ProcessData/AtProcessDataREST.dll",
     auth=get_auth_aspen(),
-    verify=False,
+    verifySSL=True,
 ):
     import urllib3
 
@@ -36,7 +36,7 @@ def list_aspen_servers(
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
 
-    res = requests.get(url_, params=params, auth=auth, verify=verify)
+    res = requests.get(url_, params=params, auth=auth, verify=verifySSL)
     if res.status_code == 200:
         server_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
         return server_list
@@ -70,16 +70,16 @@ class NoEncodeSession(requests.Session):
 
 class AspenHandlerWeb:
     def __init__(
-        self, url=None, server=None, options={},
+        self, server=None, url=None, auth=None, verifySSL=None, options={},
     ):
         self._max_rows = options.get("max_rows", 100000)
         if url is None:
-            url = r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll"
+            url = r"https://aspenone.equinor.com/ProcessData/AtProcessDataREST.dll"
         self.base_url = url
         self.dataserver = server
         self.session = NoEncodeSession()
-        self.session.verify = False
-        self.session.auth = get_auth_aspen()
+        self.session.verify = verifySSL if verifySSL is not None else True
+        self.session.auth = auth if auth else get_auth_aspen()
 
     @staticmethod
     def stringify(params):
@@ -202,6 +202,10 @@ class AspenHandlerWeb:
         """
         url = urljoin(self.base_url, "Datasources")
         params = {"service": "ProcessData", "allQuotes": 1}
+        if not self.session.verify:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+ 
         res = self.session.get(url, params=params)
         if res.status_code != 200:
             raise ConnectionError
@@ -405,7 +409,7 @@ class AspenHandlerWeb:
 
 class PIHandlerWeb:
     def __init__(
-        self, url=None, server=None, options={},
+        self, url=None, server=None, auth=None, verifySSL=None, options={},
     ):
         self._max_rows = options.get("max_rows", 100000)
         if url is None:
@@ -413,7 +417,8 @@ class PIHandlerWeb:
         self.base_url = url
         self.dataserver = server
         self.session = requests.Session()
-        self.session.auth = get_auth_pi()
+        self.session.verify = verifySSL if verifySSL is not None else True
+        self.session.auth = auth if auth else get_auth_pi()
         self.webidcache = {}
 
     @staticmethod
@@ -524,6 +529,9 @@ class PIHandlerWeb:
         :rtype: Bool
         """
         url = urljoin(self.base_url, "dataservers")
+        if not self.session.verify:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         res = self.session.get(url)
         if res.status_code != 200:
             raise ConnectionError

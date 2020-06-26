@@ -122,7 +122,7 @@ def get_server_address_pi(assetname):
         return None
 
 
-def get_handler(imstype, server, url=None, options={}):
+def get_handler(imstype, server, url=None, options={}, verifySSL=None, auth=None):
     accepted_values = ["pi", "aspen", "ip21", "piweb", "aspenweb", "ip21web"]
 
     if not imstype or imstype.lower() not in accepted_values:
@@ -157,15 +157,15 @@ def get_handler(imstype, server, url=None, options={}):
         return AspenHandlerODBC(host=host, port=port, options=options)
 
     if imstype.lower() == "piweb":
-        return PIHandlerWeb(url=url, server=server, options=options)
+        return PIHandlerWeb(url=url, server=server, options=options, verifySSL=verifySSL, auth=auth)
 
     if imstype.lower() in ["aspenweb", "ip21web"]:
-        return AspenHandlerWeb(url=url, server=server, options=options)
+        return AspenHandlerWeb(server=server, url=url, options=options, verifySSL=verifySSL, auth=auth)
 
 
 class IMSClient:
     def __init__(
-        self, server, imstype=None, tz="Europe/Oslo", url=None, handler_options={}
+        self, server, imstype=None, tz="Europe/Oslo", url=None, handler_options={}, verifySSL=None, auth=None
     ):
         self.handler = None
         self.asset = server.lower()  # FIXME
@@ -174,7 +174,9 @@ class IMSClient:
             imstype,
             server,
             url=url,
-            options=handler_options
+            options=handler_options,
+            verifySSL=verifySSL,
+            auth=auth,
         )
         self.cache = SmartCache(server)
 
