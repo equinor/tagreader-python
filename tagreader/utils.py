@@ -73,8 +73,8 @@ class ReaderType(enum.IntEnum):
     (specifically for cache hierarchies).
     """
 
-    RAW = SAMPLED = enum.auto()  # Raw sampled data
-    SHAPEPRESERVING = enum.auto()  # Minimum data points while preserving shape
+    RAW = SAMPLED = ACTUAL = enum.auto()  # Raw sampled data
+    SHAPEPRESERVING = BESTFIT = enum.auto()  # Minimum data points for preserving shape
     INT = INTERPOLATE = INTERPOLATED = enum.auto()  # Interpolated data
     MIN = MINIMUM = enum.auto()  # Min value
     MAX = MAXIMUM = enum.auto()  # Max value
