@@ -108,11 +108,86 @@ class AspenHandlerWeb:
         params = {"datasource": server, "tag": tag, "max": 100, "getTrendable": 0}
         return params
 
-    @staticmethod
     def generate_read_query(
-        tag, start_time, stop_time, sample_time, read_type, metadata=None
+        self,
+        tagname,
+        mapname,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
     ):
-        raise NotImplementedError
+        # Maxpoints is used for Actual (raw) and Bestfit (shapepreserving).
+        # Probably need to handle this in some way at some point
+        maxpoints = 100000
+        stepped = 0
+        outsiders = 0
+
+        rt = {
+            ReaderType.RAW: 0,
+            ReaderType.SHAPEPRESERVING: 2,
+            ReaderType.INT: 1,
+            ReaderType.MIN: 14,
+            ReaderType.MAX: 13,
+            ReaderType.AVG: 12,
+            ReaderType.VAR: 18,
+            ReaderType.STD: 17,
+            ReaderType.RNG: 15,
+            ReaderType.COUNT: -1,
+            ReaderType.GOOD: 11,
+            ReaderType.BAD: 10,
+            ReaderType.TOTAL: -1,
+            ReaderType.SUM: 16,
+            ReaderType.SNAPSHOT: -1,
+        }.get(read_type, -1)
+
+        # fmt: off
+        query = (
+            '<Q f="d" allQuotes="1">'
+            "<Tag>"
+            f"<N><![CDATA[{tagname}]]></N>"
+        )
+        # fmt: on
+
+        if mapname:
+            query += f"<M><![CDATA[{mapname}]]></M>"
+
+        query += (
+            f"<D><![CDATA[{self.dataserver}]]></D>"
+            "<F><![CDATA[VAL]]></F>"
+            "<HF>0</HF>"  # History format: 0=Raw, 1=RecordAsString
+            f"<St>{int(start_time.timestamp())*1000}</St>"
+            f"<Et>{int(stop_time.timestamp())*1000}</Et>"
+            f"<RT>{rt}</RT>"
+        )
+        if read_type in [ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
+            query += f"<X>{maxpoints}</X>"
+        if read_type not in [ReaderType.INT]:
+            query += f"<O>{outsiders}</O>"
+        if read_type not in [ReaderType.RAW]:
+            query += f"<S>{stepped}</S>"
+        if read_type not in [ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
+            query += (
+                f"<P>{int(sample_time.total_seconds())}</P>"
+                "<PU>3</PU>"  # Period Unit: 0=day, 1=hour, 2=min, 3=sec
+            )
+        if read_type not in [
+            ReaderType.RAW,
+            ReaderType.SHAPEPRESERVING,
+            ReaderType.INT,
+        ]:
+            query += (
+                # Method: 0=integral, 2=value, 3=integral complete, 4=value complete
+                "<AM>0</AM>"
+                "<AS>1</AS>"  # Start: 0=Start Day, 1=Start Time
+                "<AA>0</AA>"  # Anchor: 0=Begin, 1=Middle, 2=End
+                # TODO: Unify anchor selection among all handlers
+                "<DSA>0</DSA>"  # DS Adjust: 0=False, 1=True
+            )
+        query += "</Tag></Q>"
+
+        return query
 
     def verify_connection(self, server):
         """Connects to the URL and verifies that the provided server exists.
@@ -247,8 +322,8 @@ class AspenHandlerWeb:
             raise KeyError
         unit = ""
         for a in attrdata:
-            if a['g'] == 'Units':
-                unit = a["samples"][0]['v']
+            if a["g"] == "Units":
+                unit = a["samples"][0]["v"]
                 break
         return unit
 
