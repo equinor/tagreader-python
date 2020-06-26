@@ -30,6 +30,7 @@ def list_aspen_servers(
     verify=False,
 ):
     import urllib3
+
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     url_ = urljoin(url, "DataSources")
@@ -73,7 +74,6 @@ class AspenHandlerWeb:
     ):
         self._max_rows = options.get("max_rows", 100000)
         if url is None:
-            url = r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll"
             url = r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll"
         self.base_url = url
         self.dataserver = server
@@ -179,8 +179,10 @@ class AspenHandlerWeb:
         ]:
             query += (
                 # Method: 0=integral, 2=value, 3=integral complete, 4=value complete
+                # Value averages all actual values inside interval
+                # Integral time-weighs values
                 "<AM>0</AM>"
-                "<AS>1</AS>"  # Start: 0=Start Day, 1=Start Time
+                "<AS>0</AS>"  # Start: 0=Start of day, 1=Start of time
                 "<AA>0</AA>"  # Anchor: 0=Begin, 1=Middle, 2=End
                 # TODO: Unify anchor selection among all handlers
                 "<DSA>0</DSA>"  # DS Adjust: 0=False, 1=True
@@ -361,7 +363,44 @@ class AspenHandlerWeb:
     def read_tag(
         self, tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
-        raise NotImplementedError
+        if read_type not in [
+            ReaderType.INT,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.AVG,
+            ReaderType.VAR,
+            ReaderType.STD,
+        ]:
+            raise (NotImplementedError)
+
+        url = urljoin(self.base_url, "History")
+
+        tagname, mapname = self.split_tagmap(tag)
+
+        params = self.generate_read_query(
+            tagname, mapname, start_time, stop_time, sample_time, read_type
+        )
+
+        res = self.session.get(url, params=params)
+        if res.status_code != 200:
+            raise ConnectionError
+
+        j = res.json()
+
+        df = (
+            pd.DataFrame.from_dict(j["data"][0]["samples"])
+            .drop(labels=["l", "s", "V"], axis="columns")
+            .rename(columns={"t": "Timestamp", "v": "Value"})
+        )
+        df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms", origin="unix")
+        df = (
+            df.set_index("Timestamp", drop=True)
+            .tz_localize("UTC")
+            .tz_convert(start_time.tzinfo)
+        )
+        df.index.name = "time"
+        return df
 
 
 class PIHandlerWeb:

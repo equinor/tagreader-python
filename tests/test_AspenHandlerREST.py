@@ -71,9 +71,9 @@ def test_generate_unit_query(AspenHandler):
 
 
 def test_generate_map_query(AspenHandler):
-    assert (
-        AspenHandler.generate_get_map_query("ATCAI")
-        == '<Q allQuotes="1" categoryInfo="1"><Tag><N><![CDATA[ATCAI]]></N><T>0</T><G><![CDATA[ATCAI]]></G><D><![CDATA[servername]]></D></Tag></Q>'  # noqa
+    assert AspenHandler.generate_get_map_query("ATCAI") == (
+        '<Q allQuotes="1" categoryInfo="1"><Tag><N><![CDATA[ATCAI]]></N><T>0</T>'
+        "<G><![CDATA[ATCAI]]></G><D><![CDATA[servername]]></D></Tag></Q>"
     )
 
 
@@ -128,42 +128,42 @@ def test_generate_tag_read_query(AspenHandler, read_type):
             "<D><![CDATA[servername]]></D><F><![CDATA[VAL]]></F>"
             "<HF>0</HF><St>1593010800000</St><Et>1593014400000</Et>"
             "<RT>14</RT><O>0</O><S>0</S><P>60</P><PU>3</PU><AM>0</AM>"
-            "<AS>1</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
+            "<AS>0</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
         ),
         "MAX": (
             '<Q f="d" allQuotes="1"><Tag><N><![CDATA[ATCAI]]></N>'
             "<D><![CDATA[servername]]></D><F><![CDATA[VAL]]></F>"
             "<HF>0</HF><St>1593010800000</St><Et>1593014400000</Et>"
             "<RT>13</RT><O>0</O><S>0</S><P>60</P><PU>3</PU><AM>0</AM>"
-            "<AS>1</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
+            "<AS>0</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
         ),
         "RNG": (
             '<Q f="d" allQuotes="1"><Tag><N><![CDATA[ATCAI]]></N>'
             "<D><![CDATA[servername]]></D><F><![CDATA[VAL]]></F>"
             "<HF>0</HF><St>1593010800000</St><Et>1593014400000</Et>"
             "<RT>15</RT><O>0</O><S>0</S><P>60</P><PU>3</PU><AM>0</AM>"
-            "<AS>1</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
+            "<AS>0</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
         ),
         "AVG": (
             '<Q f="d" allQuotes="1"><Tag><N><![CDATA[ATCAI]]></N>'
             "<D><![CDATA[servername]]></D><F><![CDATA[VAL]]></F>"
             "<HF>0</HF><St>1593010800000</St><Et>1593014400000</Et>"
             "<RT>12</RT><O>0</O><S>0</S><P>60</P><PU>3</PU><AM>0</AM>"
-            "<AS>1</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
+            "<AS>0</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
         ),
         "VAR": (
             '<Q f="d" allQuotes="1"><Tag><N><![CDATA[ATCAI]]></N>'
             "<D><![CDATA[servername]]></D><F><![CDATA[VAL]]></F>"
             "<HF>0</HF><St>1593010800000</St><Et>1593014400000</Et>"
             "<RT>18</RT><O>0</O><S>0</S><P>60</P><PU>3</PU><AM>0</AM>"
-            "<AS>1</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
+            "<AS>0</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
         ),
         "STD": (
             '<Q f="d" allQuotes="1"><Tag><N><![CDATA[ATCAI]]></N>'
             "<D><![CDATA[servername]]></D><F><![CDATA[VAL]]></F>"
             "<HF>0</HF><St>1593010800000</St><Et>1593014400000</Et>"
             "<RT>17</RT><O>0</O><S>0</S><P>60</P><PU>3</PU><AM>0</AM>"
-            "<AS>1</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
+            "<AS>0</AS><AA>0</AA><DSA>0</DSA></Tag></Q>"
         ),
         "COUNT": ("whatever"),
         "GOOD": ("whatever"),
