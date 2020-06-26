@@ -205,7 +205,7 @@ class AspenHandlerWeb:
         if not self.session.verify:
             import urllib3
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
- 
+
         res = self.session.get(url, params=params)
         if res.status_code != 200:
             raise ConnectionError

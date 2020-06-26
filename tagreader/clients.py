@@ -157,15 +157,26 @@ def get_handler(imstype, server, url=None, options={}, verifySSL=None, auth=None
         return AspenHandlerODBC(host=host, port=port, options=options)
 
     if imstype.lower() == "piweb":
-        return PIHandlerWeb(url=url, server=server, options=options, verifySSL=verifySSL, auth=auth)
+        return PIHandlerWeb(
+            url=url, server=server, options=options, verifySSL=verifySSL, auth=auth
+        )
 
     if imstype.lower() in ["aspenweb", "ip21web"]:
-        return AspenHandlerWeb(server=server, url=url, options=options, verifySSL=verifySSL, auth=auth)
+        return AspenHandlerWeb(
+            server=server, url=url, options=options, verifySSL=verifySSL, auth=auth
+        )
 
 
 class IMSClient:
     def __init__(
-        self, server, imstype=None, tz="Europe/Oslo", url=None, handler_options={}, verifySSL=None, auth=None
+        self,
+        server,
+        imstype=None,
+        tz="Europe/Oslo",
+        url=None,
+        handler_options={},
+        verifySSL=None,
+        auth=None,
     ):
         self.handler = None
         self.asset = server.lower()  # FIXME
