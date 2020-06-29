@@ -404,7 +404,7 @@ class AspenHandlerWeb:
             .tz_convert(start_time.tzinfo)
         )
         df.index.name = "time"
-        return df
+        return df.rename(columns={"Value": tag})
 
 
 class PIHandlerWeb:

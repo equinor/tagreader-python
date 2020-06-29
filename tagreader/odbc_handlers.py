@@ -77,12 +77,15 @@ class AspenHandlerODBC:
                 # sample_time = (stop_time-start_time).totalseconds
 
         request_num = {
-            ReaderType.SAMPLED: 4,
-            ReaderType.SHAPEPRESERVING: 3,
-            ReaderType.INT: 6,
-            ReaderType.NOTGOOD: 0,
+            ReaderType.SAMPLED: 4,          # VALUES request (actual recorded data), history  # noqa: E501
+            ReaderType.SHAPEPRESERVING: 3,  # FITS request, history
+            ReaderType.INT: 7,              # TIMES2_EXTENDED request, history
+            ReaderType.COUNT: 0,            # Actual data points are used, aggregates
+            ReaderType.GOOD: 0,             # Actual data points are used, aggregates
+            ReaderType.TOTAL: 0,            # Actual data points are used, aggregates
+            ReaderType.NOTGOOD: 0,          # Actual data points are used, aggregates
             ReaderType.SNAPSHOT: None,
-        }.get(read_type, 1)
+        }.get(read_type, 1)  # Default 1 for aggregates table
 
         from_column = {
             ReaderType.SAMPLED: "history",
@@ -103,6 +106,7 @@ class AspenHandlerODBC:
             ReaderType.GOOD: "good",
             ReaderType.NOTGOOD: "ng",
             ReaderType.TOTAL: "sum",
+            ReaderType.SUM: "sum",
             ReaderType.SNAPSHOT: "IP_INPUT_VALUE",
         }.get(read_type, "value")
 
@@ -119,8 +123,10 @@ class AspenHandlerODBC:
             ReaderType.SNAPSHOT: "IP_INPUT_TIME",
         }.get(read_type, "ts")
 
+        ts_report = "ts_start" if from_column == "aggregates" else ts_actual
+
         query = [
-            f'SELECT CAST({ts_actual} AS CHAR FORMAT {timecast_format_output!r}) AS "time",',  # noqa: E501
+            f'SELECT CAST({ts_report} AS CHAR FORMAT {timecast_format_output!r}) AS "time",',  # noqa: E501
             f'{value} AS "value" FROM {from_column}',
         ]
         # Query is actually slower without cast(time) regardless of whether post-fetch
@@ -448,6 +454,19 @@ class PIHandlerODBC:
         unit = self.cursor.fetchone()
         return unit[0]
 
+    @staticmethod
+    def _is_summary(read_type):
+        if read_type in [
+            ReaderType.AVG,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.STD,
+            ReaderType.VAR,
+        ]:
+            return True
+        return False
+
     def read_tag(
         self, tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
@@ -461,6 +480,13 @@ class PIHandlerODBC:
             index_col="timestamp",
             parse_dates={"timestamp": {"format": "%Y-%m-%d %H:%M:%S"}},
         )
+        # PI ODBC reports aggregate values for both end points, using the end of
+        # interval as anchor. Normalize to using start of end as anchor, and remove
+        # initial point which is out of defined range.
+        if self._is_summary(read_type):
+            df.index = df.index - sample_time
+            df = df.drop(df.index[0])
+
         df.index.name = "time"
         # One hour repeated during transition from DST to standard time:
         # if len(df) > len(df.index.unique()):

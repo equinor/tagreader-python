@@ -1,7 +1,10 @@
 import pytest
 import os
-
-from tagreader.utils import ReaderType
+import pandas as pd
+from tagreader.utils import (
+    ReaderType,
+    datestr_to_datetime
+)
 from tagreader.odbc_handlers import list_pi_servers
 from tagreader.clients import IMSClient
 
@@ -65,12 +68,12 @@ def test_search(Client):
         #     "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
         # ),
         ("INT", 61),
-        ("MIN", 61),
-        ("MAX", 61),
-        ("RNG", 61),
-        ("AVG", 61),
-        ("VAR", 61),
-        ("STD", 61),
+        ("MIN", 60),
+        ("MAX", 60),
+        ("RNG", 60),
+        ("AVG", 60),
+        ("VAR", 60),
+        ("STD", 60),
         # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
         # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
         # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
@@ -84,6 +87,8 @@ def test_read(Client, read_type, size):
         tags["Float32"], interval[0], interval[1], 60, getattr(ReaderType, read_type)
     )
     assert df.shape == (size, 1)
+    assert df.index[0] == datestr_to_datetime(interval[0])
+    assert df.index[size - 1] == df.index[0] + (size - 1) * pd.Timedelta(60, unit="s")
 
 
 def test_digitalread_is_one_or_zero(Client):

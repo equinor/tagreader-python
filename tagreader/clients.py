@@ -52,8 +52,8 @@ def get_next_timeslice(start_time, stop_time, ts, max_steps=None):
     # Ensure we include the last data point.
     # Discrepancies between Aspen and Pi for +ts
     # Discrepancies between IMS and cache for e.g. ts.
-    if calc_stop_time == stop_time:
-        calc_stop_time += ts / 2
+    # if calc_stop_time == stop_time:
+    #     calc_stop_time += ts / 2
     return start_time, calc_stop_time
 
 
@@ -234,6 +234,10 @@ class IMSClient:
         # df = pd.concat(frames, verify_integrity=True)
         df = pd.concat(frames)
         df.sort_index(inplace=True)
+        # read_type INT leads to overlapping values after concatenating
+        # due to both start time and end time included.
+        # Aggregate read_types (should) align perfectly and don't
+        # (shouldn't) need deduplication.
         df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
         df = df.rename(columns={"value": tag})
         return df

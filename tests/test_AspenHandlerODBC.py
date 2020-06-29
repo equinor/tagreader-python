@@ -1,4 +1,3 @@
-import pytest
 import pandas as pd
 from tagreader import utils
 from tagreader.utils import ReaderType
@@ -25,6 +24,6 @@ def test_generate_tag_read_query():
         "SELECT CAST(ts AS CHAR FORMAT 'YYYY-MM-DD HH:MI:SS') AS \"time\", "
         'value AS "value" FROM history WHERE name = '
         "'thetag' AND (ts BETWEEN '17-Jan-18 16:00:00' AND '17-Jan-18 17:00:00') AND "
-        "(request = 6) AND (period = 600) ORDER BY ts"
+        "(request = 7) AND (period = 600) ORDER BY ts"
     )
     assert expected == res
