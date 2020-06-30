@@ -25,7 +25,7 @@ def get_auth_aspen():
 
 
 def list_aspen_servers(
-    url=r"https://aspenone.equinor.com/ProcessData/AtProcessDataREST.dll",
+    url=r"ws2679.statoil.net/ProcessData/AtProcessDataREST.dll",
     auth=get_auth_aspen(),
     verifySSL=True,
 ):
@@ -74,7 +74,7 @@ class AspenHandlerWeb:
     ):
         self._max_rows = options.get("max_rows", 100000)
         if url is None:
-            url = r"https://aspenone.equinor.com/ProcessData/AtProcessDataREST.dll"
+            url = r"https://ws2679.statoil.net/ProcessData/AtProcessDataREST.dll"
         self.base_url = url
         self.dataserver = server
         self.session = NoEncodeSession()
