@@ -24,7 +24,7 @@ def get_auth_aspen():
     return HTTPKerberosAuth(service="HTTPS")
 
 
-def list_aspen_servers(
+def list_aspen_sources(
     url=r"ws2679.statoil.net/ProcessData/AtProcessDataREST.dll",
     auth=get_auth_aspen(),
     verifySSL=True,
@@ -38,20 +38,20 @@ def list_aspen_servers(
 
     res = requests.get(url_, params=params, auth=auth, verify=verifySSL)
     if res.status_code == 200:
-        server_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
-        return server_list
+        source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
+        return source_list
     elif res.status_code == 404:
         print("Not found")
     elif res.status_code == 401:
         print("Not authorized")
 
 
-def list_pi_servers(url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_pi()):
+def list_pi_sources(url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_pi()):
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth)
     if res.status_code == 200:
-        server_list = [r["Name"] for r in res.json()["Items"]]
-        return server_list
+        source_list = [r["Name"] for r in res.json()["Items"]]
+        return source_list
     elif res.status_code == 404:
         print("Not found")
     elif res.status_code == 401:
@@ -70,13 +70,13 @@ class NoEncodeSession(requests.Session):
 
 class AspenHandlerWeb:
     def __init__(
-        self, server=None, url=None, auth=None, verifySSL=None, options={},
+        self, datasource=None, url=None, auth=None, verifySSL=None, options={},
     ):
         self._max_rows = options.get("max_rows", 100000)
         if url is None:
             url = r"https://ws2679.statoil.net/ProcessData/AtProcessDataREST.dll"
         self.base_url = url
-        self.dataserver = server
+        self.datasource = datasource
         self.session = NoEncodeSession()
         self.session.verify = verifySSL if verifySSL is not None else True
         self.session.auth = auth if auth else get_auth_aspen()
@@ -102,10 +102,10 @@ class AspenHandlerWeb:
         raise NotImplementedError
 
     @staticmethod
-    def generate_search_query(tag=None, desc=None, server=None):
-        if not server:
-            raise ValueError("Server is required argument")
-        params = {"datasource": server, "tag": tag, "max": 100, "getTrendable": 0}
+    def generate_search_query(tag=None, desc=None, datasource=None):
+        if not datasource:
+            raise ValueError("Data source is required argument")
+        params = {"datasource": datasource, "tag": tag, "max": 100, "getTrendable": 0}
         return params
 
     def generate_read_query(
@@ -154,7 +154,7 @@ class AspenHandlerWeb:
             query += f"<M><![CDATA[{mapname}]]></M>"
 
         query += (
-            f"<D><![CDATA[{self.dataserver}]]></D>"
+            f"<D><![CDATA[{self.datasource}]]></D>"
             "<F><![CDATA[VAL]]></F>"
             "<HF>0</HF>"  # History format: 0=Raw, 1=RecordAsString
             f"<St>{int(start_time.timestamp())*1000}</St>"
@@ -191,13 +191,13 @@ class AspenHandlerWeb:
 
         return query
 
-    def verify_connection(self, server):
-        """Connects to the URL and verifies that the provided server exists.
+    def verify_connection(self, datasource):
+        """Connects to the URL and verifies that the provided data source exists.
 
-        :param server: Data server to look for
-        :type server: String
+        :param datasource: Data source to look for
+        :type datasource: String
         :raises ConnectionError: If connection fails
-        :return: True if server exists, False if not.
+        :return: True if datasource exists, False if not.
         :rtype: Bool
         """
         url = urljoin(self.base_url, "Datasources")
@@ -211,12 +211,12 @@ class AspenHandlerWeb:
             raise ConnectionError
         j = res.json()
         for item in j["data"]:
-            if item["n"] == server:
+            if item["n"] == datasource:
                 return True
         return False
 
     def connect(self):
-        self.verify_connection(self.dataserver)
+        self.verify_connection(self.datasource)
 
     @staticmethod
     def split_tagmap(tagmap):
@@ -230,7 +230,7 @@ class AspenHandlerWeb:
             f"<N><![CDATA[{tagname}]]></N>",
             "<T>0</T>",  # What is this?
             f"<G><![CDATA[{tagname}]]></G>",
-            f"<D><![CDATA[{self.dataserver}]]></D>",
+            f"<D><![CDATA[{self.datasource}]]></D>",
             "<AL>",
             # Units only or MAP_Units only: ATCAI=>3. Both: Units=psig, MAP_Units=3
             "<A>Units</A>",
@@ -249,7 +249,7 @@ class AspenHandlerWeb:
             f"<N><![CDATA[{tagname}]]></N>",
             "<T>0</T>",  # What is this?
             f"<G><![CDATA[{tagname}]]></G>",
-            f"<D><![CDATA[{self.dataserver}]]></D>",
+            f"<D><![CDATA[{self.datasource}]]></D>",
             "</Tag>",
             "</Q>",
         ]
@@ -287,7 +287,7 @@ class AspenHandlerWeb:
         desc = desc.replace("%", "*") if isinstance(desc, str) else None
         desc = desc.replace("*", ".*") if isinstance(desc, str) else None
 
-        params = self.generate_search_query(tag, desc, self.dataserver)
+        params = self.generate_search_query(tag, desc, self.datasource)
         url = urljoin(self.base_url, "Browse")
         res = self.session.get(url, params=params)
 
@@ -341,7 +341,7 @@ class AspenHandlerWeb:
             f"<N><![CDATA[{tagname}]]></N>",
             "<T>0</T>",  # What is this?
             f"<G><![CDATA[{tagname}]]></G>",
-            f"<D><![CDATA[{self.dataserver}]]></D>",
+            f"<D><![CDATA[{self.datasource}]]></D>",
             "<AL>",
             "<A>DSCR</A>",
             "<VS>0</VS>",  # What is this?
@@ -409,13 +409,13 @@ class AspenHandlerWeb:
 
 class PIHandlerWeb:
     def __init__(
-        self, url=None, server=None, auth=None, verifySSL=None, options={},
+        self, url=None, datasource=None, auth=None, verifySSL=None, options={},
     ):
         self._max_rows = options.get("max_rows", 100000)
         if url is None:
             url = r"https://piwebapi.equinor.com/piwebapi"
         self.base_url = url
-        self.dataserver = server
+        self.datasource = datasource
         self.session = requests.Session()
         self.session.verify = verifySSL if verifySSL is not None else True
         self.session.auth = auth if auth else get_auth_pi()
@@ -454,7 +454,7 @@ class PIHandlerWeb:
         )
 
     @staticmethod
-    def generate_search_query(tag=None, desc=None, server=None):
+    def generate_search_query(tag=None, desc=None, datasource=None):
         q = []
         if tag is not None:
             q.extend([f"name:{PIHandlerWeb.escape(tag)}"])
@@ -463,8 +463,8 @@ class PIHandlerWeb:
         query = " AND ".join(q)
         params = {"q": f"{query}"}
 
-        if server is not None:
-            params["scope"] = f"pi:{server}"
+        if datasource is not None:
+            params["scope"] = f"pi:{datasource}"
 
         return params
 
@@ -519,13 +519,13 @@ class PIHandlerWeb:
 
         return (url, params)
 
-    def verify_connection(self, server):
-        """Connects to the URL and verifies that the provided server exists.
+    def verify_connection(self, datasource):
+        """Connects to the URL and verifies that the provided data source exists.
 
-        :param server: Data server to look for
-        :type server: String
+        :param source: Data source to look for
+        :type source: String
         :raises ConnectionError: If connection fails
-        :return: True if server exists, False if not.
+        :return: True if data source exists, False if not.
         :rtype: Bool
         """
         url = urljoin(self.base_url, "dataservers")
@@ -537,15 +537,15 @@ class PIHandlerWeb:
             raise ConnectionError
         j = res.json()
         for item in j["Items"]:
-            if item["Name"] == server:
+            if item["Name"] == datasource:
                 return True
         return False
 
     def connect(self):
-        self.verify_connection(self.dataserver)
+        self.verify_connection(self.datasource)
 
     def search_tag(self, tag=None, desc=None):
-        params = self.generate_search_query(tag, desc, self.dataserver)
+        params = self.generate_search_query(tag, desc, self.datasource)
         url = urljoin(self.base_url, "search", "query")
         done = False
         ret = []
@@ -598,7 +598,7 @@ class PIHandlerWeb:
         :rtype: str
         """
         if tag not in self.webidcache:
-            params = self.generate_search_query(tag=tag, server=self.dataserver)
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
             params["fields"] = "name;webid"
             url = urljoin(self.base_url, "search", "query")
             res = self.session.get(url, params=params)

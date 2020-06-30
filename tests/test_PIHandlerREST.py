@@ -13,7 +13,7 @@ SAMPLE_TIME = 60
 
 @pytest.fixture()
 def PIHandler():
-    h = PIHandlerWeb(server="servername")
+    h = PIHandlerWeb(datasource="sourcename")
     h.webidcache["alreadyknowntag"] = "knownwebid"
     yield h
 
@@ -26,9 +26,9 @@ def test_escape_chars():
 
 def test_generate_search_query():
     assert PIHandlerWeb.generate_search_query("SINUSOID") == {"q": "name:SINUSOID"}
-    assert PIHandlerWeb.generate_search_query(r"BA:*.1", server="servername") == {
+    assert PIHandlerWeb.generate_search_query(r"BA:*.1", datasource="sourcename") == {
         "q": r"name:BA\:*.1",
-        "scope": "pi:servername",
+        "scope": "pi:sourcename",
     }
     assert PIHandlerWeb.generate_search_query(tag="BA:*.1") == {
         "q": r"name:BA\:*.1",

@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from tagreader.utils import ReaderType
 from tagreader.web_handlers import (
-    list_pi_servers,
+    list_pi_sources,
     PIHandlerWeb,
 )
 from tagreader.clients import IMSClient
@@ -17,7 +17,7 @@ if is_GITHUBACTION:
 
 
 BASE_URL = "https://piwebapi.equinor.com/piwebapi"
-ASSET = "PINO"
+SOURCE = "PINO"
 TAGS = {
     "Float32": "BA:CONC.1",
     "Digital": "BA:ACTIVE.1",
@@ -31,23 +31,23 @@ SAMPLE_TIME = 60
 
 @pytest.fixture()
 def Client():
-    c = IMSClient(ASSET, imstype="piweb")
+    c = IMSClient(SOURCE, imstype="piweb")
     c.cache = None
     c.connect()
     yield c
-    if os.path.exists(ASSET + ".h5"):
-        os.remove(ASSET + ".h5")
+    if os.path.exists(SOURCE + ".h5"):
+        os.remove(SOURCE + ".h5")
 
 
 @pytest.fixture()
 def PIHandler():
-    h = PIHandlerWeb(server=ASSET)
+    h = PIHandlerWeb(datasource=SOURCE)
     h.webidcache["alreadyknowntag"] = "knownwebid"
     yield h
 
 
-def test_list_all_pi_servers():
-    res = list_pi_servers()
+def test_list_all_pi_sources():
+    res = list_pi_sources()
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:
@@ -160,8 +160,8 @@ def test_get_description(Client):
 
 
 def test_from_DST_folds_time(Client):
-    if os.path.exists(ASSET + ".h5"):
-        os.remove(ASSET + ".h5")
+    if os.path.exists(SOURCE + ".h5"):
+        os.remove(SOURCE + ".h5")
     tag = TAGS["Float32"]
     interval = ["2017-10-29 00:30:00", "2017-10-29 04:30:00"]
     df = Client.read_tags([tag], interval[0], interval[1], 600)
@@ -177,8 +177,8 @@ def test_from_DST_folds_time(Client):
 
 
 def test_to_DST_skips_time(Client):
-    if os.path.exists(ASSET + ".h5"):
-        os.remove(ASSET + ".h5")
+    if os.path.exists(SOURCE + ".h5"):
+        os.remove(SOURCE + ".h5")
     tag = TAGS["Float32"]
     interval = ["2018-03-25 00:30:00", "2018-03-25 03:30:00"]
     df = Client.read_tags([tag], interval[0], interval[1], 600)

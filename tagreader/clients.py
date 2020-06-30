@@ -57,10 +57,10 @@ def get_next_timeslice(start_time, stop_time, ts, max_steps=None):
     return start_time, calc_stop_time
 
 
-def get_server_address_aspen(assetname):
-    """Assets are listed under
+def get_server_address_aspen(datasource):
+    """Data sources are listed under
     HKEY_CURRENT_USER\\Software\\AspenTech\\ADSA\\Caches\\AspenADSA\\username.
-    For each asset there are multiple keys with Host entries. We start by
+    For each data source there are multiple keys with Host entries. We start by
     identifying the correct key to use by locating the UUID for Aspen SQLplus
     services located under Aspen SQLplus service component. Then we find the
     host and port based on the path above and the UUID.
@@ -84,7 +84,7 @@ def get_server_address_aspen(assetname):
     )
 
     try:
-        reg_site_key = winreg.OpenKey(reg_adsa, assetname + "\\" + aspen_UUID)
+        reg_site_key = winreg.OpenKey(reg_adsa, datasource + "\\" + aspen_UUID)
         host = winreg.QueryValueEx(reg_site_key, "Host")[0]
         port = int(winreg.QueryValueEx(reg_site_key, "Port")[0])
         return host, port
@@ -92,13 +92,13 @@ def get_server_address_aspen(assetname):
         return None
 
 
-def get_server_address_pi(assetname):
+def get_server_address_pi(datasource):
     """
-    PI Assets are listed under
+    PI data sources are listed under
     HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\PISystem\\PI-SDK\\x.x\\ServerHandles or
     \\Software\\PISystem\\PI-SDK\\x.x\\ServerHandles.
 
-    :param assetname: Name of asset
+    :param datasource: Name of data source
     :return: host, port
     :type: tuple(string, int)
     """
@@ -107,13 +107,13 @@ def get_server_address_pi(assetname):
             winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\PISystem\PI-SDK"
         )
         reg_key_handles = find_registry_key(reg_key, "ServerHandles")
-        reg_site_key = find_registry_key(reg_key_handles, assetname)
+        reg_site_key = find_registry_key(reg_key_handles, datasource)
         if reg_site_key is None:
             reg_key = winreg.OpenKey(
                 winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\PISystem\PI-SDK"
             )
             reg_key_handles = find_registry_key(reg_key, "ServerHandles")
-            reg_site_key = find_registry_key(reg_key_handles, assetname)
+            reg_site_key = find_registry_key(reg_key_handles, datasource)
         if reg_site_key is not None:
             host = winreg.QueryValueEx(reg_site_key, "path")[0]
             port = int(winreg.QueryValueEx(reg_site_key, "port")[0])
@@ -122,7 +122,7 @@ def get_server_address_pi(assetname):
         return None
 
 
-def get_handler(imstype, server, url=None, options={}, verifySSL=None, auth=None):
+def get_handler(imstype, datasource, url=None, options={}, verifySSL=None, auth=None):
     accepted_values = ["pi", "aspen", "ip21", "piweb", "aspenweb", "ip21web"]
 
     if not imstype or imstype.lower() not in accepted_values:
@@ -134,10 +134,11 @@ def get_handler(imstype, server, url=None, options={}, verifySSL=None, auth=None
                 "No PI ODBC driver detected. "
                 "Either switch to Web API ('piweb') or install appropriate driver."
             )
-        hostport = get_server_address_pi(server)
+        hostport = get_server_address_pi(datasource)
         if not hostport:
             raise ValueError(
-                f"Unable to locate server '{server}'. Do you have correct permissions?"
+                f"Unable to locate data source '{datasource}'."
+                "Do you have correct permissions?"
             )
         host, port = hostport
         return PIHandlerODBC(host=host, port=port, options=options)
@@ -148,29 +149,38 @@ def get_handler(imstype, server, url=None, options={}, verifySSL=None, auth=None
                 "No Aspen SQLplus ODBC driver detected. Either switch to Web API "
                 "('aspenweb') or install appropriate driver."
             )
-        hostport = get_server_address_aspen(server)
+        hostport = get_server_address_aspen(datasource)
         if not hostport:
             raise ValueError(
-                f"Unable to locate server '{server}'. Do you have correct permissions?"
+                f"Unable to locate data source '{datasource}'."
+                "Do you have correct permissions?"
             )
         host, port = hostport
         return AspenHandlerODBC(host=host, port=port, options=options)
 
     if imstype.lower() == "piweb":
         return PIHandlerWeb(
-            url=url, server=server, options=options, verifySSL=verifySSL, auth=auth
+            url=url,
+            datasource=datasource,
+            options=options,
+            verifySSL=verifySSL,
+            auth=auth,
         )
 
     if imstype.lower() in ["aspenweb", "ip21web"]:
         return AspenHandlerWeb(
-            server=server, url=url, options=options, verifySSL=verifySSL, auth=auth
+            datasource=datasource,
+            url=url,
+            options=options,
+            verifySSL=verifySSL,
+            auth=auth,
         )
 
 
 class IMSClient:
     def __init__(
         self,
-        server,
+        datasource,
         imstype=None,
         tz="Europe/Oslo",
         url=None,
@@ -179,17 +189,17 @@ class IMSClient:
         auth=None,
     ):
         self.handler = None
-        self.asset = server.lower()  # FIXME
+        self.datasource = datasource.lower()  # FIXME
         self.tz = tz
         self.handler = get_handler(
             imstype,
-            server,
+            datasource,
             url=url,
             options=handler_options,
             verifySSL=verifySSL,
             auth=auth,
         )
-        self.cache = SmartCache(server)
+        self.cache = SmartCache(datasource)
 
     def connect(self):
         self.handler.connect()

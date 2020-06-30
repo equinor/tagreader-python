@@ -3,7 +3,7 @@ import os
 
 from tagreader.clients import IMSClient
 from tagreader.odbc_handlers import (
-    list_aspen_servers,
+    list_aspen_sources,
 )
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
@@ -14,24 +14,22 @@ if is_GITHUBACTION:
         allow_module_level=True
     )
 
-ASSET = "SNA"
-ASSET2 = "MEL-IMS"
-
+SOURCE = "SNA"
 TAGS = ["ATCAI", "ATCMIXTIME1"]
 
 
 @pytest.fixture()
 def Client():
-    c = IMSClient(ASSET, "ip21")
+    c = IMSClient(SOURCE, "ip21")
     c.cache = None
     c.connect()
     yield c
-    if os.path.exists(ASSET + ".h5"):
-        os.remove(ASSET + ".h5")
+    if os.path.exists(SOURCE + ".h5"):
+        os.remove(SOURCE + ".h5")
 
 
-def test_list_all_aspen_servers():
-    res = list_aspen_servers()
+def test_list_all_aspen_sources():
+    res = list_aspen_sources()
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)

@@ -5,7 +5,7 @@ from tagreader.utils import (
     ReaderType,
     datestr_to_datetime
 )
-from tagreader.odbc_handlers import list_pi_servers
+from tagreader.odbc_handlers import list_pi_sources
 from tagreader.clients import IMSClient
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
@@ -15,7 +15,7 @@ if is_GITHUBACTION:
         "All tests in module require connection to PI server", allow_module_level=True
     )
 
-asset = "PINO"
+SOURCE = "PINO"
 
 tags = {
     "Float32": "BA:CONC.1",
@@ -28,16 +28,16 @@ interval = ["2020-04-01 11:05:00", "2020-04-01 12:05:00"]
 
 @pytest.fixture()
 def Client():
-    c = IMSClient(asset, "pi")
+    c = IMSClient(SOURCE, "pi")
     c.cache = None
     c.connect()
     yield c
-    if os.path.exists(asset + ".h5"):
-        os.remove(asset + ".h5")
+    if os.path.exists(SOURCE + ".h5"):
+        os.remove(SOURCE + ".h5")
 
 
-def test_list_all_pi_servers():
-    res = list_pi_servers()
+def test_list_all_pi_sources():
+    res = list_pi_sources()
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)
@@ -114,8 +114,8 @@ def test_get_description(Client):
 
 
 def test_from_DST_folds_time(Client):
-    if os.path.exists(asset + ".h5"):
-        os.remove(asset + ".h5")
+    if os.path.exists(SOURCE + ".h5"):
+        os.remove(SOURCE + ".h5")
     tag = tags["Float32"]
     interval = ["2017-10-29 00:30:00", "2017-10-29 04:30:00"]
     df = Client.read_tags([tag], interval[0], interval[1], 600)
@@ -131,8 +131,8 @@ def test_from_DST_folds_time(Client):
 
 
 def test_to_DST_skips_time(Client):
-    if os.path.exists(asset + ".h5"):
-        os.remove(asset + ".h5")
+    if os.path.exists(SOURCE + ".h5"):
+        os.remove(SOURCE + ".h5")
     tag = tags["Float32"]
     interval = ["2018-03-25 00:30:00", "2018-03-25 03:30:00"]
     df = Client.read_tags([tag], interval[0], interval[1], 600)

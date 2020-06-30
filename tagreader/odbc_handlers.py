@@ -9,20 +9,20 @@ logging.basicConfig(
 )
 
 
-def list_aspen_servers():
-    server_list = []
+def list_aspen_sources():
+    source_list = []
     reg_adsa = winreg.OpenKey(
         winreg.HKEY_CURRENT_USER,
         r"Software\AspenTech\ADSA\Caches\AspenADSA\\" + os.getlogin(),
     )
-    num_servers, _, _ = winreg.QueryInfoKey(reg_adsa)
-    for i in range(0, num_servers):
-        server_list.append(winreg.EnumKey(reg_adsa, i))
-    return server_list
+    num_sources, _, _ = winreg.QueryInfoKey(reg_adsa)
+    for i in range(0, num_sources):
+        source_list.append(winreg.EnumKey(reg_adsa, i))
+    return source_list
 
 
-def list_pi_servers():
-    server_list = []
+def list_pi_sources():
+    source_list = []
     reg_key = winreg.OpenKey(
         winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\PISystem\PI-SDK"
     )
@@ -31,10 +31,10 @@ def list_pi_servers():
         reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\PISystem\PI-SDK")
         reg_key = find_registry_key(reg_key, "ServerHandles")
     if reg_key is not None:
-        num_servers, _, _ = winreg.QueryInfoKey(reg_key)
-        for i in range(0, num_servers):
-            server_list.append(winreg.EnumKey(reg_key, i))
-    return server_list
+        num_sources, _, _ = winreg.QueryInfoKey(reg_key)
+        for i in range(0, num_sources):
+            source_list.append(winreg.EnumKey(reg_key, i))
+    return source_list
 
 
 class AspenHandlerODBC:

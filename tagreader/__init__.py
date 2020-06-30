@@ -1,8 +1,11 @@
-from .clients import IMSClient
-from .odbc_handlers import list_aspen_servers, list_pi_servers
+from .clients import IMSClient      # noqa: F401
+from .odbc_handlers import (        # noqa: F401
+    list_aspen_sources,
+    list_pi_sources,
+)
 try:
     from .version import version as __version__
 except ImportError:
     # Just in case it wasn't installed properly, for some reason
     from datetime import datetime
-    __version__ = 'unknown-'+datetime.today().strftime('%Y%m%d')
+    __version__ = 'unknown-' + datetime.today().strftime('%Y%m%d')
