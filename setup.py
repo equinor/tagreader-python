@@ -69,7 +69,7 @@ setup(
     setup_requires=["setuptools_scm"],
     use_scm_version={"write_to": "tagreader/version.py"},
     install_requires=[
-        "pandas>= .0.0",
+        "pandas>=1.0.0",
         "tables",
         "pyodbc",
         "requests",
