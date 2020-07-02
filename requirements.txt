@@ -1,4 +1,4 @@
-pandas>=0.23
+pandas>=1.0.0
 tables
 pyodbc
 requests

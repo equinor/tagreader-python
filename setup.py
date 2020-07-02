@@ -18,7 +18,7 @@ file format to cache results.
 
 ## Requirements ##
 * Python >= 3.6 with the following packages:
-  * pandas >= 0.23
+  * pandas >= 1.0.0
   * pytables
   * pyodbc
 * PI ODBC driver and/or Aspen IP.21 SQLPlus ODBC driver
@@ -69,7 +69,7 @@ setup(
     setup_requires=["setuptools_scm"],
     use_scm_version={"write_to": "tagreader/version.py"},
     install_requires=[
-        "pandas >=0.23",
+        "pandas>= .0.0",
         "tables",
         "pyodbc",
         "requests",
