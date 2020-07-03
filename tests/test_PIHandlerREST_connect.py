@@ -9,12 +9,14 @@ from tagreader.web_handlers import (
 from tagreader.clients import IMSClient
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
+is_AZUREPIPELINE = "TF_BUILD" in os.environ
 
 if is_GITHUBACTION:
     pytest.skip(
         "All tests in module require connection to PI server", allow_module_level=True
     )
 
+verifySSL = is_AZUREPIPELINE # Certificate unavailable there
 
 BASE_URL = "https://piwebapi.equinor.com/piwebapi"
 SOURCE = "PINO"
@@ -31,7 +33,7 @@ SAMPLE_TIME = 60
 
 @pytest.fixture()
 def Client():
-    c = IMSClient(SOURCE, imstype="piweb")
+    c = IMSClient(SOURCE, imstype="piweb", verifySSL=verifySSL)
     c.cache = None
     c.connect()
     yield c
@@ -41,7 +43,7 @@ def Client():
 
 @pytest.fixture()
 def PIHandler():
-    h = PIHandlerWeb(datasource=SOURCE)
+    h = PIHandlerWeb(datasource=SOURCE, verifySSL=verifySSL)
     h.webidcache["alreadyknowntag"] = "knownwebid"
     yield h
 

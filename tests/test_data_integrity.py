@@ -6,11 +6,14 @@ from tagreader.utils import ReaderType, datestr_to_datetime
 from tagreader.cache import SmartCache
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
+is_AZUREPIPELINE = "TF_BUILD" in os.environ
 
 if is_GITHUBACTION:
     pytest.skip(
         "All tests in module require connection to PI server", allow_module_level=True
     )
+
+verifySSL = is_AZUREPIPELINE # Certificate unavailable there
 
 PI_DS = "PIMAM"
 PI_TAG = "SINUSOID"
@@ -39,7 +42,7 @@ def PIClientOdbc():
 
 @pytest.fixture()
 def PIClientWeb():
-    c = IMSClient(PI_DS, "piweb")
+    c = IMSClient(PI_DS, "piweb", verifySSL=verifySSL)
     if os.path.exists(PI_DS + ".h5"):
         os.remove(PI_DS + ".h5")
     c.cache = None

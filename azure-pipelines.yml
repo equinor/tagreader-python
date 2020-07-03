@@ -28,11 +28,11 @@ steps:
 
 - script: |
     pip install -r test-requirements.txt
-    pip install pytest-azurepipelines
+    pip install pytest pytest-cov pytest-azurepipelines 
     curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
     rmdir /S /Q extratests
     unzip -o -j -d extratests extratests.zip */tests/*.py
-    pytest
+    pytest tests/ extratests/ --cov tagreader --cov-report html
   displayName: 'pytest'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
