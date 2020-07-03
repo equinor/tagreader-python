@@ -470,9 +470,8 @@ class PIHandlerWeb:
 
         return params
 
-    @staticmethod
     def generate_read_query(
-        tag, start_time, stop_time, sample_time, read_type, metadata=None
+        self, tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
         if read_type in [
             ReaderType.COUNT,
@@ -518,6 +517,11 @@ class PIHandlerWeb:
         elif summary_type:
             params["summaryType"] = summary_type
             params["summaryDuration"] = f"{sample_time}s"
+
+        if self._is_summary(read_type):
+            params["selectedFields"] = "Links;Items.Value.Timestamp;Items.Value.Value;Items.Value.Good"
+        else:
+            params["selectedFields"] = "Links;Items.Timestamp;Items.Value;Items.Good"
 
         return (url, params)
 
@@ -648,10 +652,6 @@ class PIHandlerWeb:
         (url, params) = self.generate_read_query(
             webid, start_time, stop_time, sample_time, read_type
         )
-        if self._is_summary(read_type):
-            params["selectedFields"] = "Links;Items.Value.Timestamp;Items.Value.Value;Items.Value.Good"
-        else:
-            params["selectedFields"] = "Links;Items.Timestamp;Items.Value;Items.Good"
         url = urljoin(self.base_url, url)
         res = self.session.get(url, params=params)
         if res.status_code != 200:

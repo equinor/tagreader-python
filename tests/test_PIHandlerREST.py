@@ -95,9 +95,11 @@ def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test
 
     if read_type == "INT":
         assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/interpolated"
+        assert params["selectedFields"] == "Links;Items.Timestamp;Items.Value;Items.Good"
         assert params["interval"] == f"{SAMPLE_TIME}s"
     elif read_type in ["AVG", "MIN", "MAX", "RNG", "STD", "VAR"]:
         assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/summary"
+        assert params["selectedFields"] == "Links;Items.Value.Timestamp;Items.Value.Value;Items.Value.Good"
         assert {
             "AVG": "Average",
             "MIN": "Minimum",
