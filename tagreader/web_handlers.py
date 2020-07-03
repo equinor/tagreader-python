@@ -2,6 +2,7 @@ import requests
 import urllib
 import re
 import pandas as pd
+import numpy as np
 
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 
@@ -204,6 +205,7 @@ class AspenHandlerWeb:
         params = {"service": "ProcessData", "allQuotes": 1}
         if not self.session.verify:
             import urllib3
+
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         res = self.session.get(url, params=params)
@@ -531,6 +533,7 @@ class PIHandlerWeb:
         url = urljoin(self.base_url, "dataservers")
         if not self.session.verify:
             import urllib3
+
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         res = self.session.get(url)
         if res.status_code != 200:
@@ -646,9 +649,9 @@ class PIHandlerWeb:
             webid, start_time, stop_time, sample_time, read_type
         )
         if self._is_summary(read_type):
-            params["selectedFields"] = "Links;Items.Value.Timestamp;Items.Value.Value"
+            params["selectedFields"] = "Links;Items.Value.Timestamp;Items.Value.Value;Items.Value.Good"
         else:
-            params["selectedFields"] = "Links;Items.Timestamp;Items.Value"
+            params["selectedFields"] = "Links;Items.Timestamp;Items.Value;Items.Good"
         url = urljoin(self.base_url, url)
         res = self.session.get(url, params=params)
         if res.status_code != 200:
@@ -657,23 +660,22 @@ class PIHandlerWeb:
         j = res.json()
         # Summary (aggregated) data and DigitalSets return Value as dict
         df = pd.json_normalize(data=j, record_path="Items")
-        if self._is_summary(read_type):
-            df = df.rename(
-                columns={"Value.Timestamp": "Timestamp", "Value.Value": "Value"}
-            )
-            # TODO: Square Value if read_type is VAR
 
-        # Missing data or digitalset:
-        if "Value.Name" in df.columns:
-            # Missing data in all rows or digitalset.
-            # Assume digitalset and replace any missing data with None.
-            # TODO: What happens for digital values with missing data?
-            # TODO: And what about summaries with digital values (with missing data)...?
-            if "Value" not in df.columns:
-                df["Value"] = df["Value.Value"]
-                df.loc[df["Value.Name"].str.contains("No Data"), "Value"] = None
-            df = df.drop(columns=["Value.Name", "Value.Value", "Value.IsSystem"])
+        
+        # Summary data, digitalset or invalid data
+        if "Value" not in df.columns:
+            # Either digitalset or invalid data. Set invalid to NaN
+            if "Value.Name" in df.columns:
+                df.loc[df.Good == False, "Value.Value"] = np.nan
+            df = df.rename(
+                columns={"Value.Value": "Value", "Value.Timestamp": "Timestamp"}
+            )
+
+        df = df.filter(["Timestamp", "Value"])
         df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="%Y-%m-%dT%H:%M:%SZ")
+
+        if read_type == ReaderType.VAR:
+            df["Value"] = df["Value"]**2
 
         df = df.set_index("Timestamp", drop=True)
         df.index.name = "time"
