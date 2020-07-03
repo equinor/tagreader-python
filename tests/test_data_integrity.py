@@ -13,7 +13,7 @@ if is_GITHUBACTION:
         "All tests in module require connection to PI server", allow_module_level=True
     )
 
-verifySSL = is_AZUREPIPELINE # Certificate unavailable there
+verifySSL = is_AZUREPIPELINE  # Certificate unavailable there
 
 PI_DS = "PIMAM"
 PI_TAG = "SINUSOID"
