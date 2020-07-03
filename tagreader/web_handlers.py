@@ -47,9 +47,9 @@ def list_aspen_sources(
         print("Not authorized")
 
 
-def list_pi_sources(url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_pi()):
+def list_pi_sources(url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_pi(), verifySSL=True):
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth)
+    res = requests.get(url_, auth=auth, verify=verifySSL)
     if res.status_code == 200:
         source_list = [r["Name"] for r in res.json()["Items"]]
         return source_list
@@ -519,7 +519,9 @@ class PIHandlerWeb:
             params["summaryDuration"] = f"{sample_time}s"
 
         if self._is_summary(read_type):
-            params["selectedFields"] = "Links;Items.Value.Timestamp;Items.Value.Value;Items.Value.Good"
+            params[
+                "selectedFields"
+            ] = "Links;Items.Value.Timestamp;Items.Value.Value;Items.Value.Good"
         else:
             params["selectedFields"] = "Links;Items.Timestamp;Items.Value;Items.Good"
 
@@ -661,12 +663,11 @@ class PIHandlerWeb:
         # Summary (aggregated) data and DigitalSets return Value as dict
         df = pd.json_normalize(data=j, record_path="Items")
 
-        
         # Summary data, digitalset or invalid data
         if "Value" not in df.columns:
             # Either digitalset or invalid data. Set invalid to NaN
             if "Value.Name" in df.columns:
-                df.loc[df.Good == False, "Value.Value"] = np.nan
+                df.loc[df.Good == False, "Value.Value"] = np.nan  # noqa E712
             df = df.rename(
                 columns={"Value.Value": "Value", "Value.Timestamp": "Timestamp"}
             )
@@ -675,7 +676,7 @@ class PIHandlerWeb:
         df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="%Y-%m-%dT%H:%M:%SZ")
 
         if read_type == ReaderType.VAR:
-            df["Value"] = df["Value"]**2
+            df["Value"] = df["Value"] ** 2
 
         df = df.set_index("Timestamp", drop=True)
         df.index.name = "time"
