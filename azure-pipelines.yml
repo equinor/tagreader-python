@@ -27,7 +27,7 @@ steps:
     curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
     rmdir /S /Q extratests
     unzip -o -j -d extratests extratests.zip */tests/*.py
-    pytest tests/test_PIHandlerREST.py
+    pytest tests/test_PIHandlerREST_connect.py
   displayName: 'pytest'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
