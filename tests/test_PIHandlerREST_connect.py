@@ -48,8 +48,8 @@ def PIHandler():
     yield h
 
 
-def test_list_all_pi_sources(verifySSL=verifySSL):
-    res = list_pi_sources()
+def test_list_all_pi_sources():
+    res = list_pi_sources(verifySSL=verifySSL)
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:

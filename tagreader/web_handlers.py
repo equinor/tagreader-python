@@ -47,7 +47,9 @@ def list_aspen_sources(
         print("Not authorized")
 
 
-def list_pi_sources(url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_pi(), verifySSL=True):
+def list_pi_sources(
+    url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_pi(), verifySSL=True
+):
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verifySSL)
     if res.status_code == 200:
