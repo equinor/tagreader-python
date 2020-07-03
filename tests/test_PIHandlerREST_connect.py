@@ -16,7 +16,7 @@ if is_GITHUBACTION:
         "All tests in module require connection to PI server", allow_module_level=True
     )
 
-verifySSL = is_AZUREPIPELINE  # Certificate unavailable there
+verifySSL = not is_AZUREPIPELINE  # Certificate unavailable there
 
 BASE_URL = "https://piwebapi.equinor.com/piwebapi"
 SOURCE = "PINO"
