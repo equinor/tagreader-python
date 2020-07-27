@@ -9,6 +9,9 @@ Tagreader is a Python package for reading trend data from the OSIsoft
 PI and Aspen Infoplus.21 IMS systems. It is intended to be easy to use,
 and present as similar as possible interfaces to the backend historians.
 
+Queries can be performed using both ODBC queries and REST API queries.
+ODBC queries require the installation of proprietary drivers from AspenTech
+and OSIsoft
 Queries are performed using ODBC using proprietary drivers from Aspen
 and OSIsoft, but code has been structured in such a way as to allow for
 other interfaces, e.g. REST APIs, in the future. Stay tuned!
@@ -20,9 +23,11 @@ file format to cache results.
 * Python >= 3.6 with the following packages:
   * pandas >= 1.0.0
   * pytables
-  * pyodbc
-* PI ODBC driver and/or Aspen IP.21 SQLPlus ODBC driver
-* Microsoft Windows (Sorry. This is due to the proprietary ODBC drivers for OSIsoft PI and Aspen IP.21)
+  * pyodbc (if using ODBC connections)
+  * requests (if using REST-API connections)
+* If using ODBC connections, you must also install proprietary drivers for
+PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for
+Microsoft Windows,
 
 ## Installation ##
 To install and/or upgrade:
