@@ -53,8 +53,10 @@ class AspenHandlerODBC:
     def generate_read_query(
         tag, mapping, start_time, stop_time, sample_time, read_type
     ):
-        timecast_format_query = "%d-%b-%y %H:%M:%S"  # 05-jan-18 14:00:00
-        timecast_format_output = "YYYY-MM-DD HH:MI:SS"
+        start_time = start_time.tz_convert("UTC")
+        stop_time = stop_time.tz_convert("UTC")
+
+        timecast_format_query = "%Y-%m-%dT%H:%M:%SZ"  # 05-jan-18 14:00:00
 
         if read_type in [
             ReaderType.COUNT,
@@ -126,7 +128,7 @@ class AspenHandlerODBC:
         ts_report = "ts_start" if from_column == "aggregates" else ts_actual
 
         query = [
-            f'SELECT CAST({ts_report} AS CHAR FORMAT {timecast_format_output!r}) AS "time",',  # noqa: E501
+            f'SELECT ISO8601({ts_report}) AS "time",',
             f'{value} AS "value" FROM {from_column}',
         ]
         # Query is actually slower without cast(time) regardless of whether post-fetch
@@ -287,14 +289,15 @@ class AspenHandlerODBC:
             query,
             self.conn,
             index_col="time",
-            parse_dates={"time": {"format": "%Y-%m-%d %H:%M:%S"}},
+            parse_dates={"time": "%Y-%m-%dT%H:%M:%S.%fZ"},
         )
-        if len(df) > len(
-            df.index.unique()
-        ):  # One hour repeated during transition from DST to standard time.
-            df = df.tz_localize(start_time.tzinfo, ambiguous="infer")
-        else:
-            df = df.tz_localize(start_time.tzinfo)
+        df = df.tz_localize("UTC")
+        # if len(df) > len(
+        #     df.index.unique()
+        # ):  # One hour repeated during transition from DST to standard time.
+        #     df = df.tz_localize(start_time.tzinfo, ambiguous="infer")
+        # else:
+        #     df = df.tz_localize(start_time.tzinfo)
         return df.rename(columns={"value": tag})
 
 
@@ -319,7 +322,7 @@ class PIHandlerODBC:
             f"DRIVER={{PI ODBC Driver}};Server={das_server};"
             "Trusted_Connection=Yes;Command Timeout=1800;Provider Type=PIOLEDB;"
             f'Provider String={{Data source={host.replace(".statoil.net", "")};'
-            "Integrated_Security=SSPI;};"
+            "Integrated_Security=SSPI;Time Zone=UTC};"
         )
 
     @staticmethod
@@ -339,6 +342,9 @@ class PIHandlerODBC:
     def generate_read_query(
         tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
+        start_time = start_time.tz_convert("UTC")
+        stop_time = stop_time.tz_convert("UTC")
+
         timecast_format_query = "%d-%b-%y %H:%M:%S"  # 05-jan-18 14:00:00
         # timecast_format_output = "yyyy-MM-dd HH:mm:ss"
 
@@ -390,7 +396,7 @@ class PIHandlerODBC:
 
         # query.extend([f"AS value, FORMAT(time, '{timecast_format_output}') AS timestamp FROM {source} WHERE tag='{tag}'"])  # noqa E501
         query.extend(
-            [f"AS value, __utctime AS timestamp FROM {source} WHERE tag='{tag}'"]
+            [f"AS value, time FROM {source} WHERE tag='{tag}'"]  # __utctime also works
         )
 
         if ReaderType.SNAPSHOT != read_type:
@@ -414,7 +420,7 @@ class PIHandlerODBC:
             query.extend([f"AND (timestep = '{sample_time}s')"])
 
         if ReaderType.SNAPSHOT != read_type:
-            query.extend(["ORDER BY timestamp"])
+            query.extend(["ORDER BY time"])
 
         return " ".join(query)
 
@@ -477,24 +483,24 @@ class PIHandlerODBC:
         df = pd.read_sql(
             query,
             self.conn,
-            index_col="timestamp",
-            parse_dates={"timestamp": {"format": "%Y-%m-%d %H:%M:%S"}},
+            index_col="time",
+            parse_dates={"time": "%Y-%m-%d %H:%M:%S"},
         )
         # PI ODBC reports aggregate values for both end points, using the end of
-        # interval as anchor. Normalize to using start of end as anchor, and remove
-        # initial point which is out of defined range.
+        # interval as anchor. Normalize to using start of insterval as anchor, and
+        # remove initial point which is out of defined range.
         if self._is_summary(read_type):
             df.index = df.index - sample_time
             df = df.drop(df.index[0])
 
-        df.index.name = "time"
         # One hour repeated during transition from DST to standard time:
         # if len(df) > len(df.index.unique()):
         #     df = df.tz_localize(start_time.tzinfo, ambiguous='infer')
         # else:
         #     df = df.tz_localize(start_time.tzinfo)
         # df = df.tz_localize(start_time.tzinfo)
-        df = df.tz_localize("UTC").tz_convert(start_time.tzinfo)
+        # df = df.tz_localize("UTC").tz_convert(start_time.tzinfo)
+        df = df.tz_localize("UTC")
         if len(metadata["digitalset"]) > 0:
             self.cursor.execute(
                 f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'"  # noqa E501

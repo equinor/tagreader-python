@@ -402,11 +402,7 @@ class AspenHandlerWeb:
             .rename(columns={"t": "Timestamp", "v": "Value"})
         )
         df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms", origin="unix")
-        df = (
-            df.set_index("Timestamp", drop=True)
-            .tz_localize("UTC")
-            .tz_convert(start_time.tzinfo)
-        )
+        df = df.set_index("Timestamp", drop=True).tz_localize("UTC")
         df.index.name = "time"
         return df.rename(columns={"Value": tag})
 
@@ -475,6 +471,9 @@ class PIHandlerWeb:
     def generate_read_query(
         self, tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
+        start_time = start_time.tz_convert("UTC")
+        stop_time = stop_time.tz_convert("UTC")
+
         if read_type in [
             ReaderType.COUNT,
             ReaderType.GOOD,
@@ -504,6 +503,7 @@ class PIHandlerWeb:
 
         params["startTime"] = starttime
         params["endTime"] = stoptime
+        params["timeZone"] = "UTC"
 
         summary_type = {
             ReaderType.MIN: "Minimum",
@@ -682,6 +682,6 @@ class PIHandlerWeb:
 
         df = df.set_index("Timestamp", drop=True)
         df.index.name = "time"
-        df = df.tz_localize("UTC").tz_convert(start_time.tzinfo)
+        df = df.tz_localize("UTC")
 
         return df.rename(columns={"Value": tag})

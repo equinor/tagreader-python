@@ -4,7 +4,7 @@ import pandas as pd
 from itertools import groupby
 from operator import itemgetter
 from .utils import (
-    datestr_to_datetime,
+    ensure_datetime_with_tz,
     find_registry_key,
     find_registry_key_from_name,
     logging,
@@ -243,7 +243,7 @@ class IMSClient:
                 frames.append(df)
         # df = pd.concat(frames, verify_integrity=True)
         df = pd.concat(frames)
-        df.sort_index(inplace=True)
+        df = df.tz_convert(self.tz).sort_index()
         # read_type INT leads to overlapping values after concatenating
         # due to both start time and end time included.
         # Aggregate read_types (should) align perfectly and don't
@@ -307,8 +307,8 @@ class IMSClient:
                 "Unable to read raw/sampled data for multiple tags since they don't "
                 "share time vector"
             )
-        start_time = datestr_to_datetime(start_time, tz=self.tz)
-        stop_time = datestr_to_datetime(stop_time, tz=self.tz)
+        start_time = ensure_datetime_with_tz(start_time, tz=self.tz)
+        stop_time = ensure_datetime_with_tz(stop_time, tz=self.tz)
         if not isinstance(ts, pd.Timedelta):
             ts = pd.Timedelta(ts, unit="s")
 

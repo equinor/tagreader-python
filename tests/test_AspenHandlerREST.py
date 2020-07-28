@@ -91,8 +91,8 @@ def test_generate_map_query(AspenHandler):
     ],
 )
 def test_generate_tag_read_query(AspenHandler, read_type):
-    start_time = utils.datestr_to_datetime("2020-06-24 17:00:00")
-    stop_time = utils.datestr_to_datetime("2020-06-24 18:00:00")
+    start_time = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")
+    stop_time = utils.ensure_datetime_with_tz("2020-06-24 18:00:00")
     ts = pd.Timedelta(1, unit="m")
     res = AspenHandler.generate_read_query(
         "ATCAI", None, start_time, stop_time, ts, getattr(ReaderType, read_type)
