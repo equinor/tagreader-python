@@ -1,10 +1,7 @@
 import pytest
 import os
 import pandas as pd
-from tagreader.utils import (
-    ReaderType,
-    datestr_to_datetime
-)
+from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.odbc_handlers import list_pi_sources
 from tagreader.clients import IMSClient
 
@@ -87,7 +84,7 @@ def test_read(Client, read_type, size):
         tags["Float32"], interval[0], interval[1], 60, getattr(ReaderType, read_type)
     )
     assert df.shape == (size, 1)
-    assert df.index[0] == datestr_to_datetime(interval[0])
+    assert df.index[0] == ensure_datetime_with_tz(interval[0])
     assert df.index[size - 1] == df.index[0] + (size - 1) * pd.Timedelta(60, unit="s")
 
 

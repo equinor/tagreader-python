@@ -39,16 +39,12 @@ def find_registry_key_from_name(base_key, search_key_name):
     return key, key_string
 
 
-def datestr_to_datetime(date_stamp, tz="Europe/Oslo"):
-    date_stamp = (
-        pd.to_datetime(date_stamp, dayfirst=True).tz_localize(tz)
-        if isinstance(date_stamp, str)
-        else date_stamp
-    )
+def ensure_datetime_with_tz(date_stamp, tz="Europe/Oslo"):
+    if isinstance(date_stamp, str):
+        date_stamp = pd.to_datetime(date_stamp, dayfirst=True)
+
     if not date_stamp.tzinfo:
         date_stamp = date_stamp.tz_localize(tz)
-    else:
-        date_stamp = date_stamp.tz_convert(tz)
     return date_stamp
 
 

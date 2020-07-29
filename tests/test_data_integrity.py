@@ -2,7 +2,7 @@ import os
 import pytest
 import pandas as pd
 from tagreader import IMSClient
-from tagreader.utils import ReaderType, datestr_to_datetime
+from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.cache import SmartCache
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
@@ -177,7 +177,7 @@ def test_cache_proper_fill_up(PIClientWeb):
         PI_TAG,
         ReaderType.INT,
         TS,
-        datestr_to_datetime(PI_START_TIME),
-        datestr_to_datetime(PI_END_TIME_2),
+        ensure_datetime_with_tz(PI_START_TIME),
+        ensure_datetime_with_tz(PI_END_TIME_2),
     )
     assert len(df_cached) == 32
