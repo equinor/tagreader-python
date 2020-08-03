@@ -1,19 +1,19 @@
 
-# tagreader-python #
+# tagreader-python # <!-- omit in toc -->
 
 [![PyPI version](https://badge.fury.io/py/tagreader.svg)](https://badge.fury.io/py/tagreader)
 ![Build](https://github.com/equinor/tagreader-python/workflows/Build/badge.svg)
 [![Build Status](https://dev.azure.com/EIIDS/tagreader/_apis/build/status/equinor.tagreader-python?branchName=master)](https://dev.azure.com/EIIDS/tagreader/_build/latest?definitionId=5&branchName=master)
 
-## Index ##
+## Index ## <!-- omit in toc -->
 
-* [Introduction](#introduction)
-* [Requirements](#requirements)
-* [Installation](#installation)
-  * [ODBC Drivers](#odbc-drivers)
-* [Uninstallation](#uninstallation)
-* [Contributing](#contributing)
-* [Usage examples](#usage-examples)
+- [Introduction](#introduction)
+- [Requirements](#requirements)
+- [Installation](#installation)
+  - [ODBC Drivers](#odbc-drivers)
+- [Uninstallation](#uninstallation)
+- [Contributing](#contributing)
+- [Usage examples](#usage-examples)
 
 ## Introduction ##
 
@@ -28,11 +28,11 @@ Tagreader is based on Pandas for Python, and uses the HDF5 file format to cache 
 ## Requirements ##
 
 * Python >= 3.6 with the following packages:
-  * pandas >= 0.23
+  * pandas >= 1.0.0
   * pytables
-  * pyodbc
-* PI ODBC driver and/or Aspen IP.21 SQLPlus ODBC driver
-* Microsoft Windows (Sorry. This is due to the proprietary ODBC drivers for OSIsoft PI and Aspen IP.21)
+  * pyodbc (if using ODBC connections)
+  * requests (if using REST-API connections)
+* If using ODBC connections, you must also install proprietary drivers for PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for Microsoft Windows.
  
 ## Installation ##
 
