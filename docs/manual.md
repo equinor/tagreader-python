@@ -19,13 +19,14 @@ Tagreader is intended to be easy to use, and present the same interface to the u
   - [Creating a client](#creating-a-client)
     - [IMSTypes](#imstypes)
   - [Connecting client to data source](#connecting-client-to-data-source)
-  - [Examples](#examples)
 - [Searching for tags](#searching-for-tags)
 - [Reading data](#reading-data)
-- [Cache](#cache)
   - [Selecting what to read](#selecting-what-to-read)
+  - [Caching results](#caching-results)
   - [Time zones](#time-zones)
 - [Fetching metadata](#fetching-metadata)
+  - [get_units()](#get_units)
+  - [get_description()](#get_description)
 
 # Requirements
 
@@ -70,7 +71,7 @@ These two methods are only available in Windows. Both methods will search specif
 Usage example:
 
 ``` python
-print(list_pi_sources())
+list_pi_sources()
 ```
 
 ## Web API
@@ -118,7 +119,6 @@ A connection to a data source is prepared by creating an instance of `tagreader.
   + `piwebapi` : For connecting to OSISoft PI Web API
   + `aspenone` : For connecting to AspenTech Process Data REST Web API
 
-  
   Note that ODBC connections require that [pyodbc](https://pypi.org/project/pyodbc/) is installed, while REST API connections require the [requests](https://requests.readthedocs.io/en/master/) module.
 
 * `tz` (optional): Time zone naive time stamps will be interpreted as belonging to this time zone. Similarly, the returned data points will be localized to this time zone. **Default**: _"Europe/Oslo"_.
@@ -139,7 +139,7 @@ Imstypes `piwebapi` and `aspenone` will attempt to connect to a PI Web API or an
 
 After creating the client as described above, connect to the server with the `connect()` method.
 
-## Examples
+**Example**
 
 Connecting to the PINO PI data source using ODBC:
 
@@ -163,23 +163,70 @@ c.connect()
 
 # Searching for tags
 
-The client's method `` `search_tag()` ` can be used to search for tags using either tag name, tag description or both. 
+The client method `search()` can be used to search for tags using either tag name, tag description or both. 
 
 Supply at least one of the following arguments:
 
 * `tag` : Name of tag
 * `desc` : Description of tag
 
-`*` is a valid wildcard.
+If both arguments are provided, the both must match. 
 
-Examples:
-```python 
+`*` can be used as wildcard. 
 
-``` 
+**Examples**
+
+``` python
+c = tagreader.IMSClient("PINO", "pi")
+c.connect()
+c.search("cd*158")
+c.search(desc="*reactor*")
+c.search(tag="BA:*", desc="*Temperature*")
+```
 
 # Reading data
 
-# Cache
+Data is read by calling the client method `read()` with the following input arguments:
+
+* `tags` : List of tagnames. Wildcards are not allowed.
+
+  Tags with maps (relevant for some InfoPlus.21 servers) can be on the form `'tag;map'` , e.g. `'109-HIC005;CS A_AUTO'` .
+
+* `start_time` : Start of time period. 
+* `stop_time` : End of time period. 
+
+  Both `start_time` and `stop time` can be either string (which will be interpreted by [pandas. Timestamp](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.html) or datetime object.
+
+* `ts` : The interval between samples when querying interpolated or aggregated data.
+* `read_type` (optional): What kind of data to read. **Default*** Interpolated. 
+
+## Selecting what to read
+
+By specifying the optional parameter `read_type` to `read_tags()`, it is possible to specify what kind of data should be returned. The default query method is interpolated. All valid values for `read_type` are defined in the `utils.ReaderType` class (mirrored for convenience as `tagreader.ReaderType`), although not all are currently implemented. Below is the list of implemented read types. 
+
+* `INT` : The raw data points are interpolated so that one new data point is generated at each step of length `ts` starting at `start_time` and ending at or less than `ts` seconds before `stop_time` .
+* The following aggregated read types perform a weighted calculation of the raw data within each interval. Where relevant, time-weighted calculations are used. Returned time stamps are anchored at the beginning of each interval. So for the 60 seconds long interval between 08:11:00 and 08:12:00, the time stamp will be 08:11:00.
+  + `MIN` : The minimum value.
+  + `MAX` : The maximum value.
+  + `AVG` : The average value.
+  + `VAR` : The variance.
+  + `STD` : The standard deviation.
+  + `RNG` : The range (max-min).
+
+**Examples**
+
+Read interpolated data for the provided tag with 3-minute intervals between the two time stamps:
+``` python 
+c = tagreader. IMSClient("PINO", "pi")
+c.connect()
+df = c.read(['BA: ACTIVE.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180)
+```
+Read the average value for the two provided tags within each 3-minute interval between the two time stamps:
+``` python
+df = c.read(['BA: CONC.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180, read_type=tagreader.ReaderType.AVG)
+``` 
+
+## Caching results
 
 By default a cache-file using the HDF5 file format will be attached to the client upon client creation. Whenever `read_tags()` is called, the cache is queried for existing data. Any data that is not already in the cache will be queried from the data source. The cache can significantly speed up queries, and it is therefore recommended to always keep it enabled. The cache file will be created on use.
 
@@ -193,18 +240,16 @@ c.cache = None
 c.connect()
 ```
 
-## Selecting what to read
-
 ## Time zones
 
 It is important to understand how Tagreader uses and interprets time zones. Queries to the backend servers are always performed in UTC time, and return data is also always in UTC. However, it is usually not convenient to ensure all time stamps are in UTC time. The client and handlers therefore have functionality for converting between UTC and user-specified time zones.
 
-There are tree levels of determining which time zone input arguments should be interpreted as, and which time zone return data should be converted to:
+There are two levels of determining which time zone input arguments should be interpreted as, and which time zone return data should be converted to:
 
 1. Time zone aware input arguments will use their corresponding time zone.
 2. Time zone naive input arguments are assumed to have time zone as provided by the client. 
 
-The client-provided time zone can be specified with the optional `tz` argument during client creation. If it is not specified, then the default value *Europe/Oslo* is used. This means that for the most common use case in Equinor where employees need to fetch data from Norwegian assets and display them with Norwegian time stamps, nothing needs to be done.
+The client-provided time zone can be specified with the optional `tz` argument during client creation. If it is not specified, then the default value *Europe/Oslo* is used. Note that for the most common use case where Equinor employees want to fetch data from Norwegian assets and display them with Norwegian time stamps, nothing needs to be done.
 
 Advanced usage example: An employee in Houston is contacted by her collague in Brazil about an event that she needs to investigate. The colleague identified the time of the event at July 20th 2020 at 15:05:00 Rio time. The Houston employee wishes to extract interpolated date with 60-second intervals and display the data in her local time zone. She also wishes to send the data to her Norwegian colleague with datestamps in Norwegian time. One way of doing this is :
 
@@ -214,7 +259,7 @@ from datetime import datetime, timedelta
 from dateutil import tz
 c = tagreader.IMSClient("PINO", "pi", tz="US/Central")  # Force output data to Houston time
 c.connect()
-tzinfo = tz.gettz("Brazil/East")  # Fetch timezone object for Rio local time
+tzinfo = tz.gettz("Brazil/East")  # Generate timezone object for Rio local time
 event_time = datetime(2020, 7, 20, 15, 5, 0, tzinfo=tzinfo)
 start_time = event_time - timedelta(minutes=30)
 end_time = event_time + timedelta(minutes=10)
@@ -223,3 +268,21 @@ df_to_Norway = df.tz_convert("Europe/Oslo")  # Create a copy of the dataframe wi
 ```
 
 # Fetching metadata
+
+Two client methods have been created to fetch basic metadata for one or more tags.
+
+## get_units()
+
+Fetches the engineering unit(s) for the tag(s) provided. The argument `tags` can be either a single tagname as string, or a list of tagnames.
+
+## get_description()
+Fetches the description(s) for the tag(s) provided. The argument `tags` can be either a single tagname as string, or a list of tagnames.
+
+**Example**:
+``` python
+tags = ["BA:ACTIVE.1", "BA:LEVEL.1", "BA:CONC.1"]
+units = c.get_units(tags)
+desc = c.get_descriptions(tags)
+tag = "BA:CONC.1"
+df[tag].plot(grid=True, title=desc[tag]).set_ylabel(units[tag])
+```
