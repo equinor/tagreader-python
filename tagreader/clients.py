@@ -226,7 +226,7 @@ class IMSClient:
                 df, start_time, stop_time, ts.seconds, read_type
             )
             if not missing_intervals:
-                return df
+                return df.tz_convert(self.tz).sort_index()
         metadata = self._get_metadata(tag)
         frames = [df]
         for (start, stop) in missing_intervals:

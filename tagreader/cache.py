@@ -27,19 +27,18 @@ class SmartCache:
 
     def key_path(self, df, readtype, ts=None):
         """Return a string on the form
-        XXX/sYY/ZZZ where XXX is the ReadType, YY is the interval between samples (in seconds)
-        and ZZZ is a safe tagname.
+        XXX/sYY/ZZZ where XXX is the ReadType, YY is the interval between samples
+        (in seconds) and ZZZ is a safe tagname.
         """
         name = list(df)[0] if isinstance(df, pd.DataFrame) else df
         name = safe_tagname(name)
         ts = ts.seconds if isinstance(ts, pd.Timedelta) else ts
         if readtype != ReaderType.RAW:
             if ts is None:
-                # Determine sample time by reading interval between first two samples of dataframe.
+                # Determine sample time by reading interval between first two
+                # samples of dataframe.
                 if isinstance(df, pd.DataFrame):
-                    interval = int(
-                        df[0:2].index.to_series().diff().mean().value / 1e9
-                    )
+                    interval = int(df[0:2].index.to_series().diff().mean().value / 1e9)
                 else:
                     raise TypeError
             else:
@@ -54,7 +53,9 @@ class SmartCache:
             return  # Weirdness ensues when using empty df in select statement below
         with pd.HDFStore(self.filename, mode="a") as f:
             if key in f:
-                idx = f.select(key, where="index in df.index", columns=["index"]).index
+                idx = f.select(  # noqa: F841
+                    key, where="index in df.index", columns=["index"]
+                ).index
                 f.append(key, df.query("index not in @idx"))
             else:
                 f.append(key, df)
