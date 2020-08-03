@@ -42,7 +42,7 @@ def PIClientOdbc():
 
 @pytest.fixture()
 def PIClientWeb():
-    c = IMSClient(PI_DS, "piweb", verifySSL=verifySSL)
+    c = IMSClient(PI_DS, "piwebapi", verifySSL=verifySSL)
     if os.path.exists(PI_DS + ".h5"):
         os.remove(PI_DS + ".h5")
     c.cache = None
@@ -66,7 +66,7 @@ def AspenClientOdbc():
 
 @pytest.fixture()
 def AspenClientWeb():
-    c = IMSClient(ASPEN_DS, "ip21web", url=ASPEN_URL, verifySSL=False)
+    c = IMSClient(ASPEN_DS, "aspenone", url=ASPEN_URL, verifySSL=False)
     if os.path.exists(ASPEN_DS + ".h5"):
         os.remove(ASPEN_DS + ".h5")
     c.cache = None

@@ -85,7 +85,7 @@ def test_read(Client, read_type, size):
     )
     assert df.shape == (size, 1)
     assert df.index[0] == ensure_datetime_with_tz(interval[0])
-    assert df.index[size - 1] == df.index[0] + (size - 1) * pd.Timedelta(60, unit="s")
+    assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(60, unit="s")
 
 
 def test_digitalread_is_one_or_zero(Client):

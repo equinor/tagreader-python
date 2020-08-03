@@ -98,6 +98,8 @@ class AspenHandlerODBC:
         # For RAW: historyevent?
         # Ref https://help.sap.com/saphelp_pco151/helpdata/en/4c/72e34ee631469ee10000000a15822d/content.htm?no_cache=true  # noqa: E501
 
+        ts = "ts_start" if from_column == "aggregates" else "ts"
+
         value = {
             ReaderType.MIN: "min",
             ReaderType.MAX: "max",
@@ -112,28 +114,10 @@ class AspenHandlerODBC:
             ReaderType.SNAPSHOT: "IP_INPUT_VALUE",
         }.get(read_type, "value")
 
-        ts_actual = {
-            ReaderType.MIN: "ts_middle",
-            ReaderType.MAX: "ts_middle",
-            ReaderType.RNG: "ts_middle",
-            ReaderType.AVG: "ts_middle",
-            ReaderType.VAR: "ts_middle",
-            ReaderType.STD: "ts_middle",
-            ReaderType.GOOD: "ts_middle",
-            ReaderType.NOTGOOD: "ts_middle",
-            ReaderType.TOTAL: "ts_middle",
-            ReaderType.SNAPSHOT: "IP_INPUT_TIME",
-        }.get(read_type, "ts")
-
-        ts_report = "ts_start" if from_column == "aggregates" else ts_actual
-
         query = [
-            f'SELECT ISO8601({ts_report}) AS "time",',
+            f'SELECT ISO8601({ts}) AS "time",',
             f'{value} AS "value" FROM {from_column}',
         ]
-        # Query is actually slower without cast(time) regardless of whether post-fetch
-        # date parsing is enabled or not.
-        # SQL_QUERY = 'SELECT ISO8601({ts_actual}) AS "timestamp"' is even slower
 
         if ReaderType.SNAPSHOT != read_type:
             start = start_time.strftime(timecast_format_query)
@@ -215,7 +199,7 @@ class AspenHandlerODBC:
         mapdef = self._get_mapdef(tagname)
         return mapdef[tagname][0]
 
-    def search_tag(self, tag=None, desc=None):
+    def search(self, tag=None, desc=None):
         if tag is None:
             raise ValueError('Tag is a required argument')
 
@@ -435,7 +419,7 @@ class PIHandlerODBC:
         self.conn = pyodbc.connect(connection_string, autocommit=True)
         self.cursor = self.conn.cursor()
 
-    def search_tag(self, tag=None, desc=None):
+    def search(self, tag=None, desc=None):
         query = self.generate_search_query(tag, desc)
         self.cursor.execute(query)
         return self.cursor.fetchall()

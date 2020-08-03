@@ -33,7 +33,7 @@ SAMPLE_TIME = 60
 
 @pytest.fixture()
 def Client():
-    c = IMSClient(SOURCE, imstype="piweb", verifySSL=verifySSL)
+    c = IMSClient(SOURCE, imstype="piwebapi", verifySSL=verifySSL)
     c.cache = None
     c.connect()
     yield c
@@ -119,7 +119,7 @@ def test_read(Client, read_type, size):
         getattr(ReaderType, read_type),
     )
     assert df.shape == (size, 1)
-    assert df.index[size - 1] == df.index[0] + (size - 1) * pd.Timedelta(
+    assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(
         SAMPLE_TIME, unit="s"
     )
 

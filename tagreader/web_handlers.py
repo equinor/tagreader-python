@@ -282,7 +282,7 @@ class AspenHandlerWeb:
             if v:
                 return k
 
-    def search_tag(self, tag=None, desc=None):
+    def search(self, tag=None, desc=None):
         if tag is None:
             raise ValueError("Tag is a required argument")
 
@@ -555,7 +555,7 @@ class PIHandlerWeb:
     def connect(self):
         self.verify_connection(self.datasource)
 
-    def search_tag(self, tag=None, desc=None):
+    def search(self, tag=None, desc=None):
         params = self.generate_search_query(tag, desc, self.datasource)
         url = urljoin(self.base_url, "search", "query")
         done = False

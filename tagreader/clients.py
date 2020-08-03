@@ -123,7 +123,7 @@ def get_server_address_pi(datasource):
 
 
 def get_handler(imstype, datasource, url=None, options={}, verifySSL=None, auth=None):
-    accepted_values = ["pi", "aspen", "ip21", "piweb", "aspenweb", "ip21web"]
+    accepted_values = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
 
     if not imstype or imstype.lower() not in accepted_values:
         raise ValueError(f"`imstype` must be one of {accepted_values}")
@@ -158,7 +158,7 @@ def get_handler(imstype, datasource, url=None, options={}, verifySSL=None, auth=
         host, port = hostport
         return AspenHandlerODBC(host=host, port=port, options=options)
 
-    if imstype.lower() == "piweb":
+    if imstype.lower() == "piwebapi":
         return PIHandlerWeb(
             url=url,
             datasource=datasource,
@@ -167,7 +167,7 @@ def get_handler(imstype, datasource, url=None, options={}, verifySSL=None, auth=
             auth=auth,
         )
 
-    if imstype.lower() in ["aspenweb", "ip21web"]:
+    if imstype.lower() in ["aspenone"]:
         return AspenHandlerWeb(
             datasource=datasource,
             url=url,
@@ -204,8 +204,8 @@ class IMSClient:
     def connect(self):
         self.handler.connect()
 
-    def search_tag(self, tag=None, desc=None):
-        return self.handler.search_tag(tag, desc)
+    def search(self, tag=None, desc=None):
+        return self.handler.search(tag, desc)
 
     def _get_metadata(self, tag):
         return self.handler._get_tag_metadata(tag)
@@ -284,7 +284,7 @@ class IMSClient:
                 descriptions[tag] = desc
         return descriptions
 
-    def read_tags(self, tags, start_time, stop_time, ts, read_type=ReaderType.INT):
+    def read(self, tags, start_time, stop_time, ts, read_type=ReaderType.INT):
         """Reads values for the specified [tags] from the IMS server for the
         time interval from [start_time] to [stop_time] in intervals [ts].
 
