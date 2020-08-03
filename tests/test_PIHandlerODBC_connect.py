@@ -43,17 +43,17 @@ def test_list_all_pi_sources():
 
 
 def test_search(Client):
-    res = Client.search_tag("BA:*.1")
+    res = Client.search("BA:*.1")
     assert 5 == len(res)
     [taglist, desclist] = zip(*res)
     assert "BA:CONC.1" in taglist
     assert desclist[taglist.index("BA:CONC.1")] == "Concentration Reactor 1"
 
-    res = Client.search_tag(tag="BA:*.1")
+    res = Client.search(tag="BA:*.1")
     assert 5 == len(res)
-    res = Client.search_tag(desc="Batch Active Reactor 1")
+    res = Client.search(desc="Batch Active Reactor 1")
     assert 1 == len(res)
-    res = Client.search_tag("BA*.1", "*Active*")
+    res = Client.search("BA*.1", "*Active*")
     assert 1 == len(res)
 
 
@@ -80,7 +80,7 @@ def test_search(Client):
     ],
 )
 def test_read(Client, read_type, size):
-    df = Client.read_tags(
+    df = Client.read(
         tags["Float32"], interval[0], interval[1], 60, getattr(ReaderType, read_type)
     )
     assert df.shape == (size, 1)
@@ -90,7 +90,7 @@ def test_read(Client, read_type, size):
 
 def test_digitalread_is_one_or_zero(Client):
     tag = tags["Digital"]
-    df = Client.read_tags(tag, interval[0], interval[1], 600, ReaderType.INT)
+    df = Client.read(tag, interval[0], interval[1], 600, ReaderType.INT)
     assert df[tag].max() == 1
     assert df[tag].min() == 0
     assert df[tag].isin([0, 1]).all()
@@ -115,7 +115,7 @@ def test_from_DST_folds_time(Client):
         os.remove(SOURCE + ".h5")
     tag = tags["Float32"]
     interval = ["2017-10-29 00:30:00", "2017-10-29 04:30:00"]
-    df = Client.read_tags([tag], interval[0], interval[1], 600)
+    df = Client.read([tag], interval[0], interval[1], 600)
     assert len(df) == (4 + 1) * 6 + 1
     # Time exists inside fold:
     assert (
@@ -132,7 +132,7 @@ def test_to_DST_skips_time(Client):
         os.remove(SOURCE + ".h5")
     tag = tags["Float32"]
     interval = ["2018-03-25 00:30:00", "2018-03-25 03:30:00"]
-    df = Client.read_tags([tag], interval[0], interval[1], 600)
+    df = Client.read([tag], interval[0], interval[1], 600)
     # Lose one hour:
     assert (
         df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6

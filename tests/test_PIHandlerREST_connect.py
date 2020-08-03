@@ -63,18 +63,18 @@ def test_verify_connection(PIHandler):
 
 
 def test_search_tag(Client):
-    res = Client.search_tag("SINUSOID")
+    res = Client.search("SINUSOID")
     assert 1 == len(res)
-    res = Client.search_tag("BA:*.1")
+    res = Client.search("BA:*.1")
     assert 5 <= len(res)
     [taglist, desclist] = zip(*res)
     assert "BA:CONC.1" in taglist
     assert desclist[taglist.index("BA:CONC.1")] == "Concentration Reactor 1"
-    res = Client.search_tag(tag="BA:*.1")
+    res = Client.search(tag="BA:*.1")
     assert 5 <= len(res)
-    res = Client.search_tag(desc="Concentration Reactor 1")
+    res = Client.search(desc="Concentration Reactor 1")
     assert 1 <= len(res)
-    res = Client.search_tag("BA*.1", "*Active*")
+    res = Client.search("BA*.1", "*Active*")
     assert 1 <= len(res)
 
 
@@ -111,7 +111,7 @@ def test_tag_to_webid(PIHandler):
     ],
 )
 def test_read(Client, read_type, size):
-    df = Client.read_tags(
+    df = Client.read(
         TAGS["Float32"],
         START_TIME,
         STOP_TIME,
@@ -126,14 +126,14 @@ def test_read(Client, read_type, size):
 
 def test_read_only_invalid_data_yields_nan_for_invalid(Client):
     tag = TAGS["Float32"]
-    df = Client.read_tags(tag, "2012-10-09 10:30:00", "2012-10-09 11:00:00", 600)
+    df = Client.read(tag, "2012-10-09 10:30:00", "2012-10-09 11:00:00", 600)
     assert df.shape == (4, 1)
     assert df[tag].isna().all()
 
 
 def test_read_invalid_data_mixed_with_valid_yields_nan_for_invalid(Client):
     tag = TAGS["Float32"]
-    df = Client.read_tags(tag, "2012-10-09 11:00:00", "2012-10-09 11:30:00", 600)
+    df = Client.read(tag, "2012-10-09 11:00:00", "2012-10-09 11:30:00", 600)
     assert df.shape == (4, 1)
     assert df[tag].iloc[[0, 1]].isna().all()
     assert df[tag].iloc[[2, 3]].notnull().all()
@@ -141,7 +141,7 @@ def test_read_invalid_data_mixed_with_valid_yields_nan_for_invalid(Client):
 
 def test_digitalread_is_one_or_zero(Client):
     tag = TAGS["Digital"]
-    df = Client.read_tags(tag, START_TIME, STOP_TIME, SAMPLE_TIME, ReaderType.INT)
+    df = Client.read(tag, START_TIME, STOP_TIME, SAMPLE_TIME, ReaderType.INT)
     assert df[tag].max() == 1
     assert df[tag].min() == 0
     assert df[tag].isin([0, 1]).all()
@@ -166,7 +166,7 @@ def test_from_DST_folds_time(Client):
         os.remove(SOURCE + ".h5")
     tag = TAGS["Float32"]
     interval = ["2017-10-29 00:30:00", "2017-10-29 04:30:00"]
-    df = Client.read_tags([tag], interval[0], interval[1], 600)
+    df = Client.read([tag], interval[0], interval[1], 600)
     assert len(df) == (4 + 1) * 6 + 1
     # Time exists inside fold:
     assert (
@@ -183,7 +183,7 @@ def test_to_DST_skips_time(Client):
         os.remove(SOURCE + ".h5")
     tag = TAGS["Float32"]
     interval = ["2018-03-25 00:30:00", "2018-03-25 03:30:00"]
-    df = Client.read_tags([tag], interval[0], interval[1], 600)
+    df = Client.read([tag], interval[0], interval[1], 600)
     # Lose one hour:
     assert (
         df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6

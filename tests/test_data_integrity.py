@@ -77,10 +77,10 @@ def AspenClientWeb():
 
 
 def test_pi_odbc_web_same_values_int(PIClientOdbc, PIClientWeb):
-    df_odbc = PIClientOdbc.read_tags(
+    df_odbc = PIClientOdbc.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
     )
-    df_web = PIClientWeb.read_tags(
+    df_web = PIClientWeb.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
     )
     print(df_odbc.head())
@@ -93,10 +93,10 @@ def test_pi_odbc_web_same_values_int(PIClientOdbc, PIClientWeb):
 
 
 def test_pi_odbc_web_same_values_agg(PIClientOdbc, PIClientWeb):
-    df_odbc = PIClientOdbc.read_tags(
+    df_odbc = PIClientOdbc.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.AVG
     )
-    df_web = PIClientWeb.read_tags(
+    df_web = PIClientWeb.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.AVG
     )
     print(df_odbc.head())
@@ -109,10 +109,10 @@ def test_pi_odbc_web_same_values_agg(PIClientOdbc, PIClientWeb):
 
 
 def test_aspen_odbc_web_same_values_int(AspenClientOdbc, AspenClientWeb):
-    df_odbc = AspenClientOdbc.read_tags(
+    df_odbc = AspenClientOdbc.read(
         ASPEN_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
     )
-    df_web = AspenClientWeb.read_tags(
+    df_web = AspenClientWeb.read(
         ASPEN_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
     )
     print(df_odbc.head())
@@ -123,10 +123,10 @@ def test_aspen_odbc_web_same_values_int(AspenClientOdbc, AspenClientWeb):
 
 
 def test_aspen_odbc_web_same_values_agg(AspenClientOdbc, AspenClientWeb):
-    df_odbc = AspenClientOdbc.read_tags(
+    df_odbc = AspenClientOdbc.read(
         ASPEN_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.AVG
     )
-    df_web = AspenClientWeb.read_tags(
+    df_web = AspenClientWeb.read(
         ASPEN_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.AVG
     )
     print(df_odbc.head())
@@ -138,21 +138,21 @@ def test_aspen_odbc_web_same_values_agg(AspenClientOdbc, AspenClientWeb):
 
 def test_concat_proper_fill_up(PIClientWeb):
     max_rows_backup = PIClientWeb.handler._max_rows
-    df_int = PIClientWeb.read_tags(
+    df_int = PIClientWeb.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
     )
     assert len(df_int) == 16
-    df_avg = PIClientWeb.read_tags(
+    df_avg = PIClientWeb.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.AVG
     )
     assert len(df_avg) == 15
 
     PIClientWeb.handler._max_rows = 5
-    df_int_concat = PIClientWeb.read_tags(
+    df_int_concat = PIClientWeb.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
     )
     assert len(df_int_concat) == 16
-    df_avg_concat = PIClientWeb.read_tags(
+    df_avg_concat = PIClientWeb.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.AVG
     )
     assert len(df_avg_concat) == 15
@@ -165,10 +165,10 @@ def test_cache_proper_fill_up(PIClientWeb):
     PIClientWeb.cache = SmartCache(PI_DS)
     if os.path.exists(PI_DS + ".h5"):
         os.remove(PI_DS + ".h5")
-    df_int_1 = PIClientWeb.read_tags(
+    df_int_1 = PIClientWeb.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
     )
-    df_int_2 = PIClientWeb.read_tags(
+    df_int_2 = PIClientWeb.read(
         PI_TAG, PI_START_TIME_2, PI_END_TIME_2, TS, read_type=ReaderType.INT
     )
     assert len(df_int_1) == 16
