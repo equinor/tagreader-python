@@ -206,7 +206,9 @@ class IMSClient:
         self.handler.connect()
 
     def search_tag(self, tag=None, desc=None):
-        warnings.warn("This function has been renamed til search() and is deprecated. Please call 'search()' instead")
+        warnings.warn(
+            "This function is deprecated. Please call 'search()' instead"
+        )
         return self.search(tag=tag, desc=desc)
 
     def search(self, tag=None, desc=None):
@@ -290,8 +292,19 @@ class IMSClient:
         return descriptions
 
     def read_tags(self, tags, start_time, stop_time, ts, read_type=ReaderType.INT):
-        warnings.warn("This function has been renamed to read() and is deprecated. Please call 'read()' instead")
-        return self.read(tags=tags, start_time=start_time, stop_time=stop_time, ts=ts, read_type=read_type)
+        warnings.warn(
+            (
+                "This function has been renamed to read() and is deprecated. "
+                "Please call 'read()' instead"
+            )
+        )
+        return self.read(
+            tags=tags,
+            start_time=start_time,
+            stop_time=stop_time,
+            ts=ts,
+            read_type=read_type,
+        )
 
     def read(self, tags, start_time, stop_time, ts, read_type=ReaderType.INT):
         """Reads values for the specified [tags] from the IMS server for the

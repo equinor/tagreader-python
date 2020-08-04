@@ -17,8 +17,8 @@ Tagreader is intended to be easy to use, and present the same interface to the u
   - [Web API](#web-api)
 - [The Client](#the-client)
   - [Creating a client](#creating-a-client)
-    - [IMSTypes](#imstypes)
-  - [Connecting client to data source](#connecting-client-to-data-source)
+  - [Connecting to data source](#connecting-to-data-source)
+    - [Adding host certificate](#adding-host-certificate)
 - [Searching for tags](#searching-for-tags)
 - [Reading data](#reading-data)
   - [Selecting what to read](#selecting-what-to-read)
@@ -129,13 +129,13 @@ The following input arguments can be used when connecting to either `piwebapi` o
 * `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: False.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth objects that work with Equinor servers. If not connecting to an Equinor server, you may have to create your own auth.
 
-### IMSTypes
+### IMSTypes <!-- omit in toc -->
 
 The imstypes `pi` and `ip21` will attempt to connect to a PI or IP.21 data source, respectively, using ODBC. 
 
 Imstypes `piwebapi` and `aspenone` will attempt to connect to a PI Web API or an Aspentech Process Data REST Web API host, respectively.
 
-## Connecting client to data source
+## Connecting to data source
 
 After creating the client as described above, connect to the server with the `connect()` method.
 
@@ -148,7 +148,7 @@ c = tagreader.IMSClient("PINO", "pi")
 c.connect()
 ```
 
-Connecting to the Peregrino IP.21 data source using AspenTech Process Data REST Web API, specifying URL (not necessary), using NTLM authentication instead of the default which is Kerberos and  ignoring the server host's certificate and specifying that all naive time stamps as well as the returned data shall use Rio local time:
+Connecting to the Peregrino IP.21 data source using AspenTech Process Data REST Web API, specifying URL (not necessary), using NTLM authentication instead of default Kerberos, ignoring the server host's certificate, and specifying that all naive time stamps as well as the returned data shall use Rio local time:
 
 ``` python
 import getpass
@@ -159,6 +159,28 @@ auth = HttpNtlmAuth(user, pwd)
 c = tagreader.IMSClient("PER", "aspenone", tz="Brazil/East", verifySSL=False,
     url="https://ws2679.statoil.net/ProcessData/AtProcessDataREST.dll")
 c.connect()
+```
+
+### Adding host certificate
+
+For the two Web APIs, it may be a good idea to add the server certificate to your certificate chain to allow SSL validation. The procedure described below is based on https://incognitjoe.github.io/adding-certs-to-requests.html. It requires the use of [git-bash](https://git-scm.com/downloads) (or another way to run openssl). There may be better ways - please let me know if you find one.
+1. Visit the server (e.g. https://pivision.equinor.com) in Google Chrome.
+2. Click the padlock icon immediately to the left of the URL and select *Certificate (valid)->Certification Path->Statoil Root CA->View Certificate->Details*. 
+3. Click *Copy to File...* and export the certificate as *DER encoded binary X.509 (.CER)* to *certificate.cer*.
+4. Open *git-bash* and navigate to the directory where you stored the file.
+5. Convert the file: `openssl x509 -inform der -in certificate.cer -out certificate.pem`.
+
+We now need to add the certificate to the certificate chain. 
+
+1.  Activate your Python virtual environment and install *certifi* if not already installed: `pip install certifi`.
+2.  Run the following Python snippet to add the certificate to the chain:
+``` python
+import certifi
+cafile = certifi.where()
+with open('certificate.pem', 'rb') as infile:
+  customca = infile.read()
+with open(cafile, 'ab') as outfile:
+  outfile.write(customca)
 ```
 
 # Searching for tags
@@ -230,9 +252,9 @@ df = c.read(['BA: CONC.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180, rea
 
 By default a cache-file using the HDF5 file format will be attached to the client upon client creation. Whenever `read_tags()` is called, the cache is queried for existing data. Any data that is not already in the cache will be queried from the data source. The cache can significantly speed up queries, and it is therefore recommended to always keep it enabled. The cache file will be created on use.
 
-Data in the cache never expires. If the data for some reason becomes invalid, then the cache and data source will no longer produce the same data set. The cache can safely be removed at any time, at least as long as there is no ongoing query.
+Data in the cache never expires. If the data for some reason becomes invalid, then the cache and data source will no longer produce the same data set. An existing cache file can safely be deleted at any time, at least as long as there is no ongoing query.
 
-If, for any reason, you want to disable the cache, simply set it to `None` . This is normally done before connecting to the server, like so:
+If, for any reason, you want to disable the cache, simply set it to `None` . This can be done at any time, but is normally done before connecting to the server, like this:
 
 ``` python
 c = tagreader.IMSClient("PINO", "pi")
@@ -249,9 +271,11 @@ There are two levels of determining which time zone input arguments should be in
 1. Time zone aware input arguments will use their corresponding time zone.
 2. Time zone naive input arguments are assumed to have time zone as provided by the client. 
 
-The client-provided time zone can be specified with the optional `tz` argument during client creation. If it is not specified, then the default value *Europe/Oslo* is used. Note that for the most common use case where Equinor employees want to fetch data from Norwegian assets and display them with Norwegian time stamps, nothing needs to be done.
+The client-provided time zone can be specified with the optional `tz` argument (string, e.g. "*US/Central*") during client creation. If it is not specified, then the default value *Europe/Oslo* is used. Note that for the most common use case where Equinor employees want to fetch data from Norwegian assets and display them with Norwegian time stamps, nothing needs to be done.
 
-Advanced usage example: An employee in Houston is contacted by her collague in Brazil about an event that she needs to investigate. The colleague identified the time of the event at July 20th 2020 at 15:05:00 Rio time. The Houston employee wishes to extract interpolated date with 60-second intervals and display the data in her local time zone. She also wishes to send the data to her Norwegian colleague with datestamps in Norwegian time. One way of doing this is :
+**Example (advanced usage)**
+
+An employee in Houston is contacted by her collague in Brazil about an event that she needs to investigate. The colleague identified the time of the event at July 20th 2020 at 15:05:00 Rio time. The Houston employee wishes to extract interpolated data with 60-second intervals and display the data in her local time zone. She also wishes to send the data to her Norwegian colleague with datestamps in Norwegian time. One way of doing this is :
 
 ``` python
 import tagreader

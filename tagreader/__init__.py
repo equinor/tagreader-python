@@ -3,7 +3,7 @@ from .odbc_handlers import (        # noqa: F401
     list_aspen_sources,
     list_pi_sources,
 )
-from .utils import ReaderType
+from .utils import ReaderType       # noqa: F401
 try:
     from .version import version as __version__
 except ImportError:
