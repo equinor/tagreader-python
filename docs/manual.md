@@ -10,8 +10,11 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 
 - [Requirements](#requirements)
 - [Before getting started](#before-getting-started)
-  - [Installation](#installation)
+- [Installation](#installation)
+  - [ODBC Drivers](#odbc-drivers)
   - [Adding host certificates](#adding-host-certificates)
+    - [For Equinor users](#for-equinor-users)
+    - [For non-Equinor users](#for-non-equinor-users)
 - [Importing the module](#importing-the-module)
 - [IMS types](#ims-types)
 - [Listing available data sources](#listing-available-data-sources)
@@ -40,37 +43,36 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 
 It is highly recommended to go through the [quickstart.ipynb](quickstart) example. The quickstart has references to relevant sections in this manual.
 
-## Installation
+# Installation
 
 To install and/or upgrade:
 
 ``` 
 pip install --upgrade tagreader
 ```
+## ODBC Drivers
+
+To be able to connect to OSISoft PI or AspenTech InfoPlus.21 servers using ODBC, you need to obtain and install proprietary ODBC drivers. 
+
+If you work in Equinor, then you can find further information and links to download the drivers on our 
+[wiki](https://wiki.equinor.com/wiki/index.php/tagreader-python).
+
+If you do not work in Equinor: It may already work for you, although it is typically not sufficient to install the desktop applications from AspenTech or OSIsoft, since these normally don't come packaged with 64-bit ODBC drivers. Check with your employer/organisation whether the ODBC drivers are available for you. If not, you may be able to obtain them directly from the vendors. 
 
 ## Adding host certificates
 
-If you run into issues with certificate verification when connecting to Web API servers, you will need to either turn of SSL verification (input argument `verifySSL=False` ) or, strongly preferred, add the certificate to your certificate store. The procedure described below is based on https://incognitjoe.github.io/adding-certs-to-requests.html. It requires the use of [git-bash](https://git-scm.com/downloads) (or another way to run openssl). There may be better ways - please let me know if you have any suggestions.
+### For Equinor users
 
-1. Visit the server (e.g. https://pivision.equinor.com) in Google Chrome.
-2. Click the padlock icon immediately to the left of the URL and select *Certificate (valid)->Certification Path->Statoil Root CA->View Certificate->Details*. 
-3. Click *Copy to File...* and export the certificate as *DER encoded binary X.509 (.CER)* to *certificate.cer*.
-4. Open *git-bash* and use the *cd* command to navigate to the directory where you stored the file.
-5. Convert the cer file to pem format: `openssl x509 -inform der -in certificate.cer -out certificate.pem` .
+The Web APIs are connected to using the requests package. Requests does no utilize the system certificate store, but instead relies on the certifi bundle. In order to avoid SSL verification errors, we need to either turn of SSL verification (input argument `verifySSL=False` ) or, strongly preferred, add the certificate to the certifi bundle. This is simple:
 
-We now need to add the certificate to the certificate store:
+1. Activate the virtual environment where you installed tagreader.
+2. Run the included helper script `add_root_certificate.py` .
 
-6.  Activate your Python virtual environment and install *certifi* if not already installed: `pip install certifi` .
-7.  Run the following Python snippet:
+This only needs to be done once per virtual environment.
 
-``` python
-import certifi
-cafile = certifi.where()
-with open('certificate.pem', 'rb') as infile:
-  customca = infile.read()
-with open(cafile, 'ab') as outfile:
-  outfile.write(customca)
-```
+### For non-Equinor users
+
+If you run info SSL verification errors and prefer to not set `verifySSL=False` , you can try the procedure outlined [here](https://incognitjoe.github.io/adding-certs-to-requests.html). 
 
 # Importing the module
 

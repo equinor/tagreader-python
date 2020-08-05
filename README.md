@@ -9,7 +9,6 @@
 - [Introduction](#introduction)
 - [Requirements](#requirements)
 - [Installation](#installation)
-  - [ODBC Drivers](#odbc-drivers)
 - [Documentation](#documentation)
 - [Contributing](#contributing)
 
@@ -39,16 +38,6 @@ To install and/or upgrade:
 ``` 
 pip install --upgrade tagreader
 ```
-
-### ODBC Drivers
-
-If you work in Equinor, you can find further information and links to download the drivers on our 
-[wiki](https://wiki.equinor.com/wiki/index.php/tagreader-python).
-
-If you do not work in Equinor: In order to fetch data from OSIsoft PI or Aspen InfoPlus.21, you need to obtain and
-install proprietary ODBC drivers. It is typically not sufficient to install the desktop applications from Aspen or 
-OSIsoft, since these normally don't come packaged with 64-bit ODBC drivers. Check with your employer/organisation 
-whether the ODBC drivers are available for you. If not, you may be able to obtain them directly from the vendors. 
 
 ## Documentation
 
