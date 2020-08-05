@@ -75,7 +75,7 @@ setup(
     install_requires=[
         "pandas>=1.0.0",
         "tables",
-        "pyodbc",
+        "pyodbc;platform_system=='Windows'",
         "requests",
         "requests_kerberos"
     ],
