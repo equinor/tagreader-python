@@ -64,16 +64,18 @@ If you do not work in Equinor: It may already work for you, although it is typic
 
 ### For Equinor users
 
-The Web APIs are connected to using the requests package. Requests does no utilize the system certificate store, but instead relies on the certifi bundle. In order to avoid SSL verification errors, we need to either turn of SSL verification (input argument `verifySSL=False` ) or, strongly preferred, add the certificate to the certifi bundle. This is simple:
+The Web APIs are queried with the requests package. Requests does not utilize the system certificate store, but instead relies on the certifi bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verifySSL=False` for relevant function calls) or, strongly preferred, add the certificate to the certifi bundle. To to this, simply activate the virtual environment where you installed tagreader, and run the following snippet:
 
-1. Activate the virtual environment where you installed tagreader.
-2. Run the included helper script `add_root_certificate.py` .
+``` python
+from tagreader.utils import add_statoil_root_certificate
+add_statoil_root_certificate()
+```
 
-This only needs to be done once per virtual environment.
+The output should inform you that the certificate was successfully added. This only needs to be done once per virtual environment. The function should detect if the certificate has been added before to avoid duplication.
 
 ### For non-Equinor users
 
-If you run info SSL verification errors and prefer to not set `verifySSL=False` , you can try the procedure outlined [here](https://incognitjoe.github.io/adding-certs-to-requests.html). 
+If you run info SSL verification errors and prefer to not set `verifySSL=False` , you can try the procedure outlined [here](https://incognitjoe.github.io/adding-certs-to-requests.html).
 
 # Importing the module
 
