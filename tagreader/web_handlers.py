@@ -25,7 +25,7 @@ def get_auth_aspen():
     return HTTPKerberosAuth(service="HTTPS")
 
 
-def list_aspen_sources(
+def list_aspenone_sources(
     url=r"ws2679.statoil.net/ProcessData/AtProcessDataREST.dll",
     auth=get_auth_aspen(),
     verifySSL=True,
@@ -47,7 +47,7 @@ def list_aspen_sources(
         print("Not authorized")
 
 
-def list_pi_sources(
+def list_piwebapi_sources(
     url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_pi(), verifySSL=True
 ):
     url_ = urljoin(url, "dataservers")

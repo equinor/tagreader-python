@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.odbc_handlers import list_pi_sources
-from tagreader.clients import IMSClient
+from tagreader.clients import IMSClient, list_sources
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 
@@ -35,6 +35,15 @@ def Client():
 
 def test_list_all_pi_sources():
     res = list_pi_sources()
+    assert isinstance(res, list)
+    assert len(res) >= 1
+    assert isinstance(res[0], str)
+    for r in res:
+        assert 3 <= len(r)
+
+
+def test_list_sources_pi():
+    res = list_sources("pi")
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)

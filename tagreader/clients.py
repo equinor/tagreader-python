@@ -13,12 +13,51 @@ from .utils import (
     winreg,
 )
 from .cache import SmartCache
-from .odbc_handlers import PIHandlerODBC, AspenHandlerODBC
-from .web_handlers import PIHandlerWeb, AspenHandlerWeb
+from .odbc_handlers import (
+    PIHandlerODBC,
+    AspenHandlerODBC,
+    list_pi_sources,
+    list_aspen_sources,
+)
+from .web_handlers import (
+    PIHandlerWeb,
+    AspenHandlerWeb,
+    list_piwebapi_sources,
+    list_aspenone_sources,
+    get_auth_pi,
+    get_auth_aspen,
+)
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
 )
+
+
+def list_sources(imstype, url=None, auth=None, verifySSL=None):
+    accepted_values = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
+    if not imstype or imstype.lower() not in accepted_values:
+        raise ValueError(f"`imstype` must be one of {accepted_values}")
+
+    if imstype.lower() == "pi":
+        return list_pi_sources()
+    elif imstype.lower() in ["aspen", "ip21"]:
+        return list_aspen_sources()
+    elif imstype.lower() == "piwebapi":
+        if url is None:
+            url = r"https://piwebapi.equinor.com/piwebapi"
+        if auth is None:
+            auth = get_auth_pi()
+        if verifySSL is None:
+            verifySSL = True
+        return list_piwebapi_sources(url=url, auth=auth, verifySSL=verifySSL)
+    elif imstype.lower() == "aspenone":
+        if url is None:
+            url = r"ws2679.statoil.net/ProcessData/AtProcessDataREST.dll"
+        if auth is None:
+            auth = get_auth_aspen()
+        if verifySSL is None:
+            verifySSL = True
+        return list_aspenone_sources(url=url, auth=auth, verifySSL=verifySSL)
 
 
 def get_missing_intervals(df, start_time, stop_time, ts, read_type):
@@ -206,9 +245,7 @@ class IMSClient:
         self.handler.connect()
 
     def search_tag(self, tag=None, desc=None):
-        warnings.warn(
-            "This function is deprecated. Please call 'search()' instead"
-        )
+        warnings.warn("This function is deprecated. Please call 'search()' instead")
         return self.search(tag=tag, desc=desc)
 
     def search(self, tag=None, desc=None):

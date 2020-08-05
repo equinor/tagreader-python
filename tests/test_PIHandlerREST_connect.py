@@ -3,10 +3,10 @@ import os
 import pandas as pd
 from tagreader.utils import ReaderType
 from tagreader.web_handlers import (
-    list_pi_sources,
+    list_piwebapi_sources,
     PIHandlerWeb,
 )
-from tagreader.clients import IMSClient
+from tagreader.clients import IMSClient, list_sources
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -48,8 +48,17 @@ def PIHandler():
     yield h
 
 
-def test_list_all_pi_sources():
-    res = list_pi_sources(verifySSL=verifySSL)
+def test_list_all_piwebapi_sources():
+    res = list_piwebapi_sources(verifySSL=verifySSL)
+    assert isinstance(res, list)
+    assert len(res) >= 1
+    for r in res:
+        assert isinstance(r, str)
+        assert 3 <= len(r)
+
+
+def test_list_sources_piwebapi():
+    res = list_sources("pi", verifySSL=verifySSL)
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:

@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from tagreader.clients import IMSClient
+from tagreader.clients import IMSClient, list_sources
 from tagreader.odbc_handlers import (
     list_aspen_sources,
 )
@@ -30,6 +30,15 @@ def Client():
 
 def test_list_all_aspen_sources():
     res = list_aspen_sources()
+    assert isinstance(res, list)
+    assert len(res) >= 1
+    assert isinstance(res[0], str)
+    for r in res:
+        assert 3 <= len(r) <= 20
+
+
+def test_list_sources_aspen():
+    res = list_sources("aspen")
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)

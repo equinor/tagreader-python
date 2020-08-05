@@ -1,12 +1,32 @@
 import os
 import pyodbc
 import pandas as pd
-
+import warnings
 from .utils import logging, winreg, find_registry_key, ReaderType
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
 )
+
+
+def list_aspen_servers():
+    warnings.warn(
+        (
+            "This function is deprecated and will be removed."
+            "Please call 'list_sources(\"aspen\")' instead"
+        )
+    )
+    return list_aspen_sources()
+
+
+def list_pi_servers():
+    warnings.warn(
+        (
+            "This function is deprecated and will be removed."
+            "Please call 'list_sources(\"pi\")' instead"
+        )
+    )
+    return list_pi_sources()
 
 
 def list_aspen_sources():
