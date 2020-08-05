@@ -39,6 +39,8 @@ To install and/or upgrade:
 pip install --upgrade tagreader
 ```
 
+If you wish to use ODBC connections to the IMS servers, you will also need some drivers. Check the [manual](docs/manual.md).
+
 ## Documentation
 
 There is a [quickstart](docs/quickstart.ipynb) example file that should get you going. Also check out the [manual](docs/manual.md) for more information.
@@ -48,4 +50,3 @@ There is a [quickstart](docs/quickstart.ipynb) example file that should get you 
 All contributions are welcome, including code, bug reports, issues, feature requests, and documentation. The preferred
 way of submitting a contribution is to either make an issue on GitHub or by forking the project on GitHub and making a 
 pull request.
-

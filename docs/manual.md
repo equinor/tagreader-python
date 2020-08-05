@@ -50,6 +50,7 @@ To install and/or upgrade:
 ``` 
 pip install --upgrade tagreader
 ```
+
 ## ODBC Drivers
 
 To be able to connect to OSISoft PI or AspenTech InfoPlus.21 servers using ODBC, you need to obtain and install proprietary ODBC drivers. 
@@ -108,12 +109,16 @@ When called with `imstype` set to `pi` , `list_sources()` will search the regist
 **Example:**
 
 ``` python
-list_sources("pi")
+from tagreader import list_sources
+list_sources("ip21")
+list_sources("piwebapi")
 ```
 
 When called with `imstype` set to `piwebapi` or `aspenone` , `list_sources()` will connect to the web server URLs and query for the available list of data sources. This list is normally the complete set of data sources available on the server, and does not indicate whether the user is authorized to query the source or not.
 
-When querying Equinor PI Web API for data sources, `list_sources()` should require no input argument except `imstype` . When querying Equinor AspenOne for data sources, it is currently necessary to use NTLM (see example code below). For non-Equinor servers, `url` , `auth` and `verifySSL` may need to be specified.
+When querying Equinor PI Web API for data sources, `list_sources()` should require no input argument except `imstype="piwebapi"` . 
+
+When querying Equinor AspenOne for data sources, it is currently necessary to use NTLM. 
 
 **Example:**
 
@@ -123,9 +128,10 @@ from requests_ntlm import HttpNtlmAuth
 user = "statoil.net\\" + getpass.getuser()
 pwd = getpass.getpass()
 auth = HttpNtlmAuth(user, pwd)
-url = "https://aspenone.equinor.com/ProcessData/AtProcessDataREST.dll"
-print(list_sources("aspenweb", url=url, auth=auth))
+print(tagreader.list_sources("aspenone", auth=auth))
 ```
+
+For non-Equinor servers, `url` will need to be specified, as may `auth` and `verifySSL` .
 
 # The Client
 
