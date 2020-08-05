@@ -9,16 +9,15 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 # Index <!-- omit in toc -->
 
 - [Requirements](#requirements)
-- [Installation](#installation)
 - [Before getting started](#before-getting-started)
+  - [Installation](#installation)
+  - [Adding host certificates](#adding-host-certificates)
 - [Importing the module](#importing-the-module)
+- [IMS types](#ims-types)
 - [Listing available data sources](#listing-available-data-sources)
-  - [ODBC](#odbc)
-  - [Web API](#web-api)
 - [The Client](#the-client)
   - [Creating a client](#creating-a-client)
   - [Connecting to data source](#connecting-to-data-source)
-    - [Adding host certificate](#adding-host-certificate)
 - [Searching for tags](#searching-for-tags)
 - [Reading data](#reading-data)
   - [Selecting what to read](#selecting-what-to-read)
@@ -37,7 +36,11 @@ Tagreader is intended to be easy to use, and present the same interface to the u
   + requests (if using REST-API connections)
 * If using ODBC connections, you must also install proprietary drivers for PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for Microsoft Windows.
 
-# Installation
+# Before getting started
+
+It is highly recommended to go through the [quickstart.ipynb](quickstart) example. The quickstart has references to relevant sections in this manual.
+
+## Installation
 
 To install and/or upgrade:
 
@@ -45,9 +48,29 @@ To install and/or upgrade:
 pip install --upgrade tagreader
 ```
 
-# Before getting started
+## Adding host certificates
 
-It is highly recommended to go through the [quickstart.ipynb](quickstart) example. The quickstart has references to relevant sections in this manual.
+If you run into issues with certificate verification when connecting to Web API servers, you will need to either turn of SSL verification (input argument `verifySSL=False` ) or, strongly preferred, add the certificate to your certificate store. The procedure described below is based on https://incognitjoe.github.io/adding-certs-to-requests.html. It requires the use of [git-bash](https://git-scm.com/downloads) (or another way to run openssl). There may be better ways - please let me know if you have any suggestions.
+
+1. Visit the server (e.g. https://pivision.equinor.com) in Google Chrome.
+2. Click the padlock icon immediately to the left of the URL and select *Certificate (valid)->Certification Path->Statoil Root CA->View Certificate->Details*. 
+3. Click *Copy to File...* and export the certificate as *DER encoded binary X.509 (.CER)* to *certificate.cer*.
+4. Open *git-bash* and use the *cd* command to navigate to the directory where you stored the file.
+5. Convert the cer file to pem format: `openssl x509 -inform der -in certificate.cer -out certificate.pem` .
+
+We now need to add the certificate to the certificate store:
+
+6.  Activate your Python virtual environment and install *certifi* if not already installed: `pip install certifi` .
+7.  Run the following Python snippet:
+
+``` python
+import certifi
+cafile = certifi.where()
+with open('certificate.pem', 'rb') as infile:
+  customca = infile.read()
+with open(cafile, 'ab') as outfile:
+  outfile.write(customca)
+```
 
 # Importing the module
 
@@ -57,41 +80,40 @@ The module is imported with
 import tagreader
 ```
 
+# IMS types
+
+Tagreader supports connecting to PI and IP.21 servers using both ODBC and Web API interfaces. When calling certain methods, the user will need to tell tagreader which system and which connection method to use. This input argument is called `imstype` , and can be one of the following case-insensitive strings:
+
+* `pi` : For connecting to OSISoft PI via ODBC.
+* `piwebapi` : For connecting to OSISoft PI Web API
+* `ip21` : For connecting to AspenTech InfoPlus.21 via ODBC 
+* `aspenone` : For connecting to AspenTech Process Data REST Web API
+
 # Listing available data sources
 
-Tagreader contains four methods to list data sources, one for each combination of IMS system (PI or IP.21) and connection method (ODBC or Web API).
+The method `tagreader.list_sources()` can query for available PI and IP.21 servers available through both ODBC and Web API. Input arguments:
 
-## ODBC
+* `imstype` : The name of the [IMS type](#ims-types) to query. Valid values: `pi` , `ip21` , `piwebapi` and `aspenone` .
 
-These two methods are only available in Windows. Both methods will search specific parts of the Windows registry for configured data sources, which is normally all data sources to which the user is authorized, and return them as a list:
+The following input arguments are only relevant when calling `list_sources()` with a Web API `imstype` ( `piwebapi` or `aspenone` ):
 
-* `list_pi_sources()` searches *HKEY_CURRENT_USER\Software\AspenTech\ADSA\Caches\AspenADSA\{username}*
-* `list_aspen_sources()` searches *HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PISystem\PI-SDK* <br/>
-
-Usage example:
-
-``` python
-list_pi_sources()
-```
-
-## Web API
-
-These two methods connect to the web server URLs and query for the available list of data sources. This list is normally the complete set of data sources available on the server, and does not indicate whether the user is authorized to query the source or not.
-
-* `list_pi_sources_web()`
-* `list_aspen_sources_web()` <br/>
-
-If querying Equinor servers for data sources, these methods should require no input arguments. For non-Equinor servers, the following input arguments can be used: 
-
-* `url` (optional): Path to server root, e.g. _"https:<span>//aspenone/ProcessData/AtProcessDataREST.dll"_ or _"https:<span>//piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` .
-* `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: False.
+* `url` (optional): Path to server root, e.g. _"https:<span>//aspenone/ProcessData/AtProcessDataREST.dll"_ or _"https:<span>//piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` if `imstype` is `piwebapi` or `aspenone` .
+* `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: True.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth objects that work with Equinor servers. If not connecting to an Equinor server, you may have to create your own auth.
 
-Examples:
+When called with `imstype` set to `pi` , `list_sources()` will search the registry at *HKEY_CURRENT_USER\Software\AspenTech\ADSA\Caches\AspenADSA\{username}* for available PI servers. Similarly, if called with `imstype` set to `ip21` , *HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PISystem\PI-SDK* will be searched for available IP.21 servers. Servers found through the registry are normally servers to which the user is authorized, and does not necessarily include all available data sources in the organization.
+
+**Example:**
 
 ``` python
-print(list_pi_sources_web())
+list_sources("pi")
 ```
+
+When called with `imstype` set to `piwebapi` or `aspenone` , `list_sources()` will connect to the web server URLs and query for the available list of data sources. This list is normally the complete set of data sources available on the server, and does not indicate whether the user is authorized to query the source or not.
+
+When querying Equinor PI Web API for data sources, `list_sources()` should require no input argument except `imstype` . When querying Equinor AspenOne for data sources, it is currently necessary to use NTLM (see example code below). For non-Equinor servers, `url` , `auth` and `verifySSL` may need to be specified.
+
+**Example:**
 
 ``` python
 import getpass
@@ -99,41 +121,30 @@ from requests_ntlm import HttpNtlmAuth
 user = "statoil.net\\" + getpass.getuser()
 pwd = getpass.getpass()
 auth = HttpNtlmAuth(user, pwd)
-url = "https://aspenone/ProcessData/AtProcessDataREST.dll"
-
-print(list_aspen_sources_web(url=url, auth=auth, verifySSL=False))
+url = "https://aspenone.equinor.com/ProcessData/AtProcessDataREST.dll"
+print(list_sources("aspenweb", url=url, auth=auth))
 ```
 
 # The Client
 
-The client handles interactions between the user and the data source. It shall present as similar as possible interface to the user, regardless of the type of data source that is used. Communication with the data source is performed by the handler object, which is attached to the client upon client creation. 
+The client presents the interface for communicating with the data source to the user. The interface shall be as unified as possible, regardless of the IMS type that is used. A handler object specifically designed for each IMS type is attached to the client when the client is created. The handler is responsible for handling the communication and data interpretation between the server and the client object.
 
 ## Creating a client
 
 A connection to a data source is prepared by creating an instance of `tagreader.IMSClient` with the following input arguments:
 
 * `datasource` : Name of data source
-* `imstype` : Indicates the type of data source that is requested, and therefore determines which handler type to use. Valid values are:
-  + `pi` : For connecting to OSISoft PI via ODBC.
-  + `ip21` : For connecting to AspenTech InfoPlus.21 via ODBC 
-  + `piwebapi` : For connecting to OSISoft PI Web API
-  + `aspenone` : For connecting to AspenTech Process Data REST Web API
+* `imstype` : The name of the [IMS type](#ims-types) to query. Indicates the type of data source that is requested, and therefore determines which handler type to use. Valid values are `pi` , `ip21` , `piwebapi` and `aspenone` .
 
   Note that ODBC connections require that [pyodbc](https://pypi.org/project/pyodbc/) is installed, while REST API connections require the [requests](https://requests.readthedocs.io/en/master/) module.
 
 * `tz` (optional): Time zone naive time stamps will be interpreted as belonging to this time zone. Similarly, the returned data points will be localized to this time zone. **Default**: _"Europe/Oslo"_.
 
-The following input arguments can be used when connecting to either `piwebapi` or to `aspenone` . None of these should be necessary to supply when connecting to Equinor servers:
+The following input arguments can be used when connecting to either `piwebapi` or to `aspenone` . None of these should be necessary to supply when connecting to Equinor servers (**Note** Kerberos currently does not work for AspenOne. Please see example code below for how to connect to AspenOne in Equinor using NTLM.)
 
 * `url` (optional): Path to server root, e.g. _"https:<span>//aspenone/ProcessData/AtProcessDataREST.dll"_ or _"https:<span>//piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` .
-* `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: False.
-* `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth objects that work with Equinor servers. If not connecting to an Equinor server, you may have to create your own auth.
-
-### IMSTypes <!-- omit in toc -->
-
-The imstypes `pi` and `ip21` will attempt to connect to a PI or IP.21 data source, respectively, using ODBC. 
-
-Imstypes `piwebapi` and `aspenone` will attempt to connect to a PI Web API or an Aspentech Process Data REST Web API host, respectively.
+* `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: True.
+* `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object that works with Equinor servers. If not connecting to an Equinor server, you need to create your own auth object.
 
 ## Connecting to data source
 
@@ -156,31 +167,8 @@ from requests_ntlm import HttpNtlmAuth
 user = "statoil.net\\" + getpass.getuser()
 pwd = getpass.getpass()
 auth = HttpNtlmAuth(user, pwd)
-c = tagreader.IMSClient("PER", "aspenone", tz="Brazil/East", verifySSL=False,
-    url="https://ws2679.statoil.net/ProcessData/AtProcessDataREST.dll")
+c = tagreader.IMSClient("PER", "aspenone", auth=auth, verifySSL=False, tz="Brazil/East")
 c.connect()
-```
-
-### Adding host certificate
-
-For the two Web APIs, it may be a good idea to add the server certificate to your certificate chain to allow SSL validation. The procedure described below is based on https://incognitjoe.github.io/adding-certs-to-requests.html. It requires the use of [git-bash](https://git-scm.com/downloads) (or another way to run openssl). There may be better ways - please let me know if you find one.
-1. Visit the server (e.g. https://pivision.equinor.com) in Google Chrome.
-2. Click the padlock icon immediately to the left of the URL and select *Certificate (valid)->Certification Path->Statoil Root CA->View Certificate->Details*. 
-3. Click *Copy to File...* and export the certificate as *DER encoded binary X.509 (.CER)* to *certificate.cer*.
-4. Open *git-bash* and navigate to the directory where you stored the file.
-5. Convert the file: `openssl x509 -inform der -in certificate.cer -out certificate.pem`.
-
-We now need to add the certificate to the certificate chain. 
-
-1.  Activate your Python virtual environment and install *certifi* if not already installed: `pip install certifi`.
-2.  Run the following Python snippet to add the certificate to the chain:
-``` python
-import certifi
-cafile = certifi.where()
-with open('certificate.pem', 'rb') as infile:
-  customca = infile.read()
-with open(cafile, 'ab') as outfile:
-  outfile.write(customca)
 ```
 
 # Searching for tags
@@ -224,7 +212,7 @@ Data is read by calling the client method `read()` with the following input argu
 
 ## Selecting what to read
 
-By specifying the optional parameter `read_type` to `read_tags()`, it is possible to specify what kind of data should be returned. The default query method is interpolated. All valid values for `read_type` are defined in the `utils.ReaderType` class (mirrored for convenience as `tagreader.ReaderType`), although not all are currently implemented. Below is the list of implemented read types. 
+By specifying the optional parameter `read_type` to `read_tags()` , it is possible to specify what kind of data should be returned. The default query method is interpolated. All valid values for `read_type` are defined in the `utils.ReaderType` class (mirrored for convenience as `tagreader.ReaderType` ), although not all are currently implemented. Below is the list of implemented read types. 
 
 * `INT` : The raw data points are interpolated so that one new data point is generated at each step of length `ts` starting at `start_time` and ending at or less than `ts` seconds before `stop_time` .
 * The following aggregated read types perform a weighted calculation of the raw data within each interval. Where relevant, time-weighted calculations are used. Returned time stamps are anchored at the beginning of each interval. So for the 60 seconds long interval between 08:11:00 and 08:12:00, the time stamp will be 08:11:00.
@@ -242,11 +230,12 @@ Read interpolated data for the provided tag with 3-minute intervals between the 
 c = tagreader. IMSClient("PINO", "pi")
 c.connect()
 df = c.read(['BA: ACTIVE.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180)
-```
+
+``` 
 Read the average value for the two provided tags within each 3-minute interval between the two time stamps:
 ``` python
 df = c.read(['BA: CONC.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180, read_type=tagreader.ReaderType.AVG)
-``` 
+```
 
 ## Caching results
 
@@ -300,9 +289,11 @@ Two client methods have been created to fetch basic metadata for one or more tag
 Fetches the engineering unit(s) for the tag(s) provided. The argument `tags` can be either a single tagname as string, or a list of tagnames.
 
 ## get_description()
+
 Fetches the description(s) for the tag(s) provided. The argument `tags` can be either a single tagname as string, or a list of tagnames.
 
 **Example**:
+
 ``` python
 tags = ["BA:ACTIVE.1", "BA:LEVEL.1", "BA:CONC.1"]
 units = c.get_units(tags)
