@@ -1,21 +1,19 @@
-
-# tagreader-python # <!-- omit in toc -->
+# tagreader-python <!-- omit in toc -->
 
 [![PyPI version](https://badge.fury.io/py/tagreader.svg)](https://badge.fury.io/py/tagreader)
 ![Build](https://github.com/equinor/tagreader-python/workflows/Build/badge.svg)
 [![Build Status](https://dev.azure.com/EIIDS/tagreader/_apis/build/status/equinor.tagreader-python?branchName=master)](https://dev.azure.com/EIIDS/tagreader/_build/latest?definitionId=5&branchName=master)
 
-## Index ## <!-- omit in toc -->
+## Index <!-- omit in toc -->
 
 - [Introduction](#introduction)
 - [Requirements](#requirements)
 - [Installation](#installation)
   - [ODBC Drivers](#odbc-drivers)
-- [Uninstallation](#uninstallation)
+- [Documentation](#documentation)
 - [Contributing](#contributing)
-- [Usage examples](#usage-examples)
 
-## Introduction ##
+## Introduction
 
 Tagreader is a Python package for reading trend data from the OSIsoft PI and Aspen Infoplus.21 IMS systems. Tagreader is
 intended to be easy to use, and present as similar as possible interfaces to the backend historians.   
@@ -25,23 +23,24 @@ a way as to allow for other interfaces, e.g. REST APIs, in the future.
   
 Tagreader is based on Pandas for Python, and uses the HDF5 file format to cache results. 
 
-## Requirements ##
+## Requirements
 
 * Python >= 3.6 with the following packages:
-  * pandas >= 1.0.0
-  * pytables
-  * pyodbc (if using ODBC connections)
-  * requests (if using REST-API connections)
+  + pandas >= 1.0.0
+  + pytables
+  + pyodbc (if using ODBC connections)
+  + requests (if using REST-API connections)
 * If using ODBC connections, you must also install proprietary drivers for PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for Microsoft Windows.
- 
-## Installation ##
+
+## Installation
 
 To install and/or upgrade:
-```
+
+``` 
 pip install --upgrade tagreader
 ```
 
-### ODBC Drivers ###
+### ODBC Drivers
 
 If you work in Equinor, you can find further information and links to download the drivers on our 
 [wiki](https://wiki.equinor.com/wiki/index.php/tagreader-python).
@@ -51,18 +50,13 @@ install proprietary ODBC drivers. It is typically not sufficient to install the 
 OSIsoft, since these normally don't come packaged with 64-bit ODBC drivers. Check with your employer/organisation 
 whether the ODBC drivers are available for you. If not, you may be able to obtain them directly from the vendors. 
 
-## Uninstallation ##
+## Documentation
 
-```
-pip uninstall tagreader
-```
+There is a [quickstart](docs/quickstart.ipynb) example file that should get you going. Also check out the [manual](docs/manual.md) for more information.
 
-## Contributing ##
+## Contributing
 
 All contributions are welcome, including code, bug reports, issues, feature requests, and documentation. The preferred
 way of submitting a contribution is to either make an issue on GitHub or by forking the project on GitHub and making a 
 pull request.
-  
-## Usage examples ##
 
-Please see the [quickstart](docs/quickstart.ipynb) example file.
