@@ -26,7 +26,7 @@ def get_auth_aspen():
 
 
 def list_aspenone_sources(
-    url=r"ws2679.statoil.net/ProcessData/AtProcessDataREST.dll",
+    url=r"https://ws2679.statoil.net/ProcessData/AtProcessDataREST.dll",
     auth=get_auth_aspen(),
     verifySSL=True,
 ):

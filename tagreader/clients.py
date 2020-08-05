@@ -52,7 +52,7 @@ def list_sources(imstype, url=None, auth=None, verifySSL=None):
         return list_piwebapi_sources(url=url, auth=auth, verifySSL=verifySSL)
     elif imstype.lower() == "aspenone":
         if url is None:
-            url = r"ws2679.statoil.net/ProcessData/AtProcessDataREST.dll"
+            url = r"https://ws2679.statoil.net/ProcessData/AtProcessDataREST.dll"
         if auth is None:
             auth = get_auth_aspen()
         if verifySSL is None:
