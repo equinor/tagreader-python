@@ -179,6 +179,7 @@ def test_to_DST_skips_time(cache):
         freq="600s",
         name="time",
     )
+    index.freq = None
     df = pd.DataFrame({"tag1": range(0, len(index))}, index=index)
     assert (
         df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6
@@ -196,6 +197,7 @@ def test_from_DST_folds_time(cache):
         freq="600s",
         name="time",
     )
+    index.freq = None
     df = pd.DataFrame({"tag1": range(0, len(index))}, index=index)
     assert len(df) == (4 + 1) * 6 + 1
     # Time exists inside fold:
