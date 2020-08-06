@@ -77,6 +77,7 @@ setup(
         "tables",
         "pyodbc;platform_system=='Windows'",
         "requests",
-        "requests_kerberos"
+        "requests_kerberos",
+        "certifi>=2020.04.05",
     ],
 )

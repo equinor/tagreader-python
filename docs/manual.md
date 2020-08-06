@@ -1,6 +1,6 @@
 # Tagreader-python <!-- omit in toc -->
 
-Tagreader is a Python package for reading trend data from the OSISoft PI and AspenTech InfoPlus.21 IMS systems. It can communicate with PI using ODBC or PI Web API, and with IP.21 using ODBC or Process Data REST Web API.
+Tagreader is a Python package for reading trend data from the OSIsoft PI and AspenTech InfoPlus.21 IMS systems. It can communicate with PI using ODBC or PI Web API, and with IP.21 using ODBC or Process Data REST Web API.
 
 The ODBC connections require proprietary drivers that are unfortunately only available for Windows. The handlers for Web APIs use the Python requests library, and should therefore also work for other platforms.
 
@@ -41,7 +41,7 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 
 # Before getting started
 
-It is highly recommended to go through the [quickstart.ipynb](quickstart) example. The quickstart has references to relevant sections in this manual.
+It is highly recommended to go through the [quickstart](quickstart.ipynb) example. It has references to relevant sections in this manual.
 
 # Installation
 
@@ -64,7 +64,7 @@ If you do not work in Equinor: It may already work for you, although it is typic
 
 ### For Equinor users
 
-The Web APIs are queried with the requests package. Requests does not utilize the system certificate store, but instead relies on the certifi bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verifySSL=False` for relevant function calls) or, strongly preferred, add the certificate to the certifi bundle. To to this, simply activate the virtual environment where you installed tagreader, and run the following snippet:
+The Web APIs are queried with the requests package. Requests does not utilize the system certificate store, but instead relies on the Certifi bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verifySSL=False` for relevant function calls) or, strongly preferred, add the certificate to the certifi bundle. To to this, simply activate the virtual environment where you installed tagreader, and run the following snippet. *Note* : This requires Certifi >= 2020.04.05. If your version is older, upgrade with `pip install --upgrade certifi` )
 
 ``` python
 from tagreader.utils import add_statoil_root_certificate
