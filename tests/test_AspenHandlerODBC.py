@@ -1,4 +1,3 @@
-import pytest
 import pandas as pd
 from tagreader import utils
 from tagreader.utils import ReaderType
@@ -15,16 +14,15 @@ def test_generate_connection_string():
 
 
 def test_generate_tag_read_query():
-    start_time = utils.datestr_to_datetime("2018-01-17 16:00:00")
-    stop_time = utils.datestr_to_datetime("2018-01-17 17:00:00")
+    start_time = utils.ensure_datetime_with_tz("2018-01-17 16:00:00")
+    stop_time = utils.ensure_datetime_with_tz("2018-01-17 17:00:00")
     ts = pd.Timedelta(1, unit="m")
     res = AspenHandlerODBC.generate_read_query(
         "thetag", None, start_time, stop_time, ts, ReaderType.INT
     )
     expected = (
-        "SELECT CAST(ts AS CHAR FORMAT 'YYYY-MM-DD HH:MI:SS') AS \"time\", "
-        'value AS "value" FROM history WHERE name = '
-        "'thetag' AND (ts BETWEEN '17-Jan-18 16:00:00' AND '17-Jan-18 17:00:00') AND "
-        "(request = 6) AND (period = 600) ORDER BY ts"
+        'SELECT ISO8601(ts) AS "time", value AS "value" FROM history WHERE name = '
+        "'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND '2018-01-17T16:00:00Z') "
+        "AND (request = 7) AND (period = 600) ORDER BY ts"
     )
     assert expected == res

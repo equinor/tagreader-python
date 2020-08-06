@@ -1,11 +1,11 @@
 import os
-import sys
 import pyodbc
 import pandas as pd
+import warnings
 from itertools import groupby
 from operator import itemgetter
 from .utils import (
-    datestr_to_datetime,
+    ensure_datetime_with_tz,
     find_registry_key,
     find_registry_key_from_name,
     logging,
@@ -13,12 +13,51 @@ from .utils import (
     winreg,
 )
 from .cache import SmartCache
-from .odbc_handlers import PIHandlerODBC, AspenHandlerODBC
-from .web_handlers import PIHandlerWeb
+from .odbc_handlers import (
+    PIHandlerODBC,
+    AspenHandlerODBC,
+    list_pi_sources,
+    list_aspen_sources,
+)
+from .web_handlers import (
+    PIHandlerWeb,
+    AspenHandlerWeb,
+    list_piwebapi_sources,
+    list_aspenone_sources,
+    get_auth_pi,
+    get_auth_aspen,
+)
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
 )
+
+
+def list_sources(imstype, url=None, auth=None, verifySSL=None):
+    accepted_values = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
+    if not imstype or imstype.lower() not in accepted_values:
+        raise ValueError(f"`imstype` must be one of {accepted_values}")
+
+    if imstype.lower() == "pi":
+        return list_pi_sources()
+    elif imstype.lower() in ["aspen", "ip21"]:
+        return list_aspen_sources()
+    elif imstype.lower() == "piwebapi":
+        if url is None:
+            url = r"https://piwebapi.equinor.com/piwebapi"
+        if auth is None:
+            auth = get_auth_pi()
+        if verifySSL is None:
+            verifySSL = True
+        return list_piwebapi_sources(url=url, auth=auth, verifySSL=verifySSL)
+    elif imstype.lower() == "aspenone":
+        if url is None:
+            url = r"https://ws2679.statoil.net/ProcessData/AtProcessDataREST.dll"
+        if auth is None:
+            auth = get_auth_aspen()
+        if verifySSL is None:
+            verifySSL = True
+        return list_aspenone_sources(url=url, auth=auth, verifySSL=verifySSL)
 
 
 def get_missing_intervals(df, start_time, stop_time, ts, read_type):
@@ -53,15 +92,15 @@ def get_next_timeslice(start_time, stop_time, ts, max_steps=None):
     # Ensure we include the last data point.
     # Discrepancies between Aspen and Pi for +ts
     # Discrepancies between IMS and cache for e.g. ts.
-    if calc_stop_time == stop_time:
-        calc_stop_time += ts / 2
+    # if calc_stop_time == stop_time:
+    #     calc_stop_time += ts / 2
     return start_time, calc_stop_time
 
 
-def get_server_address_aspen(assetname):
-    """Assets are listed under
+def get_server_address_aspen(datasource):
+    """Data sources are listed under
     HKEY_CURRENT_USER\\Software\\AspenTech\\ADSA\\Caches\\AspenADSA\\username.
-    For each asset there are multiple keys with Host entries. We start by
+    For each data source there are multiple keys with Host entries. We start by
     identifying the correct key to use by locating the UUID for Aspen SQLplus
     services located under Aspen SQLplus service component. Then we find the
     host and port based on the path above and the UUID.
@@ -85,7 +124,7 @@ def get_server_address_aspen(assetname):
     )
 
     try:
-        reg_site_key = winreg.OpenKey(reg_adsa, assetname + "\\" + aspen_UUID)
+        reg_site_key = winreg.OpenKey(reg_adsa, datasource + "\\" + aspen_UUID)
         host = winreg.QueryValueEx(reg_site_key, "Host")[0]
         port = int(winreg.QueryValueEx(reg_site_key, "Port")[0])
         return host, port
@@ -93,13 +132,13 @@ def get_server_address_aspen(assetname):
         return None
 
 
-def get_server_address_pi(assetname):
+def get_server_address_pi(datasource):
     """
-    PI Assets are listed under
+    PI data sources are listed under
     HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\PISystem\\PI-SDK\\x.x\\ServerHandles or
     \\Software\\PISystem\\PI-SDK\\x.x\\ServerHandles.
 
-    :param assetname: Name of asset
+    :param datasource: Name of data source
     :return: host, port
     :type: tuple(string, int)
     """
@@ -108,13 +147,13 @@ def get_server_address_pi(assetname):
             winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\PISystem\PI-SDK"
         )
         reg_key_handles = find_registry_key(reg_key, "ServerHandles")
-        reg_site_key = find_registry_key(reg_key_handles, assetname)
+        reg_site_key = find_registry_key(reg_key_handles, datasource)
         if reg_site_key is None:
             reg_key = winreg.OpenKey(
                 winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\PISystem\PI-SDK"
             )
             reg_key_handles = find_registry_key(reg_key, "ServerHandles")
-            reg_site_key = find_registry_key(reg_key_handles, assetname)
+            reg_site_key = find_registry_key(reg_key_handles, datasource)
         if reg_site_key is not None:
             host = winreg.QueryValueEx(reg_site_key, "path")[0]
             port = int(winreg.QueryValueEx(reg_site_key, "port")[0])
@@ -123,8 +162,8 @@ def get_server_address_pi(assetname):
         return None
 
 
-def get_handler(imstype, asset, options={}):
-    accepted_values = ["pi", "aspen", "ip21", "piweb", "aspenweb", "ip21web"]
+def get_handler(imstype, datasource, url=None, options={}, verifySSL=None, auth=None):
+    accepted_values = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
 
     if not imstype or imstype.lower() not in accepted_values:
         raise ValueError(f"`imstype` must be one of {accepted_values}")
@@ -135,13 +174,14 @@ def get_handler(imstype, asset, options={}):
                 "No PI ODBC driver detected. "
                 "Either switch to Web API ('piweb') or install appropriate driver."
             )
-        hostport = get_server_address_pi(asset)
+        hostport = get_server_address_pi(datasource)
         if not hostport:
             raise ValueError(
-                f"Unable to locate asset '{asset}'. Do you have correct permissions?"
+                f"Unable to locate data source '{datasource}'."
+                "Do you have correct permissions?"
             )
         host, port = hostport
-        return PIHandlerODBC(host, port, options)
+        return PIHandlerODBC(host=host, port=port, options=options)
 
     if imstype.lower() in ["aspen", "ip21"]:
         if "AspenTech SQLplus" not in pyodbc.drivers():
@@ -149,39 +189,67 @@ def get_handler(imstype, asset, options={}):
                 "No Aspen SQLplus ODBC driver detected. Either switch to Web API "
                 "('aspenweb') or install appropriate driver."
             )
-        hostport = get_server_address_aspen(asset)
+        hostport = get_server_address_aspen(datasource)
         if not hostport:
             raise ValueError(
-                f"Unable to locate asset '{asset}'. Do you have correct permissions?"
+                f"Unable to locate data source '{datasource}'."
+                "Do you have correct permissions?"
             )
         host, port = hostport
-        return AspenHandlerODBC(host, port, options)
+        return AspenHandlerODBC(host=host, port=port, options=options)
 
-    if imstype.lower() == "piweb":
-        if "osisoft.pidevclub.piwebapi" not in sys.modules:
-            raise RuntimeError(
-                "PI WEB API module not found. Either switch to ODBC ('pi') or install "
-                "'PI-Web-API-Client-Python'"
-            )
-        return PIHandlerWeb()
+    if imstype.lower() == "piwebapi":
+        return PIHandlerWeb(
+            url=url,
+            datasource=datasource,
+            options=options,
+            verifySSL=verifySSL,
+            auth=auth,
+        )
 
-    if imstype.lower() in ["aspenweb", "ip21web"]:
-        raise NotImplementedError
+    if imstype.lower() in ["aspenone"]:
+        return AspenHandlerWeb(
+            datasource=datasource,
+            url=url,
+            options=options,
+            verifySSL=verifySSL,
+            auth=auth,
+        )
 
 
 class IMSClient:
-    def __init__(self, asset, imstype=None, tz="Europe/Oslo", handler_options={}):
+    def __init__(
+        self,
+        datasource,
+        imstype=None,
+        tz="Europe/Oslo",
+        url=None,
+        handler_options={},
+        verifySSL=None,
+        auth=None,
+    ):
         self.handler = None
-        self.asset = asset.lower()
+        self.datasource = datasource.lower()  # FIXME
         self.tz = tz
-        self.handler = get_handler(imstype, asset, handler_options)
-        self.cache = SmartCache(asset)
+        self.handler = get_handler(
+            imstype,
+            datasource,
+            url=url,
+            options=handler_options,
+            verifySSL=verifySSL,
+            auth=auth,
+        )
+        self.cache = SmartCache(datasource)
 
     def connect(self):
         self.handler.connect()
 
     def search_tag(self, tag=None, desc=None):
-        return self.handler.search_tag(tag, desc)
+        warnings.warn("This function is deprecated. Please call 'search()' instead")
+        return self.search(tag=tag, desc=desc)
+
+    def search(self, tag=None, desc=None):
+        return self.handler.search(tag, desc)
 
     def _get_metadata(self, tag):
         return self.handler._get_tag_metadata(tag)
@@ -202,7 +270,7 @@ class IMSClient:
                 df, start_time, stop_time, ts.seconds, read_type
             )
             if not missing_intervals:
-                return df
+                return df.tz_convert(self.tz).sort_index()
         metadata = self._get_metadata(tag)
         frames = [df]
         for (start, stop) in missing_intervals:
@@ -219,7 +287,11 @@ class IMSClient:
                 frames.append(df)
         # df = pd.concat(frames, verify_integrity=True)
         df = pd.concat(frames)
-        df.sort_index(inplace=True)
+        df = df.tz_convert(self.tz).sort_index()
+        # read_type INT leads to overlapping values after concatenating
+        # due to both start time and end time included.
+        # Aggregate read_types (should) align perfectly and don't
+        # (shouldn't) need deduplication.
         df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
         df = df.rename(columns={"value": tag})
         return df
@@ -257,6 +329,21 @@ class IMSClient:
         return descriptions
 
     def read_tags(self, tags, start_time, stop_time, ts, read_type=ReaderType.INT):
+        warnings.warn(
+            (
+                "This function has been renamed to read() and is deprecated. "
+                "Please call 'read()' instead"
+            )
+        )
+        return self.read(
+            tags=tags,
+            start_time=start_time,
+            stop_time=stop_time,
+            ts=ts,
+            read_type=read_type,
+        )
+
+    def read(self, tags, start_time, stop_time, ts, read_type=ReaderType.INT):
         """Reads values for the specified [tags] from the IMS server for the
         time interval from [start_time] to [stop_time] in intervals [ts].
 
@@ -279,8 +366,8 @@ class IMSClient:
                 "Unable to read raw/sampled data for multiple tags since they don't "
                 "share time vector"
             )
-        start_time = datestr_to_datetime(start_time, tz=self.tz)
-        stop_time = datestr_to_datetime(stop_time, tz=self.tz)
+        start_time = ensure_datetime_with_tz(start_time, tz=self.tz)
+        stop_time = ensure_datetime_with_tz(stop_time, tz=self.tz)
         if not isinstance(ts, pd.Timedelta):
             ts = pd.Timedelta(ts, unit="s")
 

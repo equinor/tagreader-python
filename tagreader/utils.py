@@ -39,17 +39,26 @@ def find_registry_key_from_name(base_key, search_key_name):
     return key, key_string
 
 
-def datestr_to_datetime(date_stamp, tz="Europe/Oslo"):
-    date_stamp = (
-        pd.to_datetime(date_stamp, dayfirst=True).tz_localize(tz)
-        if isinstance(date_stamp, str)
-        else date_stamp
-    )
+def ensure_datetime_with_tz(date_stamp, tz="Europe/Oslo"):
+    if isinstance(date_stamp, str):
+        date_stamp = pd.to_datetime(date_stamp, dayfirst=True)
+
     if not date_stamp.tzinfo:
         date_stamp = date_stamp.tz_localize(tz)
-    else:
-        date_stamp = date_stamp.tz_convert(tz)
     return date_stamp
+
+
+def urljoin(*args):
+    """Joins components of URL. Ensures slashes are inserted or removed where
+    needed, and does not strip trailing slash of last element.
+
+    Arguments:
+        str
+    Returns:
+        str -- Generated URL
+    """
+    trailing_slash = "/" if args[-1].endswith("/") else ""
+    return "/".join(map(lambda x: str(x).strip("/"), args)) + trailing_slash
 
 
 class ReaderType(enum.IntEnum):
@@ -60,8 +69,8 @@ class ReaderType(enum.IntEnum):
     (specifically for cache hierarchies).
     """
 
-    RAW = SAMPLED = enum.auto()  # Raw sampled data
-    SHAPEPRESERVING = enum.auto()  # Minimum data points while preserving shape
+    RAW = SAMPLED = ACTUAL = enum.auto()  # Raw sampled data
+    SHAPEPRESERVING = BESTFIT = enum.auto()  # Minimum data points for preserving shape
     INT = INTERPOLATE = INTERPOLATED = enum.auto()  # Interpolated data
     MIN = MINIMUM = enum.auto()  # Min value
     MAX = MAXIMUM = enum.auto()  # Max value
@@ -75,3 +84,41 @@ class ReaderType(enum.IntEnum):
     TOTAL = enum.auto()  # Number of total data
     SUM = enum.auto()  # Sum of data
     SNAPSHOT = FINAL = LAST = enum.auto()  # Last sampled value
+
+
+def add_statoil_root_certificate():
+    """ This is a utility function for Equinor employees on Equinor machines.
+    
+    The function searches for the Statoil Root certificate in the Windows
+    cert store and imports it to the cacert bundle.
+
+    This only needs to be done once per virtual environment.
+    """
+    import ssl
+    import certifi
+    import hashlib
+
+    STATOIL_ROOT_PEM_HASH = "ce7bb185ab908d2fea28c7d097841d9d5bbf2c76"
+
+    print("Scanning CA certs in store ", end="")
+    found = False
+    for cert in ssl.enum_certificates("CA"):
+        print(".", end="")
+        der = cert[0]
+        if hashlib.sha1(der).hexdigest() == STATOIL_ROOT_PEM_HASH:
+            found = True
+            print(" found it!")
+            print("Converting certificate to PEM")
+            pem = ssl.DER_cert_to_PEM_cert(cert[0])
+            if pem in certifi.contents():
+                print("Certificate already exists in certifi store. Nothing to do.")
+                break
+            print("Writing certificate to cacert store.")
+            cafile = certifi.where()
+            with open(cafile, "ab") as f:
+                f.write(bytes(pem, "ascii"))
+            print("Completed")
+            break
+
+    if not found:
+        print("\n\nERROR: Unable to locate Statoil Root certificate.")

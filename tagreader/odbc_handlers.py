@@ -1,7 +1,7 @@
 import os
 import pyodbc
 import pandas as pd
-
+import warnings
 from .utils import logging, winreg, find_registry_key, ReaderType
 
 logging.basicConfig(
@@ -10,19 +10,39 @@ logging.basicConfig(
 
 
 def list_aspen_servers():
-    server_list = []
+    warnings.warn(
+        (
+            "This function is deprecated and will be removed."
+            "Please call 'list_sources(\"aspen\")' instead"
+        )
+    )
+    return list_aspen_sources()
+
+
+def list_pi_servers():
+    warnings.warn(
+        (
+            "This function is deprecated and will be removed."
+            "Please call 'list_sources(\"pi\")' instead"
+        )
+    )
+    return list_pi_sources()
+
+
+def list_aspen_sources():
+    source_list = []
     reg_adsa = winreg.OpenKey(
         winreg.HKEY_CURRENT_USER,
         r"Software\AspenTech\ADSA\Caches\AspenADSA\\" + os.getlogin(),
     )
-    num_servers, _, _ = winreg.QueryInfoKey(reg_adsa)
-    for i in range(0, num_servers):
-        server_list.append(winreg.EnumKey(reg_adsa, i))
-    return server_list
+    num_sources, _, _ = winreg.QueryInfoKey(reg_adsa)
+    for i in range(0, num_sources):
+        source_list.append(winreg.EnumKey(reg_adsa, i))
+    return source_list
 
 
-def list_pi_servers():
-    server_list = []
+def list_pi_sources():
+    source_list = []
     reg_key = winreg.OpenKey(
         winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\PISystem\PI-SDK"
     )
@@ -31,14 +51,14 @@ def list_pi_servers():
         reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\PISystem\PI-SDK")
         reg_key = find_registry_key(reg_key, "ServerHandles")
     if reg_key is not None:
-        num_servers, _, _ = winreg.QueryInfoKey(reg_key)
-        for i in range(0, num_servers):
-            server_list.append(winreg.EnumKey(reg_key, i))
-    return server_list
+        num_sources, _, _ = winreg.QueryInfoKey(reg_key)
+        for i in range(0, num_sources):
+            source_list.append(winreg.EnumKey(reg_key, i))
+    return source_list
 
 
 class AspenHandlerODBC:
-    def __init__(self, host, port, options={}):
+    def __init__(self, host=None, port=None, options={}):
         self.host = host
         self.port = port
         self.conn = None
@@ -53,8 +73,10 @@ class AspenHandlerODBC:
     def generate_read_query(
         tag, mapping, start_time, stop_time, sample_time, read_type
     ):
-        timecast_format_query = "%d-%b-%y %H:%M:%S"  # 05-jan-18 14:00:00
-        timecast_format_output = "YYYY-MM-DD HH:MI:SS"
+        start_time = start_time.tz_convert("UTC")
+        stop_time = stop_time.tz_convert("UTC")
+
+        timecast_format_query = "%Y-%m-%dT%H:%M:%SZ"  # 05-jan-18 14:00:00
 
         if read_type in [
             ReaderType.COUNT,
@@ -77,12 +99,15 @@ class AspenHandlerODBC:
                 # sample_time = (stop_time-start_time).totalseconds
 
         request_num = {
-            ReaderType.SAMPLED: 4,
-            ReaderType.SHAPEPRESERVING: 3,
-            ReaderType.INT: 6,
-            ReaderType.NOTGOOD: 0,
+            ReaderType.SAMPLED: 4,          # VALUES request (actual recorded data), history  # noqa: E501
+            ReaderType.SHAPEPRESERVING: 3,  # FITS request, history
+            ReaderType.INT: 7,              # TIMES2_EXTENDED request, history
+            ReaderType.COUNT: 0,            # Actual data points are used, aggregates
+            ReaderType.GOOD: 0,             # Actual data points are used, aggregates
+            ReaderType.TOTAL: 0,            # Actual data points are used, aggregates
+            ReaderType.NOTGOOD: 0,          # Actual data points are used, aggregates
             ReaderType.SNAPSHOT: None,
-        }.get(read_type, 1)
+        }.get(read_type, 1)  # Default 1 for aggregates table
 
         from_column = {
             ReaderType.SAMPLED: "history",
@@ -92,6 +117,8 @@ class AspenHandlerODBC:
         }.get(read_type, "aggregates")
         # For RAW: historyevent?
         # Ref https://help.sap.com/saphelp_pco151/helpdata/en/4c/72e34ee631469ee10000000a15822d/content.htm?no_cache=true  # noqa: E501
+
+        ts = "ts_start" if from_column == "aggregates" else "ts"
 
         value = {
             ReaderType.MIN: "min",
@@ -103,29 +130,14 @@ class AspenHandlerODBC:
             ReaderType.GOOD: "good",
             ReaderType.NOTGOOD: "ng",
             ReaderType.TOTAL: "sum",
+            ReaderType.SUM: "sum",
             ReaderType.SNAPSHOT: "IP_INPUT_VALUE",
         }.get(read_type, "value")
 
-        ts_actual = {
-            ReaderType.MIN: "ts_middle",
-            ReaderType.MAX: "ts_middle",
-            ReaderType.RNG: "ts_middle",
-            ReaderType.AVG: "ts_middle",
-            ReaderType.VAR: "ts_middle",
-            ReaderType.STD: "ts_middle",
-            ReaderType.GOOD: "ts_middle",
-            ReaderType.NOTGOOD: "ts_middle",
-            ReaderType.TOTAL: "ts_middle",
-            ReaderType.SNAPSHOT: "IP_INPUT_TIME",
-        }.get(read_type, "ts")
-
         query = [
-            f'SELECT CAST({ts_actual} AS CHAR FORMAT {timecast_format_output!r}) AS "time",',  # noqa: E501
+            f'SELECT ISO8601({ts}) AS "time",',
             f'{value} AS "value" FROM {from_column}',
         ]
-        # Query is actually slower without cast(time) regardless of whether post-fetch
-        # date parsing is enabled or not.
-        # SQL_QUERY = 'SELECT ISO8601({ts_actual}) AS "timestamp"' is even slower
 
         if ReaderType.SNAPSHOT != read_type:
             start = start_time.strftime(timecast_format_query)
@@ -207,7 +219,7 @@ class AspenHandlerODBC:
         mapdef = self._get_mapdef(tagname)
         return mapdef[tagname][0]
 
-    def search_tag(self, tag=None, desc=None):
+    def search(self, tag=None, desc=None):
         if tag is None:
             raise ValueError('Tag is a required argument')
 
@@ -281,19 +293,20 @@ class AspenHandlerODBC:
             query,
             self.conn,
             index_col="time",
-            parse_dates={"time": {"format": "%Y-%m-%d %H:%M:%S"}},
+            parse_dates={"time": "%Y-%m-%dT%H:%M:%S.%fZ"},
         )
-        if len(df) > len(
-            df.index.unique()
-        ):  # One hour repeated during transition from DST to standard time.
-            df = df.tz_localize(start_time.tzinfo, ambiguous="infer")
-        else:
-            df = df.tz_localize(start_time.tzinfo)
+        df = df.tz_localize("UTC")
+        # if len(df) > len(
+        #     df.index.unique()
+        # ):  # One hour repeated during transition from DST to standard time.
+        #     df = df.tz_localize(start_time.tzinfo, ambiguous="infer")
+        # else:
+        #     df = df.tz_localize(start_time.tzinfo)
         return df.rename(columns={"value": tag})
 
 
 class PIHandlerODBC:
-    def __init__(self, host, port, options={}):
+    def __init__(self, host=None, port=None, options={}):
         self.host = host
         self.port = port
         self.conn = None
@@ -302,7 +315,8 @@ class PIHandlerODBC:
         # TODO: Find default das_server under
         # HKLM\SOFTWARE\Wow6432Node\PISystem\Analytics\InstallData/AFServer
         # It seems that is actually not possible anymore.
-        self._das_server = options.get("das_server", "ws3099.statoil.net")
+        # ws3099.statoil.net
+        self._das_server = options.get("das_server", "piwebapi.equinor.com")
 
         # print(self._das_server)
 
@@ -312,7 +326,7 @@ class PIHandlerODBC:
             f"DRIVER={{PI ODBC Driver}};Server={das_server};"
             "Trusted_Connection=Yes;Command Timeout=1800;Provider Type=PIOLEDB;"
             f'Provider String={{Data source={host.replace(".statoil.net", "")};'
-            "Integrated_Security=SSPI;};"
+            "Integrated_Security=SSPI;Time Zone=UTC};"
         )
 
     @staticmethod
@@ -332,6 +346,9 @@ class PIHandlerODBC:
     def generate_read_query(
         tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
+        start_time = start_time.tz_convert("UTC")
+        stop_time = stop_time.tz_convert("UTC")
+
         timecast_format_query = "%d-%b-%y %H:%M:%S"  # 05-jan-18 14:00:00
         # timecast_format_output = "yyyy-MM-dd HH:mm:ss"
 
@@ -383,7 +400,7 @@ class PIHandlerODBC:
 
         # query.extend([f"AS value, FORMAT(time, '{timecast_format_output}') AS timestamp FROM {source} WHERE tag='{tag}'"])  # noqa E501
         query.extend(
-            [f"AS value, __utctime AS timestamp FROM {source} WHERE tag='{tag}'"]
+            [f"AS value, time FROM {source} WHERE tag='{tag}'"]  # __utctime also works
         )
 
         if ReaderType.SNAPSHOT != read_type:
@@ -407,7 +424,7 @@ class PIHandlerODBC:
             query.extend([f"AND (timestep = '{sample_time}s')"])
 
         if ReaderType.SNAPSHOT != read_type:
-            query.extend(["ORDER BY timestamp"])
+            query.extend(["ORDER BY time"])
 
         return " ".join(query)
 
@@ -422,7 +439,7 @@ class PIHandlerODBC:
         self.conn = pyodbc.connect(connection_string, autocommit=True)
         self.cursor = self.conn.cursor()
 
-    def search_tag(self, tag=None, desc=None):
+    def search(self, tag=None, desc=None):
         query = self.generate_search_query(tag, desc)
         self.cursor.execute(query)
         return self.cursor.fetchall()
@@ -447,6 +464,19 @@ class PIHandlerODBC:
         unit = self.cursor.fetchone()
         return unit[0]
 
+    @staticmethod
+    def _is_summary(read_type):
+        if read_type in [
+            ReaderType.AVG,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.STD,
+            ReaderType.VAR,
+        ]:
+            return True
+        return False
+
     def read_tag(
         self, tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
@@ -457,17 +487,24 @@ class PIHandlerODBC:
         df = pd.read_sql(
             query,
             self.conn,
-            index_col="timestamp",
-            parse_dates={"timestamp": {"format": "%Y-%m-%d %H:%M:%S"}},
+            index_col="time",
+            parse_dates={"time": "%Y-%m-%d %H:%M:%S"},
         )
-        df.index.name = "time"
+        # PI ODBC reports aggregate values for both end points, using the end of
+        # interval as anchor. Normalize to using start of insterval as anchor, and
+        # remove initial point which is out of defined range.
+        if self._is_summary(read_type):
+            df.index = df.index - sample_time
+            df = df.drop(df.index[0])
+
         # One hour repeated during transition from DST to standard time:
         # if len(df) > len(df.index.unique()):
         #     df = df.tz_localize(start_time.tzinfo, ambiguous='infer')
         # else:
         #     df = df.tz_localize(start_time.tzinfo)
         # df = df.tz_localize(start_time.tzinfo)
-        df = df.tz_localize("UTC").tz_convert(start_time.tzinfo)
+        # df = df.tz_localize("UTC").tz_convert(start_time.tzinfo)
+        df = df.tz_localize("UTC")
         if len(metadata["digitalset"]) > 0:
             self.cursor.execute(
                 f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'"  # noqa E501

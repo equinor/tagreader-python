@@ -2,7 +2,7 @@
 
 name: Build
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build:
@@ -31,5 +31,5 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pip install -r test-requirements.txt
+        pip install pytest
         pytest
