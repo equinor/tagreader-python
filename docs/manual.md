@@ -215,7 +215,7 @@ Data is read by calling the client method `read()` with the following input argu
 * `start_time` : Start of time period. 
 * `stop_time` : End of time period. 
 
-  Both `start_time` and `stop time` can be either string (which will be interpreted by [pandas. Timestamp](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.html) or datetime object.
+  Both `start_time` and `stop time` can be either datetime object or string. Strings are interpreted by the [Timestamp](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.html) method from Pandas.
 
 * `ts` : The interval between samples when querying interpolated or aggregated data.
 * `read_type` (optional): What kind of data to read. **Default*** Interpolated. 
@@ -271,6 +271,8 @@ There are two levels of determining which time zone input arguments should be in
 2. Time zone naive input arguments are assumed to have time zone as provided by the client. 
 
 The client-provided time zone can be specified with the optional `tz` argument (string, e.g. "*US/Central*") during client creation. If it is not specified, then the default value *Europe/Oslo* is used. Note that for the most common use case where Equinor employees want to fetch data from Norwegian assets and display them with Norwegian time stamps, nothing needs to be done.
+
+*Note:* It is a good idea to update the `pytz` package rather frequently (at least twice per year) to ensure that time zone information is up to date. `pip install --upgrade pytz`.
 
 **Example (advanced usage)**
 

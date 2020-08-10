@@ -1,6 +1,7 @@
 import pytest
 import os
 import pandas as pd
+from requests_kerberos.kerberos_ import SanitizedResponse
 from tagreader.utils import ReaderType
 from tagreader.web_handlers import (
     list_piwebapi_sources,
@@ -116,17 +117,24 @@ def test_tag_to_webid(PIHandler):
         # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
         # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
         # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
-        # pytest.param("SNAPSHOT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        ("SNAPSHOT", 1),
     ],
 )
 def test_read(Client, read_type, size):
-    df = Client.read(
-        TAGS["Float32"],
-        START_TIME,
-        STOP_TIME,
-        SAMPLE_TIME,
-        getattr(ReaderType, read_type),
-    )
+    if read_type == ReaderType.SNAPSHOT:
+        df = Client.read(
+            TAGS["Float32"],
+            getattr(ReaderType, read_type),
+        )
+    else:
+        df = Client.read(
+            TAGS["Float32"],
+            START_TIME,
+            STOP_TIME,
+            SAMPLE_TIME,
+            getattr(ReaderType, read_type),
+        )
+
     assert df.shape == (size, 1)
     assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(
         SAMPLE_TIME, unit="s"

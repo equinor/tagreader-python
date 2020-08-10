@@ -72,7 +72,7 @@ def test_is_summary(PIHandler):
         # pytest.param("BAD", marks=pytest.mark.skip(reason="Not implemented")),
         # pytest.param("TOTAL", marks=pytest.mark.skip(reason="Not implemented")),
         # pytest.param("SUM", marks=pytest.mark.skip(reason="Not implemented")),
-        # pytest.param("SNAPSHOT", marks=pytest.mark.skip(reason="Not implemented")),
+        "SNAPSHOT",
     ],
 )
 def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test*connect
@@ -87,8 +87,9 @@ def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test
         ts,
         getattr(ReaderType, read_type),
     )
-    assert params["startTime"] == "01-Apr-20 09:05:00"
-    assert params["endTime"] == "01-Apr-20 10:05:00"
+    if read_type != "SNAPSHOT":
+        assert params["startTime"] == "01-Apr-20 09:05:00"
+        assert params["endTime"] == "01-Apr-20 10:05:00"
 
     if read_type == "INT":
         assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/interpolated"
@@ -111,3 +112,10 @@ def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test
             "VAR": "StdDev",
         }.get(read_type) == params["summaryType"]
         assert params["summaryDuration"] == f"{SAMPLE_TIME}s"
+    elif read_type == "SNAPSHOT":
+        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/end"
+        assert (
+            params["selectedFields"] == "Timestamp;Value;Good"
+        )
+        assert len(params) == 1
+

@@ -481,7 +481,6 @@ class PIHandlerWeb:
             ReaderType.TOTAL,
             ReaderType.SUM,
             ReaderType.RAW,
-            ReaderType.SNAPSHOT,
             ReaderType.SHAPEPRESERVING,
         ]:
             raise (NotImplementedError)
@@ -494,16 +493,20 @@ class PIHandlerWeb:
 
         sample_time = sample_time.seconds
 
-        get_action = {ReaderType.INT: "interpolated", ReaderType.RAW: "recorded"}.get(
-            read_type, "summary"
-        )
+        get_action = {
+            ReaderType.INT: "interpolated", 
+            ReaderType.RAW: "recorded",
+            ReaderType.SNAPSHOT: "end",
+            ReaderType.SHAPEPRESERVING: "plot"
+        }.get(read_type, "summary")
 
         url = f"streams/{webid}/{get_action}"
         params = {}
 
-        params["startTime"] = starttime
-        params["endTime"] = stoptime
-        params["timeZone"] = "UTC"
+        if read_type != ReaderType.SNAPSHOT:
+            params["startTime"] = starttime
+            params["endTime"] = stoptime
+            params["timeZone"] = "UTC"
 
         summary_type = {
             ReaderType.MIN: "Minimum",
@@ -524,8 +527,10 @@ class PIHandlerWeb:
             params[
                 "selectedFields"
             ] = "Links;Items.Value.Timestamp;Items.Value.Value;Items.Value.Good"
-        else:
+        elif read_type == ReaderType.INT:
             params["selectedFields"] = "Links;Items.Timestamp;Items.Value;Items.Good"
+        elif read_type == ReaderType.SNAPSHOT:
+            params["selectedFields"] = "Timestamp;Value;Good"
 
         return (url, params)
 
@@ -650,7 +655,7 @@ class PIHandlerWeb:
         return False
 
     def read_tag(
-        self, tag, start_time, stop_time, sample_time, read_type, metadata=None
+        self, tag, start_time=None, stop_time=None, sample_time=None, read_type=ReaderType.INTERPOLATED, metadata=None
     ):
         webid = self.tag_to_webid(tag)
         (url, params) = self.generate_read_query(
@@ -662,8 +667,11 @@ class PIHandlerWeb:
             raise ConnectionError
 
         j = res.json()
-        # Summary (aggregated) data and DigitalSets return Value as dict
-        df = pd.json_normalize(data=j, record_path="Items")
+        if read_type == ReaderType.SNAPSHOT:
+            df = pd.DataFrame.from_dict([j])
+        else:
+            # Summary (aggregated) data and DigitalSets return Value as dict
+            df = pd.json_normalize(data=j, record_path="Items")
 
         # Summary data, digitalset or invalid data
         if "Value" not in df.columns:

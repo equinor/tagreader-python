@@ -255,44 +255,48 @@ class IMSClient:
         return self.handler._get_tag_metadata(tag)
 
     def _read_single_tag(self, tag, start_time, stop_time, ts, read_type, cache=None):
-        missing_intervals = [(start_time, stop_time)]
-        df = pd.DataFrame()
-        if cache is not None:
-            time_slice = get_next_timeslice(start_time, stop_time, ts)
-            df = cache.fetch(
-                tag,
-                readtype=read_type,
-                ts=ts,
-                start_time=time_slice[0],
-                stop_time=time_slice[1],
-            )
-            missing_intervals = get_missing_intervals(
-                df, start_time, stop_time, ts.seconds, read_type
-            )
-            if not missing_intervals:
-                return df.tz_convert(self.tz).sort_index()
-        metadata = self._get_metadata(tag)
-        frames = [df]
-        for (start, stop) in missing_intervals:
-            time_slice = [start, start]
-            while time_slice[1] < stop:
-                time_slice = get_next_timeslice(
-                    time_slice[1], stop, ts, self.handler._max_rows
+        if read_type == ReaderType.SNAPSHOT:
+            metadata = self._get_metadata(tag)
+            df = self.handler.read_tag(tag, start_time, stop_time, ts, read_type, metadata)
+        else:    
+            missing_intervals = [(start_time, stop_time)]
+            df = pd.DataFrame()
+            if cache is not None:
+                time_slice = get_next_timeslice(start_time, stop_time, ts)
+                df = cache.fetch(
+                    tag,
+                    readtype=read_type,
+                    ts=ts,
+                    start_time=time_slice[0],
+                    stop_time=time_slice[1],
                 )
-                df = self.handler.read_tag(
-                    tag, time_slice[0], time_slice[1], ts, read_type, metadata
+                missing_intervals = get_missing_intervals(
+                    df, start_time, stop_time, ts.seconds, read_type
                 )
-                if cache is not None:
-                    cache.store(df, read_type, ts)
-                frames.append(df)
-        # df = pd.concat(frames, verify_integrity=True)
-        df = pd.concat(frames)
+                if not missing_intervals:
+                    return df.tz_convert(self.tz).sort_index()
+            metadata = self._get_metadata(tag)
+            frames = [df]
+            for (start, stop) in missing_intervals:
+                time_slice = [start, start]
+                while time_slice[1] < stop:
+                    time_slice = get_next_timeslice(
+                        time_slice[1], stop, ts, self.handler._max_rows
+                    )
+                    df = self.handler.read_tag(
+                        tag, time_slice[0], time_slice[1], ts, read_type, metadata
+                    )
+                    if cache is not None:
+                        cache.store(df, read_type, ts)
+                    frames.append(df)
+            # df = pd.concat(frames, verify_integrity=True)
+            df = pd.concat(frames)
+            # read_type INT leads to overlapping values after concatenating
+            # due to both start time and end time included.
+            # Aggregate read_types (should) align perfectly and don't
+            # (shouldn't) need deduplication.
+            df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
         df = df.tz_convert(self.tz).sort_index()
-        # read_type INT leads to overlapping values after concatenating
-        # due to both start time and end time included.
-        # Aggregate read_types (should) align perfectly and don't
-        # (shouldn't) need deduplication.
-        df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
         df = df.rename(columns={"value": tag})
         return df
 
