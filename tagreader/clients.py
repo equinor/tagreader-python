@@ -372,6 +372,7 @@ class IMSClient:
             )
         if read_type != ReaderType.SNAPSHOT:
             start_time = ensure_datetime_with_tz(start_time, tz=self.tz)
+        if end_time:
             end_time = ensure_datetime_with_tz(end_time, tz=self.tz)
         if not isinstance(ts, pd.Timedelta):
             ts = pd.Timedelta(ts, unit="s")

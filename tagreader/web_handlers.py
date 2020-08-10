@@ -145,13 +145,19 @@ class AspenHandlerWeb:
             ReaderType.SNAPSHOT: -1,
         }.get(read_type, -1)
 
-        # fmt: off
-        query = (
-            '<Q f="d" allQuotes="1">'
-            "<Tag>"
-            f"<N><![CDATA[{tagname}]]></N>"
-        )
-        # fmt: on
+        if read_type == ReaderType.SNAPSHOT:
+            if stop_time is not None:
+                use_current = 0
+                end_time = int(stop_time.timestamp())*1000
+            else:
+                use_current = 1
+                end_time = 0
+
+            query = f'<Q f="d" allQuotes="1" rt="{end_time}" uc="{use_current}">'
+        else:
+            query = '<Q f="d" allQuotes="1">'
+
+        query += "<Tag>" f"<N><![CDATA[{tagname}]]></N>"
 
         if mapname:
             query += f"<M><![CDATA[{mapname}]]></M>"
@@ -159,18 +165,26 @@ class AspenHandlerWeb:
         query += (
             f"<D><![CDATA[{self.datasource}]]></D>"
             "<F><![CDATA[VAL]]></F>"
-            "<HF>0</HF>"  # History format: 0=Raw, 1=RecordAsString
-            f"<St>{int(start_time.timestamp())*1000}</St>"
-            f"<Et>{int(stop_time.timestamp())*1000}</Et>"
-            f"<RT>{rt}</RT>"
         )
+
+        if read_type == ReaderType.SNAPSHOT:
+            query += (
+                "<VS>1</VS>"
+            )
+        else:
+            query += (
+                "<HF>0</HF>"  # History format: 0=Raw, 1=RecordAsString
+                f"<St>{int(start_time.timestamp())*1000}</St>"
+                f"<Et>{int(stop_time.timestamp())*1000}</Et>"
+                f"<RT>{rt}</RT>"
+            )
         if read_type in [ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
             query += f"<X>{maxpoints}</X>"
-        if read_type not in [ReaderType.INT]:
+        if read_type not in [ReaderType.INT, ReaderType.SNAPSHOT]:
             query += f"<O>{outsiders}</O>"
         if read_type not in [ReaderType.RAW]:
             query += f"<S>{stepped}</S>"
-        if read_type not in [ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
+        if read_type not in [ReaderType.RAW, ReaderType.SHAPEPRESERVING, ReaderType.SNAPSHOT]:
             query += (
                 f"<P>{int(sample_time.total_seconds())}</P>"
                 "<PU>3</PU>"  # Period Unit: 0=day, 1=hour, 2=min, 3=sec
@@ -179,6 +193,7 @@ class AspenHandlerWeb:
             ReaderType.RAW,
             ReaderType.SHAPEPRESERVING,
             ReaderType.INT,
+            ReaderType.SNAPSHOT
         ]:
             query += (
                 # Method: 0=integral, 2=value, 3=integral complete, 4=value complete
@@ -379,10 +394,14 @@ class AspenHandlerWeb:
             ReaderType.AVG,
             ReaderType.VAR,
             ReaderType.STD,
+            ReaderType.SNAPSHOT
         ]:
             raise (NotImplementedError)
 
-        url = urljoin(self.base_url, "History")
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
 
         tagname, mapname = self.split_tagmap(tag)
 
@@ -500,8 +519,12 @@ class PIHandlerWeb:
         params = {}
 
         if read_type != ReaderType.SNAPSHOT:
-            params["startTime"] = start_time.tz_convert("UTC").strftime(timecast_format_query)
-            params["endTime"] = stop_time.tz_convert("UTC").strftime(timecast_format_query)
+            params["startTime"] = start_time.tz_convert("UTC").strftime(
+                timecast_format_query
+            )
+            params["endTime"] = stop_time.tz_convert("UTC").strftime(
+                timecast_format_query
+            )
             params["timeZone"] = "UTC"
 
         summary_type = {

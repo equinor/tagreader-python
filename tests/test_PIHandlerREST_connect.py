@@ -136,9 +136,10 @@ def test_read(Client, read_type, size):
         )
 
     assert df.shape == (size, 1)
-    assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(
-        SAMPLE_TIME, unit="s"
-    )
+    if read_type != "SNAPSHOT":
+        assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(
+            SAMPLE_TIME, unit="s"
+        )
 
 
 def test_read_only_invalid_data_yields_nan_for_invalid(Client):
