@@ -258,7 +258,7 @@ class IMSClient:
         if read_type == ReaderType.SNAPSHOT:
             metadata = self._get_metadata(tag)
             df = self.handler.read_tag(tag, start_time, stop_time, ts, read_type, metadata)
-        else:    
+        else:
             missing_intervals = [(start_time, stop_time)]
             df = pd.DataFrame()
             if cache is not None:
@@ -342,12 +342,12 @@ class IMSClient:
         return self.read(
             tags=tags,
             start_time=start_time,
-            stop_time=stop_time,
+            end_time=stop_time,
             ts=ts,
             read_type=read_type,
         )
 
-    def read(self, tags, start_time, stop_time, ts, read_type=ReaderType.INT):
+    def read(self, tags, start_time=None, end_time=None, ts=60, read_type=ReaderType.INT):
         """Reads values for the specified [tags] from the IMS server for the
         time interval from [start_time] to [stop_time] in intervals [ts].
 
@@ -370,8 +370,9 @@ class IMSClient:
                 "Unable to read raw/sampled data for multiple tags since they don't "
                 "share time vector"
             )
-        start_time = ensure_datetime_with_tz(start_time, tz=self.tz)
-        stop_time = ensure_datetime_with_tz(stop_time, tz=self.tz)
+        if read_type != ReaderType.SNAPSHOT:
+            start_time = ensure_datetime_with_tz(start_time, tz=self.tz)
+            end_time = ensure_datetime_with_tz(end_time, tz=self.tz)
         if not isinstance(ts, pd.Timedelta):
             ts = pd.Timedelta(ts, unit="s")
 
@@ -379,7 +380,7 @@ class IMSClient:
         for tag in tags:
             cols.append(
                 self._read_single_tag(
-                    tag, start_time, stop_time, ts, read_type, cache=self.cache
+                    tag, start_time, end_time, ts, read_type, cache=self.cache
                 )
             )
         return pd.concat(cols, axis=1)

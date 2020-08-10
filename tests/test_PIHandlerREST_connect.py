@@ -121,18 +121,18 @@ def test_tag_to_webid(PIHandler):
     ],
 )
 def test_read(Client, read_type, size):
-    if read_type == ReaderType.SNAPSHOT:
+    if read_type == "SNAPSHOT":
         df = Client.read(
             TAGS["Float32"],
-            getattr(ReaderType, read_type),
+            read_type=getattr(ReaderType, read_type),
         )
     else:
         df = Client.read(
             TAGS["Float32"],
-            START_TIME,
-            STOP_TIME,
-            SAMPLE_TIME,
-            getattr(ReaderType, read_type),
+            start_time=START_TIME,
+            end_time=STOP_TIME,
+            ts=SAMPLE_TIME,
+            read_type=getattr(ReaderType, read_type),
         )
 
     assert df.shape == (size, 1)

@@ -471,8 +471,7 @@ class PIHandlerWeb:
     def generate_read_query(
         self, tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
-        start_time = start_time.tz_convert("UTC")
-        stop_time = stop_time.tz_convert("UTC")
+        timecast_format_query = "%d-%b-%y %H:%M:%S"
 
         if read_type in [
             ReaderType.COUNT,
@@ -487,25 +486,22 @@ class PIHandlerWeb:
 
         webid = tag
 
-        timecast_format_query = "%d-%b-%y %H:%M:%S"
-        starttime = start_time.strftime(timecast_format_query)
-        stoptime = stop_time.strftime(timecast_format_query)
-
-        sample_time = sample_time.seconds
+        if read_type != ReaderType.SNAPSHOT:
+            sample_time = sample_time.seconds
 
         get_action = {
-            ReaderType.INT: "interpolated", 
+            ReaderType.INT: "interpolated",
             ReaderType.RAW: "recorded",
             ReaderType.SNAPSHOT: "end",
-            ReaderType.SHAPEPRESERVING: "plot"
+            ReaderType.SHAPEPRESERVING: "plot",
         }.get(read_type, "summary")
 
         url = f"streams/{webid}/{get_action}"
         params = {}
 
         if read_type != ReaderType.SNAPSHOT:
-            params["startTime"] = starttime
-            params["endTime"] = stoptime
+            params["startTime"] = start_time.tz_convert("UTC").strftime(timecast_format_query)
+            params["endTime"] = stop_time.tz_convert("UTC").strftime(timecast_format_query)
             params["timeZone"] = "UTC"
 
         summary_type = {
@@ -655,7 +651,13 @@ class PIHandlerWeb:
         return False
 
     def read_tag(
-        self, tag, start_time=None, stop_time=None, sample_time=None, read_type=ReaderType.INTERPOLATED, metadata=None
+        self,
+        tag,
+        start_time=None,
+        stop_time=None,
+        sample_time=None,
+        read_type=ReaderType.INTERPOLATED,
+        metadata=None,
     ):
         webid = self.tag_to_webid(tag)
         (url, params) = self.generate_read_query(
