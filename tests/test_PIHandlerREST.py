@@ -113,9 +113,9 @@ def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test
         }.get(read_type) == params["summaryType"]
         assert params["summaryDuration"] == f"{SAMPLE_TIME}s"
     elif read_type == "SNAPSHOT":
-        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/end"
+        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/value"
         assert (
             params["selectedFields"] == "Timestamp;Value;Good"
         )
-        assert len(params) == 1
+        assert len(params) == 3
 

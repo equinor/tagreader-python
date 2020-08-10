@@ -511,7 +511,7 @@ class PIHandlerWeb:
         get_action = {
             ReaderType.INT: "interpolated",
             ReaderType.RAW: "recorded",
-            ReaderType.SNAPSHOT: "end",
+            ReaderType.SNAPSHOT: "value",
             ReaderType.SHAPEPRESERVING: "plot",
         }.get(read_type, "summary")
 
@@ -523,6 +523,11 @@ class PIHandlerWeb:
                 timecast_format_query
             )
             params["endTime"] = stop_time.tz_convert("UTC").strftime(
+                timecast_format_query
+            )
+            params["timeZone"] = "UTC"
+        elif read_type == ReaderType.SNAPSHOT and stop_time is not None:
+            params["time"] = stop_time.tz_convert("UTC").strftime(
                 timecast_format_query
             )
             params["timeZone"] = "UTC"
