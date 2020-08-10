@@ -99,15 +99,17 @@ class AspenHandlerODBC:
                 # sample_time = (stop_time-start_time).totalseconds
 
         request_num = {
-            ReaderType.SAMPLED: 4,          # VALUES request (actual recorded data), history  # noqa: E501
+            ReaderType.SAMPLED: 4,  # VALUES request (actual recorded data), history  # noqa: E501
             ReaderType.SHAPEPRESERVING: 3,  # FITS request, history
-            ReaderType.INT: 7,              # TIMES2_EXTENDED request, history
-            ReaderType.COUNT: 0,            # Actual data points are used, aggregates
-            ReaderType.GOOD: 0,             # Actual data points are used, aggregates
-            ReaderType.TOTAL: 0,            # Actual data points are used, aggregates
-            ReaderType.NOTGOOD: 0,          # Actual data points are used, aggregates
+            ReaderType.INT: 7,  # TIMES2_EXTENDED request, history
+            ReaderType.COUNT: 0,  # Actual data points are used, aggregates
+            ReaderType.GOOD: 0,  # Actual data points are used, aggregates
+            ReaderType.TOTAL: 0,  # Actual data points are used, aggregates
+            ReaderType.NOTGOOD: 0,  # Actual data points are used, aggregates
             ReaderType.SNAPSHOT: None,
-        }.get(read_type, 1)  # Default 1 for aggregates table
+        }.get(
+            read_type, 1
+        )  # Default 1 for aggregates table
 
         from_column = {
             ReaderType.SAMPLED: "history",
@@ -171,9 +173,9 @@ class AspenHandlerODBC:
             "m.MAP_IsDefault, m.MAP_Description, m.MAP_Units, m.MAP_Base, m.MAP_Range",
             "FROM all_records a",
             "LEFT JOIN atmapdef m ON a.definition = m.MAP_DefinitionRecord",
-            "WHERE a.name"
+            "WHERE a.name",
         ]
-        if '%' in tag:
+        if "%" in tag:
             query.append(f"LIKE '{tag}'")
         else:
             query.append(f"='{tag}'")
@@ -182,12 +184,12 @@ class AspenHandlerODBC:
 
     @staticmethod
     def _generate_query_search_tag(mapdef, desc=None):
-        if mapdef['MAP_DefinitionRecord'] is None:
+        if mapdef["MAP_DefinitionRecord"] is None:
             return None
         query = [
             f"SELECT \"{mapdef['MAP_Description']}\"",
             f"FROM {mapdef['MAP_DefinitionRecord']}",
-            f"WHERE name = '{mapdef['tagname']}'"
+            f"WHERE name = '{mapdef['tagname']}'",
         ]
         if desc is not None:
             query.append(f"AND {mapdef['MAP_Description']} like '{desc}'")
@@ -201,16 +203,16 @@ class AspenHandlerODBC:
         temp = [dict(zip(colnames, row)) for row in rows]
         mapdef = {}
         for t in temp:
-            if t['tagname'] not in mapdef:
-                mapdef[t['tagname']] = [t]
+            if t["tagname"] not in mapdef:
+                mapdef[t["tagname"]] = [t]
             else:
-                mapdef[t['tagname']].append(t)
+                mapdef[t["tagname"]].append(t)
         return mapdef
 
     def _get_specific_mapdef(self, tagname, mapping):
         mapdef = self._get_mapdef(tagname)
         for m in mapdef[tagname]:
-            if m['NAME'] == mapping:
+            if m["NAME"] == mapping:
                 return m
         return None
 
@@ -221,7 +223,7 @@ class AspenHandlerODBC:
 
     def search(self, tag=None, desc=None):
         if tag is None:
-            raise ValueError('Tag is a required argument')
+            raise ValueError("Tag is a required argument")
 
         tag = tag.replace("*", "%") if isinstance(tag, str) else None
         desc = desc.replace("*", "%") if isinstance(desc, str) else None
@@ -271,7 +273,7 @@ class AspenHandlerODBC:
             mapping = self._get_specific_mapdef(tagname, mapping)
         query = [
             f"SELECT name, \"{mapping['MAP_Description']}\" as description",
-            f" FROM \"{tagname}\""
+            f' FROM "{tagname}"',
         ]
         query = " ".join(query)
         self.cursor.execute(query)
@@ -346,12 +348,6 @@ class PIHandlerODBC:
     def generate_read_query(
         tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
-        start_time = start_time.tz_convert("UTC")
-        stop_time = stop_time.tz_convert("UTC")
-
-        timecast_format_query = "%d-%b-%y %H:%M:%S"  # 05-jan-18 14:00:00
-        # timecast_format_output = "yyyy-MM-dd HH:mm:ss"
-
         if read_type in [
             ReaderType.COUNT,
             ReaderType.GOOD,
@@ -359,18 +355,29 @@ class PIHandlerODBC:
             ReaderType.TOTAL,
             ReaderType.SUM,
             ReaderType.RAW,
-            ReaderType.SNAPSHOT,
             ReaderType.SHAPEPRESERVING,
         ]:
-            raise (NotImplementedError)
+            raise NotImplementedError
 
-        sample_time = sample_time.seconds
-        if ReaderType.SAMPLED == read_type:
-            sample_time = 0
-        else:
-            if sample_time <= 0:
-                pass  # Fixme: Not implemented
-                # sample_time = (stop_time-start_time).totalseconds
+        if read_type == ReaderType.SNAPSHOT and stop_time is not None:
+            raise NotImplementedError(
+                "Timestamp not supported for PI ODBC connection using 'SNAPSHOT'."
+                "Try 'piwebapi' instead."
+            )
+
+        if read_type != ReaderType.SNAPSHOT:
+            start_time = start_time.tz_convert("UTC")
+            stop_time = stop_time.tz_convert("UTC")
+            sample_time = sample_time.seconds
+            if ReaderType.SAMPLED == read_type:
+                sample_time = 0
+            else:
+                if sample_time <= 0:
+                    pass  # Fixme: Not implemented
+                    # sample_time = (stop_time-start_time).totalseconds
+
+        timecast_format_query = "%d-%b-%y %H:%M:%S"  # 05-jan-18 14:00:00
+        # timecast_format_output = "yyyy-MM-dd HH:mm:ss"
 
         source = {
             ReaderType.INT: "[piarchive]..[piinterp2]",
@@ -415,12 +422,12 @@ class PIHandlerODBC:
         elif ReaderType.SHAPEPRESERVING == read_type:
             query.extend(
                 [
-                    f"AND (intervalcount = {int((stop_time-start_time).seconds/sample_time)})" # noqa E501
+                    f"AND (intervalcount = {int((stop_time-start_time).seconds/sample_time)})"  # noqa E501
                 ]
             )
         elif ReaderType.RAW == read_type:
             pass
-        else:
+        elif ReaderType.SNAPSHOT != read_type:
             query.extend([f"AND (timestep = '{sample_time}s')"])
 
         if ReaderType.SNAPSHOT != read_type:

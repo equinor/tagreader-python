@@ -85,16 +85,22 @@ def test_search(Client):
         # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
         # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
         # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
-        # pytest.param("SNAPSHOT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        ("SNAPSHOT", 1),
     ],
 )
 def test_read(Client, read_type, size):
-    df = Client.read(
-        tags["Float32"], interval[0], interval[1], 60, getattr(ReaderType, read_type)
-    )
+    if read_type == "SNAPSHOT":
+        df = Client.read(
+            tags["Float32"], read_type=getattr(ReaderType, read_type)
+        )
+    else:
+        df = Client.read(
+            tags["Float32"], interval[0], interval[1], 60, getattr(ReaderType, read_type)
+        )
     assert df.shape == (size, 1)
-    assert df.index[0] == ensure_datetime_with_tz(interval[0])
-    assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(60, unit="s")
+    if read_type != "SNAPSHOT":
+        assert df.index[0] == ensure_datetime_with_tz(interval[0])
+        assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(60, unit="s")
 
 
 def test_digitalread_is_one_or_zero(Client):
