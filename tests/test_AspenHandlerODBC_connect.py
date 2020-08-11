@@ -2,16 +2,14 @@ import pytest
 import os
 
 from tagreader.clients import IMSClient, list_sources
-from tagreader.odbc_handlers import (
-    list_aspen_sources,
-)
+from tagreader.odbc_handlers import list_aspen_sources
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 
 if is_GITHUBACTION:
     pytest.skip(
         "All tests in module require connection to Aspen server",
-        allow_module_level=True
+        allow_module_level=True,
     )
 
 SOURCE = "SNA"

@@ -56,44 +56,44 @@ def test_generate_tag_read_query(read_type):
 
     expected = {
         "INT": (
-            'SELECT ISO8601(ts) AS "time", value AS "value" FROM history WHERE name = '
-            "'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND '2018-01-17T16:00:00Z') "
-            "AND (request = 7) AND (period = 600) ORDER BY ts"
+            'SELECT ISO8601(ts) AS "time", value AS "value" FROM history WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 7) AND (period = 600) ORDER BY ts"
         ),
         "MIN": (
-            'SELECT ISO8601(ts_start) AS "time", min AS "value" FROM aggregates WHERE name = '
-            "'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND '2018-01-17T16:00:00Z') "
-            "AND (request = 1) AND (period = 600) ORDER BY ts"
+            'SELECT ISO8601(ts_start) AS "time", min AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
         ),
         "MAX": (
-            'SELECT ISO8601(ts_start) AS "time", max AS "value" FROM aggregates WHERE name = '
-            "'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND '2018-01-17T16:00:00Z') "
-            "AND (request = 1) AND (period = 600) ORDER BY ts"
+            'SELECT ISO8601(ts_start) AS "time", max AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
         ),
         "RNG": (
-            'SELECT ISO8601(ts_start) AS "time", rng AS "value" FROM aggregates WHERE name = '
-            "'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND '2018-01-17T16:00:00Z') "
-            "AND (request = 1) AND (period = 600) ORDER BY ts"
+            'SELECT ISO8601(ts_start) AS "time", rng AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
         ),
         "AVG": (
-            'SELECT ISO8601(ts_start) AS "time", avg AS "value" FROM aggregates WHERE name = '
-            "'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND '2018-01-17T16:00:00Z') "
-            "AND (request = 1) AND (period = 600) ORDER BY ts"
+            'SELECT ISO8601(ts_start) AS "time", avg AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
         ),
         "STD": (
-            'SELECT ISO8601(ts_start) AS "time", std AS "value" FROM aggregates WHERE name = '
-            "'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND '2018-01-17T16:00:00Z') "
-            "AND (request = 1) AND (period = 600) ORDER BY ts"
+            'SELECT ISO8601(ts_start) AS "time", std AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
         ),
         "VAR": (
-            'SELECT ISO8601(ts_start) AS "time", var AS "value" FROM aggregates WHERE name = '
-            "'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND '2018-01-17T16:00:00Z') "
-            "AND (request = 1) AND (period = 600) ORDER BY ts"
+            'SELECT ISO8601(ts_start) AS "time", var AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
         ),
         "SNAPSHOT": (
-            'SELECT ISO8601(IP_INPUT_TIME) AS "time", IP_INPUT_VALUE AS "value" FROM "thetag"'
+            'SELECT ISO8601(IP_INPUT_TIME) AS "time", IP_INPUT_VALUE AS "value" '
+            'FROM "thetag"'
         ),
-
     }
 
     assert expected[read_type] == res

@@ -70,9 +70,7 @@ class AspenHandlerODBC:
         return f"DRIVER={{AspenTech SQLPlus}};HOST={host};PORT={port};READONLY=Y;MAXROWS={max_rows}"  # noqa: E501
 
     @staticmethod
-    def generate_read_query(
-        tag, mapdef, start_time, stop_time, sample_time, read_type
-    ):
+    def generate_read_query(tag, mapdef, start_time, stop_time, sample_time, read_type):
         if mapdef is None:
             mapdef = {}
         if read_type in [
@@ -129,7 +127,7 @@ class AspenHandlerODBC:
 
         ts = "ts"
         if from_column == "aggregates":
-            ts = "ts_start" 
+            ts = "ts_start"
         elif read_type == ReaderType.SNAPSHOT:
             ts = mapdef.get("MAP_CurrentTimeStamp", "IP_INPUT_TIME")
 
@@ -201,10 +199,10 @@ class AspenHandlerODBC:
         temp = [dict(zip(colnames, row)) for row in rows]
         mapdef = {}
         for t in temp:
-            if t['tagname'] not in mapdef:
-                mapdef[t['tagname']] = [t]
+            if t["tagname"] not in mapdef:
+                mapdef[t["tagname"]] = [t]
             else:
-                mapdef[t['tagname']].append(t)
+                mapdef[t["tagname"]].append(t)
         return mapdef
 
     @staticmethod
@@ -247,7 +245,6 @@ class AspenHandlerODBC:
         return None
 
     def _get_default_mapdef(self, tagname):
-        #(tagname, _) = tagname.split(";") if ";" in tagname else (tagname, None)
         mapdefs = self._get_mapdefs(tagname)
         for mapdef in mapdefs:
             if mapdef["MAP_IsDefault"] == "TRUE":
