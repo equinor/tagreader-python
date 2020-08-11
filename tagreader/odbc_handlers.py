@@ -73,11 +73,6 @@ class AspenHandlerODBC:
     def generate_read_query(
         tag, mapping, start_time, stop_time, sample_time, read_type
     ):
-        start_time = start_time.tz_convert("UTC")
-        stop_time = stop_time.tz_convert("UTC")
-
-        timecast_format_query = "%Y-%m-%dT%H:%M:%SZ"  # 05-jan-18 14:00:00
-
         if read_type in [
             ReaderType.COUNT,
             ReaderType.GOOD,
@@ -85,18 +80,28 @@ class AspenHandlerODBC:
             ReaderType.TOTAL,
             ReaderType.SUM,
             ReaderType.RAW,
-            ReaderType.SNAPSHOT,
             ReaderType.SHAPEPRESERVING,
         ]:
             raise (NotImplementedError)
 
-        sample_time = sample_time.seconds
-        if ReaderType.SAMPLED == read_type:
-            sample_time = 0
-        else:
-            if sample_time <= 0:
-                raise NotImplementedError
-                # sample_time = (stop_time-start_time).totalseconds
+        if read_type == ReaderType.SNAPSHOT and stop_time is not None:
+            raise NotImplementedError(
+                "Timestamp not supported for IP.21 ODBC connection using 'SNAPSHOT'. "
+                "Try 'piwebapi' instead."
+            )
+
+        if read_type != ReaderType.SNAPSHOT:
+            start_time = start_time.tz_convert("UTC")
+            stop_time = stop_time.tz_convert("UTC")
+            sample_time = sample_time.seconds
+            if ReaderType.SAMPLED == read_type:
+                sample_time = 0
+            else:
+                if sample_time <= 0:
+                    raise NotImplementedError
+                    # sample_time = (stop_time-start_time).totalseconds
+
+        timecast_format_query = "%Y-%m-%dT%H:%M:%SZ"  # 05-jan-18 14:00:00
 
         request_num = {
             ReaderType.SAMPLED: 4,  # VALUES request (actual recorded data), history  # noqa: E501
@@ -120,7 +125,12 @@ class AspenHandlerODBC:
         # For RAW: historyevent?
         # Ref https://help.sap.com/saphelp_pco151/helpdata/en/4c/72e34ee631469ee10000000a15822d/content.htm?no_cache=true  # noqa: E501
 
-        ts = "ts_start" if from_column == "aggregates" else "ts"
+        if from_column == "aggregates":
+            ts = "ts_start" 
+        elif read_type == ReaderType.SNAPSHOT:
+            ts = "IP_INPUT_TIME"
+        else:
+            ts = "ts"
 
         value = {
             ReaderType.MIN: "min",
