@@ -498,7 +498,6 @@ class PIHandlerWeb:
             ReaderType.BAD,
             ReaderType.TOTAL,
             ReaderType.SUM,
-            ReaderType.RAW,
             ReaderType.SHAPEPRESERVING,
         ]:
             raise (NotImplementedError)
@@ -549,7 +548,7 @@ class PIHandlerWeb:
             params[
                 "selectedFields"
             ] = "Links;Items.Value.Timestamp;Items.Value.Value;Items.Value.Good"
-        elif read_type == ReaderType.INT:
+        elif read_type in [ReaderType.INT, ReaderType.RAW]:
             params["selectedFields"] = "Links;Items.Timestamp;Items.Value;Items.Good"
         elif read_type == ReaderType.SNAPSHOT:
             params["selectedFields"] = "Timestamp;Value;Good"
@@ -719,5 +718,11 @@ class PIHandlerWeb:
         df = df.set_index("Timestamp", drop=True)
         df.index.name = "time"
         df = df.tz_localize("UTC")
+
+        # Correct weird bug in PI Web API where MAX timestamps end of interval while
+        # all the other summaries stamp start of interval by shifting all timestamps
+        # one interval down.
+        if read_type == ReaderType.MAX and df.index[0] > start_time:
+            df.index = df.index - sample_time
 
         return df.rename(columns={"Value": tag})

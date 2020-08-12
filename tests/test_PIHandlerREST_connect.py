@@ -1,8 +1,10 @@
 import pytest
 import os
 import pandas as pd
-from requests_kerberos.kerberos_ import SanitizedResponse
-from tagreader.utils import ReaderType
+from tagreader.utils import (
+    ReaderType,
+    ensure_datetime_with_tz,
+)
 from tagreader.web_handlers import (
     list_piwebapi_sources,
     PIHandlerWeb,
@@ -101,7 +103,7 @@ def test_tag_to_webid(PIHandler):
 @pytest.mark.parametrize(
     ("read_type", "size"),
     [
-        # pytest.param("RAW", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        ("RAW", 4),
         # pytest.param(
         #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
         # ),
@@ -136,10 +138,14 @@ def test_read(Client, read_type, size):
         )
 
     assert df.shape == (size, 1)
-    if read_type != "SNAPSHOT":
+    if read_type not in ["SNAPSHOT", "RAW"]:
+        assert df.index[0] == ensure_datetime_with_tz(START_TIME)
         assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(
             SAMPLE_TIME, unit="s"
         )
+    elif read_type in "RAW":
+        assert df.index[0] >= ensure_datetime_with_tz(START_TIME)
+        assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
 
 
 def test_read_only_invalid_data_yields_nan_for_invalid(Client):
