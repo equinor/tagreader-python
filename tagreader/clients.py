@@ -257,7 +257,9 @@ class IMSClient:
     def _read_single_tag(self, tag, start_time, stop_time, ts, read_type, cache=None):
         if read_type == ReaderType.SNAPSHOT:
             metadata = self._get_metadata(tag)
-            df = self.handler.read_tag(tag, start_time, stop_time, ts, read_type, metadata)
+            df = self.handler.read_tag(
+                tag, start_time, stop_time, ts, read_type, metadata
+            )
         else:
             missing_intervals = [(start_time, stop_time)]
             df = pd.DataFrame()
@@ -347,7 +349,9 @@ class IMSClient:
             read_type=read_type,
         )
 
-    def read(self, tags, start_time=None, end_time=None, ts=60, read_type=ReaderType.INT):
+    def read(
+        self, tags, start_time=None, end_time=None, ts=60, read_type=ReaderType.INT
+    ):
         """Reads values for the specified [tags] from the IMS server for the
         time interval from [start_time] to [stop_time] in intervals [ts].
 
@@ -361,14 +365,14 @@ class IMSClient:
             from utils import ReaderType
 
         Values for Readertype.* that should work are:
-            INT, MIN, MAX, RNG, AVG, VAR and STD
+            INT, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
         """
         if isinstance(tags, str):
             tags = [tags]
-        if read_type == ReaderType.SAMPLED and len(tags) > 1:
+        if read_type in [ReaderType.RAW, ReaderType.SNAPSHOT] and len(tags) > 1:
             raise RuntimeError(
                 "Unable to read raw/sampled data for multiple tags since they don't "
-                "share time vector"
+                "share time vector. Read one at a time."
             )
         if read_type != ReaderType.SNAPSHOT:
             start_time = ensure_datetime_with_tz(start_time, tz=self.tz)
