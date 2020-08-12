@@ -212,19 +212,19 @@ Data is read by calling the client method `read()` with the following input argu
 
   Tags with maps (relevant for some InfoPlus.21 servers) can be on the form `'tag;map'` , e.g. `'109-HIC005;CS A_AUTO'` .
 
-* `start_time` : Start of time period. 
-* `stop_time` : End of time period. 
+* `start_time` : Start of time period.
+* `end_time` : End of time period.
 
-  Both `start_time` and `stop time` can be either datetime object or string. Strings are interpreted by the [Timestamp](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.html) method from Pandas.
+  Both `start_time` and `end_time` can be either datetime object or string. Strings are interpreted by the [Timestamp](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.html) method from Pandas. Both times can be left out when `read_type = ReaderType.SNAPSHOT` . However, when using either of the Web APIs, `end_time` provides the time at which the snapshot is taken.
 
-* `ts` : The interval between samples when querying interpolated or aggregated data.
-* `read_type` (optional): What kind of data to read. **Default*** Interpolated. 
+* `ts` : The interval between samples when querying interpolated or aggregated data. Ignored and can be left out when `read_type = ReaderType.SNAPSHOT` . **Default** 60 seconds.
+* `read_type` (optional): What kind of data to read. More info immediately below. **Default** Interpolated. 
 
 ## Selecting what to read
 
-By specifying the optional parameter `read_type` to `read_tags()` , it is possible to specify what kind of data should be returned. The default query method is interpolated. All valid values for `read_type` are defined in the `utils.ReaderType` class (mirrored for convenience as `tagreader.ReaderType` ), although not all are currently implemented. Below is the list of implemented read types. 
+By specifying the optional parameter `read_type` to `read()` , it is possible to specify what kind of data should be returned. The default query method is interpolated. All valid values for `read_type` are defined in the `utils.ReaderType` class (mirrored for convenience as `tagreader.ReaderType` ), although not all are currently implemented. Below is the list of implemented read types. 
 
-* `INT` : The raw data points are interpolated so that one new data point is generated at each step of length `ts` starting at `start_time` and ending at or less than `ts` seconds before `stop_time` .
+* `INT` : The raw data points are interpolated so that one new data point is generated at each step of length `ts` starting at `start_time` and ending at or less than `ts` seconds before `end_time` .
 * The following aggregated read types perform a weighted calculation of the raw data within each interval. Where relevant, time-weighted calculations are used. Returned time stamps are anchored at the beginning of each interval. So for the 60 seconds long interval between 08:11:00 and 08:12:00, the time stamp will be 08:11:00.
   + `MIN` : The minimum value.
   + `MAX` : The maximum value.
@@ -232,17 +232,21 @@ By specifying the optional parameter `read_type` to `read_tags()` , it is possib
   + `VAR` : The variance.
   + `STD` : The standard deviation.
   + `RNG` : The range (max-min).
+* `SNAPSHOT` : Returns the last recorded value. Only one tag can be read at a time. When using either of the Web API based handlers, providing `end_time` is possible in which case a snapshot at the specific time is returned.
 
 **Examples**
 
 Read interpolated data for the provided tag with 3-minute intervals between the two time stamps:
-``` python 
-c = tagreader. IMSClient("PINO", "pi")
+
+``` python
+c = tagreader.IMSClient("PINO", "pi")
 c.connect()
 df = c.read(['BA: ACTIVE.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180)
 
-``` 
+```
+
 Read the average value for the two provided tags within each 3-minute interval between the two time stamps:
+
 ``` python
 df = c.read(['BA: CONC.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180, read_type=tagreader.ReaderType.AVG)
 ```
@@ -272,7 +276,7 @@ There are two levels of determining which time zone input arguments should be in
 
 The client-provided time zone can be specified with the optional `tz` argument (string, e.g. "*US/Central*") during client creation. If it is not specified, then the default value *Europe/Oslo* is used. Note that for the most common use case where Equinor employees want to fetch data from Norwegian assets and display them with Norwegian time stamps, nothing needs to be done.
 
-*Note:* It is a good idea to update the `pytz` package rather frequently (at least twice per year) to ensure that time zone information is up to date. `pip install --upgrade pytz`.
+*Note:* It is a good idea to update the `pytz` package rather frequently (at least twice per year) to ensure that time zone information is up to date. `pip install --upgrade pytz` .
 
 **Example (advanced usage)**
 
