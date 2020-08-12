@@ -255,44 +255,50 @@ class IMSClient:
         return self.handler._get_tag_metadata(tag)
 
     def _read_single_tag(self, tag, start_time, stop_time, ts, read_type, cache=None):
-        missing_intervals = [(start_time, stop_time)]
-        df = pd.DataFrame()
-        if cache is not None:
-            time_slice = get_next_timeslice(start_time, stop_time, ts)
-            df = cache.fetch(
-                tag,
-                readtype=read_type,
-                ts=ts,
-                start_time=time_slice[0],
-                stop_time=time_slice[1],
+        if read_type == ReaderType.SNAPSHOT:
+            metadata = self._get_metadata(tag)
+            df = self.handler.read_tag(
+                tag, start_time, stop_time, ts, read_type, metadata
             )
-            missing_intervals = get_missing_intervals(
-                df, start_time, stop_time, ts.seconds, read_type
-            )
-            if not missing_intervals:
-                return df.tz_convert(self.tz).sort_index()
-        metadata = self._get_metadata(tag)
-        frames = [df]
-        for (start, stop) in missing_intervals:
-            time_slice = [start, start]
-            while time_slice[1] < stop:
-                time_slice = get_next_timeslice(
-                    time_slice[1], stop, ts, self.handler._max_rows
+        else:
+            missing_intervals = [(start_time, stop_time)]
+            df = pd.DataFrame()
+            if cache is not None:
+                time_slice = get_next_timeslice(start_time, stop_time, ts)
+                df = cache.fetch(
+                    tag,
+                    readtype=read_type,
+                    ts=ts,
+                    start_time=time_slice[0],
+                    stop_time=time_slice[1],
                 )
-                df = self.handler.read_tag(
-                    tag, time_slice[0], time_slice[1], ts, read_type, metadata
+                missing_intervals = get_missing_intervals(
+                    df, start_time, stop_time, ts.seconds, read_type
                 )
-                if cache is not None:
-                    cache.store(df, read_type, ts)
-                frames.append(df)
-        # df = pd.concat(frames, verify_integrity=True)
-        df = pd.concat(frames)
+                if not missing_intervals:
+                    return df.tz_convert(self.tz).sort_index()
+            metadata = self._get_metadata(tag)
+            frames = [df]
+            for (start, stop) in missing_intervals:
+                time_slice = [start, start]
+                while time_slice[1] < stop:
+                    time_slice = get_next_timeslice(
+                        time_slice[1], stop, ts, self.handler._max_rows
+                    )
+                    df = self.handler.read_tag(
+                        tag, time_slice[0], time_slice[1], ts, read_type, metadata
+                    )
+                    if cache is not None:
+                        cache.store(df, read_type, ts)
+                    frames.append(df)
+            # df = pd.concat(frames, verify_integrity=True)
+            df = pd.concat(frames)
+            # read_type INT leads to overlapping values after concatenating
+            # due to both start time and end time included.
+            # Aggregate read_types (should) align perfectly and don't
+            # (shouldn't) need deduplication.
+            df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
         df = df.tz_convert(self.tz).sort_index()
-        # read_type INT leads to overlapping values after concatenating
-        # due to both start time and end time included.
-        # Aggregate read_types (should) align perfectly and don't
-        # (shouldn't) need deduplication.
-        df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
         df = df.rename(columns={"value": tag})
         return df
 
@@ -338,12 +344,14 @@ class IMSClient:
         return self.read(
             tags=tags,
             start_time=start_time,
-            stop_time=stop_time,
+            end_time=stop_time,
             ts=ts,
             read_type=read_type,
         )
 
-    def read(self, tags, start_time, stop_time, ts, read_type=ReaderType.INT):
+    def read(
+        self, tags, start_time=None, end_time=None, ts=60, read_type=ReaderType.INT
+    ):
         """Reads values for the specified [tags] from the IMS server for the
         time interval from [start_time] to [stop_time] in intervals [ts].
 
@@ -357,17 +365,19 @@ class IMSClient:
             from utils import ReaderType
 
         Values for Readertype.* that should work are:
-            INT, MIN, MAX, RNG, AVG, VAR and STD
+            INT, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
         """
         if isinstance(tags, str):
             tags = [tags]
-        if read_type == ReaderType.SAMPLED and len(tags) > 1:
+        if read_type in [ReaderType.RAW, ReaderType.SNAPSHOT] and len(tags) > 1:
             raise RuntimeError(
                 "Unable to read raw/sampled data for multiple tags since they don't "
-                "share time vector"
+                "share time vector. Read one at a time."
             )
-        start_time = ensure_datetime_with_tz(start_time, tz=self.tz)
-        stop_time = ensure_datetime_with_tz(stop_time, tz=self.tz)
+        if read_type != ReaderType.SNAPSHOT:
+            start_time = ensure_datetime_with_tz(start_time, tz=self.tz)
+        if end_time:
+            end_time = ensure_datetime_with_tz(end_time, tz=self.tz)
         if not isinstance(ts, pd.Timedelta):
             ts = pd.Timedelta(ts, unit="s")
 
@@ -375,7 +385,7 @@ class IMSClient:
         for tag in tags:
             cols.append(
                 self._read_single_tag(
-                    tag, start_time, stop_time, ts, read_type, cache=self.cache
+                    tag, start_time, end_time, ts, read_type, cache=self.cache
                 )
             )
         return pd.concat(cols, axis=1)

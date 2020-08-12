@@ -39,7 +39,7 @@ To install and/or upgrade:
 pip install --upgrade tagreader
 ```
 
-If you wish to use ODBC connections to the IMS servers, you will also need some drivers. Check the [manual](docs/manual.md).
+If you wish to use ODBC connections to the IMS servers, you will also need some proprietary drivers. There is more information in the [manual](docs/manual.md#odbc-drivers).
 
 ## Documentation
 

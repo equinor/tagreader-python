@@ -87,7 +87,7 @@ def test_generate_map_query(AspenHandler):
         # pytest.param("BAD", 0, marks=pytest.mark.skip),
         # pytest.param("TOTAL", 0, marks=pytest.mark.skip),
         # pytest.param("SUM", 0, marks=pytest.mark.skip),
-        # pytest.param("SNAPSHOT", 0, marks=pytest.mark.skip),
+        "SNAPSHOT",
     ],
 )
 def test_generate_tag_read_query(AspenHandler, read_type):
@@ -163,6 +163,11 @@ def test_generate_tag_read_query(AspenHandler, read_type):
         "BAD": ("whatever"),
         "TOTAL": ("whatever"),
         "SUM": ("whatever"),
-        "SNAPSHOT": ("whatever"),
+        "SNAPSHOT": (
+            '<Q f="d" allQuotes="1" rt="1593014400000" uc="0">'
+            "<Tag><N><![CDATA[ATCAI]]></N>"
+            "<D><![CDATA[sourcename]]></D><F><![CDATA[VAL]]></F>"
+            "<VS>1</VS><S>0</S></Tag></Q>"
+            ),
     }
     assert expected[read_type] == res

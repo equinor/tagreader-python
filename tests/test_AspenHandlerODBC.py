@@ -1,7 +1,12 @@
+import pytest
 import pandas as pd
 from tagreader import utils
 from tagreader.utils import ReaderType
 from tagreader.odbc_handlers import AspenHandlerODBC
+
+START_TIME = "2018-01-17 16:00:00"
+STOP_TIME = "2018-01-17 17:00:00"
+SAMPLE_TIME = 60
 
 
 def test_generate_connection_string():
@@ -13,16 +18,82 @@ def test_generate_connection_string():
     assert expected == res
 
 
-def test_generate_tag_read_query():
-    start_time = utils.ensure_datetime_with_tz("2018-01-17 16:00:00")
-    stop_time = utils.ensure_datetime_with_tz("2018-01-17 17:00:00")
-    ts = pd.Timedelta(1, unit="m")
-    res = AspenHandlerODBC.generate_read_query(
-        "thetag", None, start_time, stop_time, ts, ReaderType.INT
-    )
-    expected = (
-        'SELECT ISO8601(ts) AS "time", value AS "value" FROM history WHERE name = '
-        "'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND '2018-01-17T16:00:00Z') "
-        "AND (request = 7) AND (period = 600) ORDER BY ts"
-    )
-    assert expected == res
+@pytest.mark.parametrize(
+    "read_type",
+    [
+        # pytest.param("RAW", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param(
+        #     "SHAPEPRESERVING", marks=pytest.mark.skip(reason="Not implemented")
+        # ),
+        "INT",
+        "MIN",
+        "MAX",
+        "RNG",
+        "AVG",
+        "STD",
+        "VAR",
+        # pytest.param("COUNT", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("GOOD", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("BAD", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("TOTAL", marks=pytest.mark.skip(reason="Not implemented")),
+        # pytest.param("SUM", marks=pytest.mark.skip(reason="Not implemented")),
+        "SNAPSHOT",
+    ],
+)
+def test_generate_tag_read_query(read_type):
+    starttime = utils.ensure_datetime_with_tz(START_TIME)
+    stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
+    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
+
+    if read_type == "SNAPSHOT":
+        res = AspenHandlerODBC.generate_read_query(
+            "thetag", None, None, None, None, getattr(ReaderType, read_type)
+        )
+    else:
+        res = AspenHandlerODBC.generate_read_query(
+            "thetag", None, starttime, stoptime, ts, getattr(ReaderType, read_type)
+        )
+
+    expected = {
+        "INT": (
+            'SELECT ISO8601(ts) AS "time", value AS "value" FROM history WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 7) AND (period = 600) ORDER BY ts"
+        ),
+        "MIN": (
+            'SELECT ISO8601(ts_start) AS "time", min AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
+        ),
+        "MAX": (
+            'SELECT ISO8601(ts_start) AS "time", max AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
+        ),
+        "RNG": (
+            'SELECT ISO8601(ts_start) AS "time", rng AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
+        ),
+        "AVG": (
+            'SELECT ISO8601(ts_start) AS "time", avg AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
+        ),
+        "STD": (
+            'SELECT ISO8601(ts_start) AS "time", std AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
+        ),
+        "VAR": (
+            'SELECT ISO8601(ts_start) AS "time", var AS "value" FROM aggregates WHERE '
+            "name = 'thetag' AND (ts BETWEEN '2018-01-17T15:00:00Z' AND "
+            "'2018-01-17T16:00:00Z') AND (request = 1) AND (period = 600) ORDER BY ts"
+        ),
+        "SNAPSHOT": (
+            'SELECT ISO8601(IP_INPUT_TIME) AS "time", IP_INPUT_VALUE AS "value" '
+            'FROM "thetag"'
+        ),
+    }
+
+    assert expected[read_type] == res

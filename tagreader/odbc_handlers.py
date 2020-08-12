@@ -70,14 +70,9 @@ class AspenHandlerODBC:
         return f"DRIVER={{AspenTech SQLPlus}};HOST={host};PORT={port};READONLY=Y;MAXROWS={max_rows}"  # noqa: E501
 
     @staticmethod
-    def generate_read_query(
-        tag, mapping, start_time, stop_time, sample_time, read_type
-    ):
-        start_time = start_time.tz_convert("UTC")
-        stop_time = stop_time.tz_convert("UTC")
-
-        timecast_format_query = "%Y-%m-%dT%H:%M:%SZ"  # 05-jan-18 14:00:00
-
+    def generate_read_query(tag, mapdef, start_time, stop_time, sample_time, read_type):
+        if mapdef is None:
+            mapdef = {}
         if read_type in [
             ReaderType.COUNT,
             ReaderType.GOOD,
@@ -85,29 +80,41 @@ class AspenHandlerODBC:
             ReaderType.TOTAL,
             ReaderType.SUM,
             ReaderType.RAW,
-            ReaderType.SNAPSHOT,
             ReaderType.SHAPEPRESERVING,
         ]:
             raise (NotImplementedError)
 
-        sample_time = sample_time.seconds
-        if ReaderType.SAMPLED == read_type:
-            sample_time = 0
-        else:
-            if sample_time <= 0:
-                raise NotImplementedError
-                # sample_time = (stop_time-start_time).totalseconds
+        if read_type == ReaderType.SNAPSHOT and stop_time is not None:
+            raise NotImplementedError(
+                "Timestamp not supported for IP.21 ODBC connection using 'SNAPSHOT'. "
+                "Try 'piwebapi' instead."
+            )
+
+        if read_type != ReaderType.SNAPSHOT:
+            start_time = start_time.tz_convert("UTC")
+            stop_time = stop_time.tz_convert("UTC")
+            sample_time = sample_time.seconds
+            if ReaderType.SAMPLED == read_type:
+                sample_time = 0
+            else:
+                if sample_time <= 0:
+                    raise NotImplementedError
+                    # sample_time = (stop_time-start_time).totalseconds
+
+        timecast_format_query = "%Y-%m-%dT%H:%M:%SZ"  # 05-jan-18 14:00:00
 
         request_num = {
-            ReaderType.SAMPLED: 4,          # VALUES request (actual recorded data), history  # noqa: E501
+            ReaderType.SAMPLED: 4,  # VALUES request (actual recorded data), history  # noqa: E501
             ReaderType.SHAPEPRESERVING: 3,  # FITS request, history
-            ReaderType.INT: 7,              # TIMES2_EXTENDED request, history
-            ReaderType.COUNT: 0,            # Actual data points are used, aggregates
-            ReaderType.GOOD: 0,             # Actual data points are used, aggregates
-            ReaderType.TOTAL: 0,            # Actual data points are used, aggregates
-            ReaderType.NOTGOOD: 0,          # Actual data points are used, aggregates
+            ReaderType.INT: 7,  # TIMES2_EXTENDED request, history
+            ReaderType.COUNT: 0,  # Actual data points are used, aggregates
+            ReaderType.GOOD: 0,  # Actual data points are used, aggregates
+            ReaderType.TOTAL: 0,  # Actual data points are used, aggregates
+            ReaderType.NOTGOOD: 0,  # Actual data points are used, aggregates
             ReaderType.SNAPSHOT: None,
-        }.get(read_type, 1)  # Default 1 for aggregates table
+        }.get(
+            read_type, 1
+        )  # Default 1 for aggregates table
 
         from_column = {
             ReaderType.SAMPLED: "history",
@@ -118,7 +125,11 @@ class AspenHandlerODBC:
         # For RAW: historyevent?
         # Ref https://help.sap.com/saphelp_pco151/helpdata/en/4c/72e34ee631469ee10000000a15822d/content.htm?no_cache=true  # noqa: E501
 
-        ts = "ts_start" if from_column == "aggregates" else "ts"
+        ts = "ts"
+        if from_column == "aggregates":
+            ts = "ts_start"
+        elif read_type == ReaderType.SNAPSHOT:
+            ts = mapdef.get("MAP_CurrentTimeStamp", "IP_INPUT_TIME")
 
         value = {
             ReaderType.MIN: "min",
@@ -131,7 +142,7 @@ class AspenHandlerODBC:
             ReaderType.NOTGOOD: "ng",
             ReaderType.TOTAL: "sum",
             ReaderType.SUM: "sum",
-            ReaderType.SNAPSHOT: "IP_INPUT_VALUE",
+            ReaderType.SNAPSHOT: mapdef.get("MAP_CurrentValue", "IP_INPUT_VALUE"),
         }.get(read_type, "value")
 
         query = [
@@ -143,8 +154,8 @@ class AspenHandlerODBC:
             start = start_time.strftime(timecast_format_query)
             stop = stop_time.strftime(timecast_format_query)
             query.extend([f"WHERE name = {tag!r}"])
-            if mapping is not None:
-                query.extend([f"AND FIELD_ID = FT({mapping!r})"])
+            if mapdef:
+                query.extend([f'AND FIELD_ID = FT({mapdef["MAP_HistoryValue"]!r})'])
             query.extend(
                 [
                     f"AND (ts BETWEEN {start!r} AND {stop!r})",
@@ -165,68 +176,89 @@ class AspenHandlerODBC:
         self.cursor = self.conn.cursor()
 
     @staticmethod
-    def _generate_query_get_mapdef_for_tag(tag):
+    def _generate_query_get_mapdef_for_search(tag):
         query = [
             "SELECT DISTINCT a.name as tagname, m.NAME, m.MAP_DefinitionRecord,",
             "m.MAP_IsDefault, m.MAP_Description, m.MAP_Units, m.MAP_Base, m.MAP_Range",
             "FROM all_records a",
             "LEFT JOIN atmapdef m ON a.definition = m.MAP_DefinitionRecord",
-            "WHERE a.name"
+            "WHERE a.name",
         ]
-        if '%' in tag:
+        if "%" in tag:
             query.append(f"LIKE '{tag}'")
         else:
             query.append(f"='{tag}'")
         query.append("AND m.MAP_IsDefault = 'TRUE'")
         return " ".join(query)
 
-    @staticmethod
-    def _generate_query_search_tag(mapdef, desc=None):
-        if mapdef['MAP_DefinitionRecord'] is None:
-            return None
-        query = [
-            f"SELECT \"{mapdef['MAP_Description']}\"",
-            f"FROM {mapdef['MAP_DefinitionRecord']}",
-            f"WHERE name = '{mapdef['tagname']}'"
-        ]
-        if desc is not None:
-            query.append(f"AND {mapdef['MAP_Description']} like '{desc}'")
-        return " ".join(query)
-
-    def _get_mapdef(self, tag):
-        query = self._generate_query_get_mapdef_for_tag(tag)
+    def _get_mapdef_for_search(self, tag):
+        query = self._generate_query_get_mapdef_for_search(tag)
         self.cursor.execute(query)
         colnames = [col[0] for col in self.cursor.description]
         rows = self.cursor.fetchall()
         temp = [dict(zip(colnames, row)) for row in rows]
         mapdef = {}
         for t in temp:
-            if t['tagname'] not in mapdef:
-                mapdef[t['tagname']] = [t]
+            if t["tagname"] not in mapdef:
+                mapdef[t["tagname"]] = [t]
             else:
-                mapdef[t['tagname']].append(t)
+                mapdef[t["tagname"]].append(t)
         return mapdef
 
+    @staticmethod
+    def _generate_query_search_tag(mapdef, desc=None):
+        if mapdef["MAP_DefinitionRecord"] is None:
+            return None
+        query = [
+            f"SELECT \"{mapdef['MAP_Description']}\"",
+            f"FROM {mapdef['MAP_DefinitionRecord']}",
+            f"WHERE name = '{mapdef['tagname']}'",
+        ]
+        if desc is not None:
+            query.append(f"AND {mapdef['MAP_Description']} like '{desc}'")
+        return " ".join(query)
+
+    @staticmethod
+    def _generate_query_get_mapdefs(tag):
+        query = [
+            "SELECT m.NAME, m.MAP_DefinitionRecord, m.MAP_IsDefault,",
+            "m.MAP_Description, m.MAP_Units, m.MAP_Base, m.MAP_Range,",
+            "m.MAP_CurrentValue, m.MAP_CurrentTimeStamp, m.MAP_CurrentQuality,",
+            f'm.MAP_HistoryValue FROM "{tag}" t',
+            "LEFT JOIN atmapdef m ON t.definition = m.MAP_DefinitionRecord",
+        ]
+        return " ".join(query)
+
+    def _get_mapdefs(self, tag):
+        query = self._generate_query_get_mapdefs(tag)
+        self.cursor.execute(query)
+        colnames = [col[0] for col in self.cursor.description]
+        rows = self.cursor.fetchall()
+        mapdefs = [dict(zip(colnames, row)) for row in rows]
+        return mapdefs
+
     def _get_specific_mapdef(self, tagname, mapping):
-        mapdef = self._get_mapdef(tagname)
-        for m in mapdef[tagname]:
-            if m['NAME'] == mapping:
-                return m
+        mapdefs = self._get_mapdefs(tagname)
+        for mapdef in mapdefs:
+            if mapdef["NAME"].lower() == mapping.lower():
+                return mapdef
         return None
 
     def _get_default_mapdef(self, tagname):
-        (tagname, _) = tagname.split(";") if ";" in tagname else (tagname, None)
-        mapdef = self._get_mapdef(tagname)
-        return mapdef[tagname][0]
+        mapdefs = self._get_mapdefs(tagname)
+        for mapdef in mapdefs:
+            if mapdef["MAP_IsDefault"] == "TRUE":
+                return mapdef
+        return None
 
     def search(self, tag=None, desc=None):
         if tag is None:
-            raise ValueError('Tag is a required argument')
+            raise ValueError("Tag is a required argument")
 
         tag = tag.replace("*", "%") if isinstance(tag, str) else None
         desc = desc.replace("*", "%") if isinstance(desc, str) else None
 
-        mapdef = self._get_mapdef(tag)
+        mapdef = self._get_mapdef_for_search(tag)
 
         res = []
         for tagname in mapdef:  # TODO: Refactor
@@ -253,10 +285,10 @@ class AspenHandlerODBC:
     def _get_tag_unit(self, tag):
         (tagname, mapping) = tag.split(";") if ";" in tag else (tag, None)
         if mapping is None:
-            mapping = self._get_default_mapdef(tagname)
+            mapdef = self._get_default_mapdef(tagname)
         else:
-            mapping = self._get_specific_mapdef(tagname, mapping)
-        query = f"SELECT name, \"{mapping['MAP_Units']}\" as engunit FROM \"{tagname}\""
+            mapdef = self._get_specific_mapdef(tagname, mapping)
+        query = f"SELECT name, \"{mapdef['MAP_Units']}\" as engunit FROM \"{tagname}\""
         self.cursor.execute(query)
         res = self.cursor.fetchone()
         if not res.engunit:
@@ -271,22 +303,22 @@ class AspenHandlerODBC:
             mapping = self._get_specific_mapdef(tagname, mapping)
         query = [
             f"SELECT name, \"{mapping['MAP_Description']}\" as description",
-            f" FROM \"{tagname}\""
+            f' FROM "{tagname}"',
         ]
         query = " ".join(query)
         self.cursor.execute(query)
-        res = self.cursor.fetchall()
-        return res[0][1]
+        res = self.cursor.fetchone()
+        if not res.description:
+            res.description = ""
+        return res.description
 
     def read_tag(self, tag, start_time, stop_time, sample_time, read_type, metadata):
         (cleantag, mapping) = tag.split(";") if ";" in tag else (tag, None)
-        map_historyvalue = None
+        mapdef = dict()
         if mapping is not None:
-            c = self.conn.cursor()
-            c.execute(f'SELECT MAP_HistoryValue FROM "{mapping}"')
-            map_historyvalue = c.fetchone()[0]
+            mapdef = self._get_specific_mapdef(cleantag, mapping)
         query = self.generate_read_query(
-            cleantag, map_historyvalue, start_time, stop_time, sample_time, read_type
+            cleantag, mapdef, start_time, stop_time, sample_time, read_type
         )
         # logging.debug(f'Executing SQL query {query!r}')
         df = pd.read_sql(
@@ -346,12 +378,6 @@ class PIHandlerODBC:
     def generate_read_query(
         tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
-        start_time = start_time.tz_convert("UTC")
-        stop_time = stop_time.tz_convert("UTC")
-
-        timecast_format_query = "%d-%b-%y %H:%M:%S"  # 05-jan-18 14:00:00
-        # timecast_format_output = "yyyy-MM-dd HH:mm:ss"
-
         if read_type in [
             ReaderType.COUNT,
             ReaderType.GOOD,
@@ -359,18 +385,29 @@ class PIHandlerODBC:
             ReaderType.TOTAL,
             ReaderType.SUM,
             ReaderType.RAW,
-            ReaderType.SNAPSHOT,
             ReaderType.SHAPEPRESERVING,
         ]:
-            raise (NotImplementedError)
+            raise NotImplementedError
 
-        sample_time = sample_time.seconds
-        if ReaderType.SAMPLED == read_type:
-            sample_time = 0
-        else:
-            if sample_time <= 0:
-                pass  # Fixme: Not implemented
-                # sample_time = (stop_time-start_time).totalseconds
+        if read_type == ReaderType.SNAPSHOT and stop_time is not None:
+            raise NotImplementedError(
+                "Timestamp not supported for PI ODBC connection using 'SNAPSHOT'."
+                "Try 'piwebapi' instead."
+            )
+
+        if read_type != ReaderType.SNAPSHOT:
+            start_time = start_time.tz_convert("UTC")
+            stop_time = stop_time.tz_convert("UTC")
+            sample_time = sample_time.seconds
+            if ReaderType.SAMPLED == read_type:
+                sample_time = 0
+            else:
+                if sample_time <= 0:
+                    pass  # Fixme: Not implemented
+                    # sample_time = (stop_time-start_time).totalseconds
+
+        timecast_format_query = "%d-%b-%y %H:%M:%S"  # 05-jan-18 14:00:00
+        # timecast_format_output = "yyyy-MM-dd HH:mm:ss"
 
         source = {
             ReaderType.INT: "[piarchive]..[piinterp2]",
@@ -415,12 +452,12 @@ class PIHandlerODBC:
         elif ReaderType.SHAPEPRESERVING == read_type:
             query.extend(
                 [
-                    f"AND (intervalcount = {int((stop_time-start_time).seconds/sample_time)})" # noqa E501
+                    f"AND (intervalcount = {int((stop_time-start_time).seconds/sample_time)})"  # noqa E501
                 ]
             )
         elif ReaderType.RAW == read_type:
             pass
-        else:
+        elif ReaderType.SNAPSHOT != read_type:
             query.extend([f"AND (timestep = '{sample_time}s')"])
 
         if ReaderType.SNAPSHOT != read_type:

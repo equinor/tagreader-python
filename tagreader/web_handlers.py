@@ -145,13 +145,19 @@ class AspenHandlerWeb:
             ReaderType.SNAPSHOT: -1,
         }.get(read_type, -1)
 
-        # fmt: off
-        query = (
-            '<Q f="d" allQuotes="1">'
-            "<Tag>"
-            f"<N><![CDATA[{tagname}]]></N>"
-        )
-        # fmt: on
+        if read_type == ReaderType.SNAPSHOT:
+            if stop_time is not None:
+                use_current = 0
+                end_time = int(stop_time.timestamp())*1000
+            else:
+                use_current = 1
+                end_time = 0
+
+            query = f'<Q f="d" allQuotes="1" rt="{end_time}" uc="{use_current}">'
+        else:
+            query = '<Q f="d" allQuotes="1">'
+
+        query += "<Tag>" f"<N><![CDATA[{tagname}]]></N>"
 
         if mapname:
             query += f"<M><![CDATA[{mapname}]]></M>"
@@ -159,18 +165,26 @@ class AspenHandlerWeb:
         query += (
             f"<D><![CDATA[{self.datasource}]]></D>"
             "<F><![CDATA[VAL]]></F>"
-            "<HF>0</HF>"  # History format: 0=Raw, 1=RecordAsString
-            f"<St>{int(start_time.timestamp())*1000}</St>"
-            f"<Et>{int(stop_time.timestamp())*1000}</Et>"
-            f"<RT>{rt}</RT>"
         )
+
+        if read_type == ReaderType.SNAPSHOT:
+            query += (
+                "<VS>1</VS>"
+            )
+        else:
+            query += (
+                "<HF>0</HF>"  # History format: 0=Raw, 1=RecordAsString
+                f"<St>{int(start_time.timestamp())*1000}</St>"
+                f"<Et>{int(stop_time.timestamp())*1000}</Et>"
+                f"<RT>{rt}</RT>"
+            )
         if read_type in [ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
             query += f"<X>{maxpoints}</X>"
-        if read_type not in [ReaderType.INT]:
+        if read_type not in [ReaderType.INT, ReaderType.SNAPSHOT]:
             query += f"<O>{outsiders}</O>"
         if read_type not in [ReaderType.RAW]:
             query += f"<S>{stepped}</S>"
-        if read_type not in [ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
+        if read_type not in [ReaderType.RAW, ReaderType.SHAPEPRESERVING, ReaderType.SNAPSHOT]:
             query += (
                 f"<P>{int(sample_time.total_seconds())}</P>"
                 "<PU>3</PU>"  # Period Unit: 0=day, 1=hour, 2=min, 3=sec
@@ -179,6 +193,7 @@ class AspenHandlerWeb:
             ReaderType.RAW,
             ReaderType.SHAPEPRESERVING,
             ReaderType.INT,
+            ReaderType.SNAPSHOT
         ]:
             query += (
                 # Method: 0=integral, 2=value, 3=integral complete, 4=value complete
@@ -379,10 +394,14 @@ class AspenHandlerWeb:
             ReaderType.AVG,
             ReaderType.VAR,
             ReaderType.STD,
+            ReaderType.SNAPSHOT
         ]:
             raise (NotImplementedError)
 
-        url = urljoin(self.base_url, "History")
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
 
         tagname, mapname = self.split_tagmap(tag)
 
@@ -471,8 +490,7 @@ class PIHandlerWeb:
     def generate_read_query(
         self, tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
-        start_time = start_time.tz_convert("UTC")
-        stop_time = stop_time.tz_convert("UTC")
+        timecast_format_query = "%d-%b-%y %H:%M:%S"
 
         if read_type in [
             ReaderType.COUNT,
@@ -481,29 +499,38 @@ class PIHandlerWeb:
             ReaderType.TOTAL,
             ReaderType.SUM,
             ReaderType.RAW,
-            ReaderType.SNAPSHOT,
             ReaderType.SHAPEPRESERVING,
         ]:
             raise (NotImplementedError)
 
         webid = tag
 
-        timecast_format_query = "%d-%b-%y %H:%M:%S"
-        starttime = start_time.strftime(timecast_format_query)
-        stoptime = stop_time.strftime(timecast_format_query)
+        if read_type != ReaderType.SNAPSHOT:
+            sample_time = sample_time.seconds
 
-        sample_time = sample_time.seconds
-
-        get_action = {ReaderType.INT: "interpolated", ReaderType.RAW: "recorded"}.get(
-            read_type, "summary"
-        )
+        get_action = {
+            ReaderType.INT: "interpolated",
+            ReaderType.RAW: "recorded",
+            ReaderType.SNAPSHOT: "value",
+            ReaderType.SHAPEPRESERVING: "plot",
+        }.get(read_type, "summary")
 
         url = f"streams/{webid}/{get_action}"
         params = {}
 
-        params["startTime"] = starttime
-        params["endTime"] = stoptime
-        params["timeZone"] = "UTC"
+        if read_type != ReaderType.SNAPSHOT:
+            params["startTime"] = start_time.tz_convert("UTC").strftime(
+                timecast_format_query
+            )
+            params["endTime"] = stop_time.tz_convert("UTC").strftime(
+                timecast_format_query
+            )
+            params["timeZone"] = "UTC"
+        elif read_type == ReaderType.SNAPSHOT and stop_time is not None:
+            params["time"] = stop_time.tz_convert("UTC").strftime(
+                timecast_format_query
+            )
+            params["timeZone"] = "UTC"
 
         summary_type = {
             ReaderType.MIN: "Minimum",
@@ -524,8 +551,10 @@ class PIHandlerWeb:
             params[
                 "selectedFields"
             ] = "Links;Items.Value.Timestamp;Items.Value.Value;Items.Value.Good"
-        else:
+        elif read_type == ReaderType.INT:
             params["selectedFields"] = "Links;Items.Timestamp;Items.Value;Items.Good"
+        elif read_type == ReaderType.SNAPSHOT:
+            params["selectedFields"] = "Timestamp;Value;Good"
 
         return (url, params)
 
@@ -650,7 +679,13 @@ class PIHandlerWeb:
         return False
 
     def read_tag(
-        self, tag, start_time, stop_time, sample_time, read_type, metadata=None
+        self,
+        tag,
+        start_time=None,
+        stop_time=None,
+        sample_time=None,
+        read_type=ReaderType.INTERPOLATED,
+        metadata=None,
     ):
         webid = self.tag_to_webid(tag)
         (url, params) = self.generate_read_query(
@@ -662,8 +697,11 @@ class PIHandlerWeb:
             raise ConnectionError
 
         j = res.json()
-        # Summary (aggregated) data and DigitalSets return Value as dict
-        df = pd.json_normalize(data=j, record_path="Items")
+        if read_type == ReaderType.SNAPSHOT:
+            df = pd.DataFrame.from_dict([j])
+        else:
+            # Summary (aggregated) data and DigitalSets return Value as dict
+            df = pd.json_normalize(data=j, record_path="Items")
 
         # Summary data, digitalset or invalid data
         if "Value" not in df.columns:
