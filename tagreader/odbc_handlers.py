@@ -79,7 +79,6 @@ class AspenHandlerODBC:
             ReaderType.BAD,
             ReaderType.TOTAL,
             ReaderType.SUM,
-            ReaderType.RAW,
             ReaderType.SHAPEPRESERVING,
         ]:
             raise (NotImplementedError)
@@ -156,11 +155,13 @@ class AspenHandlerODBC:
             query.extend([f"WHERE name = {tag!r}"])
             if mapdef:
                 query.extend([f'AND FIELD_ID = FT({mapdef["MAP_HistoryValue"]!r})'])
+            if ReaderType.RAW != read_type:
+                query.extend([f"AND (period = {sample_time*10})"])
             query.extend(
                 [
+                    f"AND (request = {request_num})",
                     f"AND (ts BETWEEN {start!r} AND {stop!r})",
-                    f"AND (request = {request_num}) AND (period = {sample_time*10})",
-                    "ORDER BY ts",
+                    "ORDER BY ts"
                 ]
             )
 
