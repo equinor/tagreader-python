@@ -263,7 +263,7 @@ class IMSClient:
         else:
             missing_intervals = [(start_time, stop_time)]
             df = pd.DataFrame()
-            if cache is not None:
+            if cache is not None and read_type != ReaderType.RAW:
                 time_slice = get_next_timeslice(start_time, stop_time, ts)
                 df = cache.fetch(
                     tag,
@@ -288,7 +288,7 @@ class IMSClient:
                     df = self.handler.read_tag(
                         tag, time_slice[0], time_slice[1], ts, read_type, metadata
                     )
-                    if cache is not None:
+                    if cache is not None and read_type != ReaderType.RAW:
                         cache.store(df, read_type, ts)
                     frames.append(df)
             # df = pd.concat(frames, verify_integrity=True)
@@ -364,7 +364,7 @@ class IMSClient:
         which can be imported as follows:
             from utils import ReaderType
 
-        Values for Readertype.* that should work are:
+        Values for ReaderType.* that should work are:
             INT, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
         """
         if isinstance(tags, str):

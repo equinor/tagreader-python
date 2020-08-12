@@ -148,7 +148,7 @@ class AspenHandlerWeb:
         if read_type == ReaderType.SNAPSHOT:
             if stop_time is not None:
                 use_current = 0
-                end_time = int(stop_time.timestamp())*1000
+                end_time = int(stop_time.timestamp()) * 1000
             else:
                 use_current = 1
                 end_time = 0
@@ -162,15 +162,10 @@ class AspenHandlerWeb:
         if mapname:
             query += f"<M><![CDATA[{mapname}]]></M>"
 
-        query += (
-            f"<D><![CDATA[{self.datasource}]]></D>"
-            "<F><![CDATA[VAL]]></F>"
-        )
+        query += f"<D><![CDATA[{self.datasource}]]></D>" "<F><![CDATA[VAL]]></F>"
 
         if read_type == ReaderType.SNAPSHOT:
-            query += (
-                "<VS>1</VS>"
-            )
+            query += "<VS>1</VS>"
         else:
             query += (
                 "<HF>0</HF>"  # History format: 0=Raw, 1=RecordAsString
@@ -184,7 +179,11 @@ class AspenHandlerWeb:
             query += f"<O>{outsiders}</O>"
         if read_type not in [ReaderType.RAW]:
             query += f"<S>{stepped}</S>"
-        if read_type not in [ReaderType.RAW, ReaderType.SHAPEPRESERVING, ReaderType.SNAPSHOT]:
+        if read_type not in [
+            ReaderType.RAW,
+            ReaderType.SHAPEPRESERVING,
+            ReaderType.SNAPSHOT,
+        ]:
             query += (
                 f"<P>{int(sample_time.total_seconds())}</P>"
                 "<PU>3</PU>"  # Period Unit: 0=day, 1=hour, 2=min, 3=sec
@@ -193,7 +192,7 @@ class AspenHandlerWeb:
             ReaderType.RAW,
             ReaderType.SHAPEPRESERVING,
             ReaderType.INT,
-            ReaderType.SNAPSHOT
+            ReaderType.SNAPSHOT,
         ]:
             query += (
                 # Method: 0=integral, 2=value, 3=integral complete, 4=value complete
@@ -394,7 +393,8 @@ class AspenHandlerWeb:
             ReaderType.AVG,
             ReaderType.VAR,
             ReaderType.STD,
-            ReaderType.SNAPSHOT
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
         ]:
             raise (NotImplementedError)
 
@@ -527,9 +527,7 @@ class PIHandlerWeb:
             )
             params["timeZone"] = "UTC"
         elif read_type == ReaderType.SNAPSHOT and stop_time is not None:
-            params["time"] = stop_time.tz_convert("UTC").strftime(
-                timecast_format_query
-            )
+            params["time"] = stop_time.tz_convert("UTC").strftime(timecast_format_query)
             params["timeZone"] = "UTC"
 
         summary_type = {
