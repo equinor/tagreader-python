@@ -232,6 +232,7 @@ By specifying the optional parameter `read_type` to `read()` , it is possible to
   + `VAR` : The variance.
   + `STD` : The standard deviation.
   + `RNG` : The range (max-min).
+* `RAW`: Returns actual data points stored in the database.
 * `SNAPSHOT` : Returns the last recorded value. Only one tag can be read at a time. When using either of the Web API based handlers, providing `end_time` is possible in which case a snapshot at the specific time is returned.
 
 **Examples**
@@ -266,6 +267,8 @@ c.connect()
 ```
 
 Snapshots (`read_type = ReaderType.SNAPSHOT`) are of course never cached.
+
+**Note**: Raw `read_type = ReaderType.RAW` data values are currently not cached pending a rewrite of the caching mechanisms.
 
 ## Time zones
 

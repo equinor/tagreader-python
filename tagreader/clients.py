@@ -376,8 +376,8 @@ class IMSClient:
         which can be imported as follows:
             from utils import ReaderType
 
-        Values for ReaderType.* that should work are:
-            INT, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
+        Values for ReaderType.* that should work for all handlers are:
+            INT, RAW, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
         """
         if isinstance(tags, str):
             tags = [tags]
