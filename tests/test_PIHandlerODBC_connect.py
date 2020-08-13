@@ -20,7 +20,9 @@ tags = {
     "Int32": "CDEP158",
 }
 
-interval = ["2020-04-01 11:05:00", "2020-04-01 12:05:00"]
+START_TIME = "2020-04-01 11:05:00"
+STOP_TIME = "2020-04-01 12:05:00"
+SAMPLE_TIME = 60
 
 
 @pytest.fixture()
@@ -69,7 +71,7 @@ def test_search(Client):
 @pytest.mark.parametrize(
     ("read_type", "size"),
     [
-        # pytest.param("RAW", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        ("RAW", 5),
         # pytest.param(
         #     "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
         # ),
@@ -90,22 +92,31 @@ def test_search(Client):
 )
 def test_read(Client, read_type, size):
     if read_type == "SNAPSHOT":
-        df = Client.read(
-            tags["Float32"], read_type=getattr(ReaderType, read_type)
-        )
+        df = Client.read(tags["Float32"], read_type=getattr(ReaderType, read_type))
     else:
         df = Client.read(
-            tags["Float32"], interval[0], interval[1], 60, getattr(ReaderType, read_type)
+            tags["Float32"],
+            start_time=START_TIME,
+            end_time=STOP_TIME,
+            ts=SAMPLE_TIME,
+            read_type=getattr(ReaderType, read_type),
         )
     assert df.shape == (size, 1)
-    if read_type != "SNAPSHOT":
-        assert df.index[0] == ensure_datetime_with_tz(interval[0])
-        assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(60, unit="s")
+    if read_type not in ["SNAPSHOT", "RAW"]:
+        assert df.index[0] == ensure_datetime_with_tz(START_TIME)
+        assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(
+            SAMPLE_TIME, unit="s"
+        )
+    elif read_type in "RAW":
+        assert df.index[0] >= ensure_datetime_with_tz(START_TIME)
+        assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
 
 
 def test_digitalread_is_one_or_zero(Client):
     tag = tags["Digital"]
-    df = Client.read(tag, interval[0], interval[1], 600, ReaderType.INT)
+    df = Client.read(
+        tag, start_time=START_TIME, end_time=STOP_TIME, ts=600, read_type=ReaderType.INT
+    )
     assert df[tag].max() == 1
     assert df[tag].min() == 0
     assert df[tag].isin([0, 1]).all()

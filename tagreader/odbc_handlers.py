@@ -375,9 +375,8 @@ class PIHandlerODBC:
             )
         return " ".join(query)
 
-    @staticmethod
     def generate_read_query(
-        tag, start_time, stop_time, sample_time, read_type, metadata=None
+        self, tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
         if read_type in [
             ReaderType.COUNT,
@@ -385,7 +384,6 @@ class PIHandlerODBC:
             ReaderType.BAD,
             ReaderType.TOTAL,
             ReaderType.SUM,
-            ReaderType.RAW,
             ReaderType.SHAPEPRESERVING,
         ]:
             raise NotImplementedError
@@ -433,6 +431,8 @@ class PIHandlerODBC:
             query = ["SELECT CAST(pctgood as FLOAT32)"]
         elif ReaderType.BAD == read_type:
             query = ["SELECT 100-CAST(pctgood as FLOAT32)"]
+        elif ReaderType.RAW == read_type:
+            query = [f"SELECT TOP {self._max_rows} CAST(value as FLOAT32)"]
         else:
             query = ["SELECT CAST(value as FLOAT32)"]
 
@@ -458,7 +458,7 @@ class PIHandlerODBC:
             )
         elif ReaderType.RAW == read_type:
             pass
-        elif ReaderType.SNAPSHOT != read_type:
+        elif read_type not in [ReaderType.SNAPSHOT, ReaderType.RAW]:
             query.extend([f"AND (timestep = '{sample_time}s')"])
 
         if ReaderType.SNAPSHOT != read_type:
