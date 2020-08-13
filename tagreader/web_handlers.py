@@ -710,14 +710,27 @@ class PIHandlerWeb:
             )
 
         df = df.filter(["Timestamp", "Value"])
-        df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="%Y-%m-%dT%H:%M:%SZ")
+
+        try:
+            if read_type == ReaderType.RAW:
+                # Sub-second timestamps are common
+                df["Timestamp"] = pd.to_datetime(
+                    df["Timestamp"], format="%Y-%m-%dT%H:%M:%S.%fZ", utc=True
+                )
+            else:
+                # Sub-second timestamps are uncommon
+                df["Timestamp"] = pd.to_datetime(
+                    df["Timestamp"], format="%Y-%m-%dT%H:%M:%SZ", utc=True
+                )
+        except ValueError:
+            df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True)
 
         if read_type == ReaderType.VAR:
             df["Value"] = df["Value"] ** 2
 
         df = df.set_index("Timestamp", drop=True)
         df.index.name = "time"
-        df = df.tz_localize("UTC")
+        # df = df.tz_localize("UTC")
 
         # Correct weird bug in PI Web API where MAX timestamps end of interval while
         # all the other summaries stamp start of interval by shifting all timestamps
