@@ -39,6 +39,7 @@ def Client():
     c = IMSClient(SOURCE, imstype="piwebapi", verifySSL=verifySSL)
     c.cache = None
     c.connect()
+    c.handler._max_rows = 1000  # For the long raw test
     yield c
     if os.path.exists(SOURCE + ".h5"):
         os.remove(SOURCE + ".h5")
@@ -103,7 +104,7 @@ def test_tag_to_webid(PIHandler):
 @pytest.mark.parametrize(
     ("read_type", "size"),
     [
-        ("RAW", 4),
+        ("RAW", 5),
         # pytest.param(
         #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
         # ),
@@ -146,6 +147,15 @@ def test_read(Client, read_type, size):
     elif read_type in "RAW":
         assert df.index[0] >= ensure_datetime_with_tz(START_TIME)
         assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
+
+
+def test_read_raw_long(Client):
+    df = Client.read(
+        TAGS["Float32"],
+        start_time=START_TIME,
+        end_time="2020-04-11 20:00:00",
+        read_type=ReaderType.RAW)
+    assert len(df) > 1000
 
 
 def test_read_only_invalid_data_yields_nan_for_invalid(Client):

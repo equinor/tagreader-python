@@ -124,3 +124,4 @@ def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test
         assert (
             params["selectedFields"] == "Links;Items.Timestamp;Items.Value;Items.Good"
         )
+        assert params["maxCount"] == 10000

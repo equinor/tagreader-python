@@ -280,17 +280,29 @@ class IMSClient:
             metadata = self._get_metadata(tag)
             frames = [df]
             for (start, stop) in missing_intervals:
-                time_slice = [start, start]
-                while time_slice[1] < stop:
-                    time_slice = get_next_timeslice(
-                        time_slice[1], stop, ts, self.handler._max_rows
-                    )
-                    df = self.handler.read_tag(
-                        tag, time_slice[0], time_slice[1], ts, read_type, metadata
-                    )
-                    if cache is not None and read_type != ReaderType.RAW:
-                        cache.store(df, read_type, ts)
-                    frames.append(df)
+                if read_type != ReaderType.RAW:
+                    time_slice = [start, start]
+                    while time_slice[1] < stop:
+                        time_slice = get_next_timeslice(
+                            time_slice[1], stop, ts, self.handler._max_rows
+                        )
+                        df = self.handler.read_tag(
+                            tag, time_slice[0], time_slice[1], ts, read_type, metadata
+                        )
+                        if cache is not None and read_type != ReaderType.RAW:
+                            cache.store(df, read_type, ts)
+                        frames.append(df)
+                else:
+                    time_slice = [start, stop]
+                    while True:
+                        df = self.handler.read_tag(
+                            tag, time_slice[0], time_slice[1], ts, read_type, metadata
+                        )
+                        frames.append(df)
+                        if len(df) < self.handler._max_rows:
+                            break
+                        time_slice[0] = df.index[-1]
+
             # df = pd.concat(frames, verify_integrity=True)
             df = pd.concat(frames)
             # read_type INT leads to overlapping values after concatenating

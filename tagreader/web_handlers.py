@@ -75,7 +75,7 @@ class AspenHandlerWeb:
     def __init__(
         self, datasource=None, url=None, auth=None, verifySSL=None, options={},
     ):
-        self._max_rows = options.get("max_rows", 100000)
+        self._max_rows = options.get("max_rows", 10000)
         if url is None:
             url = r"https://ws2679.statoil.net/ProcessData/AtProcessDataREST.dll"
         self.base_url = url
@@ -430,7 +430,7 @@ class PIHandlerWeb:
     def __init__(
         self, url=None, datasource=None, auth=None, verifySSL=None, options={},
     ):
-        self._max_rows = options.get("max_rows", 100000)
+        self._max_rows = options.get("max_rows", 10000)
         if url is None:
             url = r"https://piwebapi.equinor.com/piwebapi"
         self.base_url = url
@@ -552,6 +552,9 @@ class PIHandlerWeb:
             params["selectedFields"] = "Links;Items.Timestamp;Items.Value;Items.Good"
         elif read_type == ReaderType.SNAPSHOT:
             params["selectedFields"] = "Timestamp;Value;Good"
+
+        if read_type == ReaderType.RAW:
+            params["maxCount"] = self._max_rows
 
         return (url, params)
 
