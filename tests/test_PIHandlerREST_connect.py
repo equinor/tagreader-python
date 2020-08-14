@@ -222,3 +222,13 @@ def test_to_DST_skips_time(Client):
     assert (
         df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6
     )
+
+
+def test_handle_unknown_tag(Client):
+    with pytest.warns(None):
+        df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
+    assert len(df.index) == 0
+    with pytest.warns(None):
+        df = Client.read([TAGS['Float32'], "sorandomitcantexist"], START_TIME, STOP_TIME)
+    assert len(df.index) > 0
+    assert len(df.columns == 1)

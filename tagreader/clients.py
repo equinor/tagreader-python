@@ -289,16 +289,18 @@ class IMSClient:
                         df = self.handler.read_tag(
                             tag, time_slice[0], time_slice[1], ts, read_type, metadata
                         )
-                        if cache is not None and read_type != ReaderType.RAW:
-                            cache.store(df, read_type, ts)
-                        frames.append(df)
+                        if len(df.index) > 0:
+                            if cache is not None and read_type != ReaderType.RAW:
+                                cache.store(df, read_type, ts)
+                            frames.append(df)
                 else:
                     time_slice = [start, stop]
                     while True:
                         df = self.handler.read_tag(
                             tag, time_slice[0], time_slice[1], ts, read_type, metadata
                         )
-                        frames.append(df)
+                        if not df.empty:
+                            frames.append(df)
                         if len(df) < self.handler._max_rows:
                             break
                         time_slice[0] = df.index[-1]

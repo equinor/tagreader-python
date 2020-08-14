@@ -1,3 +1,4 @@
+import warnings
 import requests
 import urllib
 import re
@@ -414,7 +415,9 @@ class AspenHandlerWeb:
             raise ConnectionError
 
         j = res.json()
-
+        if "er" in j['data'][0]['samples'][0]:
+            warnings.warn(j['data'][0]['samples'][0]['es'])
+            return pd.DataFrame()
         df = (
             pd.DataFrame.from_dict(j["data"][0]["samples"])
             .drop(labels=["l", "s", "V"], axis="columns")
@@ -659,7 +662,8 @@ class PIHandlerWeb:
                             f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
                         )
             elif len(j["Items"]) == 0:
-                raise AssertionError(f"No WebId found for {tag}.")
+                warnings.warn(f"Tag {tag} not found", RuntimeWarning)
+                return None
 
             webid = j["Items"][0]["WebId"]
             self.webidcache[tag] = webid
@@ -688,6 +692,9 @@ class PIHandlerWeb:
         metadata=None,
     ):
         webid = self.tag_to_webid(tag)
+        if not webid:
+            return pd.DataFrame()
+
         (url, params) = self.generate_read_query(
             webid, start_time, stop_time, sample_time, read_type
         )

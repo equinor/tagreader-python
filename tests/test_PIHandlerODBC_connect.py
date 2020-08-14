@@ -14,7 +14,7 @@ if is_GITHUBACTION:
 
 SOURCE = "PINO"
 
-tags = {
+TAGS = {
     "Float32": "BA:CONC.1",
     "Digital": "BA:ACTIVE.1",
     "Int32": "CDEP158",
@@ -92,10 +92,10 @@ def test_search(Client):
 )
 def test_read(Client, read_type, size):
     if read_type == "SNAPSHOT":
-        df = Client.read(tags["Float32"], read_type=getattr(ReaderType, read_type))
+        df = Client.read(TAGS["Float32"], read_type=getattr(ReaderType, read_type))
     else:
         df = Client.read(
-            tags["Float32"],
+            TAGS["Float32"],
             start_time=START_TIME,
             end_time=STOP_TIME,
             ts=SAMPLE_TIME,
@@ -113,7 +113,7 @@ def test_read(Client, read_type, size):
 
 
 def test_digitalread_is_one_or_zero(Client):
-    tag = tags["Digital"]
+    tag = TAGS["Digital"]
     df = Client.read(
         tag, start_time=START_TIME, end_time=STOP_TIME, ts=600, read_type=ReaderType.INT
     )
@@ -123,23 +123,23 @@ def test_digitalread_is_one_or_zero(Client):
 
 
 def test_get_unit(Client):
-    res = Client.get_units(list(tags.values()))
-    assert res[tags["Float32"]] == "DEG. C"
-    assert res[tags["Digital"]] == "STATE"
-    assert res[tags["Int32"]] == ""
+    res = Client.get_units(list(TAGS.values()))
+    assert res[TAGS["Float32"]] == "DEG. C"
+    assert res[TAGS["Digital"]] == "STATE"
+    assert res[TAGS["Int32"]] == ""
 
 
 def test_get_description(Client):
-    res = Client.get_descriptions(list(tags.values()))
-    assert res[tags["Float32"]] == "Concentration Reactor 1"
-    assert res[tags["Digital"]] == "Batch Active Reactor 1"
-    assert res[tags["Int32"]] == "Light Naphtha End Point"
+    res = Client.get_descriptions(list(TAGS.values()))
+    assert res[TAGS["Float32"]] == "Concentration Reactor 1"
+    assert res[TAGS["Digital"]] == "Batch Active Reactor 1"
+    assert res[TAGS["Int32"]] == "Light Naphtha End Point"
 
 
 def test_from_DST_folds_time(Client):
     if os.path.exists(SOURCE + ".h5"):
         os.remove(SOURCE + ".h5")
-    tag = tags["Float32"]
+    tag = TAGS["Float32"]
     interval = ["2017-10-29 00:30:00", "2017-10-29 04:30:00"]
     df = Client.read([tag], interval[0], interval[1], 600)
     assert len(df) == (4 + 1) * 6 + 1
@@ -156,10 +156,20 @@ def test_from_DST_folds_time(Client):
 def test_to_DST_skips_time(Client):
     if os.path.exists(SOURCE + ".h5"):
         os.remove(SOURCE + ".h5")
-    tag = tags["Float32"]
+    tag = TAGS["Float32"]
     interval = ["2018-03-25 00:30:00", "2018-03-25 03:30:00"]
     df = Client.read([tag], interval[0], interval[1], 600)
     # Lose one hour:
     assert (
         df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6
     )
+
+
+def test_handle_unknown_tag(Client):
+    with pytest.warns(None):
+        df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
+    assert len(df.index) == 0
+    with pytest.warns(None):
+        df = Client.read([TAGS['Float32'], "sorandomitcantexist"], START_TIME, STOP_TIME)
+    assert len(df.index) > 0
+    assert len(df.columns == 1)

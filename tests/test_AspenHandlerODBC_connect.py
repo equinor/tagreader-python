@@ -14,6 +14,8 @@ if is_GITHUBACTION:
 
 SOURCE = "SNA"
 TAGS = ["ATCAI", "ATCMIXTIME1"]
+START_TIME = "2018-05-01 10:00:00"
+STOP_TIME = "2018-05-01 11:00:00"
 
 
 @pytest.fixture()
@@ -42,3 +44,14 @@ def test_list_sources_aspen():
     assert isinstance(res[0], str)
     for r in res:
         assert 3 <= len(r) <= 20
+
+
+def test_handle_unknown_tag(Client):
+    with pytest.warns(None):
+        df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
+    assert len(df.index) == 0
+    with pytest.warns(None):
+        df = Client.read(["ATCAI", "sorandomitcantexist"], START_TIME, STOP_TIME)
+    assert len(df.index) > 0
+    assert len(df.columns == 1)
+

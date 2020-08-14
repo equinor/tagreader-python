@@ -483,11 +483,16 @@ class PIHandlerODBC:
         return self.cursor.fetchall()
 
     def _get_tag_metadata(self, tag):
+        # Returns None if tag not found.
         query = f"SELECT digitalset, engunits, descriptor FROM pipoint.pipoint2 WHERE tag='{tag}'"  # noqa E501
         self.cursor.execute(query)
         desc = self.cursor.description
         col_names = [col[0] for col in desc]
-        metadata = dict(zip(col_names, self.cursor.fetchone()))
+        res = self.cursor.fetchone()
+        if res is None:
+            warnings.warn(f"Tag {tag} not found", RuntimeWarning)
+            return None
+        metadata = dict(zip(col_names, res))
         return metadata
 
     def _get_tag_description(self, tag):
@@ -518,6 +523,10 @@ class PIHandlerODBC:
     def read_tag(
         self, tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
+        if metadata is None:
+            # Tag not found
+            return pd.DataFrame()
+
         query = self.generate_read_query(
             tag, start_time, stop_time, sample_time, read_type
         )
