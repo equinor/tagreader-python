@@ -1,8 +1,10 @@
 import pytest
 import os
 import pandas as pd
-from requests_kerberos.kerberos_ import SanitizedResponse
-from tagreader.utils import ReaderType
+from tagreader.utils import (
+    ReaderType,
+    ensure_datetime_with_tz,
+)
 from tagreader.web_handlers import (
     list_piwebapi_sources,
     PIHandlerWeb,
@@ -37,6 +39,7 @@ def Client():
     c = IMSClient(SOURCE, imstype="piwebapi", verifySSL=verifySSL)
     c.cache = None
     c.connect()
+    c.handler._max_rows = 1000  # For the long raw test
     yield c
     if os.path.exists(SOURCE + ".h5"):
         os.remove(SOURCE + ".h5")
@@ -94,14 +97,14 @@ def test_tag_to_webid(PIHandler):
     assert len(res) >= 20
     with pytest.raises(AssertionError):
         res = PIHandler.tag_to_webid("SINUSOID*")
-    with pytest.raises(AssertionError):
+    with pytest.warns(None):
         res = PIHandler.tag_to_webid("somerandomgarbage")
 
 
 @pytest.mark.parametrize(
     ("read_type", "size"),
     [
-        # pytest.param("RAW", 0, marks=pytest.mark.skip(reason="Not implemented")),
+        ("RAW", 5),
         # pytest.param(
         #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
         # ),
@@ -122,10 +125,7 @@ def test_tag_to_webid(PIHandler):
 )
 def test_read(Client, read_type, size):
     if read_type == "SNAPSHOT":
-        df = Client.read(
-            TAGS["Float32"],
-            read_type=getattr(ReaderType, read_type),
-        )
+        df = Client.read(TAGS["Float32"], read_type=getattr(ReaderType, read_type),)
     else:
         df = Client.read(
             TAGS["Float32"],
@@ -136,10 +136,24 @@ def test_read(Client, read_type, size):
         )
 
     assert df.shape == (size, 1)
-    if read_type != "SNAPSHOT":
+    if read_type not in ["SNAPSHOT", "RAW"]:
+        assert df.index[0] == ensure_datetime_with_tz(START_TIME)
         assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(
             SAMPLE_TIME, unit="s"
         )
+    elif read_type in "RAW":
+        assert df.index[0] >= ensure_datetime_with_tz(START_TIME)
+        assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
+
+
+def test_read_raw_long(Client):
+    df = Client.read(
+        TAGS["Float32"],
+        start_time=START_TIME,
+        end_time="2020-04-11 20:00:00",
+        read_type=ReaderType.RAW,
+    )
+    assert len(df) > 1000
 
 
 def test_read_only_invalid_data_yields_nan_for_invalid(Client):
@@ -206,3 +220,15 @@ def test_to_DST_skips_time(Client):
     assert (
         df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6
     )
+
+
+def test_read_unknown_tag(Client):
+    with pytest.warns(UserWarning):
+        df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
+    assert len(df.index) == 0
+    with pytest.warns(UserWarning):
+        df = Client.read(
+            [TAGS["Float32"], "sorandomitcantexist"], START_TIME, STOP_TIME
+        )
+    assert len(df.index) > 0
+    assert len(df.columns == 1)

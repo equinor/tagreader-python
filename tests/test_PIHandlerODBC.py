@@ -31,7 +31,7 @@ def test_generate_connection_string(PIHandler):
 @pytest.mark.parametrize(
     "read_type",
     [
-        # pytest.param("RAW", marks=pytest.mark.skip(reason="Not implemented")),
+        "RAW",
         # pytest.param(
         #     "SHAPEPRESERVING", marks=pytest.mark.skip(reason="Not implemented")
         # ),
@@ -64,8 +64,13 @@ def test_generate_tag_read_query(PIHandler, read_type):
             "thetag", starttime, stoptime, ts, getattr(ReaderType, read_type)
         )
 
-        
     expected = {
+        "RAW": (
+            "SELECT TOP 100000 CAST(value as FLOAT32) AS value, time "
+            "FROM [piarchive]..[picomp2] WHERE tag='thetag' "
+            "AND (time BETWEEN '17-Jan-18 15:00:00' AND '17-Jan-18 16:00:00') "
+            "ORDER BY time"
+        ),
         "INT": (
             "SELECT CAST(value as FLOAT32) AS value, time "
             "FROM [piarchive]..[piinterp2] WHERE tag='thetag' "

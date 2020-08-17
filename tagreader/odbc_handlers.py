@@ -79,7 +79,6 @@ class AspenHandlerODBC:
             ReaderType.BAD,
             ReaderType.TOTAL,
             ReaderType.SUM,
-            ReaderType.RAW,
             ReaderType.SHAPEPRESERVING,
         ]:
             raise (NotImplementedError)
@@ -156,10 +155,12 @@ class AspenHandlerODBC:
             query.extend([f"WHERE name = {tag!r}"])
             if mapdef:
                 query.extend([f'AND FIELD_ID = FT({mapdef["MAP_HistoryValue"]!r})'])
+            if ReaderType.RAW != read_type:
+                query.extend([f"AND (period = {sample_time*10})"])
             query.extend(
                 [
+                    f"AND (request = {request_num})",
                     f"AND (ts BETWEEN {start!r} AND {stop!r})",
-                    f"AND (request = {request_num}) AND (period = {sample_time*10})",
                     "ORDER BY ts",
                 ]
             )
@@ -170,7 +171,9 @@ class AspenHandlerODBC:
         pass
 
     def connect(self):
-        connection_string = self.generate_connection_string(self.host, self.port)
+        connection_string = self.generate_connection_string(
+            self.host, self.port, max_rows=self._max_rows
+        )
         # The default autocommit=False is not supported by PI odbc driver.
         self.conn = pyodbc.connect(connection_string, autocommit=True)
         self.cursor = self.conn.cursor()
@@ -327,6 +330,8 @@ class AspenHandlerODBC:
             index_col="time",
             parse_dates={"time": "%Y-%m-%dT%H:%M:%S.%fZ"},
         )
+        if len(df.index) == 0:
+            warnings.warn(f"Tag {tag} not found")
         df = df.tz_localize("UTC")
         # if len(df) > len(
         #     df.index.unique()
@@ -374,9 +379,8 @@ class PIHandlerODBC:
             )
         return " ".join(query)
 
-    @staticmethod
     def generate_read_query(
-        tag, start_time, stop_time, sample_time, read_type, metadata=None
+        self, tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
         if read_type in [
             ReaderType.COUNT,
@@ -384,7 +388,6 @@ class PIHandlerODBC:
             ReaderType.BAD,
             ReaderType.TOTAL,
             ReaderType.SUM,
-            ReaderType.RAW,
             ReaderType.SHAPEPRESERVING,
         ]:
             raise NotImplementedError
@@ -432,6 +435,8 @@ class PIHandlerODBC:
             query = ["SELECT CAST(pctgood as FLOAT32)"]
         elif ReaderType.BAD == read_type:
             query = ["SELECT 100-CAST(pctgood as FLOAT32)"]
+        elif ReaderType.RAW == read_type:
+            query = [f"SELECT TOP {self._max_rows} CAST(value as FLOAT32)"]
         else:
             query = ["SELECT CAST(value as FLOAT32)"]
 
@@ -457,7 +462,7 @@ class PIHandlerODBC:
             )
         elif ReaderType.RAW == read_type:
             pass
-        elif ReaderType.SNAPSHOT != read_type:
+        elif read_type not in [ReaderType.SNAPSHOT, ReaderType.RAW]:
             query.extend([f"AND (timestep = '{sample_time}s')"])
 
         if ReaderType.SNAPSHOT != read_type:
@@ -482,11 +487,16 @@ class PIHandlerODBC:
         return self.cursor.fetchall()
 
     def _get_tag_metadata(self, tag):
+        # Returns None if tag not found.
         query = f"SELECT digitalset, engunits, descriptor FROM pipoint.pipoint2 WHERE tag='{tag}'"  # noqa E501
         self.cursor.execute(query)
         desc = self.cursor.description
         col_names = [col[0] for col in desc]
-        metadata = dict(zip(col_names, self.cursor.fetchone()))
+        res = self.cursor.fetchone()
+        if res is None:
+            warnings.warn(f"Tag {tag} not found")
+            return None
+        metadata = dict(zip(col_names, res))
         return metadata
 
     def _get_tag_description(self, tag):
@@ -517,6 +527,10 @@ class PIHandlerODBC:
     def read_tag(
         self, tag, start_time, stop_time, sample_time, read_type, metadata=None
     ):
+        if metadata is None:
+            # Tag not found
+            return pd.DataFrame()
+
         query = self.generate_read_query(
             tag, start_time, stop_time, sample_time, read_type
         )

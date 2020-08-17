@@ -263,7 +263,7 @@ class IMSClient:
         else:
             missing_intervals = [(start_time, stop_time)]
             df = pd.DataFrame()
-            if cache is not None:
+            if cache is not None and read_type != ReaderType.RAW:
                 time_slice = get_next_timeslice(start_time, stop_time, ts)
                 df = cache.fetch(
                     tag,
@@ -280,17 +280,34 @@ class IMSClient:
             metadata = self._get_metadata(tag)
             frames = [df]
             for (start, stop) in missing_intervals:
-                time_slice = [start, start]
-                while time_slice[1] < stop:
-                    time_slice = get_next_timeslice(
-                        time_slice[1], stop, ts, self.handler._max_rows
-                    )
+                while True:
                     df = self.handler.read_tag(
-                        tag, time_slice[0], time_slice[1], ts, read_type, metadata
+                        tag, start, stop, ts, read_type, metadata
                     )
-                    if cache is not None:
-                        cache.store(df, read_type, ts)
-                    frames.append(df)
+                    if len(df.index) > 0:
+                        if cache is not None and read_type not in [
+                            ReaderType.SNAPSHOT,
+                            ReaderType.RAW,
+                        ]:
+                            cache.store(df, read_type, ts)
+                        frames.append(df)
+                    if len(df) < self.handler._max_rows:
+                        break
+                    start = df.index[-1]
+                # if read_type != ReaderType.RAW:
+                #     time_slice = [start, start]
+                #     while time_slice[1] < stop:
+                #         time_slice = get_next_timeslice(
+                #             time_slice[1], stop, ts, self.handler._max_rows
+                #         )
+                #         df = self.handler.read_tag(
+                #             tag, time_slice[0], time_slice[1], ts, read_type, metadata
+                #         )
+                #         if len(df.index) > 0:
+                #             if cache is not None and read_type != ReaderType.RAW:
+                #                 cache.store(df, read_type, ts)
+                #             frames.append(df)
+
             # df = pd.concat(frames, verify_integrity=True)
             df = pd.concat(frames)
             # read_type INT leads to overlapping values after concatenating
@@ -313,7 +330,7 @@ class IMSClient:
                     units[tag] = r["unit"]
             if tag not in units:
                 unit = self.handler._get_tag_unit(tag)
-                if self.cache is not None:
+                if self.cache is not None and unit is not None:
                     self.cache.store_tag_metadata(tag, {"unit": unit})
                 units[tag] = unit
         return units
@@ -329,7 +346,7 @@ class IMSClient:
                     descriptions[tag] = r["description"]
             if tag not in descriptions:
                 desc = self.handler._get_tag_description(tag)
-                if self.cache is not None:
+                if self.cache is not None and desc is not None:
                     self.cache.store_tag_metadata(tag, {"description": desc})
                 descriptions[tag] = desc
         return descriptions
@@ -364,8 +381,8 @@ class IMSClient:
         which can be imported as follows:
             from utils import ReaderType
 
-        Values for Readertype.* that should work are:
-            INT, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
+        Values for ReaderType.* that should work for all handlers are:
+            INT, RAW, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
         """
         if isinstance(tags, str):
             tags = [tags]

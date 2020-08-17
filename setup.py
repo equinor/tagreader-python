@@ -36,11 +36,13 @@ pip install --upgrade tagreader
 ```
 import tagreader
 c = tagreader.IMSClient("mysource", "ip21")
-print(c.search("mytag%"))
-df = s.read_tags(["mytag_1", "mytag_2;with map"], "18.06.2020 08:00:00", "18.06.2020 09:00:00", 60)
+print(c.search("tag*"))
+df = s.read_tags(["tag1", "tag2"], "18.06.2020 08:00:00", "18.06.2020 09:00:00", 60)
 ```
 
-Also see the [quickstart](https://github.com/equinor/tagreader-python/blob/master/docs/quickstart.ipynb) document at gitlab.
+Also see the
+[quickstart](https://github.com/equinor/tagreader-python/blob/master/docs/quickstart.ipynb)
+document at gitlab.
 """
 
 setup(

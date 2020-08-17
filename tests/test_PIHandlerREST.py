@@ -56,7 +56,7 @@ def test_is_summary(PIHandler):
 @pytest.mark.parametrize(
     "read_type",
     [
-        # pytest.param("RAW", marks=pytest.mark.skip(reason="Not implemented")),
+        "RAW",
         # pytest.param(
         #     "SHAPEPRESERVING", marks=pytest.mark.skip(reason="Not implemented")
         # ),
@@ -90,6 +90,7 @@ def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test
     if read_type != "SNAPSHOT":
         assert params["startTime"] == "01-Apr-20 09:05:00"
         assert params["endTime"] == "01-Apr-20 10:05:00"
+        assert params["timeZone"] == "UTC"
 
     if read_type == "INT":
         assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/interpolated"
@@ -118,4 +119,9 @@ def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test
             params["selectedFields"] == "Timestamp;Value;Good"
         )
         assert len(params) == 3
-
+    elif read_type == "RAW":
+        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/recorded"
+        assert (
+            params["selectedFields"] == "Links;Items.Timestamp;Items.Value;Items.Good"
+        )
+        assert params["maxCount"] == 10000

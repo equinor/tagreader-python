@@ -1,3 +1,4 @@
+import warnings
 import requests
 import urllib
 import re
@@ -75,7 +76,7 @@ class AspenHandlerWeb:
     def __init__(
         self, datasource=None, url=None, auth=None, verifySSL=None, options={},
     ):
-        self._max_rows = options.get("max_rows", 100000)
+        self._max_rows = options.get("max_rows", 10000)
         if url is None:
             url = r"https://ws2679.statoil.net/ProcessData/AtProcessDataREST.dll"
         self.base_url = url
@@ -148,7 +149,7 @@ class AspenHandlerWeb:
         if read_type == ReaderType.SNAPSHOT:
             if stop_time is not None:
                 use_current = 0
-                end_time = int(stop_time.timestamp())*1000
+                end_time = int(stop_time.timestamp()) * 1000
             else:
                 use_current = 1
                 end_time = 0
@@ -162,15 +163,10 @@ class AspenHandlerWeb:
         if mapname:
             query += f"<M><![CDATA[{mapname}]]></M>"
 
-        query += (
-            f"<D><![CDATA[{self.datasource}]]></D>"
-            "<F><![CDATA[VAL]]></F>"
-        )
+        query += f"<D><![CDATA[{self.datasource}]]></D>" "<F><![CDATA[VAL]]></F>"
 
         if read_type == ReaderType.SNAPSHOT:
-            query += (
-                "<VS>1</VS>"
-            )
+            query += "<VS>1</VS>"
         else:
             query += (
                 "<HF>0</HF>"  # History format: 0=Raw, 1=RecordAsString
@@ -184,7 +180,11 @@ class AspenHandlerWeb:
             query += f"<O>{outsiders}</O>"
         if read_type not in [ReaderType.RAW]:
             query += f"<S>{stepped}</S>"
-        if read_type not in [ReaderType.RAW, ReaderType.SHAPEPRESERVING, ReaderType.SNAPSHOT]:
+        if read_type not in [
+            ReaderType.RAW,
+            ReaderType.SHAPEPRESERVING,
+            ReaderType.SNAPSHOT,
+        ]:
             query += (
                 f"<P>{int(sample_time.total_seconds())}</P>"
                 "<PU>3</PU>"  # Period Unit: 0=day, 1=hour, 2=min, 3=sec
@@ -193,7 +193,7 @@ class AspenHandlerWeb:
             ReaderType.RAW,
             ReaderType.SHAPEPRESERVING,
             ReaderType.INT,
-            ReaderType.SNAPSHOT
+            ReaderType.SNAPSHOT,
         ]:
             query += (
                 # Method: 0=integral, 2=value, 3=integral complete, 4=value complete
@@ -394,7 +394,8 @@ class AspenHandlerWeb:
             ReaderType.AVG,
             ReaderType.VAR,
             ReaderType.STD,
-            ReaderType.SNAPSHOT
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
         ]:
             raise (NotImplementedError)
 
@@ -414,7 +415,9 @@ class AspenHandlerWeb:
             raise ConnectionError
 
         j = res.json()
-
+        if "er" in j['data'][0]['samples'][0]:
+            warnings.warn(j['data'][0]['samples'][0]['es'])
+            return pd.DataFrame()
         df = (
             pd.DataFrame.from_dict(j["data"][0]["samples"])
             .drop(labels=["l", "s", "V"], axis="columns")
@@ -430,7 +433,7 @@ class PIHandlerWeb:
     def __init__(
         self, url=None, datasource=None, auth=None, verifySSL=None, options={},
     ):
-        self._max_rows = options.get("max_rows", 100000)
+        self._max_rows = options.get("max_rows", 10000)
         if url is None:
             url = r"https://piwebapi.equinor.com/piwebapi"
         self.base_url = url
@@ -498,7 +501,6 @@ class PIHandlerWeb:
             ReaderType.BAD,
             ReaderType.TOTAL,
             ReaderType.SUM,
-            ReaderType.RAW,
             ReaderType.SHAPEPRESERVING,
         ]:
             raise (NotImplementedError)
@@ -527,9 +529,7 @@ class PIHandlerWeb:
             )
             params["timeZone"] = "UTC"
         elif read_type == ReaderType.SNAPSHOT and stop_time is not None:
-            params["time"] = stop_time.tz_convert("UTC").strftime(
-                timecast_format_query
-            )
+            params["time"] = stop_time.tz_convert("UTC").strftime(timecast_format_query)
             params["timeZone"] = "UTC"
 
         summary_type = {
@@ -551,10 +551,13 @@ class PIHandlerWeb:
             params[
                 "selectedFields"
             ] = "Links;Items.Value.Timestamp;Items.Value.Value;Items.Value.Good"
-        elif read_type == ReaderType.INT:
+        elif read_type in [ReaderType.INT, ReaderType.RAW]:
             params["selectedFields"] = "Links;Items.Timestamp;Items.Value;Items.Good"
         elif read_type == ReaderType.SNAPSHOT:
             params["selectedFields"] = "Timestamp;Value;Good"
+
+        if read_type == ReaderType.RAW:
+            params["maxCount"] = self._max_rows
 
         return (url, params)
 
@@ -610,6 +613,8 @@ class PIHandlerWeb:
 
     def _get_tag_unit(self, tag):
         webid = self.tag_to_webid(tag)
+        if webid is None:
+            return None
         url = urljoin(self.base_url, "points", webid)
         res = self.session.get(url)
         if res.status_code != 200:
@@ -620,6 +625,8 @@ class PIHandlerWeb:
 
     def _get_tag_description(self, tag):
         webid = self.tag_to_webid(tag)
+        if webid is None:
+            return None
         url = urljoin(self.base_url, "points", webid)
         res = self.session.get(url)
         if res.status_code != 200:
@@ -659,7 +666,8 @@ class PIHandlerWeb:
                             f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
                         )
             elif len(j["Items"]) == 0:
-                raise AssertionError(f"No WebId found for {tag}.")
+                warnings.warn(f"Tag {tag} not found")
+                return None
 
             webid = j["Items"][0]["WebId"]
             self.webidcache[tag] = webid
@@ -688,6 +696,9 @@ class PIHandlerWeb:
         metadata=None,
     ):
         webid = self.tag_to_webid(tag)
+        if not webid:
+            return pd.DataFrame()
+
         (url, params) = self.generate_read_query(
             webid, start_time, stop_time, sample_time, read_type
         )
@@ -713,13 +724,32 @@ class PIHandlerWeb:
             )
 
         df = df.filter(["Timestamp", "Value"])
-        df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="%Y-%m-%dT%H:%M:%SZ")
+
+        try:
+            if read_type == ReaderType.RAW:
+                # Sub-second timestamps are common
+                df["Timestamp"] = pd.to_datetime(
+                    df["Timestamp"], format="%Y-%m-%dT%H:%M:%S.%fZ", utc=True
+                )
+            else:
+                # Sub-second timestamps are uncommon
+                df["Timestamp"] = pd.to_datetime(
+                    df["Timestamp"], format="%Y-%m-%dT%H:%M:%SZ", utc=True
+                )
+        except ValueError:
+            df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True)
 
         if read_type == ReaderType.VAR:
             df["Value"] = df["Value"] ** 2
 
         df = df.set_index("Timestamp", drop=True)
         df.index.name = "time"
-        df = df.tz_localize("UTC")
+        # df = df.tz_localize("UTC")
+
+        # Correct weird bug in PI Web API where MAX timestamps end of interval while
+        # all the other summaries stamp start of interval by shifting all timestamps
+        # one interval down.
+        if read_type == ReaderType.MAX and df.index[0] > start_time:
+            df.index = df.index - sample_time
 
         return df.rename(columns={"Value": tag})
