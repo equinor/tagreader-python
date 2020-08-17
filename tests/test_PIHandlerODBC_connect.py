@@ -170,6 +170,8 @@ def test_read_unknown_tag(Client):
         df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
     assert len(df.index) == 0
     with pytest.warns(UserWarning):
-        df = Client.read([TAGS['Float32'], "sorandomitcantexist"], START_TIME, STOP_TIME)
+        df = Client.read(
+            [TAGS["Float32"], "sorandomitcantexist"], START_TIME, STOP_TIME
+        )
     assert len(df.index) > 0
     assert len(df.columns == 1)

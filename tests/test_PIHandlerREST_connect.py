@@ -125,10 +125,7 @@ def test_tag_to_webid(PIHandler):
 )
 def test_read(Client, read_type, size):
     if read_type == "SNAPSHOT":
-        df = Client.read(
-            TAGS["Float32"],
-            read_type=getattr(ReaderType, read_type),
-        )
+        df = Client.read(TAGS["Float32"], read_type=getattr(ReaderType, read_type),)
     else:
         df = Client.read(
             TAGS["Float32"],
@@ -154,7 +151,8 @@ def test_read_raw_long(Client):
         TAGS["Float32"],
         start_time=START_TIME,
         end_time="2020-04-11 20:00:00",
-        read_type=ReaderType.RAW)
+        read_type=ReaderType.RAW,
+    )
     assert len(df) > 1000
 
 
@@ -229,6 +227,8 @@ def test_read_unknown_tag(Client):
         df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
     assert len(df.index) == 0
     with pytest.warns(UserWarning):
-        df = Client.read([TAGS['Float32'], "sorandomitcantexist"], START_TIME, STOP_TIME)
+        df = Client.read(
+            [TAGS["Float32"], "sorandomitcantexist"], START_TIME, STOP_TIME
+        )
     assert len(df.index) > 0
     assert len(df.columns == 1)

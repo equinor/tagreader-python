@@ -285,7 +285,10 @@ class IMSClient:
                         tag, start, stop, ts, read_type, metadata
                     )
                     if len(df.index) > 0:
-                        if cache is not None and read_type not in [ReaderType.SNAPSHOT, ReaderType.RAW]:
+                        if cache is not None and read_type not in [
+                            ReaderType.SNAPSHOT,
+                            ReaderType.RAW,
+                        ]:
                             cache.store(df, read_type, ts)
                         frames.append(df)
                     if len(df) < self.handler._max_rows:
@@ -327,7 +330,7 @@ class IMSClient:
                     units[tag] = r["unit"]
             if tag not in units:
                 unit = self.handler._get_tag_unit(tag)
-                if self.cache is not None and desc is not None:
+                if self.cache is not None and unit is not None:
                     self.cache.store_tag_metadata(tag, {"unit": unit})
                 units[tag] = unit
         return units
