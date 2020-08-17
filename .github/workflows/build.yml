@@ -34,10 +34,11 @@ jobs:
         pip install pytest
         pytest
     - name: Build and publish
-      if: ${{ matrix.python-version == 3.6 }}
+      if: ${{ matrix.python-version == 3.6 && success() }}
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
       run: |
+        pip install setuptools wheel twine
         python setup.py sdist bdist_wheel
         twine upload --repository-url https://test.pypi.org/legacy dist/*
