@@ -161,7 +161,7 @@ class AspenHandlerODBC:
                 [
                     f"AND (request = {request_num})",
                     f"AND (ts BETWEEN {start!r} AND {stop!r})",
-                    "ORDER BY ts"
+                    "ORDER BY ts",
                 ]
             )
 
@@ -171,7 +171,9 @@ class AspenHandlerODBC:
         pass
 
     def connect(self):
-        connection_string = self.generate_connection_string(self.host, self.port)
+        connection_string = self.generate_connection_string(
+            self.host, self.port, max_rows=self._max_rows
+        )
         # The default autocommit=False is not supported by PI odbc driver.
         self.conn = pyodbc.connect(connection_string, autocommit=True)
         self.cursor = self.conn.cursor()
@@ -328,6 +330,8 @@ class AspenHandlerODBC:
             index_col="time",
             parse_dates={"time": "%Y-%m-%dT%H:%M:%S.%fZ"},
         )
+        if len(df.index) == 0:
+            warnings.warn(f"Tag {tag} not found")
         df = df.tz_localize("UTC")
         # if len(df) > len(
         #     df.index.unique()
@@ -490,7 +494,7 @@ class PIHandlerODBC:
         col_names = [col[0] for col in desc]
         res = self.cursor.fetchone()
         if res is None:
-            warnings.warn(f"Tag {tag} not found", RuntimeWarning)
+            warnings.warn(f"Tag {tag} not found")
             return None
         metadata = dict(zip(col_names, res))
         return metadata

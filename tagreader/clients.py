@@ -280,30 +280,30 @@ class IMSClient:
             metadata = self._get_metadata(tag)
             frames = [df]
             for (start, stop) in missing_intervals:
-                if read_type != ReaderType.RAW:
-                    time_slice = [start, start]
-                    while time_slice[1] < stop:
-                        time_slice = get_next_timeslice(
-                            time_slice[1], stop, ts, self.handler._max_rows
-                        )
-                        df = self.handler.read_tag(
-                            tag, time_slice[0], time_slice[1], ts, read_type, metadata
-                        )
-                        if len(df.index) > 0:
-                            if cache is not None and read_type != ReaderType.RAW:
-                                cache.store(df, read_type, ts)
-                            frames.append(df)
-                else:
-                    time_slice = [start, stop]
-                    while True:
-                        df = self.handler.read_tag(
-                            tag, time_slice[0], time_slice[1], ts, read_type, metadata
-                        )
-                        if not df.empty:
-                            frames.append(df)
-                        if len(df) < self.handler._max_rows:
-                            break
-                        time_slice[0] = df.index[-1]
+                while True:
+                    df = self.handler.read_tag(
+                        tag, start, stop, ts, read_type, metadata
+                    )
+                    if len(df.index) > 0:
+                        if cache is not None and read_type not in [ReaderType.SNAPSHOT, ReaderType.RAW]:
+                            cache.store(df, read_type, ts)
+                        frames.append(df)
+                    if len(df) < self.handler._max_rows:
+                        break
+                    start = df.index[-1]
+                # if read_type != ReaderType.RAW:
+                #     time_slice = [start, start]
+                #     while time_slice[1] < stop:
+                #         time_slice = get_next_timeslice(
+                #             time_slice[1], stop, ts, self.handler._max_rows
+                #         )
+                #         df = self.handler.read_tag(
+                #             tag, time_slice[0], time_slice[1], ts, read_type, metadata
+                #         )
+                #         if len(df.index) > 0:
+                #             if cache is not None and read_type != ReaderType.RAW:
+                #                 cache.store(df, read_type, ts)
+                #             frames.append(df)
 
             # df = pd.concat(frames, verify_integrity=True)
             df = pd.concat(frames)
@@ -327,7 +327,7 @@ class IMSClient:
                     units[tag] = r["unit"]
             if tag not in units:
                 unit = self.handler._get_tag_unit(tag)
-                if self.cache is not None:
+                if self.cache is not None and desc is not None:
                     self.cache.store_tag_metadata(tag, {"unit": unit})
                 units[tag] = unit
         return units
@@ -343,7 +343,7 @@ class IMSClient:
                     descriptions[tag] = r["description"]
             if tag not in descriptions:
                 desc = self.handler._get_tag_description(tag)
-                if self.cache is not None:
+                if self.cache is not None and desc is not None:
                     self.cache.store_tag_metadata(tag, {"description": desc})
                 descriptions[tag] = desc
         return descriptions

@@ -613,6 +613,8 @@ class PIHandlerWeb:
 
     def _get_tag_unit(self, tag):
         webid = self.tag_to_webid(tag)
+        if webid is None:
+            return None
         url = urljoin(self.base_url, "points", webid)
         res = self.session.get(url)
         if res.status_code != 200:
@@ -623,6 +625,8 @@ class PIHandlerWeb:
 
     def _get_tag_description(self, tag):
         webid = self.tag_to_webid(tag)
+        if webid is None:
+            return None
         url = urljoin(self.base_url, "points", webid)
         res = self.session.get(url)
         if res.status_code != 200:
@@ -662,7 +666,7 @@ class PIHandlerWeb:
                             f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
                         )
             elif len(j["Items"]) == 0:
-                warnings.warn(f"Tag {tag} not found", RuntimeWarning)
+                warnings.warn(f"Tag {tag} not found")
                 return None
 
             webid = j["Items"][0]["WebId"]

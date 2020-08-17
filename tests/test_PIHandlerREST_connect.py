@@ -97,7 +97,7 @@ def test_tag_to_webid(PIHandler):
     assert len(res) >= 20
     with pytest.raises(AssertionError):
         res = PIHandler.tag_to_webid("SINUSOID*")
-    with pytest.raises(AssertionError):
+    with pytest.warns(None):
         res = PIHandler.tag_to_webid("somerandomgarbage")
 
 
@@ -224,11 +224,11 @@ def test_to_DST_skips_time(Client):
     )
 
 
-def test_handle_unknown_tag(Client):
-    with pytest.warns(None):
+def test_read_unknown_tag(Client):
+    with pytest.warns(UserWarning):
         df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
     assert len(df.index) == 0
-    with pytest.warns(None):
+    with pytest.warns(UserWarning):
         df = Client.read([TAGS['Float32'], "sorandomitcantexist"], START_TIME, STOP_TIME)
     assert len(df.index) > 0
     assert len(df.columns == 1)
