@@ -34,10 +34,11 @@ jobs:
         pip install pytest
         pytest
 
-  test-deploy:
+  test-deploy-if-tagged:
 
     needs: build 
     runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
