@@ -1,4 +1,5 @@
 # This is a simplified test workflow that does not include tests that require a connection to server.
+# If tests are successful and the push is a tag, then run a test-deploy to test.pypi.org.
 
 name: Build
 
@@ -33,3 +34,28 @@ jobs:
       run: |
         pip install pytest
         pytest
+
+  test-deploy-if-tagged:
+
+    needs: build 
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags')
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install setuptools wheel twine
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
+        run: |
+          pip install setuptools wheel twine
+          python setup.py sdist bdist_wheel
+          twine upload --repository-url https://test.pypi.org/legacy/ dist/*
