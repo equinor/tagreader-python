@@ -38,9 +38,8 @@ steps:
 
 - script: |
     coverage erase
-    coverage run -m pytest tests/ extratests/
-    coverage html
-    coverage xml
+    coverage run -m pytest tests extratests --junitxml=junit/test-results.xml 
+    coverage xml --include='tagreader/*'
   displayName: 'Run tests'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
@@ -49,10 +48,10 @@ steps:
   inputs:
     codeCoverageTool: Cobertura
     summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-    reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
 
-#- task: PublishTestResults@2
-#  condition: succeededOrFailed()
-#  inputs:
-#    testResultsFiles: '**/test-*.xml'
-#    testRunTitle: 'Publish test results for Python $(python.version)'
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/test-*.xml'
+    testRunTitle: 'Publish test results for Python $(python.version)'
