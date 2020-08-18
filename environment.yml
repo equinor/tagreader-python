@@ -1,6 +1,0 @@
-name: tagreader-env
-dependencies:
-  - python>=3.6
-  - pandas>=0.23
-  - pytables
-  - pyodbc

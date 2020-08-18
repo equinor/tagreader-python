@@ -35,10 +35,10 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 * Python >= 3.6 with the following packages:
   + pandas >= 1.0.0
   + pytables
-  + pyodbc (if using ODBC connections)
-  + requests (if using REST-API connections)
+  + requests
+  + requests_kerberos
+  + pyodbc (if using ODBC connections, Windows only)
 * If using ODBC connections, you must also install proprietary drivers for PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for Microsoft Windows.
-
 # Before getting started
 
 It is highly recommended to go through the [quickstart](quickstart.ipynb) example. It has references to relevant sections in this manual.
