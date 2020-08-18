@@ -38,7 +38,7 @@ steps:
 
 - script: |
     coverage erase
-    coverage run -m pytest tests extratests --junitxml=junit/test-results.xml 
+    coverage run -m pytest tests extratests
     coverage xml --include='tagreader/*'
   displayName: 'Run tests'
   env: 
@@ -48,10 +48,3 @@ steps:
   inputs:
     codeCoverageTool: Cobertura
     summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-
-- task: PublishTestResults@2
-  condition: succeededOrFailed()
-  inputs:
-    testResultsFormat: 'JUnit'
-    testResultsFiles: '**/test-*.xml'
-    testRunTitle: 'Publish test results for Python $(python.version)'
