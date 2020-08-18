@@ -22,7 +22,7 @@ steps:
 - script: |
     python -m pip install --upgrade pip
     pip install  -r requirements.txt
-    pip install pytest pytest-cov pytest-azurepipelines coverage
+    pip install pytest pytest-azurepipelines coverage
   displayName: 'Install dependencies'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
@@ -31,7 +31,7 @@ steps:
     curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
     rmdir /S /Q extratests
     unzip -o -j -d extratests extratests.zip */tests/*.py
-    pytest tests/ extratests/ --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+    coverage -m pytest tests/ extratests/
   displayName: 'pytest'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
