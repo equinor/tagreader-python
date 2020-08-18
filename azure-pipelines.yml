@@ -31,20 +31,28 @@ steps:
     curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
     rmdir /S /Q extratests
     unzip -o -j -d extratests extratests.zip */tests/*.py
-    coverage -m pytest tests/ extratests/
-  displayName: 'pytest'
+  displayName: 'Fetch extratests'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
     TOKEN: $(github_token)
 
-- task: PublishTestResults@2
-  condition: succeededOrFailed()
-  inputs:
-    testResultsFiles: '**/test-*.xml'
-    testRunTitle: 'Publish test results for Python $(python.version)'
+- script: |
+    coverage erase
+    coverage run -m pytest tests/ extratests/
+    coverage html
+    coverage xml
+  displayName: 'Run tests'
+  env: 
+    HTTPS_PROXY: $(var_http_proxy)
 
-- task: PublishCodeCoverageResults@1
-  inputs:
-    codeCoverageTool: Cobertura
-    summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-    reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+#- task: PublishTestResults@2
+#  condition: succeededOrFailed()
+#  inputs:
+#    testResultsFiles: '**/test-*.xml'
+#    testRunTitle: 'Publish test results for Python $(python.version)'
+
+#- task: PublishCodeCoverageResults@1
+#  inputs:
+#    codeCoverageTool: Cobertura
+#    summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+#    reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
