@@ -22,17 +22,29 @@ steps:
 - script: |
     python -m pip install --upgrade pip
     pip install  -r requirements.txt
+    pip install pytest pytest-azurepipelines coverage
   displayName: 'Install dependencies'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
 
 - script: |
-    pip install pytest pytest-azurepipelines 
-    curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
+    curl --silent --show-error --header "Authorization: token %TOKEN%" --output extratests.zip --location https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
     rmdir /S /Q extratests
     unzip -o -j -d extratests extratests.zip */tests/*.py
-    pytest tests/ extratests/
-  displayName: 'pytest'
+  displayName: 'Fetch extratests'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
     TOKEN: $(github_token)
+
+- script: |
+    coverage erase
+    coverage run -m pytest tests extratests
+    coverage xml --include='tagreader/*'
+  displayName: 'Run tests'
+  env: 
+    HTTPS_PROXY: $(var_http_proxy)
+
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: Cobertura
+    summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
