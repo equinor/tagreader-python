@@ -2,4 +2,4 @@ pandas>=1.0.0
 tables
 pyodbc
 requests
-requests_kerberos
+requests_kerberos==0.12.0
