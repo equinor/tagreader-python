@@ -28,7 +28,7 @@ steps:
     HTTPS_PROXY: $(var_http_proxy)
 
 - script: |
-    curl --header "Authorization: token %TOKEN%" --output extratests.zip -L https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
+    curl --silent --show-error --header "Authorization: token %TOKEN%" --output extratests.zip --location https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
     rmdir /S /Q extratests
     unzip -o -j -d extratests extratests.zip */tests/*.py
   displayName: 'Fetch extratests'
