@@ -3,11 +3,11 @@
 from setuptools import setup
 
 long_description = """
-# tagreader #
+# Tagreader #
 
 Tagreader is a Python package for reading trend data from the OSIsoft
 PI and Aspen Infoplus.21 IMS systems. It is intended to be easy to use,
-and present as similar as possible interfaces to the backend historians.
+and present as similar interfaces as possible to the backend historians.
 
 Queries can be performed using either ODBC or REST API queries. ODBC
 queries require the installation of proprietary drivers from AspenTech
@@ -16,24 +16,33 @@ and OSIsoft.
 Tagreader outputs trend data as Pandas Dataframes, and uses the HDF5
 file format to cache results.
 
-## Requirements ##
-* Python >= 3.6 with the following packages:
-  * pandas >= 1.0.0
-  * pytables
-  * requests
-  * requests_kerberos
-  * pyodbc (if using ODBC connections, Windows only)
-* If using ODBC connections, you must also install proprietary drivers for
+Tagreader has only been tested on Windows platforms, but should also work
+elsewhere when using REST APIs.
+
+## Requirements
+
+Python >= 3.6 with the following packages:
+
+  + pandas >= 1.0.0
+  + pytables
+  + requests
+  + requests_kerberos
+  + pyodbc (if using ODBC connections, Windows only)
+
+If using ODBC connections, you must also install proprietary drivers for
 PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for
 Microsoft Windows.
 
-## Installation ##
+## Installation
+
 To install and/or upgrade:
+
 ```
 pip install --upgrade tagreader
 ```
 
 ## Usage example ##
+
 ```
 import tagreader
 c = tagreader.IMSClient("mysource", "ip21")
@@ -43,8 +52,17 @@ df = s.read_tags(["tag1", "tag2"], "18.06.2020 08:00:00", "18.06.2020 09:00:00",
 
 Also see the
 [quickstart](https://github.com/equinor/tagreader-python/blob/master/docs/quickstart.ipynb)
-document at gitlab.
+document and the
+[manual](docs/https://github.com/equinor/tagreader-python/blob/master/docs/manual.md)
+for more information.at gitlab.
 """
+
+
+def get_install_requirements():
+    with open("requirements.in") as f:
+        requirements = f.read().splitlines()
+        return requirements
+
 
 setup(
     name="tagreader",
@@ -75,12 +93,5 @@ setup(
     python_requires="~=3.6",
     setup_requires=["setuptools_scm"],
     use_scm_version={"write_to": "tagreader/version.py"},
-    install_requires=[
-        "pandas>=1.0.0",
-        "tables",
-        "pyodbc;platform_system=='Windows'",
-        "requests",
-        "requests_kerberos",
-        "certifi>=2020.04.05",
-    ],
+    install_requires=get_install_requirements(),
 )

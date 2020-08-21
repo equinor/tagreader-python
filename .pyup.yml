@@ -6,7 +6,7 @@ update: insecure
 # configure dependency pinning globally
 # default: True
 # allowed: True, False
-pin: False
+pin: True
 
 # set the default branch
 # default: empty, the default branch on GitHub

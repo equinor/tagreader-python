@@ -32,16 +32,19 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 
 # Requirements
 
-* Python >= 3.6 with the following packages:
+Python >= 3.6 with the following packages:
+
   + pandas >= 1.0.0
   + pytables
   + requests
   + requests_kerberos
   + pyodbc (if using ODBC connections, Windows only)
-* If using ODBC connections, you must also install proprietary drivers for PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for Microsoft Windows.
+
+If using ODBC connections, you must also install proprietary drivers for PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for Microsoft Windows.
+
 # Before getting started
 
-It is highly recommended to go through the [quickstart](quickstart.ipynb) example. It has references to relevant sections in this manual.
+It is highly recommended to go through the [quickstart](quickstart.ipynb) example. It contains references to relevant sections in this manual.
 
 # Installation
 
@@ -53,18 +56,18 @@ pip install --upgrade tagreader
 
 ## ODBC Drivers
 
-To be able to connect to OSISoft PI or AspenTech InfoPlus.21 servers using ODBC, you need to obtain and install proprietary ODBC drivers. 
+To be able to connect to OSISoft PI or AspenTech InfoPlus.21 servers using ODBC, you need to obtain and install proprietary ODBC drivers. This is not required if you prefer to connect using REST APIs.
 
 If you work in Equinor, then you can find further information and links to download the drivers on our 
 [wiki](https://wiki.equinor.com/wiki/index.php/tagreader-python).
 
-If you do not work in Equinor: It may already work for you, although it is typically not sufficient to install the desktop applications from AspenTech or OSIsoft, since these normally don't come packaged with 64-bit ODBC drivers. Check with your employer/organisation whether the ODBC drivers are available for you. If not, you may be able to obtain them directly from the vendors. 
+If you do not work in Equinor: ODBC queries may already work for you, although it is typically not sufficient to install the desktop applications from AspenTech or OSIsoft, since these normally don't come packaged with 64-bit ODBC drivers. If tagreader complains about missing drivers, check with your employer/organisation whether the ODBC drivers are available for you. If not, you may be able to obtain them directly from the vendors. 
 
 ## Adding host certificates
 
 ### For Equinor users
 
-The Web APIs are queried with the requests package. Requests does not utilize the system certificate store, but instead relies on the Certifi bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verifySSL=False` for relevant function calls) or, strongly preferred, add the certificate to the certifi bundle. To to this, simply activate the virtual environment where you installed tagreader, and run the following snippet. *Note* : This requires Certifi >= 2020.04.05. If your version is older, upgrade with `pip install --upgrade certifi` )
+The Web APIs are queried with the requests package. Requests does not utilize the system certificate store, but instead relies on the certifi bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verifySSL=False` for relevant function calls) or, strongly preferred, add the certificate to the certifi bundle. To to this, simply activate the virtual environment where you installed tagreader, and run the following snippet:
 
 ``` python
 from tagreader.utils import add_statoil_root_certificate
@@ -232,7 +235,7 @@ By specifying the optional parameter `read_type` to `read()` , it is possible to
   + `VAR` : The variance.
   + `STD` : The standard deviation.
   + `RNG` : The range (max-min).
-* `RAW`: Returns actual data points stored in the database.
+* `RAW` : Returns actual data points stored in the database.
 * `SNAPSHOT` : Returns the last recorded value. Only one tag can be read at a time. When using either of the Web API based handlers, providing `end_time` is possible in which case a snapshot at the specific time is returned.
 
 **Examples**
@@ -266,7 +269,7 @@ c.cache = None
 c.connect()
 ```
 
-Snapshots (`read_type = ReaderType.SNAPSHOT`) are of course never cached.
+Snapshots ( `read_type = ReaderType.SNAPSHOT` ) are of course never cached.
 
 **Note**: Raw `read_type = ReaderType.RAW` data values are currently not cached pending a rewrite of the caching mechanisms.
 

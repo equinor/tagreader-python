@@ -88,7 +88,7 @@ class ReaderType(enum.IntEnum):
 
 def add_statoil_root_certificate():
     """ This is a utility function for Equinor employees on Equinor machines.
-    
+
     The function searches for the Statoil Root certificate in the Windows
     cert store and imports it to the cacert bundle.
 

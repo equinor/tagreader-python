@@ -1,0 +1,6 @@
+certifi>=2020.04.05
+pandas>=1.0.0
+pyodbc; platform_system == 'Windows'
+requests
+requests_kerberos
+tables
