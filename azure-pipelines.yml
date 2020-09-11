@@ -40,20 +40,20 @@ steps:
     coverage erase
     coverage run -m pytest tests extratests
     coverage xml --include='tagreader/*'
-  condition: eq('${{ python.version }}', '3.6')
+  condition: eq(variables.python.version, '3.6')
   displayName: 'Run tests with coverage'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
 
 - script: |
     pytest tests extratests
-  condition: not(eq('${{ python.version }}', '3.6'))
+  condition: not(eq(variables.python.version, '3.6'))
   displayName: 'Run tests'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
 
 - task: PublishCodeCoverageResults@1
-  condition: eq('${{ python.version }}', '3.6')
+  condition: eq(variables.python.version, '3.6')
   inputs:
     codeCoverageTool: Cobertura
     summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
