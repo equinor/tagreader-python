@@ -159,6 +159,12 @@ The following input arguments can be used when connecting to either `piwebapi` o
 * `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: True.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object that works with Equinor servers. If not connecting to an Equinor server, you need to create your own auth object.
 
+
+If `imstype` is an ODBC type, i.e. `pi` or `ip21`, the host and port to connect to will by default be found by performing a search in Windows registry. For some systems this may not work. In those cases the user can explicitly specify the following optional parameters:
+
+* `host` (optional): Overrides mapping of datasource to hostname via Windows registry.
+* `port` (optional): Overrides mapping of datasource to port number via Windows registry. **Default**: 10014 for `ip21` and 5450 for `pi`.
+
 ## Connecting to data source
 
 After creating the client as described above, connect to the server with the `connect()` method.
@@ -245,14 +251,14 @@ Read interpolated data for the provided tag with 3-minute intervals between the 
 ``` python
 c = tagreader.IMSClient("PINO", "pi")
 c.connect()
-df = c.read(['BA: ACTIVE.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180)
+df = c.read(['BA:ACTIVE.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180)
 
 ```
 
 Read the average value for the two provided tags within each 3-minute interval between the two time stamps:
 
 ``` python
-df = c.read(['BA: CONC.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180, read_type=tagreader.ReaderType.AVG)
+df = c.read(['BA:CONC.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180, read_type=tagreader.ReaderType.AVG)
 ```
 
 ## Caching results
