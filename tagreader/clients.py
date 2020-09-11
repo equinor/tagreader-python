@@ -162,7 +162,16 @@ def get_server_address_pi(datasource):
         return None
 
 
-def get_handler(imstype, datasource, url=None, options={}, verifySSL=None, auth=None):
+def get_handler(
+    imstype,
+    datasource,
+    url=None,
+    host=None,
+    port=None,
+    options={},
+    verifySSL=None,
+    auth=None,
+):
     accepted_values = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
 
     if not imstype or imstype.lower() not in accepted_values:
@@ -174,13 +183,16 @@ def get_handler(imstype, datasource, url=None, options={}, verifySSL=None, auth=
                 "No PI ODBC driver detected. "
                 "Either switch to Web API ('piweb') or install appropriate driver."
             )
-        hostport = get_server_address_pi(datasource)
-        if not hostport:
-            raise ValueError(
-                f"Unable to locate data source '{datasource}'."
-                "Do you have correct permissions?"
-            )
-        host, port = hostport
+        if host is None:
+            hostport = get_server_address_pi(datasource)
+            if not hostport:
+                raise ValueError(
+                    f"Unable to locate data source '{datasource}'."
+                    "Do you have correct permissions?"
+                )
+            host, port = hostport
+        if port is None:
+            port = 5450
         return PIHandlerODBC(host=host, port=port, options=options)
 
     if imstype.lower() in ["aspen", "ip21"]:
@@ -189,13 +201,16 @@ def get_handler(imstype, datasource, url=None, options={}, verifySSL=None, auth=
                 "No Aspen SQLplus ODBC driver detected. Either switch to Web API "
                 "('aspenweb') or install appropriate driver."
             )
-        hostport = get_server_address_aspen(datasource)
-        if not hostport:
-            raise ValueError(
-                f"Unable to locate data source '{datasource}'."
-                "Do you have correct permissions?"
-            )
-        host, port = hostport
+        if host is None:
+            hostport = get_server_address_aspen(datasource)
+            if not hostport:
+                raise ValueError(
+                    f"Unable to locate data source '{datasource}'."
+                    "Do you have correct permissions?"
+                )
+            host, port = hostport
+        if port is None:
+            port = 10014
         return AspenHandlerODBC(host=host, port=port, options=options)
 
     if imstype.lower() == "piwebapi":
@@ -224,6 +239,8 @@ class IMSClient:
         imstype=None,
         tz="Europe/Oslo",
         url=None,
+        host=None,
+        port=None,
         handler_options={},
         verifySSL=None,
         auth=None,
@@ -235,6 +252,8 @@ class IMSClient:
             imstype,
             datasource,
             url=url,
+            host=host,
+            port=port,
             options=handler_options,
             verifySSL=verifySSL,
             auth=auth,

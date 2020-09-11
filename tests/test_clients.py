@@ -52,6 +52,28 @@ def test_get_missing_intervals():
     )
 
 
+def test_init_PI_odbc_client_with_host_port():
+    host = 'thehostname'
+    port = 999
+    c = IMSClient(datasource='whatever', imstype='pi', host=host)
+    assert c.handler.host == host
+    assert c.handler.port == 5450
+    c = IMSClient(datasource='whatever', imstype='pi', host=host, port=port)
+    assert c.handler.host == host
+    assert c.handler.port == port
+
+
+def test_init_IP21_odbc_client_with_host_port():
+    host = 'thehostname'
+    port = 999
+    c = IMSClient(datasource='whatever', imstype='ip21', host=host)
+    assert c.handler.host == host
+    assert c.handler.port == 10014
+    c = IMSClient(datasource='whatever', imstype='ip21', host=host, port=port)
+    assert c.handler.host == host
+    assert c.handler.port == port
+
+
 @pytest.mark.skipif(
     is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
 )
