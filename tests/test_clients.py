@@ -52,6 +52,9 @@ def test_get_missing_intervals():
     )
 
 
+@pytest.mark.skipif(
+    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
+)
 def test_PI_init_odbc_client_with_host_port():
     host = "thehostname"
     port = 999
@@ -63,6 +66,9 @@ def test_PI_init_odbc_client_with_host_port():
     assert c.handler.port == port
 
 
+@pytest.mark.skipif(
+    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
+)
 def test_IP21_init_odbc_client_with_host_port():
     host = "thehostname"
     port = 999
@@ -74,6 +80,9 @@ def test_IP21_init_odbc_client_with_host_port():
     assert c.handler.port == port
 
 
+@pytest.mark.skipif(
+    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
+)
 def test_PI_connection_string_override():
     connstr = "someuserspecifiedconnectionstring"
     c = IMSClient(
@@ -85,6 +94,9 @@ def test_PI_connection_string_override():
     assert c.handler.generate_connection_string() == connstr
 
 
+@pytest.mark.skipif(
+    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
+)
 def test_IP21_connection_string_override():
     connstr = "someuserspecifiedconnectionstring"
     c = IMSClient(
