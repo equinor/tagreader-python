@@ -9,8 +9,17 @@ STOP_TIME = "2018-01-17 17:00:00"
 SAMPLE_TIME = 60
 
 
-def test_generate_connection_string():
-    res = AspenHandlerODBC.generate_connection_string("thehostname", 1234, 567890)
+@pytest.fixture(scope="module")
+def AspenHandler():
+    from tagreader.odbc_handlers import AspenHandlerODBC
+
+    yield AspenHandlerODBC(
+        "thehostname", 1234, options={"max_rows": 567890}
+    )
+
+
+def test_generate_connection_string(AspenHandler):
+    res = AspenHandler.generate_connection_string()
     expected = (
         "DRIVER={AspenTech SQLPlus};HOST=thehostname;PORT=1234;"
         "READONLY=Y;MAXROWS=567890"

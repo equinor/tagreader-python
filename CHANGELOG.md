@@ -1,5 +1,7 @@
 # Changelog
 
+This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
+
 ## [1.1.0] - 2020-06-18
 Improved handling of tags with maps for Aspen IP.21.
 

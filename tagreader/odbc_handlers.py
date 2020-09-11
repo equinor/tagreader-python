@@ -64,10 +64,13 @@ class AspenHandlerODBC:
         self.conn = None
         self.cursor = None
         self._max_rows = options.get("max_rows", 100000)
+        self._connection_string = options.get("connection_string", None)
 
-    @staticmethod
-    def generate_connection_string(host, port, max_rows=100000):
-        return f"DRIVER={{AspenTech SQLPlus}};HOST={host};PORT={port};READONLY=Y;MAXROWS={max_rows}"  # noqa: E501
+    def generate_connection_string(self):
+        if self._connection_string is None:
+            return f"DRIVER={{AspenTech SQLPlus}};HOST={self.host};PORT={self.port};READONLY=Y;MAXROWS={self._max_rows}"  # noqa E501
+        else:
+            return self._connection_string
 
     @staticmethod
     def generate_read_query(tag, mapdef, start_time, stop_time, sample_time, read_type):
@@ -171,9 +174,7 @@ class AspenHandlerODBC:
         pass
 
     def connect(self):
-        connection_string = self.generate_connection_string(
-            self.host, self.port, max_rows=self._max_rows
-        )
+        connection_string = self.generate_connection_string()
         # The default autocommit=False is not supported by PI odbc driver.
         self.conn = pyodbc.connect(connection_string, autocommit=True)
         self.cursor = self.conn.cursor()
@@ -354,17 +355,20 @@ class PIHandlerODBC:
         # It seems that is actually not possible anymore.
         # ws3099.statoil.net
         self._das_server = options.get("das_server", "piwebapi.equinor.com")
+        self._connection_string = options.get("connection_string", None)
 
         # print(self._das_server)
 
-    @staticmethod
-    def generate_connection_string(host, port, das_server):
-        return (
-            f"DRIVER={{PI ODBC Driver}};Server={das_server};"
-            "Trusted_Connection=Yes;Command Timeout=1800;Provider Type=PIOLEDB;"
-            f'Provider String={{Data source={host.replace(".statoil.net", "")};'
-            "Integrated_Security=SSPI;Time Zone=UTC};"
-        )
+    def generate_connection_string(self):
+        if self._connection_string is None:
+            return (
+                f"DRIVER={{PI ODBC Driver}};Server={self._das_server};"
+                "Trusted_Connection=Yes;Command Timeout=1800;Provider Type=PIOLEDB;"
+                f'Provider String={{Data source={self.host.replace(".statoil.net", "")};'  # noqa: E501
+                "Integrated_Security=SSPI;Time Zone=UTC};"
+            )
+        else:
+            return self._connection_string
 
     @staticmethod
     def generate_search_query(tag=None, desc=None):
@@ -474,9 +478,7 @@ class PIHandlerODBC:
         pass
 
     def connect(self):
-        connection_string = self.generate_connection_string(
-            self.host, self.port, self._das_server
-        )
+        connection_string = self.generate_connection_string()
         # The default autocommit=False is not supported by PI odbc driver.
         self.conn = pyodbc.connect(connection_string, autocommit=True)
         self.cursor = self.conn.cursor()
