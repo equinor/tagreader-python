@@ -40,7 +40,7 @@ steps:
     coverage erase
     coverage run -m pytest tests extratests
     coverage xml --include='tagreader/*'
-  condition: or(eq(python.version, '3.6'), eq($(python.version, '3.6')), eq(variables['python.version'], '3.6'))
+  condition: or(eq(python.version, '3.6'), eq($(python.version), '3.6'), eq(variables['python.version'], '3.6'))
   displayName: 'Run tests with coverage'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
