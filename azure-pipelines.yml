@@ -54,7 +54,7 @@ steps:
     HTTPS_PROXY: $(var_http_proxy)
 
 - task: PublishCodeCoverageResults@1
-  condition: eq(variables['python.version'], '13.6')
+  condition: eq(variables['python.version'], '3.6')
   inputs:
     codeCoverageTool: Cobertura
     summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
