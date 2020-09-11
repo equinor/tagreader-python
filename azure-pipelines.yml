@@ -42,7 +42,7 @@ steps:
     coverage xml --include='tagreader/*'
   #condition: eq(python.version, '3.6')
   #condition: eq($(python.version), '3.6')
-  condition: eq(variables['python.version'], '3.6'))
+  condition: eq(variables['python.version'], '3.6')
   displayName: 'Run tests with coverage'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
