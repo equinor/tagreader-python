@@ -41,7 +41,7 @@ steps:
     del /f coverage.xml
     coverage run -m pytest tests extratests
     coverage xml --include='tagreader/*'
-  condition: eq(variables['python.version'], '3.6')
+  condition: and(succeeded(), eq(variables['python.version'], '3.6'))
   displayName: 'Run tests with coverage'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
@@ -49,13 +49,13 @@ steps:
 - script: |
     echo $(python.version)
     pytest tests extratests
-  condition: not(eq(variables['python.version'], '3.6'))
+  condition: and(succeeded(), not(eq(variables['python.version'], '3.6')))
   displayName: 'Run tests'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
 
 - task: PublishCodeCoverageResults@1
-  condition: eq(variables['python.version'], '3.6')
+  condition: and(succeeded(), eq(variables['python.version'], '3.6'))
   inputs:
     codeCoverageTool: Cobertura
     summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
