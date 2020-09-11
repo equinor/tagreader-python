@@ -8,10 +8,10 @@ strategy:
   matrix:
     Python36:
       python.version: '3.6'
-#    Python37:
-#      python.version: '3.7'
-#    Python38:
-#      python.version: '3.8'
+    Python37:
+      python.version: '3.7'
+    Python38:
+      python.version: '3.8'
 
 steps:
 - task: UsePythonVersion@0
@@ -40,8 +40,6 @@ steps:
     coverage erase
     coverage run -m pytest tests extratests
     coverage xml --include='tagreader/*'
-  #condition: eq(python.version, '3.6')
-  #condition: eq($(python.version), '3.6')
   condition: eq(variables['python.version'], '3.6')
   displayName: 'Run tests with coverage'
   env: 
@@ -50,6 +48,7 @@ steps:
 - script: |
     echo $(python.version)
     pytest tests extratests
+  condition: not(eq(variables['python.version'], '3.6'))
   displayName: 'Run tests'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
