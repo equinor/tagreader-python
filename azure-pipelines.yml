@@ -50,7 +50,6 @@ steps:
 - script: |
     echo $(python.version)
     pytest tests extratests
-  condition: not(eq($(python.version), '3.6'))
   displayName: 'Run tests'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
