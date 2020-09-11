@@ -38,6 +38,7 @@ steps:
 
 - script: |
     coverage erase
+    rm coverage.xml
     coverage run -m pytest tests extratests
     coverage xml --include='tagreader/*'
   condition: eq(variables['python.version'], '3.6')
