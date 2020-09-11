@@ -172,10 +172,10 @@ def get_handler(
     verifySSL=None,
     auth=None,
 ):
-    accepted_values = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
+    accepted_imstypes = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
 
-    if not imstype or imstype.lower() not in accepted_values:
-        raise ValueError(f"`imstype` must be one of {accepted_values}")
+    if not imstype or imstype.lower() not in accepted_imstypes:
+        raise ValueError(f"`imstype` must be one of {accepted_imstypes}")
 
     if imstype.lower() == "pi":
         if "PI ODBC Driver" not in pyodbc.drivers():

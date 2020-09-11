@@ -12,15 +12,15 @@ SAMPLE_TIME = 60
 def PIHandler():
     from tagreader.odbc_handlers import PIHandlerODBC
 
-    yield PIHandlerODBC("thehostname.statoil.net", 1234)
+    yield PIHandlerODBC(
+        "thehostname.statoil.net", 1234, options={"das_server": "the_das_server"}
+    )
 
 
 def test_generate_connection_string(PIHandler):
-    res = PIHandler.generate_connection_string(
-        PIHandler.host, PIHandler.port, "das_server"
-    )
+    res = PIHandler.generate_connection_string()
     expected = (
-        "DRIVER={PI ODBC Driver};Server=das_server;Trusted_Connection=Yes;"
+        "DRIVER={PI ODBC Driver};Server=the_das_server;Trusted_Connection=Yes;"
         "Command Timeout=1800;Provider Type=PIOLEDB;"
         "Provider String={Data source=thehostname;Integrated_Security=SSPI;"
         "Time Zone=UTC};"
