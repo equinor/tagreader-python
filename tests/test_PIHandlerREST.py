@@ -125,3 +125,17 @@ def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test
             params["selectedFields"] == "Links;Items.Timestamp;Items.Value;Items.Good"
         )
         assert params["maxCount"] == 10000
+
+def test_genreadquery_long_sampletime(PIHandler):
+    starttime = ensure_datetime_with_tz(START_TIME)
+    stoptime = ensure_datetime_with_tz(STOP_TIME)
+    ts = pd.Timedelta(86410, unit="s")
+
+    (url, params) = PIHandler.generate_read_query(
+        PIHandler.tag_to_webid("alreadyknowntag"),
+        starttime,
+        stoptime,
+        ts,
+        ReaderType.INT,
+    )
+    assert params["interval"] == f"{86410}s"

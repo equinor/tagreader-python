@@ -95,11 +95,11 @@ class AspenHandlerODBC:
         if read_type != ReaderType.SNAPSHOT:
             start_time = start_time.tz_convert("UTC")
             stop_time = stop_time.tz_convert("UTC")
-            sample_time = sample_time.seconds
+            seconds = int(sample_time.total_seconds())
             if ReaderType.SAMPLED == read_type:
-                sample_time = 0
+                seconds = 0
             else:
-                if sample_time <= 0:
+                if seconds <= 0:
                     raise NotImplementedError
                     # sample_time = (stop_time-start_time).totalseconds
 
@@ -159,7 +159,7 @@ class AspenHandlerODBC:
             if mapdef:
                 query.extend([f'AND FIELD_ID = FT({mapdef["MAP_HistoryValue"]!r})'])
             if ReaderType.RAW != read_type:
-                query.extend([f"AND (period = {sample_time*10})"])
+                query.extend([f"AND (period = {seconds*10})"])
             query.extend(
                 [
                     f"AND (request = {request_num})",
@@ -405,11 +405,11 @@ class PIHandlerODBC:
         if read_type != ReaderType.SNAPSHOT:
             start_time = start_time.tz_convert("UTC")
             stop_time = stop_time.tz_convert("UTC")
-            sample_time = sample_time.seconds
+            seconds = int(sample_time.total_seconds())
             if ReaderType.SAMPLED == read_type:
-                sample_time = 0
+                seconds = 0
             else:
-                if sample_time <= 0:
+                if seconds <= 0:
                     pass  # Fixme: Not implemented
                     # sample_time = (stop_time-start_time).totalseconds
 
@@ -461,13 +461,13 @@ class PIHandlerODBC:
         elif ReaderType.SHAPEPRESERVING == read_type:
             query.extend(
                 [
-                    f"AND (intervalcount = {int((stop_time-start_time).seconds/sample_time)})"  # noqa E501
+                    f"AND (intervalcount = {int((stop_time-start_time).seconds/seconds)})"  # noqa E501
                 ]
             )
         elif ReaderType.RAW == read_type:
             pass
         elif read_type not in [ReaderType.SNAPSHOT, ReaderType.RAW]:
-            query.extend([f"AND (timestep = '{sample_time}s')"])
+            query.extend([f"AND (timestep = '{seconds}s')"])
 
         if ReaderType.SNAPSHOT != read_type:
             query.extend(["ORDER BY time"])

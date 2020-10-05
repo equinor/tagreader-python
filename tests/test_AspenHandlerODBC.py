@@ -119,3 +119,22 @@ def test_generate_tag_read_query(read_type):
     }
 
     assert expected[read_type] == res
+
+
+def test_genreadquery_long_sampletime():
+    starttime = utils.ensure_datetime_with_tz(START_TIME)
+    stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
+    ts = pd.Timedelta(86401, unit="s")
+
+    res = AspenHandlerODBC.generate_read_query(
+        "thetag", None, starttime, stoptime, ts, ReaderType.INT
+    )
+
+    expected = (
+        'SELECT ISO8601(ts) AS "time", value AS "value" FROM history WHERE '
+        "name = 'thetag' AND (period = 864010) AND (request = 7) "
+        "AND (ts BETWEEN '2018-01-17T15:00:00Z' AND '2018-01-17T16:00:00Z') "
+        "ORDER BY ts"
+    )
+
+    assert expected == res

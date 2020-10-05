@@ -32,7 +32,7 @@ class SmartCache:
         """
         name = list(df)[0] if isinstance(df, pd.DataFrame) else df
         name = safe_tagname(name)
-        ts = ts.seconds if isinstance(ts, pd.Timedelta) else ts
+        ts = int(ts.total_seconds()) if isinstance(ts, pd.Timedelta) else ts
         if readtype != ReaderType.RAW:
             if ts is None:
                 # Determine sample time by reading interval between first two
@@ -122,7 +122,7 @@ class SmartCache:
 
         def timedelta_to_str(t):
             if isinstance(t, pd.Timedelta):
-                return str(t.seconds)
+                return str(int(t.total_seconds()))
             return t
 
         key = "/" + key.lstrip("/")  # Ensure absolute path

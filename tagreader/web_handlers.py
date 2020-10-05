@@ -508,7 +508,7 @@ class PIHandlerWeb:
         webid = tag
 
         if read_type != ReaderType.SNAPSHOT:
-            sample_time = sample_time.seconds
+            seconds = int(sample_time.total_seconds())
 
         get_action = {
             ReaderType.INT: "interpolated",
@@ -542,10 +542,10 @@ class PIHandlerWeb:
         }.get(read_type, None)
 
         if ReaderType.INT == read_type:
-            params["interval"] = f"{sample_time}s"
+            params["interval"] = f"{seconds}s"
         elif summary_type:
             params["summaryType"] = summary_type
-            params["summaryDuration"] = f"{sample_time}s"
+            params["summaryDuration"] = f"{seconds}s"
 
         if self._is_summary(read_type):
             params[

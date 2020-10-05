@@ -119,3 +119,22 @@ def test_generate_tag_read_query(PIHandler, read_type):
         ),
     }
     assert expected[read_type] == res
+
+
+def test_genreadquery_long_sampletime(PIHandler):
+    starttime = utils.ensure_datetime_with_tz(START_TIME)
+    stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
+    ts = pd.Timedelta(86401, unit="s")
+
+    res = PIHandler.generate_read_query(
+        "thetag", starttime, stoptime, ts, ReaderType.INT
+    )
+
+    expected = (
+        "SELECT CAST(value as FLOAT32) AS value, time "
+        "FROM [piarchive]..[piinterp2] WHERE tag='thetag' "
+        "AND (time BETWEEN '17-Jan-18 15:00:00' AND '17-Jan-18 16:00:00') "
+        "AND (timestep = '86401s') ORDER BY time"
+    )
+
+    assert expected == res

@@ -113,7 +113,7 @@ def add_statoil_root_certificate():
             if pem in certifi.contents():
                 print("Certificate already exists in certifi store. Nothing to do.")
                 break
-            print("Writing certificate to cacert store.")
+            print("Writing certificate to certifi store.")
             cafile = certifi.where()
             with open(cafile, "ab") as f:
                 f.write(bytes(pem, "ascii"))

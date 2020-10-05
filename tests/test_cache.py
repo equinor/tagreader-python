@@ -79,6 +79,10 @@ def test_match_tag(cache):
         is True
     )
     assert (
+        cache._match_tag("INT/s86401/tag1", readtype=ReaderType.INT, ts=86401, tagname="tag1")
+        is True
+    )
+    assert (
         cache._match_tag("INT/s60/tag1", readtype=ReaderType.RAW, ts=60, tagname="tag1")
         is False
     )

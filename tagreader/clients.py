@@ -65,7 +65,8 @@ def get_missing_intervals(df, start_time, stop_time, ts, read_type):
         read_type == ReaderType.RAW
     ):  # Fixme: How to check for completeness for RAW data?
         return [[start_time, stop_time]]
-    tvec = pd.date_range(start=start_time, end=stop_time, freq=f"{ts}s")
+    seconds = int(ts.total_seconds())
+    tvec = pd.date_range(start=start_time, end=stop_time, freq=f"{seconds}s")
     if len(df) == len(tvec):  # Short-circuit if dataset is complete
         return []
     values_in_df = tvec.isin(df.index)
@@ -292,7 +293,7 @@ class IMSClient:
                     stop_time=time_slice[1],
                 )
                 missing_intervals = get_missing_intervals(
-                    df, start_time, stop_time, ts.seconds, read_type
+                    df, start_time, stop_time, ts, read_type
                 )
                 if not missing_intervals:
                     return df.tz_convert(self.tz).sort_index()

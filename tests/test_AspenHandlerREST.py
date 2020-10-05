@@ -93,7 +93,7 @@ def test_generate_map_query(AspenHandler):
 def test_generate_tag_read_query(AspenHandler, read_type):
     start_time = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")
     stop_time = utils.ensure_datetime_with_tz("2020-06-24 18:00:00")
-    ts = pd.Timedelta(1, unit="m")
+    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
     res = AspenHandler.generate_read_query(
         "ATCAI", None, start_time, stop_time, ts, getattr(ReaderType, read_type)
     )
@@ -171,3 +171,20 @@ def test_generate_tag_read_query(AspenHandler, read_type):
             ),
     }
     assert expected[read_type] == res
+
+def test_genreadquery_long_sampletime(AspenHandler):
+    start_time = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")
+    stop_time = utils.ensure_datetime_with_tz("2020-06-24 18:00:00")
+    ts = pd.Timedelta(86401, unit="s")
+
+    res = AspenHandler.generate_read_query(
+        "ATCAI", None, start_time, stop_time, ts, ReaderType.INT
+    )
+    expected = (
+        '<Q f="d" allQuotes="1"><Tag><N><![CDATA[ATCAI]]></N>'
+        "<D><![CDATA[sourcename]]></D><F><![CDATA[VAL]]></F>"
+        "<HF>0</HF><St>1593010800000</St><Et>1593014400000</Et>"
+        "<RT>1</RT><S>0</S><P>86401</P><PU>3</PU></Tag></Q>"
+    )
+
+    assert expected == res
