@@ -2,6 +2,7 @@ import os
 import pyodbc
 import pandas as pd
 import warnings
+from typing import Union
 from .utils import logging, winreg, find_registry_key, ReaderType
 
 logging.basicConfig(
@@ -338,7 +339,7 @@ class AspenHandlerODBC:
 
         return df.rename(columns={"value": tag})
 
-    def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
+    def query_sql(self, query: str, parse: bool = True) -> Union[pd.DataFrame, pyodbc.Cursor]:
         if not parse:
             cursor = self.conn.cursor()
             cursor.execute(query)
@@ -572,5 +573,14 @@ class PIHandlerODBC:
 
         return df.rename(columns={"value": tag})
 
-    def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
-        raise NotImplementedError
+    def query_sql(self, query: str, parse: bool = True) -> Union[pd.DataFrame, pyodbc.Cursor]:
+        if not parse:
+            cursor = self.conn.cursor()
+            cursor.execute(query)
+            return cursor
+        else:
+            res = pd.read_sql(
+                query,
+                self.conn
+            )
+            return res

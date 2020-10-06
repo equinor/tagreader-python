@@ -1,5 +1,6 @@
 import pytest
 import os
+import pyodbc
 import pandas as pd
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.odbc_handlers import list_pi_sources
@@ -182,3 +183,17 @@ def test_tags_with_no_data_included_in_results(Client):
         [TAGS["Float32"]], "2099-01-01 00:00:00", "2099-01-02 00:00:00"
     )
     assert len(df.columns) == 1
+
+
+def test_query_sql(Client):
+    tag = TAGS['Float32']
+    query = f"SELECT descriptor, engunits FROM pipoint.pipoint2 WHERE tag='{tag}'"
+    res = Client.query_sql(query, parse = True)
+    assert isinstance(res, pd.DataFrame)
+    assert res.shape[0] >= 1
+    assert res.shape[1] == 2
+    res = Client.query_sql(query, parse = False)
+    assert isinstance(res, pyodbc.Cursor)
+    rows = res.fetchall()
+    assert len(rows) >= 1
+    assert len(rows[0]) == 2
