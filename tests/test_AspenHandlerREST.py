@@ -168,9 +168,10 @@ def test_generate_tag_read_query(AspenHandler, read_type):
             "<Tag><N><![CDATA[ATCAI]]></N>"
             "<D><![CDATA[sourcename]]></D><F><![CDATA[VAL]]></F>"
             "<VS>1</VS><S>0</S></Tag></Q>"
-            ),
+        ),
     }
     assert expected[read_type] == res
+
 
 def test_genreadquery_long_sampletime(AspenHandler):
     start_time = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")

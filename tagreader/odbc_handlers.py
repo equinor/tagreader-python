@@ -339,7 +339,7 @@ class AspenHandlerODBC:
 
         return df.rename(columns={"value": tag})
 
-    def query_sql(self, query: str, parse: bool = True) -> Union[pd.DataFrame, pyodbc.Cursor]:
+    def query_sql(self, query: str, parse: bool = True) -> Union[pd.DataFrame, pyodbc.Cursor]:  # noqa:E501
         if not parse:
             cursor = self.conn.cursor()
             cursor.execute(query)
@@ -564,7 +564,7 @@ class PIHandlerODBC:
 
         if len(metadata["digitalset"]) > 0:
             self.cursor.execute(
-                f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'"  # noqa E501
+                f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'"  # noqa: E501
             )
             digitalset = self.cursor.fetchall()
             code = [x[0] for x in digitalset]
@@ -573,7 +573,7 @@ class PIHandlerODBC:
 
         return df.rename(columns={"value": tag})
 
-    def query_sql(self, query: str, parse: bool = True) -> Union[pd.DataFrame, pyodbc.Cursor]:
+    def query_sql(self, query: str, parse: bool = True) -> Union[pd.DataFrame, pyodbc.Cursor]:  # noqa: E501
         if not parse:
             cursor = self.conn.cursor()
             cursor.execute(query)
