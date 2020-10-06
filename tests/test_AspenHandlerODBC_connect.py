@@ -1,5 +1,7 @@
 import pytest
 import os
+import pyodbc
+import pandas as pd
 
 from tagreader.clients import IMSClient, list_sources
 from tagreader.odbc_handlers import list_aspen_sources
@@ -55,3 +57,16 @@ def test_list_sources_aspen():
 #         df = Client.read(["ATCAI", "sorandomitcantexist"], START_TIME, STOP_TIME)
 #     assert len(df.index) > 0
 #     assert len(df.columns) == 1
+
+
+def test_query_sql(Client):
+    query = "SELECT name, ip_description FROM ip_analogdef WHERE name LIKE 'ATC%'"
+    res = Client.query_sql(query, parse=True)
+    assert isinstance(res, pd.DataFrame)
+    assert res.shape[0] >= 1
+    assert res.shape[1] == 2
+    res = Client.query_sql(query, parse=False)
+    assert isinstance(res, pyodbc.Cursor)
+    rows = res.fetchall()
+    assert len(rows) >= 1
+    assert len(rows[0]) == 2

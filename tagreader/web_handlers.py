@@ -431,6 +431,9 @@ class AspenHandlerWeb:
         df.index.name = "time"
         return df.rename(columns={"Value": tag})
 
+    def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
+        raise NotImplementedError
+
 
 class PIHandlerWeb:
     def __init__(
@@ -756,3 +759,6 @@ class PIHandlerWeb:
             df.index = df.index - sample_time
 
         return df.rename(columns={"Value": tag})
+
+    def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
+        raise NotImplementedError

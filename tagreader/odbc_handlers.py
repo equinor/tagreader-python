@@ -338,6 +338,18 @@ class AspenHandlerODBC:
 
         return df.rename(columns={"value": tag})
 
+    def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
+        if not parse:
+            cursor = self.conn.cursor()
+            cursor.execute(query)
+            return cursor
+        else:
+            res = pd.read_sql(
+                query,
+                self.conn
+            )
+            return res
+
 
 class PIHandlerODBC:
     def __init__(self, host=None, port=None, options={}):
@@ -559,3 +571,6 @@ class PIHandlerODBC:
             df = df.replace(code, offset)
 
         return df.rename(columns={"value": tag})
+
+    def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
+        raise NotImplementedError
