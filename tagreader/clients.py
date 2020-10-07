@@ -310,7 +310,7 @@ class IMSClient:
                             ReaderType.RAW,
                         ]:
                             cache.store(df, read_type, ts)
-                        frames.append(df)
+                    frames.append(df)
                     if len(df) < self.handler._max_rows:
                         break
                     start = df.index[-1]

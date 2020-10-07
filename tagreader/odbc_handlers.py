@@ -331,15 +331,11 @@ class AspenHandlerODBC:
             index_col="time",
             parse_dates={"time": "%Y-%m-%dT%H:%M:%S.%fZ"},
         )
-        if len(df.index) == 0:
-            warnings.warn(f"Tag {tag} not found")
+        # This warning will trigger also for (at least some) valid tags with no data.
+        # if len(df.index) == 0:
+        #     warnings.warn(f"Tag {tag} not found")
         df = df.tz_localize("UTC")
-        # if len(df) > len(
-        #     df.index.unique()
-        # ):  # One hour repeated during transition from DST to standard time.
-        #     df = df.tz_localize(start_time.tzinfo, ambiguous="infer")
-        # else:
-        #     df = df.tz_localize(start_time.tzinfo)
+
         return df.rename(columns={"value": tag})
 
 
@@ -531,6 +527,7 @@ class PIHandlerODBC:
     ):
         if metadata is None:
             # Tag not found
+            # TODO: Handle better and similarly across all handlers.
             return pd.DataFrame()
 
         query = self.generate_read_query(
@@ -550,14 +547,8 @@ class PIHandlerODBC:
             df.index = df.index - sample_time
             df = df.drop(df.index[0])
 
-        # One hour repeated during transition from DST to standard time:
-        # if len(df) > len(df.index.unique()):
-        #     df = df.tz_localize(start_time.tzinfo, ambiguous='infer')
-        # else:
-        #     df = df.tz_localize(start_time.tzinfo)
-        # df = df.tz_localize(start_time.tzinfo)
-        # df = df.tz_localize("UTC").tz_convert(start_time.tzinfo)
         df = df.tz_localize("UTC")
+
         if len(metadata["digitalset"]) > 0:
             self.cursor.execute(
                 f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'"  # noqa E501
@@ -566,7 +557,5 @@ class PIHandlerODBC:
             code = [x[0] for x in digitalset]
             offset = [x[1] for x in digitalset]
             df = df.replace(code, offset)
-        # cols = tuple(['value', metadata['engunits'], metadata['descriptor']])
-        # df.columns = cols
-        # df.columns.names = ['Tag', 'Unit', 'Description']
+
         return df.rename(columns={"value": tag})

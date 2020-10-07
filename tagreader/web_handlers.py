@@ -414,10 +414,13 @@ class AspenHandlerWeb:
         if res.status_code != 200:
             raise ConnectionError
 
+        if len(res.text) == 0:  # res.text='' for timestamps in future
+            return pd.DataFrame(columns=[tag])
+
         j = res.json()
         if "er" in j['data'][0]['samples'][0]:
             warnings.warn(j['data'][0]['samples'][0]['es'])
-            return pd.DataFrame()
+            return pd.DataFrame(columns=[tag])
         df = (
             pd.DataFrame.from_dict(j["data"][0]["samples"])
             .drop(labels=["l", "s", "V"], axis="columns")

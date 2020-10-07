@@ -142,9 +142,9 @@ def test_read(Client, read_type, size):
             SAMPLE_TIME, unit="s"
         )
     elif read_type in "RAW":
-        # Weirdness for test-tag which can have two different results, 
+        # Weirdness for test-tag which can have two different results,
         # apparently depending on the day of the week, mood, lunar cycle...
-        assert df.shape == (size, 1) or df.shape == (size-1, 1)
+        assert df.shape == (size, 1) or df.shape == (size - 1, 1)
         assert df.index[0] >= ensure_datetime_with_tz(START_TIME)
         assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
 
@@ -225,13 +225,20 @@ def test_to_DST_skips_time(Client):
     )
 
 
-def test_read_unknown_tag(Client):
-    with pytest.warns(UserWarning):
-        df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
-    assert len(df.index) == 0
-    with pytest.warns(UserWarning):
-        df = Client.read(
-            [TAGS["Float32"], "sorandomitcantexist"], START_TIME, STOP_TIME
-        )
-    assert len(df.index) > 0
-    assert len(df.columns == 1)
+# def test_read_unknown_tag(Client):
+#     with pytest.warns(UserWarning):
+#         df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
+#     assert len(df.index) == 0
+#     with pytest.warns(UserWarning):
+#         df = Client.read(
+#             [TAGS["Float32"], "sorandomitcantexist"], START_TIME, STOP_TIME
+#         )
+#     assert len(df.index) > 0
+#     assert len(df.columns == 1)
+
+
+def test_tags_with_no_data_included_in_results(Client):
+    df = Client.read(
+        [TAGS["Float32"]], "2099-01-01 00:00:00", "2099-01-02 00:00:00"
+    )
+    assert len(df.columns) == 1
