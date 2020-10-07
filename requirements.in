@@ -3,4 +3,5 @@ pandas>=1.0.0
 pyodbc; platform_system == 'Windows'
 requests
 requests_kerberos
+requests_ntlm
 tables

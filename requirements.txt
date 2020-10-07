@@ -7,8 +7,9 @@
 certifi==2020.6.20        # via -r requirements.in, requests
 cffi==1.14.2              # via cryptography
 chardet==3.0.4            # via requests
-cryptography==3.0         # via requests-kerberos
+cryptography==3.0         # via requests-kerberos, requests-ntlm
 idna==2.10                # via requests
+ntlm-auth==1.5.0          # via requests-ntlm
 numexpr==2.7.1            # via tables
 numpy==1.19.1             # via numexpr, pandas, tables
 pandas==1.1.1             # via -r requirements.in
@@ -17,7 +18,8 @@ pyodbc==4.0.30 ; platform_system == "Windows"  # via -r requirements.in
 python-dateutil==2.8.1    # via pandas
 pytz==2020.1              # via pandas
 requests-kerberos==0.12.0  # via -r requirements.in
-requests==2.24.0          # via -r requirements.in, requests-kerberos
+requests-ntlm==1.1.0      # via -r requirements.in
+requests==2.24.0          # via -r requirements.in, requests-kerberos, requests-ntlm
 six==1.15.0               # via cryptography, python-dateutil
 tables==3.6.1             # via -r requirements.in
 urllib3==1.25.10          # via requests
