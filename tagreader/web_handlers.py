@@ -454,16 +454,16 @@ class AspenHandlerWeb:
         connection_string=None, datasource=None, query=None, max_rows=1000
     ):
         if connection_string is not None:
-            parts = [f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">']
+            connstr = f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">'
         else:
-            parts = [
-                f'<SQL t="SQLplus" ds="{datasource}"'
-                'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N"'
+            connstr = (
+                f'<SQL t="SQLplus" ds="{datasource}" '
+                'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
                 f'm="{max_rows}" to="30" s="1">'
-            ]
+            )
 
-        parts.extend([f"<![CDATA[{query}]]>", "</SQL>"])
-        return "".join(parts)
+        connstr += f"<![CDATA[{query}]]></SQL>"
+        return connstr
 
     def initialize_connectionstring(
         self, host=None, port=10014, connection_string=None
@@ -472,9 +472,9 @@ class AspenHandlerWeb:
             self._connection_string = connection_string
         else:
             self._connection_string = (
-                f"DRIVER=AspenTech SQLPlus;HOST={host};",
-                f"PORT={port};CHARINT=N;CHARFLOAT=N;",
-                "CHARTIME=N;CONVERTERRORS=N",
+                f"DRIVER=AspenTech SQLPlus;HOST={host};"
+                f"PORT={port};CHARINT=N;CHARFLOAT=N;"
+                "CHARTIME=N;CONVERTERRORS=N"
             )
 
     def query_sql(self, query: str, parse: bool = True) -> Union[str, pd.DataFrame]:
