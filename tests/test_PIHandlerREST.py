@@ -126,6 +126,7 @@ def test_generate_read_query(PIHandler, read_type):  # TODO: Move away from test
         )
         assert params["maxCount"] == 10000
 
+
 def test_genreadquery_long_sampletime(PIHandler):
     starttime = ensure_datetime_with_tz(START_TIME)
     stoptime = ensure_datetime_with_tz(STOP_TIME)
