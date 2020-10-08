@@ -4,6 +4,7 @@ import urllib
 import re
 import pandas as pd
 import numpy as np
+from typing import Union
 
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 
@@ -69,6 +70,22 @@ class NoEncodeSession(requests.Session):
 
     def send(self, *args, **kwargs):
         args[0].url = args[0].url.replace(urllib.parse.quote("*"), "*")
+        # .replace(
+        #     urllib.parse.quote("%"), "%"
+        # ).replace(
+        #     urllib.parse.quote("{"), "{"
+        # ).replace(
+        #     urllib.parse.quote("}"), "}"
+        # ).replace(
+        #     urllib.parse.quote('"'), '"'
+        # ).replace(
+        #     urllib.parse.quote(" "), " "
+        # ).replace(
+        #     urllib.parse.quote("<"), "<"
+        # ).replace(
+        #     urllib.parse.quote(">"), ">"
+        # )
+
         return requests.Session.send(self, *args, **kwargs)
 
 
@@ -84,6 +101,7 @@ class AspenHandlerWeb:
         self.session = NoEncodeSession()
         self.session.verify = verifySSL if verifySSL is not None else True
         self.session.auth = auth if auth else get_auth_aspen()
+        self._connection_string = ""  # Used for raw SQL queries
 
     @staticmethod
     def stringify(params):
@@ -418,8 +436,8 @@ class AspenHandlerWeb:
             return pd.DataFrame(columns=[tag])
 
         j = res.json()
-        if "er" in j['data'][0]['samples'][0]:
-            warnings.warn(j['data'][0]['samples'][0]['es'])
+        if "er" in j["data"][0]["samples"][0]:
+            warnings.warn(j["data"][0]["samples"][0]["es"])
             return pd.DataFrame(columns=[tag])
         df = (
             pd.DataFrame.from_dict(j["data"][0]["samples"])
@@ -431,8 +449,55 @@ class AspenHandlerWeb:
         df.index.name = "time"
         return df.rename(columns={"Value": tag})
 
-    def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
-        raise NotImplementedError
+    @staticmethod
+    def generate_sql_query(
+        connection_string=None, datasource=None, query=None, max_rows=1000
+    ):
+        if connection_string is not None:
+            parts = [f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">']
+        else:
+            parts = [
+                f'<SQL t="SQLplus" ds="{datasource}"'
+                'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N"'
+                f'm="{max_rows}" to="30" s="1">'
+            ]
+
+        parts.extend([f"<![CDATA[{query}]]>", "</SQL>"])
+        return "".join(parts)
+
+    def initialize_connectionstring(
+        self, host=None, port=10014, connection_string=None
+    ):
+        if connection_string:
+            self._connection_string = connection_string
+        else:
+            self._connection_string = (
+                f"DRIVER=AspenTech SQLPlus;HOST={host};",
+                f"PORT={port};CHARINT=N;CHARFLOAT=N;",
+                "CHARTIME=N;CONVERTERRORS=N",
+            )
+
+    def query_sql(self, query: str, parse: bool = True) -> Union[str, pd.DataFrame]:
+        url = urljoin(self.base_url, "SQL")
+        if self._connection_string is None:
+            params = self.generate_sql_query(
+                datasource=self.datasource, query=query, max_rows=self._max_rows
+            )
+        else:
+            params = self.generate_sql_query(
+                connection_string=self._connection_string,
+                query=query,
+                max_rows=self._max_rows,
+            )
+        res = self.session.get(url, params=params)
+        if res.status_code != 200:
+            raise ConnectionError
+        # For now just return result as text regardless of value of parse
+        if parse:
+            raise NotImplementedError(
+                "Use parse=False to receive and handle text result instead"
+            )
+        return res.text
 
 
 class PIHandlerWeb:

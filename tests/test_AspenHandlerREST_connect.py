@@ -1,6 +1,7 @@
 import pytest
 import os
-import pandas as pd
+
+from pytest import raises
 
 from tagreader.clients import IMSClient, list_sources
 from tagreader.web_handlers import (
@@ -92,3 +93,24 @@ def test_read_unknown_tag(Client):
         df = Client.read([TAG, "sorandomitcantexist"], START_TIME, STOP_TIME)
     assert len(df.index) > 0
     assert len(df.columns == 1)
+
+
+def test_query_sql(Client):
+    # The % causes WC_E_SYNTAX error in result. Tried "everything" but no go.
+    # Leaving it for now.
+    # query = "SELECT name, ip_description FROM ip_analogdef WHERE name LIKE 'ATC%'"
+    query = "Select name, ip_description from ip_analogdef where name = 'atcai'"
+    res = Client.query_sql(query, parse=False)
+    print(res)
+    assert isinstance(res, str)
+    with raises(NotImplementedError):
+        res = Client.query_sql(query, parse=True)
+        assert isinstance(res, str)
+    Client.handler.initialize_connectionstring(host="SNA-IMS.statoil.net")
+    query = "Select name, ip_description from ip_analogdef where name = 'atcai'"
+    res = Client.query_sql(query, parse=False)
+    print(res)
+    assert isinstance(res, str)
+    with raises(NotImplementedError):
+        res = Client.query_sql(query, parse=True)
+        assert isinstance(res, str)

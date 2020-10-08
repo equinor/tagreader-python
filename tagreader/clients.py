@@ -429,6 +429,8 @@ class IMSClient:
             )
         return pd.concat(cols, axis=1)
 
-    def query_sql(self, query: str, parse: bool = True) -> Union[pd.DataFrame, pyodbc.Cursor]:
+    def query_sql(
+        self, query: str, parse: bool = True
+    ) -> Union[pd.DataFrame, pyodbc.Cursor, str]:
         df_or_cursor = self.handler.query_sql(query=query, parse=parse)
         return df_or_cursor

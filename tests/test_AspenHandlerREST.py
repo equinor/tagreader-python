@@ -189,3 +189,45 @@ def test_genreadquery_long_sampletime(AspenHandler):
     )
 
     assert expected == res
+
+
+def test_generate_sql_query(AspenHandler):
+    res = AspenHandler.generate_sql_query(
+        connection_string="myconnstring",
+        query="myquery",
+        max_rows=9999
+    )
+    expected = (
+        '<SQL c="myconnstring" m="9999" to="30" s="1">'
+        '<![CDATA[myquery]]></SQL>'
+    )
+    assert res == expected
+    res = AspenHandler.generate_sql_query(
+        datasource="mydatasource",
+        query="myquery",
+        max_rows=9999
+    )
+    expected = (
+        '<SQL t="SQLplus" ds="mydatasource" '
+        'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
+        'm="9999" to="30" s="1">'
+        '<![CDATA[myquery]]></SQL>'
+    )
+    assert res == expected
+
+
+def test_initialize_connectionstring(AspenHandler):
+    AspenHandler.initialize_connectionstring(
+        host="myhost",
+        port=999,
+        connection_string="myconnstr"
+    )
+    assert AspenHandler._connection_string == "myconnstr"
+    AspenHandler.initialize_connectionstring(
+        host="myhost",
+        port=999,
+    )
+    assert AspenHandler._connection_string == (
+        "DRIVER=AspenTech SQLPlus;HOST=myhost;PORT=999;"
+        "CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N"
+    )
