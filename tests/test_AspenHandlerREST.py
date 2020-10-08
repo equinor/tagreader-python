@@ -168,9 +168,10 @@ def test_generate_tag_read_query(AspenHandler, read_type):
             "<Tag><N><![CDATA[ATCAI]]></N>"
             "<D><![CDATA[sourcename]]></D><F><![CDATA[VAL]]></F>"
             "<VS>1</VS><S>0</S></Tag></Q>"
-            ),
+        ),
     }
     assert expected[read_type] == res
+
 
 def test_genreadquery_long_sampletime(AspenHandler):
     start_time = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")
@@ -188,3 +189,45 @@ def test_genreadquery_long_sampletime(AspenHandler):
     )
 
     assert expected == res
+
+
+def test_generate_sql_query(AspenHandler):
+    res = AspenHandler.generate_sql_query(
+        connection_string="myconnstring",
+        query="myquery",
+        max_rows=9999
+    )
+    expected = (
+        '<SQL c="myconnstring" m="9999" to="30" s="1">'
+        '<![CDATA[myquery]]></SQL>'
+    )
+    assert res == expected
+    res = AspenHandler.generate_sql_query(
+        datasource="mydatasource",
+        query="myquery",
+        max_rows=9999
+    )
+    expected = (
+        '<SQL t="SQLplus" ds="mydatasource" '
+        'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
+        'm="9999" to="30" s="1">'
+        '<![CDATA[myquery]]></SQL>'
+    )
+    assert res == expected
+
+
+def test_initialize_connectionstring(AspenHandler):
+    AspenHandler.initialize_connectionstring(
+        host="myhost",
+        port=999,
+        connection_string="myconnstr"
+    )
+    assert AspenHandler._connection_string == "myconnstr"
+    AspenHandler.initialize_connectionstring(
+        host="myhost",
+        port=999,
+    )
+    assert AspenHandler._connection_string == (
+        "DRIVER=AspenTech SQLPlus;HOST=myhost;PORT=999;"
+        "CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N"
+    )

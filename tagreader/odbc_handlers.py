@@ -2,6 +2,7 @@ import os
 import pyodbc
 import pandas as pd
 import warnings
+from typing import Union
 from .utils import logging, winreg, find_registry_key, ReaderType
 
 logging.basicConfig(
@@ -338,6 +339,18 @@ class AspenHandlerODBC:
 
         return df.rename(columns={"value": tag})
 
+    def query_sql(self, query: str, parse: bool = True) -> Union[pd.DataFrame, pyodbc.Cursor]:  # noqa:E501
+        if not parse:
+            cursor = self.conn.cursor()
+            cursor.execute(query)
+            return cursor
+        else:
+            res = pd.read_sql(
+                query,
+                self.conn
+            )
+            return res
+
 
 class PIHandlerODBC:
     def __init__(self, host=None, port=None, options={}):
@@ -551,7 +564,7 @@ class PIHandlerODBC:
 
         if len(metadata["digitalset"]) > 0:
             self.cursor.execute(
-                f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'"  # noqa E501
+                f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'"  # noqa: E501
             )
             digitalset = self.cursor.fetchall()
             code = [x[0] for x in digitalset]
@@ -559,3 +572,15 @@ class PIHandlerODBC:
             df = df.replace(code, offset)
 
         return df.rename(columns={"value": tag})
+
+    def query_sql(self, query: str, parse: bool = True) -> Union[pd.DataFrame, pyodbc.Cursor]:  # noqa: E501
+        if not parse:
+            cursor = self.conn.cursor()
+            cursor.execute(query)
+            return cursor
+        else:
+            res = pd.read_sql(
+                query,
+                self.conn
+            )
+            return res
