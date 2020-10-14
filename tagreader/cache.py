@@ -2,6 +2,8 @@ import os
 import pandas as pd
 from .utils import ReaderType
 
+from typing import Tuple, Union, List
+
 
 def safe_tagname(tagname):
     tagname = tagname.replace(".", "_")
@@ -9,6 +11,180 @@ def safe_tagname(tagname):
     if tagname[0].isnumeric():
         tagname = "_" + tagname  # Conform to NaturalName
     return tagname
+
+
+def timestamp_to_epoch(timestamp: pd.Timestamp) -> int:
+    origin = pd.Timestamp("1970-01-01")
+    if timestamp.tzinfo is not None:
+        origin = origin.tz_localize("UTC")
+    return (timestamp - origin) // pd.Timedelta("1s")
+
+
+class BucketCache:
+    def __init__(self, filename, path="."):
+        self.filename = os.path.splitext(filename)[0] + ".h5"
+        self.filename = os.path.join(path, self.filename)
+
+    def _key_path(
+        self,
+        tagname: str,
+        readtype: ReaderType,
+        ts: Union[int, pd.Timedelta],
+        stepped: bool,
+        status: bool,
+        starttime: pd.Timestamp = None,
+        endtime: pd.Timestamp = None,
+    ) -> str:
+        """Return a string on the form
+        /tagname/readtype[/sample_time][/stepped][/status]/_starttime_endtime
+        tagname: safe tagname
+        sample_time: integer value. 0 for RAW.
+        stepped: "stepped" or "cont" whether tag was read as stepped or not
+        status: "status" or "nostatus" indicates whether status value is included
+        starttime: start of bucket
+        endtime: end of bucket
+        """
+        tagname = safe_tagname(tagname)
+
+        ts = (
+            int(ts.total_seconds())
+            if readtype != ReaderType.RAW and isinstance(ts, pd.Timedelta)
+            else ts
+        )
+        timespan = ""
+        if starttime is not None:
+            starttime_epoch = timestamp_to_epoch(starttime)
+            endtime_epoch = timestamp_to_epoch(endtime)
+            timespan = f"/_{starttime_epoch}_{endtime_epoch}"
+
+        keyval = (
+            f"/{tagname}"
+            f"/{readtype.name}"
+            f"{(ts is not None and readtype != ReaderType.RAW) * f'/s{ts}'}"
+            f"{stepped * '/stepped'}"
+            f"{status * '/status'}"
+            f"{timespan}"
+        )
+        return keyval
+
+    def remove(self, filename=None):
+        if not filename:
+            filename = self.filename
+            # self.close()
+        if os.path.isfile(filename):
+            os.unlink(filename)
+
+    def store(self, df, tagname, readtype, ts, stepped, status, starttime, endtime):
+        if df.empty:
+            return  # Weirdness ensues when using empty df in select statement below
+        key = self._key_path(tagname, readtype, ts, stepped, status, starttime, endtime)
+        with pd.HDFStore(self.filename, mode="a") as f:
+            if key in f:
+                raise NotImplementedError
+            else:
+                f.append(key, df)
+
+    @staticmethod
+    def _get_intervals_from_dataset_name(name: str) -> Tuple[pd.Timestamp, pd.Timestamp]:
+        name_with_times = name.split("/")[-1]
+        if not name_with_times.count("_") == 2:
+            return (None, None)
+        _, starttime_epoch, endtime_epoch = name_with_times.split("_")
+        starttime = pd.to_datetime(int(starttime_epoch), unit="s").tz_localize("UTC")
+        endtime = pd.to_datetime(int(endtime_epoch), unit="s").tz_localize("UTC")
+        return starttime, endtime
+
+    def get_intersecting_datasets(
+        self,
+        tagname: str,
+        readtype: ReaderType,
+        ts: Union[int, pd.Timedelta],
+        stepped: bool,
+        status: bool,
+        starttime: pd.Timestamp,
+        endtime: pd.Timestamp,
+    ) -> List[str]:
+
+        intersecting_datasets = []
+        with pd.HDFStore(self.filename, mode="r") as f:
+            buckets = f.walk(where=self._key_path(tagname, readtype, ts, stepped, status))
+            for bucket in buckets:
+                for leaf in bucket[2]:
+                    dataset = bucket[0] + "/" + leaf
+                    starttime_ds, endtime_ds = self._get_intervals_from_dataset_name(dataset)
+                    if endtime_ds >= starttime and endtime >= starttime_ds:
+                        intersecting_datasets.append(dataset)
+        return intersecting_datasets
+
+    def get_missing_intervals(
+        self,
+        tagname: str,
+        readtype: ReaderType,
+        ts: Union[int, pd.Timedelta],
+        stepped: bool,
+        status: bool,
+        starttime: pd.Timestamp,
+        endtime: pd.Timestamp,
+    ) -> List[List[pd.Timestamp]]:
+        missing_intervals = [[starttime, endtime]]
+        with pd.HDFStore(self.filename, mode="r") as f:
+            datasets = self.get_intersecting_datasets(
+                tagname, readtype, ts, stepped, status, starttime, endtime
+            )
+            for dataset in datasets:
+                b = self._get_intervals_from_dataset_name(dataset)
+                for _ in range(0, len(missing_intervals)):
+                    r = missing_intervals.pop(0)
+                    if b[1] < r[0] or b[0] > r[1]:
+                        # No overlap
+                        missing_intervals.append(r)
+                    elif b[0] <= r[0] and b[1] >= r[1]:
+                        # The bucket covers the entire interval
+                        continue
+                    elif b[0] > r[0] and b[1] < r[1]:
+                        # The bucket splits the interval in two
+                        missing_intervals.append([r[0], b[0]])
+                        missing_intervals.append([b[1], r[1]])
+                    elif b[0] <= r[0] and r[0] <= b[1] < r[1]:
+                        # The bucket chomps the start of the interval
+                        missing_intervals.append([b[1], r[1]])
+                    elif r[0] < b[0] <= r[1] and b[1] >= r[1]:
+                        # The bucket chomps the end of the interval
+                        missing_intervals.append([r[0], b[0]])
+        return missing_intervals
+
+    def fetch(
+        self,
+        tagname: str,
+        readtype: ReaderType,
+        ts: int,
+        stepped: bool,
+        status: bool,
+        starttime: pd.Timestamp,
+        endtime: pd.Timestamp,
+    ) -> pd.DataFrame:
+        df = pd.DataFrame()
+        if not os.path.isfile(self.filename):
+            return df
+        key = self.key_path(tagname, readtype, ts, stepped, status, starttime, endtime)
+
+        where = []
+        if starttime is not None:
+            where.append("index >= starttime")
+        if endtime is not None:
+            where.append("index <= endtime")
+        where = " and ".join(where)
+
+        with pd.HDFStore(self.filename, mode="r") as f:
+            datasets = self._get_possible_datasets(
+                tagname, readtype, ts, stepped, status, starttime, endtime
+            )
+            if key in f:
+                if where:
+                    df = f.select(key, where=where)
+                else:
+                    df = f.select(key)
+        return df.sort_index()
 
 
 class SmartCache:
