@@ -272,7 +272,7 @@ def test_store_single_df(cache):
         DF1, TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1,
     )
     df_read = cache.fetch(TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1)
-    pd.testing.assert_frame_equal(DF1, df_read)
+    pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
 
 
 def test_fetch(cache):
@@ -292,7 +292,7 @@ def test_fetch(cache):
         STARTTIME_1,
         ENDTIME_1 - pd.Timedelta("15m"),
     )
-    pd.testing.assert_frame_equal(DF1.loc[STARTTIME_1:ENDTIME_1-pd.Timedelta("15m")], df_read)
+    pd.testing.assert_frame_equal(DF1.loc[STARTTIME_1:ENDTIME_1-pd.Timedelta("15m")], df_read, check_freq=False)
 
     df_read = cache.fetch(
         TAGNAME,
@@ -303,7 +303,7 @@ def test_fetch(cache):
         STARTTIME_1 - pd.Timedelta("15m"),
         ENDTIME_1 + pd.Timedelta("15m"),
     )
-    pd.testing.assert_frame_equal(DF1, df_read)
+    pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
 
     df_read = cache.fetch(
         TAGNAME,
@@ -314,7 +314,7 @@ def test_fetch(cache):
         STARTTIME_1 - pd.Timedelta("15m"),
         ENDTIME_2 + pd.Timedelta("15m"),
     )
-    pd.testing.assert_frame_equal(DF1.append(DF2), df_read)
+    pd.testing.assert_frame_equal(DF1.append(DF2), df_read, check_freq=False)
 
 def test_store_overlapping_df(cache):
     cache.store(
