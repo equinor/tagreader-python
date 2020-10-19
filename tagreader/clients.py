@@ -12,7 +12,7 @@ from .utils import (
     ReaderType,
     winreg,
 )
-from .cache import SmartCache
+from .cache import BucketCache, SmartCache
 from .odbc_handlers import (
     PIHandlerODBC,
     AspenHandlerODBC,
@@ -285,7 +285,8 @@ class IMSClient:
         else:
             missing_intervals = [(start_time, stop_time)]
             df = pd.DataFrame()
-            if cache is not None and read_type != ReaderType.RAW:
+
+            if isinstance(cache, SmartCache) and read_type != ReaderType.RAW:
                 time_slice = get_next_timeslice(start_time, stop_time, ts)
                 df = cache.fetch(
                     tag,
@@ -299,6 +300,26 @@ class IMSClient:
                 )
                 if not missing_intervals:
                     return df.tz_convert(self.tz).sort_index()
+            elif isinstance(cache, BucketCache):
+                df = cache.fetch(
+                    tag,
+                    readtype=read_type,
+                    ts=ts,
+                    start_time=start_time,
+                    stop_time=stop_time,
+                )
+                missing_intervals = cache.get_missing_intervals(
+                    tag, 
+                    readtype=readtype,
+                    ts=ts,
+                    stepped=False,
+                    status=False,
+                    start_time=start_time,
+                    stop_time=stop_time,
+                )
+                if not missing_intervals:
+                    return df.tz_convert(self.tz).sort_index()
+
             metadata = self._get_metadata(tag)
             frames = [df]
             for (start, stop) in missing_intervals:
