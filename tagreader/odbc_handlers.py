@@ -1,6 +1,7 @@
 import os
 import pyodbc
 import pandas as pd
+import numpy as np
 import warnings
 from typing import Union
 from .utils import logging, winreg, find_registry_key, ReaderType
@@ -331,7 +332,7 @@ class AspenHandlerODBC:
             self.conn,
             index_col="time",
             parse_dates={"time": "%Y-%m-%dT%H:%M:%S.%fZ"},
-        )
+        ).fillna(value=np.nan)
         # This warning will trigger also for (at least some) valid tags with no data.
         # if len(df.index) == 0:
         #     warnings.warn(f"Tag {tag} not found")
@@ -552,7 +553,7 @@ class PIHandlerODBC:
             self.conn,
             index_col="time",
             parse_dates={"time": "%Y-%m-%d %H:%M:%S"},
-        )
+        ).fillna(value=np.nan)
         # PI ODBC reports aggregate values for both end points, using the end of
         # interval as anchor. Normalize to using start of insterval as anchor, and
         # remove initial point which is out of defined range.
