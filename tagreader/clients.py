@@ -309,8 +309,8 @@ class IMSClient:
                     stop_time=stop_time,
                 )
                 missing_intervals = cache.get_missing_intervals(
-                    tag, 
-                    readtype=readtype,
+                    tag,
+                    readtype=read_type,
                     ts=ts,
                     stepped=False,
                     status=False,

@@ -292,7 +292,11 @@ def test_fetch(cache):
         STARTTIME_1,
         ENDTIME_1 - pd.Timedelta("15m"),
     )
-    pd.testing.assert_frame_equal(DF1.loc[STARTTIME_1:ENDTIME_1-pd.Timedelta("15m")], df_read, check_freq=False)
+    pd.testing.assert_frame_equal(
+        DF1.loc[STARTTIME_1 : ENDTIME_1 - pd.Timedelta("15m")],
+        df_read,
+        check_freq=False,
+    )
 
     df_read = cache.fetch(
         TAGNAME,
@@ -316,6 +320,7 @@ def test_fetch(cache):
     )
     pd.testing.assert_frame_equal(DF1.append(DF2), df_read, check_freq=False)
 
+
 def test_store_overlapping_df(cache):
     cache.store(
         DF1, TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1,
@@ -326,6 +331,7 @@ def test_store_overlapping_df(cache):
     cache.store(DF3, TAGNAME, READERTYPE, TS, False, False, STARTTIME_3, ENDTIME_3)
     with pd.HDFStore(cache.filename, mode="r") as f:
         keys = list(f.walk(where="/"))
+    leaves = None
     for key in keys:
         if len(key[2]) > 0:
             leaves = key[2]
@@ -333,4 +339,3 @@ def test_store_overlapping_df(cache):
     _, starttime, endtime = leaves[0].split("_")
     assert int(starttime) == STARTTIME_1_EPOCH
     assert int(endtime) == ENDTIME_2_EPOCH
-
