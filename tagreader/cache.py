@@ -74,18 +74,46 @@ class BucketCache:
         if os.path.isfile(filename):
             os.unlink(filename)
 
-    def store(self, df, tagname, readtype, ts, stepped, status, starttime, endtime):
+    def store(
+        self,
+        df: pd.DataFrame,
+        tagname: str,
+        readtype: ReaderType,
+        ts: pd.Timestamp,
+        stepped: bool,
+        status: bool,
+        starttime: pd.Timestamp,
+        endtime: pd.Timestamp,
+    ):
         if df.empty:
-            return  # Weirdness ensues when using empty df in select statement below
-        key = self._key_path(tagname, readtype, ts, stepped, status, starttime, endtime)
+            return
+
+        intersecting = self.get_intersecting_datasets(
+            tagname, readtype, ts, stepped, status, starttime, endtime
+        )
+        if len(intersecting) > 0:
+            df_cached = pd.DataFrame()
+            with pd.HDFStore(self.filename, mode="a") as f:
+                for dataset in intersecting:
+                    this_start, this_end = self._get_intervals_from_dataset_name(
+                        dataset
+                    )
+                    starttime = min(starttime, this_start)
+                    endtime = max(endtime, this_end)
+                    df_cached.append(f.get(dataset))
+                    del f[dataset]
+            df = df.append(df_cached)
+            df = df[~df.index.duplicated(keep="first")].sort_index()
+        key = self._key_path(
+            tagname, readtype, ts, stepped, status, starttime, endtime
+        )
         with pd.HDFStore(self.filename, mode="a") as f:
-            if key in f:
-                raise NotImplementedError
-            else:
-                f.append(key, df)
+            f.put(key, df, format="table")
 
     @staticmethod
-    def _get_intervals_from_dataset_name(name: str) -> Tuple[pd.Timestamp, pd.Timestamp]:
+    def _get_intervals_from_dataset_name(
+        name: str,
+    ) -> Tuple[pd.Timestamp, pd.Timestamp]:
         name_with_times = name.split("/")[-1]
         if not name_with_times.count("_") == 2:
             return (None, None)
@@ -105,13 +133,18 @@ class BucketCache:
         endtime: pd.Timestamp,
     ) -> List[str]:
 
+        if not os.path.isfile(self.filename):
+            return []
         intersecting_datasets = []
         with pd.HDFStore(self.filename, mode="r") as f:
-            buckets = f.walk(where=self._key_path(tagname, readtype, ts, stepped, status))
-            for bucket in buckets:
+            for bucket in f.walk(
+                where=self._key_path(tagname, readtype, ts, stepped, status)
+            ):
                 for leaf in bucket[2]:
                     dataset = bucket[0] + "/" + leaf
-                    starttime_ds, endtime_ds = self._get_intervals_from_dataset_name(dataset)
+                    starttime_ds, endtime_ds = self._get_intervals_from_dataset_name(
+                        dataset
+                    )
                     if endtime_ds >= starttime and endtime >= starttime_ds:
                         intersecting_datasets.append(dataset)
         return intersecting_datasets
@@ -166,7 +199,6 @@ class BucketCache:
         df = pd.DataFrame()
         if not os.path.isfile(self.filename):
             return df
-        key = self.key_path(tagname, readtype, ts, stepped, status, starttime, endtime)
 
         where = []
         if starttime is not None:
@@ -176,15 +208,20 @@ class BucketCache:
         where = " and ".join(where)
 
         with pd.HDFStore(self.filename, mode="r") as f:
-            datasets = self._get_possible_datasets(
+            datasets = self.get_intersecting_datasets(
                 tagname, readtype, ts, stepped, status, starttime, endtime
             )
-            if key in f:
+            df_total = pd.DataFrame()
+            for dataset in datasets:
                 if where:
-                    df = f.select(key, where=where)
+                    df = f.select(
+                        dataset, where="index >= starttime and index <= endtime"
+                    )
                 else:
-                    df = f.select(key)
-        return df.sort_index()
+                    df = f.select(dataset)
+                df_total = df_total.append(df)
+
+        return df_total.sort_index()
 
 
 class SmartCache:
