@@ -9,7 +9,7 @@ TAGNAME = "tag1"
 READERTYPE = ReaderType.INT
 
 TZ = "UTC"
-TS = 60
+TS = 300
 FREQ = f"{TS}s"
 
 STARTTIME_1 = pd.to_datetime("2020-01-01 12:00:00", utc=True)
@@ -267,6 +267,37 @@ def test_get_intersecting_datasets(cache):
     assert len(intersecting_datasets) == 2
 
 
+def test_store_metadata(cache):
+    cache.store_tag_metadata(TAGNAME, {"unit": "%", "desc": "Some description"})
+    cache.store_tag_metadata(TAGNAME, {"max": 60})
+    r = cache.fetch_tag_metadata(TAGNAME, "unit")
+    assert "%" == r["unit"]
+    r = cache.fetch_tag_metadata(TAGNAME, ["unit", "max", "noworky"])
+    assert "%" == r["unit"]
+    assert 60 == r["max"]
+    assert "noworky" not in r
+
+
+def test_store_empty_df(cache):
+    # Empty dataframes should not be stored (note: df full of NaN is not empty!)
+    df = pd.DataFrame({TAGNAME: []})
+    cache.store(
+        df, TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1
+    )  # Specify ts to ensure correct key /if/ stored
+    df_read = cache.fetch(TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1)
+    pd.testing.assert_frame_equal(df_read, pd.DataFrame())
+
+    cache.store(DF1, TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1)
+    df_read = cache.fetch(TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1)
+    pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
+
+    cache.store(
+        df, TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1
+    )  # Specify ts to ensure correct key /if/ stored
+    df_read = cache.fetch(TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1)
+    pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
+
+
 def test_store_single_df(cache):
     cache.store(
         DF1, TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1,
@@ -339,3 +370,12 @@ def test_store_overlapping_df(cache):
     _, starttime, endtime = leaves[0].split("_")
     assert int(starttime) == STARTTIME_1_EPOCH
     assert int(endtime) == ENDTIME_2_EPOCH
+    df_read = cache.fetch(TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_2)
+    df_expected = (
+        DF1[STARTTIME_1 : STARTTIME_3 - pd.Timedelta(TS, unit="s")]
+        .append(DF3[STARTTIME_3:ENDTIME_3])
+        .append(DF2[ENDTIME_3 + pd.Timedelta(TS, unit="s") : ENDTIME_2])
+    )
+    pd.testing.assert_frame_equal(
+        df_read, df_expected, check_freq=False,
+    )

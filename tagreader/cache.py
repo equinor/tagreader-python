@@ -120,7 +120,6 @@ class BucketCache:
             tagname, readtype, ts, stepped, status, starttime, endtime
         )
         if len(intersecting) > 0:
-            df_cached = pd.DataFrame()
             with pd.HDFStore(self.filename, mode="a") as f:
                 for dataset in intersecting:
                     this_start, this_end = self._get_intervals_from_dataset_name(
@@ -128,9 +127,8 @@ class BucketCache:
                     )
                     starttime = min(starttime, this_start)
                     endtime = max(endtime, this_end)
-                    df_cached.append(f.get(dataset))
+                    df = df.append(f.get(dataset))
                     del f[dataset]
-            df = df.append(df_cached)
             df = df[~df.index.duplicated(keep="first")].sort_index()
         key = self._key_path(
             tagname, readtype, ts, stepped, status, starttime, endtime
