@@ -67,6 +67,34 @@ class BucketCache:
         )
         return keyval
 
+    def store_tag_metadata(self, tagname, metadata):
+        tagname = safe_tagname(tagname)
+        key = f"/{tagname}"
+        with pd.HDFStore(self.filename, mode="a") as f:
+            if key not in f:
+                f.put(key, pd.DataFrame())
+            origmetadata = {}
+            if "metadata" in f.get_storer(key).attrs:
+                origmetadata = f.get_storer(key).attrs.metadata
+            f.get_storer(key).attrs.metadata = {**origmetadata, **metadata}
+
+    def fetch_tag_metadata(self, tagname, properties):
+        res = {}
+        if not os.path.isfile(self.filename):
+            return res
+        tagname = safe_tagname(tagname)
+        key = f"/{tagname}"
+        if isinstance(properties, str):
+            properties = [properties]
+        with pd.HDFStore(self.filename, mode="r") as f:
+            if key not in f or "metadata" not in f.get_storer(key).attrs:
+                return {}
+            metadata = f.get_storer(key).attrs.metadata
+        for p in properties:
+            if p in metadata.keys():
+                res[p] = metadata.get(p)
+        return res
+
     def remove(self, filename=None):
         if not filename:
             filename = self.filename
