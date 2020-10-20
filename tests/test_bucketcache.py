@@ -157,8 +157,8 @@ def test_get_missing_intervals(cache):
     )
 
     assert len(missing_intervals) == 2
-    assert missing_intervals[0] == [STARTTIME_1 - pd.Timedelta("15m"), STARTTIME_1]
-    assert missing_intervals[1] == [ENDTIME_1, ENDTIME_1 + pd.Timedelta("15m")]
+    assert missing_intervals[0] == (STARTTIME_1 - pd.Timedelta("15m"), STARTTIME_1)
+    assert missing_intervals[1] == (ENDTIME_1, ENDTIME_1 + pd.Timedelta("15m"))
 
     # Request data stretching from before first bucket, including
     # space between buckets, to after second bucket. Three missing intervals.
@@ -173,9 +173,9 @@ def test_get_missing_intervals(cache):
     )
 
     assert len(missing_intervals) == 3
-    assert missing_intervals[0] == [STARTTIME_1 - pd.Timedelta("15m"), STARTTIME_1]
-    assert missing_intervals[1] == [ENDTIME_1, STARTTIME_2]
-    assert missing_intervals[2] == [ENDTIME_2, ENDTIME_2 + pd.Timedelta("15m")]
+    assert missing_intervals[0] == (STARTTIME_1 - pd.Timedelta("15m"), STARTTIME_1)
+    assert missing_intervals[1] == (ENDTIME_1, STARTTIME_2)
+    assert missing_intervals[2] == (ENDTIME_2, ENDTIME_2 + pd.Timedelta("15m"))
 
 
 def test_get_intersecting_datasets(cache):

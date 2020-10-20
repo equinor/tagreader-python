@@ -186,32 +186,31 @@ class BucketCache:
         status: bool,
         starttime: pd.Timestamp,
         endtime: pd.Timestamp,
-    ) -> List[List[pd.Timestamp]]:
-        missing_intervals = [[starttime, endtime]]
-        with pd.HDFStore(self.filename, mode="r") as f:
-            datasets = self.get_intersecting_datasets(
-                tagname, readtype, ts, stepped, status, starttime, endtime
-            )
-            for dataset in datasets:
-                b = self._get_intervals_from_dataset_name(dataset)
-                for _ in range(0, len(missing_intervals)):
-                    r = missing_intervals.pop(0)
-                    if b[1] < r[0] or b[0] > r[1]:
-                        # No overlap
-                        missing_intervals.append(r)
-                    elif b[0] <= r[0] and b[1] >= r[1]:
-                        # The bucket covers the entire interval
-                        continue
-                    elif b[0] > r[0] and b[1] < r[1]:
-                        # The bucket splits the interval in two
-                        missing_intervals.append([r[0], b[0]])
-                        missing_intervals.append([b[1], r[1]])
-                    elif b[0] <= r[0] and r[0] <= b[1] < r[1]:
-                        # The bucket chomps the start of the interval
-                        missing_intervals.append([b[1], r[1]])
-                    elif r[0] < b[0] <= r[1] and b[1] >= r[1]:
-                        # The bucket chomps the end of the interval
-                        missing_intervals.append([r[0], b[0]])
+    ) -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
+        datasets = self.get_intersecting_datasets(
+            tagname, readtype, ts, stepped, status, starttime, endtime
+        )
+        missing_intervals = [(starttime, endtime)]
+        for dataset in datasets:
+            b = self._get_intervals_from_dataset_name(dataset)
+            for _ in range(0, len(missing_intervals)):
+                r = missing_intervals.pop(0)
+                if b[1] < r[0] or b[0] > r[1]:
+                    # No overlap
+                    missing_intervals.append(r)
+                elif b[0] <= r[0] and b[1] >= r[1]:
+                    # The bucket covers the entire interval
+                    continue
+                elif b[0] > r[0] and b[1] < r[1]:
+                    # The bucket splits the interval in two
+                    missing_intervals.append((r[0], b[0]))
+                    missing_intervals.append((b[1], r[1]))
+                elif b[0] <= r[0] and r[0] <= b[1] < r[1]:
+                    # The bucket chomps the start of the interval
+                    missing_intervals.append((b[1], r[1]))
+                elif r[0] < b[0] <= r[1] and b[1] >= r[1]:
+                    # The bucket chomps the end of the interval
+                    missing_intervals.append((r[0], b[0]))
         return missing_intervals
 
     def fetch(
