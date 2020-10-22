@@ -578,6 +578,7 @@ class PIHandlerWeb:
 
         webid = tag
 
+        seconds = 0
         if read_type != ReaderType.SNAPSHOT:
             seconds = int(sample_time.total_seconds())
 

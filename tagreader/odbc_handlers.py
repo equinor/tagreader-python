@@ -94,6 +94,7 @@ class AspenHandlerODBC:
                 "Try 'piwebapi' instead."
             )
 
+        seconds = 0
         if read_type != ReaderType.SNAPSHOT:
             start_time = start_time.tz_convert("UTC")
             stop_time = stop_time.tz_convert("UTC")
@@ -340,16 +341,15 @@ class AspenHandlerODBC:
 
         return df.rename(columns={"value": tag})
 
-    def query_sql(self, query: str, parse: bool = True) -> Union[pd.DataFrame, pyodbc.Cursor]:  # noqa:E501
+    def query_sql(
+        self, query: str, parse: bool = True
+    ) -> Union[pd.DataFrame, pyodbc.Cursor]:  # noqa:E501
         if not parse:
             cursor = self.conn.cursor()
             cursor.execute(query)
             return cursor
         else:
-            res = pd.read_sql(
-                query,
-                self.conn
-            )
+            res = pd.read_sql(query, self.conn)
             return res
 
 
@@ -412,6 +412,7 @@ class PIHandlerODBC:
                 "Try 'piwebapi' instead."
             )
 
+        seconds = 0
         if read_type != ReaderType.SNAPSHOT:
             start_time = start_time.tz_convert("UTC")
             stop_time = stop_time.tz_convert("UTC")
@@ -574,14 +575,13 @@ class PIHandlerODBC:
 
         return df.rename(columns={"value": tag})
 
-    def query_sql(self, query: str, parse: bool = True) -> Union[pd.DataFrame, pyodbc.Cursor]:  # noqa: E501
+    def query_sql(
+        self, query: str, parse: bool = True
+    ) -> Union[pd.DataFrame, pyodbc.Cursor]:  # noqa: E501
         if not parse:
             cursor = self.conn.cursor()
             cursor.execute(query)
             return cursor
         else:
-            res = pd.read_sql(
-                query,
-                self.conn
-            )
+            res = pd.read_sql(query, self.conn)
             return res
