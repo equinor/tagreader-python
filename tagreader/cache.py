@@ -16,8 +16,8 @@ def safe_tagname(tagname):
 def timestamp_to_epoch(timestamp: pd.Timestamp) -> int:
     origin = pd.Timestamp("1970-01-01")
     if timestamp.tzinfo is not None:
-        origin = origin.tz_localize("UTC")
-    return (timestamp - origin) // pd.Timedelta("1s")
+        timestamp = timestamp.tz_convert("UTC").tz_localize(None)
+    return (timestamp - origin) // pd.Timedelta("1s")  # type: ignore
 
 
 class BucketCache:

@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 
 from tagreader.utils import ReaderType
-from tagreader.cache import safe_tagname, BucketCache
+from tagreader.cache import safe_tagname, timestamp_to_epoch, BucketCache
 
 
 TAGNAME = "tag1"
@@ -47,6 +47,17 @@ def cache():
     cache = BucketCache("testcache.h5")
     yield cache
     cache.remove()
+
+
+def test_timestamp_to_epoch():
+    # Any timezone or naïve should work
+    timestamp = pd.to_datetime("1970-01-01 01:00:00", utc=True)
+    assert timestamp_to_epoch(timestamp) == 3600
+    timestamp = pd.to_datetime("1970-01-01 01:00:00", utc=False)
+    assert timestamp_to_epoch(timestamp) == 3600
+    timestamp = pd.to_datetime("1970-01-01 01:00:00", utc=True)
+    timestamp = timestamp.tz_convert("Europe/Oslo")
+    assert timestamp_to_epoch(timestamp) == 3600
 
 
 def test_safe_tagname():
