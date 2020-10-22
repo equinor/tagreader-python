@@ -225,28 +225,17 @@ class BucketCache:
         if not os.path.isfile(self.filename):
             return df
 
-        where = []
-        if starttime is not None:
-            where.append("index >= starttime")
-        if endtime is not None:
-            where.append("index <= endtime")
-        where = " and ".join(where)
+        datasets = self.get_intersecting_datasets(
+            tagname, readtype, ts, stepped, status, starttime, endtime
+        )
 
         with pd.HDFStore(self.filename, mode="r") as f:
-            datasets = self.get_intersecting_datasets(
-                tagname, readtype, ts, stepped, status, starttime, endtime
-            )
-            df_total = pd.DataFrame()
             for dataset in datasets:
-                if where:
-                    df = f.select(
-                        dataset, where="index >= starttime and index <= endtime"
-                    )
-                else:
-                    df = f.select(dataset)
-                df_total = df_total.append(df)
+                df = df.append(
+                    f.select(dataset, where="index >= starttime and index <= endtime")
+                )
 
-        return df_total.sort_index()
+        return df.sort_index()
 
 
 class SmartCache:
