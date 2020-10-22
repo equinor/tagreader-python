@@ -471,7 +471,7 @@ class PIHandlerODBC:
         elif ReaderType.SHAPEPRESERVING == read_type:
             query.extend(
                 [
-                    f"AND (intervalcount = {int((stop_time-start_time).seconds/seconds)})"  # noqa E501
+                    f"AND (intervalcount = {int((stop_time-start_time).total_seconds()/seconds)})"  # noqa E501
                 ]
             )
         elif ReaderType.RAW == read_type:
