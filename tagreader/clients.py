@@ -283,6 +283,8 @@ class IMSClient:
                 tag, start_time, stop_time, ts, read_type, metadata
             )
         else:
+            stepped = False
+            status = False
             missing_intervals = [(start_time, stop_time)]
             df = pd.DataFrame()
 
@@ -305,17 +307,19 @@ class IMSClient:
                     tag,
                     readtype=read_type,
                     ts=ts,
-                    start_time=start_time,
-                    stop_time=stop_time,
+                    stepped=stepped,
+                    status=status,
+                    starttime=start_time,
+                    endtime=stop_time,
                 )
                 missing_intervals = cache.get_missing_intervals(
                     tag,
                     readtype=read_type,
                     ts=ts,
-                    stepped=False,
-                    status=False,
-                    start_time=start_time,
-                    stop_time=stop_time,
+                    stepped=stepped,
+                    status=status,
+                    starttime=start_time,
+                    endtime=stop_time,
                 )
                 if not missing_intervals:
                     return df.tz_convert(self.tz).sort_index()
