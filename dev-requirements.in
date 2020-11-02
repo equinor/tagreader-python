@@ -1,0 +1,6 @@
+pytest
+black
+flake8
+mypy
+jupyter
+setuptools-scm
