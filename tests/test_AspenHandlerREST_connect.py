@@ -17,7 +17,9 @@ if is_GITHUBACTION:
         allow_module_level=True,
     )
 
-URL = r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll"
+
+# URL = r"https://aspenone-qa.api.equinor.com"
+URL = r"https://aspenone.api.equinor.com"
 SOURCE = "SNA"
 TAG = "ATCAI"
 

@@ -23,9 +23,12 @@ PI_START_TIME_2 = "2020-06-29 11:30:00"
 PI_END_TIME_2 = "2020-06-29 11:45:00"
 TS = 60
 
-ASPEN_URL = r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll"
+# ASPEN_URL = r"https://aspenone-qa.api.equinor.com"
+ASPEN_URL = r"https://aspenone.api.equinor.com"
 ASPEN_DS = "SNA"
 ASPEN_TAG = "ATCAI"
+ASPEN_START_TIME = PI_START_TIME
+ASPEN_END_TIME = PI_END_TIME
 
 
 @pytest.fixture()
@@ -85,14 +88,13 @@ def test_pi_odbc_web_same_values_int(PIClientOdbc, PIClientWeb):
     )
     print(df_odbc.head())
     print(df_web.head())
-    assert len(df_odbc) == 16
-    assert len(df_web) == 16
+    assert len(df_web) == len(df_odbc) == 16
     pd.testing.assert_frame_equal(
         df_odbc, df_web, check_less_precise=1  # Slightly different results for PI
     )
 
 
-def test_pi_odbc_web_same_values_agg(PIClientOdbc, PIClientWeb):
+def test_pi_odbc_web_same_values_aggregated(PIClientOdbc, PIClientWeb):
     df_odbc = PIClientOdbc.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.AVG
     )
@@ -101,38 +103,48 @@ def test_pi_odbc_web_same_values_agg(PIClientOdbc, PIClientWeb):
     )
     print(df_odbc.head())
     print(df_web.head())
-    assert len(df_odbc) == 15
-    assert len(df_web) == 15
+    assert len(df_web) == len(df_odbc) == 15
     pd.testing.assert_frame_equal(
         df_odbc, df_web, check_less_precise=1  # Slightly different results for PI
     )
 
 
-def test_aspen_odbc_web_same_values_int(AspenClientOdbc, AspenClientWeb):
+def test_aspen_odbc_web_same_values_raw(AspenClientOdbc, AspenClientWeb):
     df_odbc = AspenClientOdbc.read(
-        ASPEN_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
+        ASPEN_TAG, ASPEN_START_TIME, ASPEN_END_TIME, read_type=ReaderType.RAW
     )
     df_web = AspenClientWeb.read(
-        ASPEN_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
+        ASPEN_TAG, ASPEN_START_TIME, ASPEN_END_TIME, read_type=ReaderType.RAW
     )
     print(df_odbc.head())
     print(df_web.head())
-    assert len(df_odbc) == 16
-    assert len(df_web) == 16
+    assert len(df_web) == len(df_odbc) == 178
     pd.testing.assert_frame_equal(df_odbc, df_web)
 
 
-def test_aspen_odbc_web_same_values_agg(AspenClientOdbc, AspenClientWeb):
+def test_aspen_odbc_web_same_values_int(AspenClientOdbc, AspenClientWeb):
     df_odbc = AspenClientOdbc.read(
-        ASPEN_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.AVG
+        ASPEN_TAG, ASPEN_START_TIME, ASPEN_END_TIME, TS, read_type=ReaderType.INT
     )
     df_web = AspenClientWeb.read(
-        ASPEN_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.AVG
+        ASPEN_TAG, ASPEN_START_TIME, ASPEN_END_TIME, TS, read_type=ReaderType.INT
     )
     print(df_odbc.head())
     print(df_web.head())
-    assert len(df_odbc) == 15
-    assert len(df_web) == 15
+    assert len(df_web) == len(df_odbc) == 16
+    pd.testing.assert_frame_equal(df_odbc, df_web)
+
+
+def test_aspen_odbc_web_same_values_aggregated(AspenClientOdbc, AspenClientWeb):
+    df_odbc = AspenClientOdbc.read(
+        ASPEN_TAG, ASPEN_START_TIME, ASPEN_END_TIME, TS, read_type=ReaderType.AVG
+    )
+    df_web = AspenClientWeb.read(
+        ASPEN_TAG, ASPEN_START_TIME, ASPEN_END_TIME, TS, read_type=ReaderType.AVG
+    )
+    print(df_odbc.head())
+    print(df_web.head())
+    assert len(df_web) == len(df_odbc) == 15
     pd.testing.assert_frame_equal(df_odbc, df_web)
 
 

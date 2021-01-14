@@ -24,11 +24,11 @@ def get_auth_pi():
 
 
 def get_auth_aspen():
-    return HTTPKerberosAuth(service="HTTPS")
+    return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
 
 def list_aspenone_sources(
-    url=r"https://ws2679.statoil.net/ProcessData/AtProcessDataREST.dll",
+    url=r"https://aspenone.api.equinor.com",
     auth=get_auth_aspen(),
     verifySSL=True,
 ):
@@ -70,22 +70,6 @@ class NoEncodeSession(requests.Session):
 
     def send(self, *args, **kwargs):
         args[0].url = args[0].url.replace(urllib.parse.quote("*"), "*")
-        # .replace(
-        #     urllib.parse.quote("%"), "%"
-        # ).replace(
-        #     urllib.parse.quote("{"), "{"
-        # ).replace(
-        #     urllib.parse.quote("}"), "}"
-        # ).replace(
-        #     urllib.parse.quote('"'), '"'
-        # ).replace(
-        #     urllib.parse.quote(" "), " "
-        # ).replace(
-        #     urllib.parse.quote("<"), "<"
-        # ).replace(
-        #     urllib.parse.quote(">"), ">"
-        # )
-
         return requests.Session.send(self, *args, **kwargs)
 
 
@@ -95,7 +79,7 @@ class AspenHandlerWeb:
     ):
         self._max_rows = options.get("max_rows", 10000)
         if url is None:
-            url = r"https://ws2679.statoil.net/ProcessData/AtProcessDataREST.dll"
+            url = r"https://aspenone.api.equinor.com"
         self.base_url = url
         self.datasource = datasource
         self.session = NoEncodeSession()
