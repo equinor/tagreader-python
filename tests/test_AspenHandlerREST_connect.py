@@ -17,10 +17,8 @@ if is_GITHUBACTION:
         allow_module_level=True,
     )
 
-URL = r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll"
 SOURCE = "SNA"
 TAG = "ATCAI"
-
 START_TIME = "2018-05-01 10:00:00"
 STOP_TIME = "2018-05-01 11:00:00"
 SAMPLE_TIME = 60
@@ -28,7 +26,7 @@ SAMPLE_TIME = 60
 
 @pytest.fixture()
 def Client():
-    c = IMSClient(SOURCE, imstype="aspenone", url=URL, verifySSL=False)
+    c = IMSClient(SOURCE, imstype="aspenone")
     c.cache = None
     c.connect()
     yield c
@@ -38,12 +36,12 @@ def Client():
 
 @pytest.fixture()
 def AspenHandler():
-    h = AspenHandlerWeb(datasource=SOURCE, url=URL, verifySSL=False)
+    h = AspenHandlerWeb(datasource=SOURCE)
     yield h
 
 
 def test_list_all_aspenone_sources():
-    res = list_aspenone_sources(url=URL, verifySSL=False)
+    res = list_aspenone_sources()
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)
@@ -52,7 +50,7 @@ def test_list_all_aspenone_sources():
 
 
 def test_list_sources_aspenone():
-    res = list_sources("aspenone", url=URL, verifySSL=False)
+    res = list_sources("aspenone")
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)

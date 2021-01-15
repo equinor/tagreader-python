@@ -23,7 +23,6 @@ PI_START_TIME_2 = "2020-06-29 11:30:00"
 PI_END_TIME_2 = "2020-06-29 11:45:00"
 TS = 60
 
-ASPEN_URL = r"https://aspenone-qa.equinor.com/ProcessData/AtProcessDataREST.dll"
 ASPEN_DS = "SNA"
 ASPEN_TAG = "ATCAI"
 
@@ -66,7 +65,7 @@ def AspenClientOdbc():
 
 @pytest.fixture()
 def AspenClientWeb():
-    c = IMSClient(ASPEN_DS, "aspenone", url=ASPEN_URL, verifySSL=False)
+    c = IMSClient(ASPEN_DS, "aspenone")
     if os.path.exists(ASPEN_DS + ".h5"):
         os.remove(ASPEN_DS + ".h5")
     c.cache = None
@@ -83,8 +82,6 @@ def test_pi_odbc_web_same_values_int(PIClientOdbc, PIClientWeb):
     df_web = PIClientWeb.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
     )
-    print(df_odbc.head())
-    print(df_web.head())
     assert len(df_odbc) == 16
     assert len(df_web) == 16
     pd.testing.assert_frame_equal(
@@ -99,8 +96,6 @@ def test_pi_odbc_web_same_values_agg(PIClientOdbc, PIClientWeb):
     df_web = PIClientWeb.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.AVG
     )
-    print(df_odbc.head())
-    print(df_web.head())
     assert len(df_odbc) == 15
     assert len(df_web) == 15
     pd.testing.assert_frame_equal(
@@ -115,8 +110,6 @@ def test_aspen_odbc_web_same_values_int(AspenClientOdbc, AspenClientWeb):
     df_web = AspenClientWeb.read(
         ASPEN_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
     )
-    print(df_odbc.head())
-    print(df_web.head())
     assert len(df_odbc) == 16
     assert len(df_web) == 16
     pd.testing.assert_frame_equal(df_odbc, df_web)
@@ -129,8 +122,6 @@ def test_aspen_odbc_web_same_values_agg(AspenClientOdbc, AspenClientWeb):
     df_web = AspenClientWeb.read(
         ASPEN_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.AVG
     )
-    print(df_odbc.head())
-    print(df_web.head())
     assert len(df_odbc) == 15
     assert len(df_web) == 15
     pd.testing.assert_frame_equal(df_odbc, df_web)
