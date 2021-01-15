@@ -120,24 +120,9 @@ list_sources("ip21")
 list_sources("piwebapi")
 ```
 
-When called with `imstype` set to `piwebapi` or `aspenone` , `list_sources()` will connect to the web server URLs and query for the available list of data sources. This list is normally the complete set of data sources available on the server, and does not indicate whether the user is authorized to query the source or not.
+When called with `imstype` set to `piwebapi` or `aspenone` , `list_sources()` will connect to the web server URL and query for the available list of data sources. This list is normally the complete set of data sources available on the server, and does not indicate whether the user is authorized to query the source or not.
 
-When querying Equinor PI Web API for data sources, `list_sources()` should require no input argument except `imstype="piwebapi"` . 
-
-When querying Equinor AspenOne for data sources, it is currently necessary to use NTLM. 
-
-**Example:**
-
-``` python
-import getpass
-from requests_ntlm import HttpNtlmAuth
-user = "statoil.net\\" + getpass.getuser()
-pwd = getpass.getpass()
-auth = HttpNtlmAuth(user, pwd)
-print(tagreader.list_sources("aspenone", auth=auth))
-```
-
-For non-Equinor servers, `url` will need to be specified, as may `auth` and `verifySSL` .
+When querying Equinor Web API for data sources, `list_sources()` should require no input argument except `imstype="piwebapi"` or `imstype="aspenone"`. For non-Equinor servers, `url` will need to be specified, as may `auth` and `verifySSL` .
 
 # The Client
 
@@ -154,12 +139,11 @@ A connection to a data source is prepared by creating an instance of `tagreader.
 
 * `tz` (optional): Time zone naive time stamps will be interpreted as belonging to this time zone. Similarly, the returned data points will be localized to this time zone. **Default**: _"Europe/Oslo"_.
 
-The following input arguments can be used when connecting to either `piwebapi` or to `aspenone` . None of these should be necessary to supply when connecting to Equinor servers (**Note** Kerberos currently does not work for AspenOne. Please see example code below for how to connect to AspenOne in Equinor using NTLM.)
+The following input arguments can be used when connecting to either `piwebapi` or to `aspenone` . None of these should be necessary to supply when connecting to Equinor servers.
 
 * `url` (optional): Path to server root, e.g. _"https:<span>//aspenone/ProcessData/AtProcessDataREST.dll"_ or _"https:<span>//piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` .
 * `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: True.
-* `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object that works with Equinor servers. If not connecting to an Equinor server, you need to create your own auth object.
-
+* `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object that works with Equinor servers.
 
 If `imstype` is an ODBC type, i.e. `pi` or `ip21`, the host and port to connect to will by default be found by performing a search in Windows registry. For some systems this may not work. In those cases the user can explicitly specify the following optional parameters:
 
@@ -179,15 +163,22 @@ c = tagreader.IMSClient("PINO", "pi")
 c.connect()
 ```
 
-Connecting to the Peregrino IP.21 data source using AspenTech Process Data REST Web API, specifying URL (not necessary), using NTLM authentication instead of default Kerberos, ignoring the server host's certificate, and specifying that all naive time stamps as well as the returned data shall use Rio local time:
+Connecting to the Peregrino IP.21 data source using AspenTech Process Data REST Web API, specifying that all naive time stamps as well as the returned data shall use Rio local time:
+
+``` python
+c = tagreader.IMSClient("PER", "aspenone", tz="Brazil/East")
+c.connect()
+```
+
+Connecting to some other AspenTech Web API URL using NTLM authentication instead of default Kerberos and ignoring the server's host certificate:
 
 ``` python
 import getpass
 from requests_ntlm import HttpNtlmAuth
-user = "statoil.net\\" + getpass.getuser()
+user = "mydomain\\" + getpass.getuser()
 pwd = getpass.getpass()
 auth = HttpNtlmAuth(user, pwd)
-c = tagreader.IMSClient("PER", "aspenone", auth=auth, verifySSL=False, tz="Brazil/East")
+c = tagreader.IMSClient(datasource="myplant", url="api.mycompany.com/aspenone", imstype="aspenone", auth=auth, verifySSL=False)
 c.connect()
 ```
 
