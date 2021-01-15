@@ -70,22 +70,6 @@ class NoEncodeSession(requests.Session):
 
     def send(self, *args, **kwargs):
         args[0].url = args[0].url.replace(urllib.parse.quote("*"), "*")
-        # .replace(
-        #     urllib.parse.quote("%"), "%"
-        # ).replace(
-        #     urllib.parse.quote("{"), "{"
-        # ).replace(
-        #     urllib.parse.quote("}"), "}"
-        # ).replace(
-        #     urllib.parse.quote('"'), '"'
-        # ).replace(
-        #     urllib.parse.quote(" "), " "
-        # ).replace(
-        #     urllib.parse.quote("<"), "<"
-        # ).replace(
-        #     urllib.parse.quote(">"), ">"
-        # )
-
         return requests.Session.send(self, *args, **kwargs)
 
 
@@ -578,6 +562,7 @@ class PIHandlerWeb:
 
         webid = tag
 
+        seconds = 0
         if read_type != ReaderType.SNAPSHOT:
             seconds = int(sample_time.total_seconds())
 

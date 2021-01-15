@@ -4,3 +4,4 @@ flake8
 mypy
 jupyter
 setuptools-scm
+pip-tools

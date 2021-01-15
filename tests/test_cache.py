@@ -38,9 +38,6 @@ def test_cache_single_store_and_fetch(cache, data):
     cache.store(data, readtype=ReaderType.INT)
     df_read = cache.fetch("tag1", ReaderType.INT, 60)
     pd.testing.assert_frame_equal(data, df_read)
-    cache.store(data, readtype=ReaderType.RAW)
-    df_read = cache.fetch("tag1", ReaderType.RAW)
-    pd.testing.assert_frame_equal(data, df_read)
 
 
 def test_cache_multiple_store_single_fetch(cache, data):
