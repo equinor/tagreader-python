@@ -77,7 +77,7 @@ class AspenHandlerWeb:
     def __init__(
         self, datasource=None, url=None, auth=None, verifySSL=None, options={},
     ):
-        self._max_rows = options.get("max_rows", 10000)
+        self._max_rows = options.get("max_rows", 100000)
         if url is None:
             url = r"https://aspenone.api.equinor.com"
         self.base_url = url
@@ -125,8 +125,8 @@ class AspenHandlerWeb:
         metadata=None,
     ):
         # Maxpoints is used for Actual (raw) and Bestfit (shapepreserving).
-        # Probably need to handle this in some way at some point
-        maxpoints = 100000
+        # Probably need to handle this in another way at some point
+        maxpoints = self._max_rows
         stepped = 0
         outsiders = 0
 
@@ -406,6 +406,16 @@ class AspenHandlerWeb:
         else:
             url = urljoin(self.base_url, "History")
 
+        # Actual and bestfit read types allow specifying maxpoints.
+        # Aggregate reads limit to 10 000 points and issue a moredata-token.
+        # TODO: May need to look into using this later - most likely more
+        # efficient than creating new query starting at previous stoptime.
+        # Interpolated reads return error message if more than 100 000 points,
+        # so we need to limit the range. Note -1 because INT normally includes 
+        # both start and end time.
+        if read_type == ReaderType.INT:
+             stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+
         tagname, mapname = self.split_tagmap(tag)
 
         params = self.generate_read_query(
@@ -435,7 +445,7 @@ class AspenHandlerWeb:
 
     @staticmethod
     def generate_sql_query(
-        connection_string=None, datasource=None, query=None, max_rows=1000
+        connection_string=None, datasource=None, query=None, max_rows=100000
     ):
         if connection_string is not None:
             connstr = f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">'
