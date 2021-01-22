@@ -67,7 +67,7 @@ def AspenClientOdbc():
 
 @pytest.fixture()
 def AspenClientWeb():
-    c = IMSClient(ASPEN_DS, "aspenone", veryfySSL=verifySSL)
+    c = IMSClient(ASPEN_DS, "aspenone", verifySSL=verifySSL)
     if os.path.exists(ASPEN_DS + ".h5"):
         os.remove(ASPEN_DS + ".h5")
     c.cache = None
@@ -86,7 +86,7 @@ def test_pi_odbc_web_same_values_int(PIClientOdbc, PIClientWeb):
     )
     assert len(df_web) == len(df_odbc) == 16
     pd.testing.assert_frame_equal(
-        df_odbc, df_web, check_less_precise=1  # Slightly different results for PI
+        df_odbc, df_web, rtol=0.001  # Slightly different results for PI
     )
 
 
@@ -99,7 +99,7 @@ def test_pi_odbc_web_same_values_aggregated(PIClientOdbc, PIClientWeb):
     )
     assert len(df_web) == len(df_odbc) == 15
     pd.testing.assert_frame_equal(
-        df_odbc, df_web, check_less_precise=1  # Slightly different results for PI
+        df_odbc, df_web, rtol=0.001  # Slightly different results for PI
     )
 
 
