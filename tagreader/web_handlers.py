@@ -75,7 +75,12 @@ class NoEncodeSession(requests.Session):
 
 class AspenHandlerWeb:
     def __init__(
-        self, datasource=None, url=None, auth=None, verifySSL=None, options={},
+        self,
+        datasource=None,
+        url=None,
+        auth=None,
+        verifySSL=None,
+        options={},
     ):
         self._max_rows = options.get("max_rows", 100000)
         if url is None:
@@ -411,10 +416,10 @@ class AspenHandlerWeb:
         # TODO: May need to look into using this later - most likely more
         # efficient than creating new query starting at previous stoptime.
         # Interpolated reads return error message if more than 100 000 points,
-        # so we need to limit the range. Note -1 because INT normally includes 
+        # so we need to limit the range. Note -1 because INT normally includes
         # both start and end time.
         if read_type == ReaderType.INT:
-             stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
 
         tagname, mapname = self.split_tagmap(tag)
 
@@ -496,7 +501,12 @@ class AspenHandlerWeb:
 
 class PIHandlerWeb:
     def __init__(
-        self, url=None, datasource=None, auth=None, verifySSL=None, options={},
+        self,
+        url=None,
+        datasource=None,
+        auth=None,
+        verifySSL=None,
+        options={},
     ):
         self._max_rows = options.get("max_rows", 10000)
         if url is None:

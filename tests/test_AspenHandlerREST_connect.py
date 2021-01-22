@@ -10,12 +10,15 @@ from tagreader.web_handlers import (
 )
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
+is_AZUREPIPELINE = "TF_BUILD" in os.environ
 
 if is_GITHUBACTION:
     pytest.skip(
         "All tests in module require connection to Aspen server",
         allow_module_level=True,
     )
+
+verifySSL = not is_AZUREPIPELINE  # Certificate unavailable there
 
 SOURCE = "SNA"
 TAG = "ATCAI"
@@ -26,7 +29,7 @@ SAMPLE_TIME = 60
 
 @pytest.fixture()
 def Client():
-    c = IMSClient(SOURCE, imstype="aspenone")
+    c = IMSClient(SOURCE, imstype="aspenone", verifySSL=verifySSL)
     c.cache = None
     c.connect()
     yield c
@@ -36,7 +39,7 @@ def Client():
 
 @pytest.fixture()
 def AspenHandler():
-    h = AspenHandlerWeb(datasource=SOURCE)
+    h = AspenHandlerWeb(datasource=SOURCE, verifySSL=verifySSL)
     yield h
 
 

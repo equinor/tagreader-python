@@ -54,7 +54,7 @@ Also see the
 [quickstart](https://github.com/equinor/tagreader-python/blob/master/docs/quickstart.ipynb)
 document and the
 [manual](docs/https://github.com/equinor/tagreader-python/blob/master/docs/manual.md)
-for more information.at gitlab.
+for more information.
 """
 
 
