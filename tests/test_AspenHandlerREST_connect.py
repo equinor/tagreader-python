@@ -44,7 +44,7 @@ def AspenHandler():
 
 
 def test_list_all_aspenone_sources():
-    res = list_aspenone_sources()
+    res = list_aspenone_sources(verifySSL=verifySSL)
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)
@@ -53,7 +53,7 @@ def test_list_all_aspenone_sources():
 
 
 def test_list_sources_aspenone():
-    res = list_sources("aspenone")
+    res = list_sources("aspenone", verifySSL=verifySSL)
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)

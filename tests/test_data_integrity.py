@@ -67,7 +67,7 @@ def AspenClientOdbc():
 
 @pytest.fixture()
 def AspenClientWeb():
-    c = IMSClient(ASPEN_DS, "aspenone")
+    c = IMSClient(ASPEN_DS, "aspenone", veryfySSL=verifySSL)
     if os.path.exists(ASPEN_DS + ".h5"):
         os.remove(ASPEN_DS + ".h5")
     c.cache = None
