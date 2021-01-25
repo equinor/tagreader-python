@@ -28,18 +28,9 @@ steps:
     HTTPS_PROXY: $(var_http_proxy)
 
 - script: |
-    curl --silent --show-error --header "Authorization: token %TOKEN%" --output extratests.zip --location https://github.com/equinor/tagreader-python-extra-tests/archive/master.zip 
-    rmdir /S /Q extratests
-    unzip -o -j -d extratests extratests.zip */tests/*.py
-  displayName: 'Fetch extratests'
-  env: 
-    HTTPS_PROXY: $(var_http_proxy)
-    TOKEN: $(github_token)
-
-- script: |
     coverage erase
     del /f coverage.xml
-    coverage run -m pytest tests extratests
+    coverage run -m pytest
     coverage xml --include='tagreader/*'
   condition: and(succeeded(), eq(variables['python.version'], '3.6'))
   displayName: 'Run tests with coverage'
@@ -48,7 +39,7 @@ steps:
 
 - script: |
     echo $(python.version)
-    pytest tests extratests
+    pytest
   condition: and(succeeded(), not(eq(variables['python.version'], '3.6')))
   displayName: 'Run tests'
   env: 
