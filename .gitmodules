@@ -1,0 +1,3 @@
+[submodule "extratests"]
+	path = extratests
+	url = git@github.com:equinor/tagreader-python-extra-tests.git
