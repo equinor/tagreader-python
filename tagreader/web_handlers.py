@@ -444,7 +444,7 @@ class AspenHandlerWeb:
             .rename(columns={"t": "Timestamp", "v": "Value"})
         )
         # Ensure non-numericals like "1.#QNAN" are returned as NaN
-        df['Value'] = pd.to_numeric(df.Value, errors='coerce')
+        df["Value"] = pd.to_numeric(df.Value, errors="coerce")
 
         df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms", origin="unix")
         df = df.set_index("Timestamp", drop=True).tz_localize("UTC")
