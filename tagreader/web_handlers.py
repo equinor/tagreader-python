@@ -391,7 +391,14 @@ class AspenHandlerWeb:
         return desc
 
     def read_tag(
-        self, tag, start_time, stop_time, sample_time, read_type, metadata=None
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
     ):
         if read_type not in [
             ReaderType.INT,
@@ -404,7 +411,7 @@ class AspenHandlerWeb:
             ReaderType.SNAPSHOT,
             ReaderType.RAW,
         ]:
-            raise (NotImplementedError)
+            raise NotImplementedError
 
         if read_type == ReaderType.SNAPSHOT:
             url = urljoin(self.base_url, "Attribute")
@@ -438,18 +445,27 @@ class AspenHandlerWeb:
         if "er" in j["data"][0]["samples"][0]:
             warnings.warn(j["data"][0]["samples"][0]["es"])
             return pd.DataFrame(columns=[tag])
-        df = (
-            pd.DataFrame.from_dict(j["data"][0]["samples"])
-            .drop(labels=["l", "s", "V"], axis="columns")
-            .rename(columns={"t": "Timestamp", "v": "Value"})
-        )
+        if get_status:
+            # The "l" field maps 1:1 to ODBC status field values 0, 1, 2, 4, 5, 6
+            df = (
+                pd.DataFrame.from_dict(j["data"][0]["samples"])
+                .drop(labels=["s", "V"], axis="columns")
+                .rename(columns={"t": "Timestamp", "v": "Value", "l": "Status"})
+            )
+        else:
+            df = (
+                pd.DataFrame.from_dict(j["data"][0]["samples"])
+                .drop(labels=["l", "s", "V"], axis="columns")
+                .rename(columns={"t": "Timestamp", "v": "Value"})
+            )
+
         # Ensure non-numericals like "1.#QNAN" are returned as NaN
         df["Value"] = pd.to_numeric(df.Value, errors="coerce")
 
         df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms", origin="unix")
         df = df.set_index("Timestamp", drop=True).tz_localize("UTC")
         df.index.name = "time"
-        return df.rename(columns={"Value": tag})
+        return df.rename(columns={"Value": tag, "Status": tag + "::status"})
 
     @staticmethod
     def generate_sql_query(
@@ -581,7 +597,7 @@ class PIHandlerWeb:
             ReaderType.SUM,
             ReaderType.SHAPEPRESERVING,
         ]:
-            raise (NotImplementedError)
+            raise NotImplementedError
 
         webid = tag
 
@@ -773,7 +789,11 @@ class PIHandlerWeb:
         sample_time=None,
         read_type=ReaderType.INTERPOLATED,
         metadata=None,
+        get_status=False,
     ):
+        if get_status:
+            raise NotImplementedError
+
         webid = self.tag_to_webid(tag)
         if not webid:
             return pd.DataFrame()

@@ -86,7 +86,7 @@ class AspenHandlerODBC:
             ReaderType.SUM,
             ReaderType.SHAPEPRESERVING,
         ]:
-            raise (NotImplementedError)
+            raise NotImplementedError
 
         if read_type == ReaderType.SNAPSHOT and stop_time is not None:
             raise NotImplementedError(
@@ -319,7 +319,18 @@ class AspenHandlerODBC:
             res.description = ""
         return res.description
 
-    def read_tag(self, tag, start_time, stop_time, sample_time, read_type, metadata):
+    def read_tag(
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
+    ):
+        if get_status:
+            raise NotImplementedError
         (cleantag, mapping) = tag.split(";") if ";" in tag else (tag, None)
         mapdef = dict()
         if mapping is not None:
@@ -538,8 +549,18 @@ class PIHandlerODBC:
         return False
 
     def read_tag(
-        self, tag, start_time, stop_time, sample_time, read_type, metadata=None
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
     ):
+        if get_status:
+            raise NotImplementedError
+
         if metadata is None:
             # Tag not found
             # TODO: Handle better and similarly across all handlers.

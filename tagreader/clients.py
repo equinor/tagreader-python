@@ -202,7 +202,7 @@ def get_handler(
         if "AspenTech SQLplus" not in pyodbc.drivers():
             raise RuntimeError(
                 "No Aspen SQLplus ODBC driver detected. Either switch to Web API "
-                "('aspenweb') or install appropriate driver."
+                "('aspenone') or install appropriate driver."
             )
         if host is None:
             hostport = get_server_address_aspen(datasource)
@@ -276,7 +276,9 @@ class IMSClient:
     def _get_metadata(self, tag):
         return self.handler._get_tag_metadata(tag)
 
-    def _read_single_tag(self, tag, start_time, stop_time, ts, read_type, cache=None):
+    def _read_single_tag(
+        self, tag, start_time, stop_time, ts, read_type, get_status, cache=None
+    ):
         if read_type == ReaderType.SNAPSHOT:
             metadata = self._get_metadata(tag)
             df = self.handler.read_tag(
@@ -284,11 +286,14 @@ class IMSClient:
             )
         else:
             stepped = False
-            status = False
             missing_intervals = [(start_time, stop_time)]
             df = pd.DataFrame()
 
-            if isinstance(cache, SmartCache) and read_type != ReaderType.RAW:
+            if (
+                isinstance(cache, SmartCache)
+                and read_type != ReaderType.RAW
+                and not get_status
+            ):
                 time_slice = get_next_timeslice(start_time, stop_time, ts)
                 df = cache.fetch(
                     tag,
@@ -308,7 +313,7 @@ class IMSClient:
                     readtype=read_type,
                     ts=ts,
                     stepped=stepped,
-                    status=status,
+                    status=get_status,
                     starttime=start_time,
                     endtime=stop_time,
                 )
@@ -317,7 +322,7 @@ class IMSClient:
                     readtype=read_type,
                     ts=ts,
                     stepped=stepped,
-                    status=status,
+                    status=get_status,
                     starttime=start_time,
                     endtime=stop_time,
                 )
@@ -329,13 +334,13 @@ class IMSClient:
             for (start, stop) in missing_intervals:
                 while True:
                     df = self.handler.read_tag(
-                        tag, start, stop, ts, read_type, metadata
+                        tag, start, stop, ts, read_type, metadata, get_status
                     )
                     if len(df.index) > 0:
                         if cache is not None and read_type not in [
                             ReaderType.SNAPSHOT,
                             ReaderType.RAW,
-                        ]:
+                        ] and not get_status:
                             cache.store(df, read_type, ts)
                     frames.append(df)
                     if len(df) < self.handler._max_rows:
@@ -411,10 +416,17 @@ class IMSClient:
             end_time=stop_time,
             ts=ts,
             read_type=read_type,
+            get_status=False,
         )
 
     def read(
-        self, tags, start_time=None, end_time=None, ts=60, read_type=ReaderType.INT
+        self,
+        tags,
+        start_time=None,
+        end_time=None,
+        ts=60,
+        read_type=ReaderType.INT,
+        get_status=False,
     ):
         """Reads values for the specified [tags] from the IMS server for the
         time interval from [start_time] to [stop_time] in intervals [ts].
@@ -449,7 +461,13 @@ class IMSClient:
         for tag in tags:
             cols.append(
                 self._read_single_tag(
-                    tag, start_time, end_time, ts, read_type, cache=self.cache
+                    tag,
+                    start_time,
+                    end_time,
+                    ts,
+                    read_type,
+                    get_status,
+                    cache=self.cache,
                 )
             )
         return pd.concat(cols, axis=1)
