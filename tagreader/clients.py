@@ -282,7 +282,7 @@ class IMSClient:
         if read_type == ReaderType.SNAPSHOT:
             metadata = self._get_metadata(tag)
             df = self.handler.read_tag(
-                tag, start_time, stop_time, ts, read_type, metadata
+                tag, start_time, stop_time, ts, read_type, metadata, get_status
             )
         else:
             stepped = False

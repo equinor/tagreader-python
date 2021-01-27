@@ -13,9 +13,7 @@ SAMPLE_TIME = 60
 def AspenHandler():
     from tagreader.odbc_handlers import AspenHandlerODBC
 
-    yield AspenHandlerODBC(
-        "thehostname", 1234, options={"max_rows": 567890}
-    )
+    yield AspenHandlerODBC("thehostname", 1234, options={"max_rows": 567890})
 
 
 def test_generate_connection_string(AspenHandler):
@@ -119,6 +117,30 @@ def test_generate_tag_read_query(read_type):
     }
 
     assert expected[read_type] == res
+
+
+def test_generate_tag_read_query_with_status():
+    starttime = utils.ensure_datetime_with_tz(START_TIME)
+    stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
+    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
+
+    res = AspenHandlerODBC.generate_read_query(
+        "thetag",
+        None,
+        starttime,
+        stoptime,
+        ts,
+        read_type=ReaderType.RAW,
+        get_status=True,
+    )
+
+    assert res == (
+        'SELECT ISO8601(ts) AS "time", value AS "value" , status AS "status" '
+        "FROM history WHERE "
+        "name = 'thetag' AND (request = 4) "
+        "AND (ts BETWEEN '2018-01-17T15:00:00Z' AND '2018-01-17T16:00:00Z') "
+        "ORDER BY ts"
+    )
 
 
 def test_genreadquery_long_sampletime():

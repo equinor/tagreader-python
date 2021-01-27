@@ -75,7 +75,9 @@ class AspenHandlerODBC:
             return self._connection_string
 
     @staticmethod
-    def generate_read_query(tag, mapdef, start_time, stop_time, sample_time, read_type):
+    def generate_read_query(
+        tag, mapdef, start_time, stop_time, sample_time, read_type, get_status=False
+    ):
         if mapdef is None:
             mapdef = {}
         if read_type in [
@@ -88,10 +90,16 @@ class AspenHandlerODBC:
         ]:
             raise NotImplementedError
 
+        # TODO: How to interpret ip_input_quality and ip_value_quality 
+        # which use a different numeric schema (e.g. -1) than status from 
+        # history table (0, 1, 2, 4, 5, 6)
+        if get_status and read_type == ReaderType.SNAPSHOT:
+            raise NotImplementedError
+
         if read_type == ReaderType.SNAPSHOT and stop_time is not None:
             raise NotImplementedError(
                 "Timestamp not supported for IP.21 ODBC connection using 'SNAPSHOT'. "
-                "Try 'piwebapi' instead."
+                "Try the web API 'aspenone' instead."
             )
 
         seconds = 0
@@ -99,7 +107,7 @@ class AspenHandlerODBC:
             start_time = start_time.tz_convert("UTC")
             stop_time = stop_time.tz_convert("UTC")
             seconds = int(sample_time.total_seconds())
-            if ReaderType.SAMPLED == read_type:
+            if read_type == ReaderType.SAMPLED:
                 seconds = 0
             else:
                 if seconds <= 0:
@@ -117,9 +125,7 @@ class AspenHandlerODBC:
             ReaderType.TOTAL: 0,  # Actual data points are used, aggregates
             ReaderType.NOTGOOD: 0,  # Actual data points are used, aggregates
             ReaderType.SNAPSHOT: None,
-        }.get(
-            read_type, 1
-        )  # Default 1 for aggregates table
+        }.get(read_type, 1)  # Default 1 for aggregates table
 
         from_column = {
             ReaderType.SAMPLED: "history",
@@ -150,10 +156,15 @@ class AspenHandlerODBC:
             ReaderType.SNAPSHOT: mapdef.get("MAP_CurrentValue", "IP_INPUT_VALUE"),
         }.get(read_type, "value")
 
-        query = [
-            f'SELECT ISO8601({ts}) AS "time",',
-            f'{value} AS "value" FROM {from_column}',
-        ]
+        status = {
+            ReaderType.SNAPSHOT: mapdef.get("MAP_CurrentQuality", "IP_INPUT_QUALITY"),
+        }.get(read_type, "status")
+
+        query = [f'SELECT ISO8601({ts}) AS "time", {value} AS "value"']
+        if get_status:
+            # status is returned/interpreted as char regardless if cast to INT
+            query.extend([f', {status} AS "status"'])
+        query.extend([f"FROM {from_column}"])
 
         if ReaderType.SNAPSHOT != read_type:
             start = start_time.strftime(timecast_format_query)
@@ -329,14 +340,14 @@ class AspenHandlerODBC:
         metadata=None,
         get_status=False,
     ):
-        if get_status:
-            raise NotImplementedError
+        # if get_status:
+        #     raise NotImplementedError
         (cleantag, mapping) = tag.split(";") if ";" in tag else (tag, None)
         mapdef = dict()
         if mapping is not None:
             mapdef = self._get_specific_mapdef(cleantag, mapping)
         query = self.generate_read_query(
-            cleantag, mapdef, start_time, stop_time, sample_time, read_type
+            cleantag, mapdef, start_time, stop_time, sample_time, read_type, get_status
         )
         # logging.debug(f'Executing SQL query {query!r}')
         df = pd.read_sql(
@@ -348,9 +359,10 @@ class AspenHandlerODBC:
         # This warning will trigger also for (at least some) valid tags with no data.
         # if len(df.index) == 0:
         #     warnings.warn(f"Tag {tag} not found")
+        if get_status:
+            df["status"] = df["status"].astype(int)
         df = df.tz_localize("UTC")
-
-        return df.rename(columns={"value": tag})
+        return df.rename(columns={"value": tag, "status": tag + "::status"})
 
     def query_sql(
         self, query: str, parse: bool = True
@@ -420,7 +432,7 @@ class PIHandlerODBC:
         if read_type == ReaderType.SNAPSHOT and stop_time is not None:
             raise NotImplementedError(
                 "Timestamp not supported for PI ODBC connection using 'SNAPSHOT'."
-                "Try 'piwebapi' instead."
+                "Try the web API 'piwebapi' instead."
             )
 
         seconds = 0
@@ -567,7 +579,7 @@ class PIHandlerODBC:
             return pd.DataFrame()
 
         query = self.generate_read_query(
-            tag, start_time, stop_time, sample_time, read_type
+            tag, start_time, stop_time, sample_time, read_type, get_status
         )
         # logging.debug(f'Executing SQL query {query!r}')
         df = pd.read_sql(
