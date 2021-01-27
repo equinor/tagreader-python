@@ -90,8 +90,8 @@ class AspenHandlerODBC:
         ]:
             raise NotImplementedError
 
-        # TODO: How to interpret ip_input_quality and ip_value_quality 
-        # which use a different numeric schema (e.g. -1) than status from 
+        # TODO: How to interpret ip_input_quality and ip_value_quality
+        # which use a different numeric schema (e.g. -1) than status from
         # history table (0, 1, 2, 4, 5, 6)
         if get_status and read_type == ReaderType.SNAPSHOT:
             raise NotImplementedError
@@ -125,7 +125,9 @@ class AspenHandlerODBC:
             ReaderType.TOTAL: 0,  # Actual data points are used, aggregates
             ReaderType.NOTGOOD: 0,  # Actual data points are used, aggregates
             ReaderType.SNAPSHOT: None,
-        }.get(read_type, 1)  # Default 1 for aggregates table
+        }.get(
+            read_type, 1
+        )  # Default 1 for aggregates table
 
         from_column = {
             ReaderType.SAMPLED: "history",
@@ -417,7 +419,14 @@ class PIHandlerODBC:
         return " ".join(query)
 
     def generate_read_query(
-        self, tag, start_time, stop_time, sample_time, read_type, metadata=None
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
     ):
         if read_type in [
             ReaderType.COUNT,
@@ -479,9 +488,12 @@ class PIHandlerODBC:
             query = ["SELECT CAST(value as FLOAT32)"]
 
         # query.extend([f"AS value, FORMAT(time, '{timecast_format_output}') AS timestamp FROM {source} WHERE tag='{tag}'"])  # noqa E501
-        query.extend(
-            [f"AS value, time FROM {source} WHERE tag='{tag}'"]  # __utctime also works
-        )
+        query.extend(["AS value,"])
+
+        if get_status:
+            query.extend(["status, questionable, substituted,"])
+
+        query.extend([f"time FROM {source} WHERE tag='{tag}'"])  # __utctime also works
 
         if ReaderType.SNAPSHOT != read_type:
             start = start_time.strftime(timecast_format_query)
@@ -570,16 +582,13 @@ class PIHandlerODBC:
         metadata=None,
         get_status=False,
     ):
-        if get_status:
-            raise NotImplementedError
-
         if metadata is None:
             # Tag not found
             # TODO: Handle better and similarly across all handlers.
             return pd.DataFrame()
 
         query = self.generate_read_query(
-            tag, start_time, stop_time, sample_time, read_type, get_status
+            tag, start_time, stop_time, sample_time, read_type, get_status=get_status
         )
         # logging.debug(f'Executing SQL query {query!r}')
         df = pd.read_sql(
@@ -606,7 +615,17 @@ class PIHandlerODBC:
             offset = [x[1] for x in digitalset]
             df = df.replace(code, offset)
 
-        return df.rename(columns={"value": tag})
+        if get_status:
+            df["status"] = (
+                # questionable and substituted are boolean, but no need to .astype(int)
+                # status can be positive or negative for bad.
+                df["questionable"]
+                + 2 * (df["status"] != 0)
+                + 4 * df["substituted"]
+            )
+            df = df.drop(columns=["questionable", "substituted"])
+
+        return df.rename(columns={"value": tag, "status": tag + "::status"})
 
     def query_sql(
         self, query: str, parse: bool = True
