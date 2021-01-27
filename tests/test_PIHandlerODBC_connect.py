@@ -113,6 +113,19 @@ def test_read(Client, read_type, size):
         assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
 
 
+def test_read_with_status(Client):
+    df = Client.read(
+        TAGS["Float32"],
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.RAW,
+        get_status=True,
+    )
+    assert df.shape == (5, 2)
+    assert df[TAGS["Float32"] + "::status"].iloc[0] == 0
+
+
 def test_digitalread_is_one_or_zero(Client):
     tag = TAGS["Digital"]
     df = Client.read(

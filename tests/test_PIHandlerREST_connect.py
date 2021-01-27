@@ -125,7 +125,10 @@ def test_tag_to_webid(PIHandler):
 )
 def test_read(Client, read_type, size):
     if read_type == "SNAPSHOT":
-        df = Client.read(TAGS["Float32"], read_type=getattr(ReaderType, read_type),)
+        df = Client.read(
+            TAGS["Float32"],
+            read_type=getattr(ReaderType, read_type),
+        )
     else:
         df = Client.read(
             TAGS["Float32"],
@@ -147,6 +150,19 @@ def test_read(Client, read_type, size):
         assert df.shape == (size, 1) or df.shape == (size - 1, 1)
         assert df.index[0] >= ensure_datetime_with_tz(START_TIME)
         assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
+
+
+def test_read_with_status(Client):
+    df = Client.read(
+        TAGS["Float32"],
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.RAW,
+        get_status=True,
+    )
+    assert df.shape == (5, 2) or df.shape == (4, 2)
+    assert df[TAGS["Float32"] + "::status"].iloc[0] == 0
 
 
 def test_read_raw_long(Client):
@@ -238,7 +254,5 @@ def test_to_DST_skips_time(Client):
 
 
 def test_tags_with_no_data_included_in_results(Client):
-    df = Client.read(
-        [TAGS["Float32"]], "2099-01-01 00:00:00", "2099-01-02 00:00:00"
-    )
+    df = Client.read([TAGS["Float32"]], "2099-01-01 00:00:00", "2099-01-02 00:00:00")
     assert len(df.columns) == 1
