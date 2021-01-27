@@ -24,6 +24,7 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 - [Searching for tags](#searching-for-tags)
 - [Reading data](#reading-data)
   - [Selecting what to read](#selecting-what-to-read)
+  - [Status information](#status-information)
   - [Caching results](#caching-results)
   - [Time zones](#time-zones)
 - [Fetching metadata](#fetching-metadata)
@@ -220,6 +221,7 @@ Data is read by calling the client method `read()` with the following input argu
 
 * `ts` : The interval between samples when querying interpolated or aggregated data. Ignored and can be left out when `read_type = ReaderType.SNAPSHOT` . **Default** 60 seconds.
 * `read_type` (optional): What kind of data to read. More info immediately below. **Default** Interpolated. 
+* `get_status` (optonal): When set to `True` will fetch status information in addition to values. **Default** `False`.
 
 ## Selecting what to read
 
@@ -252,6 +254,42 @@ Read the average value for the two provided tags within each 3-minute interval b
 ``` python
 df = c.read(['BA:CONC.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180, read_type=tagreader.ReaderType.AVG)
 ```
+
+## Status information
+
+The optional parameter `get_status` was added to `IMSClient.read()` in release 2.6.0. If set to true, the resulting dataframe will be expanded with one additional column per tag. The column contains integer numbers that indicate the status, or quality, of the returned values.
+
+In an effort to unify the status value for all IMS types, the following schema based on AspenTech was selected:
+
+0: Good  
+1: Suspect  
+2: Bad  
+4: Good/Modified  
+5: Suspect/Modified  
+6: Bad/Modified
+
+The status value is obtained differently for the four IMS types:
+* Aspen Web API: Read directly from the `l` ("Level") field in the json output.
+* Aspen ODBC: Read directly from the `status` field in the table.
+* PI Web API: Calculated as `Questionable` + 2 * (1 - `Good`) + 4 * `Substituted`.
+* PI ODBC: Calculated as `questionable` + 2 * (`status` != 0) + 4 * `substituted`. `status` is 0 for good, positive or negative for various reasons for being bad.
+For the PI IMS types, it is assumed that `Questionable` cannot be True if `Good` is False or `status != 0`. This may be an incorrect assumption with resulting erroneous status value.
+
+Summed up, here is the resulting status value from tagreader for different combinations of status field values from the IMS types:
+
+| tagreader | Aspen Web API | Aspen ODBC | PI Web API                                                        | PI ODBC                                                          |
+|-----------|---------------|------------|-------------------------------------------------------------------|------------------------------------------------------------------|
+| 0         | l = 0         | status = 0 | Good = True<br /> Questionable = False<br /> Substituted = False  | status = 0<br /> questionable = False<br /> substituted = False  |
+| 1         | l = 1         | status = 1 | Good = True<br /> Questionable = True<br /> Substituted = False   | status = 0<br /> questionable = True<br /> substituted = False   |
+| 2         | l = 2         | status = 2 | Good = False<br /> Questionable = False<br /> Substituted = False | status != 0<br /> questionable = False<br /> substituted = False |
+| 4         | l = 4         | status = 4 | Good = True<br /> Questionable = False<br /> Substituted = True   | status = 0<br /> questionable = False<br /> substituted = True   |
+| 5         | l = 5         | status = 5 | Good = True<br /> Questionable = True<br /> Substituted = True    | status = 0<br /> questionable = True<br /> substituted = True    |
+| 6         | l = 6         | status = 6 | Good = False<br /> Questionable = False<br /> Substituted = True  | status != 0<br /> questionable = False<br /> substituted = True  |
+
+Please keep in mind when using `get_status`:
+* This is an experimental feature. It may work as intended, or it may resut in erroneous status values in some cases. If that happens, please create an issue.
+* Both how fetching status is activated and how it is returned may be changed at a later time.
+* The cache will currently be silently bypassed whenever `get_status` is `True`.
 
 ## Caching results
 
