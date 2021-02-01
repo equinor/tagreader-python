@@ -69,6 +69,8 @@ If you do not work in Equinor: ODBC queries may already work for you, although i
 
 ### For Equinor users
 
+***Note**: Since v2.7.0 the procedure described below will be automatically performed on Equinor hosts when importing the tagreader module. It should therefore no longer be necessary to perform this step manually.*
+
 The Web APIs are queried with the requests package. Requests does not utilize the system certificate store, but instead relies on the certifi bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verifySSL=False` for relevant function calls) or, strongly preferred, add the certificate to the certifi bundle. To do this, simply activate the virtual environment where you installed tagreader, and run the following snippet:
 
 ``` python
@@ -108,7 +110,7 @@ The method `tagreader.list_sources()` can query for available PI and IP.21 serve
 The following input arguments are only relevant when calling `list_sources()` with a Web API `imstype` ( `piwebapi` or `aspenone` ):
 
 * `url` (optional): Path to server root, e.g. _"https:<span>//aspenone/ProcessData/AtProcessDataREST.dll"_ or _"https:<span>//piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` if `imstype` is `piwebapi` or `aspenone` .
-* `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: True.
+* `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth objects that work with Equinor servers. If not connecting to an Equinor server, you may have to create your own auth.
 
 When called with `imstype` set to `pi` , `list_sources()` will search the registry at *HKEY_CURRENT_USER\Software\AspenTech\ADSA\Caches\AspenADSA\{username}* for available PI servers. Similarly, if called with `imstype` set to `ip21` , *HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PISystem\PI-SDK* will be searched for available IP.21 servers. Servers found through the registry are normally servers to which the user is authorized, and does not necessarily include all available data sources in the organization.
@@ -143,7 +145,7 @@ A connection to a data source is prepared by creating an instance of `tagreader.
 The following input arguments can be used when connecting to either `piwebapi` or to `aspenone` . None of these should be necessary to supply when connecting to Equinor servers.
 
 * `url` (optional): Path to server root, e.g. _"https:<span>//aspenone/ProcessData/AtProcessDataREST.dll"_ or _"https:<span>//piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` .
-* `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: True.
+* `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object that works with Equinor servers.
 
 If `imstype` is an ODBC type, i.e. `pi` or `ip21`, the host and port to connect to will by default be found by performing a search in Windows registry. For some systems this may not work. In those cases the user can explicitly specify the following optional parameters:
@@ -257,7 +259,7 @@ df = c.read(['BA:CONC.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180, read
 
 ## Status information
 
-The optional parameter `get_status` was added to `IMSClient.read()` in release 2.6.0. If set to true, the resulting dataframe will be expanded with one additional column per tag. The column contains integer numbers that indicate the status, or quality, of the returned values.
+The optional parameter `get_status` was added to `IMSClient.read()` in release 2.6.0. If set to `True`, the resulting dataframe will be expanded with one additional column per tag. The column contains integer numbers that indicate the status, or quality, of the returned values.
 
 In an effort to unify the status value for all IMS types, the following schema based on AspenTech was selected:
 
@@ -273,12 +275,13 @@ The status value is obtained differently for the four IMS types:
 * Aspen ODBC: Read directly from the `status` field in the table.
 * PI Web API: Calculated as `Questionable` + 2 * (1 - `Good`) + 4 * `Substituted`.
 * PI ODBC: Calculated as `questionable` + 2 * (`status` != 0) + 4 * `substituted`. `status` is 0 for good, positive or negative for various reasons for being bad.
-For the PI IMS types, it is assumed that `Questionable` cannot be True if `Good` is False or `status != 0`. This may be an incorrect assumption with resulting erroneous status value.
 
-Summed up, here is the resulting status value from tagreader for different combinations of status field values from the IMS types:
+For the two PI IMS types, it is assumed that `Questionable` is never `True` if `Good` is `False` or `status != 0`. This may be an incorrect assumption with resulting erroneous status value.
+
+In summary, here is the resulting status value from tagreader for different combinations of status field values from the IMS types:
 
 | tagreader | Aspen Web API | Aspen ODBC | PI Web API                                                        | PI ODBC                                                          |
-|-----------|---------------|------------|-------------------------------------------------------------------|------------------------------------------------------------------|
+| :-------: | :-----------: | :--------: | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
 | 0         | l = 0         | status = 0 | Good = True<br /> Questionable = False<br /> Substituted = False  | status = 0<br /> questionable = False<br /> substituted = False  |
 | 1         | l = 1         | status = 1 | Good = True<br /> Questionable = True<br /> Substituted = False   | status = 0<br /> questionable = True<br /> substituted = False   |
 | 2         | l = 2         | status = 2 | Good = False<br /> Questionable = False<br /> Substituted = False | status != 0<br /> questionable = False<br /> substituted = False |
@@ -287,7 +290,7 @@ Summed up, here is the resulting status value from tagreader for different combi
 | 6         | l = 6         | status = 6 | Good = False<br /> Questionable = False<br /> Substituted = True  | status != 0<br /> questionable = False<br /> substituted = True  |
 
 Please keep in mind when using `get_status`:
-* This is an experimental feature. It may work as intended, or it may resut in erroneous status values in some cases. If that happens, please create an issue.
+* This is an experimental feature. It may work as intended, or it may result in erroneous status values in some cases. If that happens, please create an issue.
 * Both how fetching status is activated and how it is returned may be changed at a later time.
 * The cache will currently be silently bypassed whenever `get_status` is `True`.
 
