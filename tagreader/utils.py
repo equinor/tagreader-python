@@ -1,5 +1,6 @@
 import enum
 import logging
+import warnings
 import winreg
 import pandas as pd
 
@@ -86,13 +87,17 @@ class ReaderType(enum.IntEnum):
     SNAPSHOT = FINAL = LAST = enum.auto()  # Last sampled value
 
 
-def add_statoil_root_certificate():
-    """ This is a utility function for Equinor employees on Equinor machines.
+def add_statoil_root_certificate(noisy=True):
+    """This is a utility function for Equinor employees on Equinor machines.
 
     The function searches for the Statoil Root certificate in the Windows
-    cert store and imports it to the cacert bundle.
+    cert store and imports it to the cacert bundle. Does nothing if not
+    running on Equinor host.
 
-    This only needs to be done once per virtual environment.
+    This needs to be repeated after updating the cacert module.
+
+    Returns:
+        bool: True if function completes successfully
     """
     import ssl
     import certifi
@@ -100,25 +105,51 @@ def add_statoil_root_certificate():
 
     STATOIL_ROOT_PEM_HASH = "ce7bb185ab908d2fea28c7d097841d9d5bbf2c76"
 
-    print("Scanning CA certs in store ", end="")
+    if noisy:
+        print("Scanning CA certs in Windows cert store", end="")
     found = False
     for cert in ssl.enum_certificates("CA"):
-        print(".", end="")
+        if noisy:
+            print(".", end="")
         der = cert[0]
         if hashlib.sha1(der).hexdigest() == STATOIL_ROOT_PEM_HASH:
             found = True
-            print(" found it!")
-            print("Converting certificate to PEM")
+            if noisy:
+                print(" found it!")
             pem = ssl.DER_cert_to_PEM_cert(cert[0])
             if pem in certifi.contents():
-                print("Certificate already exists in certifi store. Nothing to do.")
+                if noisy:
+                    print("Certificate already exists in certifi store. Nothing to do.")
                 break
-            print("Writing certificate to certifi store.")
+            if noisy:
+                print("Writing certificate to certifi store.")
             cafile = certifi.where()
             with open(cafile, "ab") as f:
                 f.write(bytes(pem, "ascii"))
-            print("Completed")
+            if noisy:
+                print("Completed")
             break
 
     if not found:
-        print("\n\nERROR: Unable to locate Statoil Root certificate.")
+        warnings.warn("Unable to locate Statoil root certificate on this host.")
+        return False
+
+    return True
+
+
+def is_equinor() -> bool:
+    """Determines whether code is running on an Equinor host
+
+    Finds host's domain in Windows Registry at
+    HKLM\\SYSTEM\\ControlSet001\\Services\\Tcpip\\Parameters\\Domain
+
+    Returns:
+        bool: True if Equnor
+    """
+    with winreg.OpenKey(
+        winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\ControlSet001\Services\Tcpip\Parameters"
+    ) as key:
+        domain = winreg.QueryValueEx(key, "Domain")
+    if "statoil" in domain[0]:
+        return True
+    return False
