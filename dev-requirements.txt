@@ -10,8 +10,6 @@ argon2-cffi==20.1.0
     # via notebook
 async-generator==1.10
     # via nbclient
-atomicwrites==1.4.0
-    # via pytest
 attrs==20.3.0
     # via
     #   jsonschema
@@ -20,7 +18,7 @@ backcall==0.2.0
     # via ipython
 black==20.8b1
     # via -r dev-requirements.in
-bleach==3.2.1
+bleach==3.3.0
     # via nbconvert
 cffi==1.14.4
     # via argon2-cffi
@@ -28,12 +26,6 @@ click==7.1.2
     # via
     #   black
     #   pip-tools
-colorama==0.4.4
-    # via
-    #   ipython
-    #   pytest
-dataclasses==0.8
-    # via black
 decorator==4.4.2
     # via
     #   ipython
@@ -44,12 +36,6 @@ entrypoints==0.3
     # via nbconvert
 flake8==3.8.4
     # via -r dev-requirements.in
-importlib-metadata==3.4.0
-    # via
-    #   flake8
-    #   jsonschema
-    #   pluggy
-    #   pytest
 iniconfig==1.1.1
     # via pytest
 ipykernel==5.4.3
@@ -142,9 +128,12 @@ parso==0.8.1
     # via jedi
 pathspec==0.8.1
     # via black
+pexpect==4.8.0
+    # via ipython
 pickleshare==0.7.5
     # via ipython
 pip-tools==5.5.0
+    # via -r dev-requirements.in
 pluggy==0.13.1
     # via pytest
 prometheus-client==0.9.0
@@ -153,6 +142,10 @@ prompt-toolkit==3.0.10
     # via
     #   ipython
     #   jupyter-console
+ptyprocess==0.7.0
+    # via
+    #   pexpect
+    #   terminado
 py==1.10.0
     # via pytest
 pycodestyle==2.6.0
@@ -176,10 +169,6 @@ pytest==6.2.1
     # via -r dev-requirements.in
 python-dateutil==2.8.1
     # via jupyter-client
-pywin32==300
-    # via jupyter-core
-pywinpty==0.5.7
-    # via terminado
 pyzmq==21.0.0
     # via
     #   jupyter-client
@@ -235,7 +224,6 @@ typed-ast==1.4.2
 typing-extensions==3.7.4.3
     # via
     #   black
-    #   importlib-metadata
     #   mypy
 wcwidth==0.2.5
     # via prompt-toolkit
@@ -243,8 +231,6 @@ webencodings==0.5.1
     # via bleach
 widgetsnbextension==3.5.1
     # via ipywidgets
-zipp==3.4.0
-    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
