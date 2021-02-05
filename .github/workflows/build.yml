@@ -31,7 +31,7 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        pytest --collect-only --ignore-glob=extratests/*
+        pytest tests
 
   testdeploy-if-tagged:
     needs: test
