@@ -31,7 +31,8 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        pytest --ignore-glob=extratests/*
+        # Ignore extratests/tests which doesn't exist here
+        pytest tests
 
   testdeploy-if-tagged:
     needs: test
