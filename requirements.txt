@@ -13,13 +13,9 @@ cffi==1.14.4
 chardet==4.0.0
     # via requests
 cryptography==3.3.1
-    # via
-    #   requests-kerberos
-    #   requests-ntlm
+    # via requests-kerberos
 idna==2.10
     # via requests
-ntlm-auth==1.5.0
-    # via requests-ntlm
 numexpr==2.7.2
     # via tables
 numpy==1.19.5
@@ -39,13 +35,10 @@ pytz==2021.1
     # via pandas
 requests-kerberos==0.12.0
     # via -r requirements.in
-requests-ntlm==1.1.0
-    # via -r requirements.in
 requests==2.25.1
     # via
     #   -r requirements.in
     #   requests-kerberos
-    #   requests-ntlm
 six==1.15.0
     # via
     #   cryptography
