@@ -1,6 +1,6 @@
 # tagreader-python <!-- omit in toc -->
 
-![Build](https://github.com/equinor/tagreader-python/workflows/Build/badge.svg) [![Build Status](https://dev.azure.com/EIIDS/tagreader/_apis/build/status/equinor.tagreader-python?branchName=master)](https://dev.azure.com/EIIDS/tagreader/_build/latest?definitionId=5&branchName=master) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tagreader) [![PyPI version](https://badge.fury.io/py/tagreader.svg)](https://badge.fury.io/py/tagreader) [![Downloads](https://pepy.tech/badge/tagreader)](https://pepy.tech/project/tagreader)
+![Build](https://github.com/equinor/tagreader-python/workflows/Build/badge.svg) [![Build Status](https://dev.azure.com/EIIDS/tagreader/_apis/build/status/equinor.tagreader-python?branchName=master)](https://dev.azure.com/EIIDS/tagreader/_build/latest?definitionId=5&branchName=master) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tagreader) ![PyPI](https://img.shields.io/pypi/v/tagreader) [![Downloads](https://pepy.tech/badge/tagreader)](https://pepy.tech/project/tagreader)
 
 Tagreader is a Python package for reading trend data from the OSIsoft
 PI and Aspen Infoplus.21 IMS systems. It is intended to be easy to use, 
