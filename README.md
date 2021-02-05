@@ -1,6 +1,6 @@
 # tagreader-python <!-- omit in toc -->
 
-![Build](https://github.com/equinor/tagreader-python/workflows/Build/badge.svg) [![Build Status](https://dev.azure.com/EIIDS/tagreader/_apis/build/status/equinor.tagreader-python?branchName=master)](https://dev.azure.com/EIIDS/tagreader/_build/latest?definitionId=5&branchName=master) [![PyPI version](https://badge.fury.io/py/tagreader.svg)](https://badge.fury.io/py/tagreader)
+![Build](https://github.com/equinor/tagreader-python/workflows/Build/badge.svg) [![Build Status](https://dev.azure.com/EIIDS/tagreader/_apis/build/status/equinor.tagreader-python?branchName=master)](https://dev.azure.com/EIIDS/tagreader/_build/latest?definitionId=5&branchName=master) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tagreader) [![PyPI version](https://badge.fury.io/py/tagreader.svg)](https://badge.fury.io/py/tagreader) [![Downloads](https://pepy.tech/badge/tagreader)](https://pepy.tech/project/tagreader)
 
 Tagreader is a Python package for reading trend data from the OSIsoft
 PI and Aspen Infoplus.21 IMS systems. It is intended to be easy to use, 
@@ -13,22 +13,27 @@ and OSIsoft.
 Tagreader outputs trend data as Pandas Dataframes, and uses the HDF5
 file format to cache results.
 
-Tagreader has only been tested on Windows platforms, but should also work
-elsewhere when using REST APIs.
+Tagreader currently only works on Windows platforms, but can (and probably
+will) be modified to work on Linux using REST APIs.
 
 ## Requirements
 
-Python >= 3.6 with the following packages:
+Python 3.6, 3.7 or 3.8 (*) with the following packages:
 
   + pandas >= 1.0.0
-  + pytables
+  + tables
   + requests
-  + requests_kerberos
+  + requests-kerberos
+  + certifi >= 2020.04.05
   + pyodbc (if using ODBC connections)
 
 If using ODBC connections, you must also install proprietary drivers for
 PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for
 Microsoft Windows.
+
+*) Please note that Python 3.9 is currently not supported due to [lack of 
+Windows wheels](https://github.com/PyTables/PyTables/issues/823) for the 
+PyTables package. 
 
 ## Installation
 
