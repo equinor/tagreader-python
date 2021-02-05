@@ -1,18 +1,16 @@
 # This is a simplified test workflow that does not include tests that require a connection to server.
 # If tests are successful and the push is a tag, then run a test-deploy to test.pypi.org.
 
-name: Build
+name: Test
 
 on: [push]
 
 jobs:
-  build:
-
+  test:
     runs-on: windows-latest
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -28,16 +26,15 @@ jobs:
         pip install flake8
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        # exit-zero treats all errors as warnings.
+        flake8 . --count --exit-zero --max-complexity=10 --statistics
     - name: Test with pytest
       run: |
         pip install pytest
-        pytest
+        pytest --ignore-glob=extratests/*
 
-  test-deploy-if-tagged:
-
-    needs: build 
+  testdeploy-if-tagged:
+    needs: test
     runs-on: windows-latest
     if: startsWith(github.ref, 'refs/tags')
     steps:
