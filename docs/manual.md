@@ -219,7 +219,7 @@ Data is read by calling the client method `read()` with the following input argu
 * `start_time` : Start of time period.
 * `end_time` : End of time period.
 
-  Both `start_time` and `end_time` can be either datetime object or string. Strings are interpreted by the [Timestamp](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.html) method from Pandas. Both times can be left out when `read_type = ReaderType.SNAPSHOT` . However, when using either of the Web APIs, `end_time` provides the time at which the snapshot is taken.
+  Both `start_time` and `end_time` can be either datetime object or string. Strings are interpreted by the [Timestamp](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.html) method from Pandas. Both timestamps can be left out when `read_type = ReaderType.SNAPSHOT` . However, when using either of the Web APIs, `end_time` provides the time at which the snapshot is taken.
 
 * `ts` : The interval between samples when querying interpolated or aggregated data. Ignored and can be left out when `read_type = ReaderType.SNAPSHOT` . **Default** 60 seconds.
 * `read_type` (optional): What kind of data to read. More info immediately below. **Default** Interpolated. 
@@ -296,7 +296,7 @@ Please keep in mind when using `get_status`:
 
 ## Caching results
 
-By default a cache-file using the HDF5 file format will be attached to the client upon client creation. Whenever `read_tags()` is called, the cache is queried for existing data. Any data that is not already in the cache will be queried from the data source. The cache can significantly speed up queries, and it is therefore recommended to always keep it enabled. The cache file will be created on use.
+By default a cache-file using the HDF5 file format will be attached to the client upon client creation. Whenever `IMSClient.read()` is called, the cache is queried for existing data. Any data that is not already in the cache will be queried from the data source. The cache can significantly speed up queries, and it is therefore recommended to always keep it enabled. The cache file will be created on use.
 
 Data in the cache never expires. If the data for some reason becomes invalid, then the cache and data source will no longer produce the same data set. An existing cache file can safely be deleted at any time, at least as long as there is no ongoing query.
 
@@ -339,7 +339,7 @@ tzinfo = tz.gettz("Brazil/East")  # Generate timezone object for Rio local time
 event_time = datetime(2020, 7, 20, 15, 5, 0, tzinfo=tzinfo)
 start_time = event_time - timedelta(minutes=30)
 end_time = event_time + timedelta(minutes=10)
-df = c.read_tags(["BA:CONC.1"], start_time, end_time, ts=60)
+df = c.read(["BA:CONC.1"], start_time, end_time, ts=60)
 df_to_Norway = df.tz_convert("Europe/Oslo")  # Create a copy of the dataframe with Norwegian time stamps
 ```
 
