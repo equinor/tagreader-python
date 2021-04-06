@@ -27,8 +27,8 @@ pandas==1.1.5
     # via -r requirements.in
 pycparser==2.20
     # via cffi
-pyodbc==4.0.30 ; platform_system == "Windows"
-    # via -r requirements.in
+pykerberos==1.2.1
+    # via requests-kerberos
 python-dateutil==2.8.1
     # via pandas
 pytz==2021.1
@@ -43,7 +43,5 @@ six==1.15.0
     # via python-dateutil
 tables==3.6.1
     # via -r requirements.in
-urllib3==1.26.3
+urllib3==1.26.4
     # via requests
-winkerberos==0.7.0
-    # via requests-kerberos
