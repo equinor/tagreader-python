@@ -184,7 +184,7 @@ def get_handler(
         if "PI ODBC Driver" not in pyodbc.drivers():
             raise RuntimeError(
                 "No PI ODBC driver detected. "
-                "Either switch to Web API ('piweb') or install appropriate driver."
+                "Either switch to Web API ('piwebapi') or install appropriate driver."
             )
         if host is None:
             hostport = get_server_address_pi(datasource)
@@ -201,8 +201,8 @@ def get_handler(
     if imstype.lower() in ["aspen", "ip21"]:
         if "AspenTech SQLplus" not in pyodbc.drivers():
             raise RuntimeError(
-                "No Aspen SQLplus ODBC driver detected. Either switch to Web API "
-                "('aspenone') or install appropriate driver."
+                "No Aspen SQLplus ODBC driver detected. "
+                "Either switch to Web API ('aspenone') or install appropriate driver."
             )
         if host is None:
             hostport = get_server_address_aspen(datasource)
