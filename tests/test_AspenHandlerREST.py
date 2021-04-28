@@ -15,10 +15,6 @@ def AspenHandler():
     yield h
 
 
-def test_stringify():
-    assert AspenHandlerWeb.stringify({"a": "b*", "c": "d!"}) == "a=b*&c=d!"
-
-
 def test_generate_search_query():
     with pytest.raises(ValueError):
         AspenHandlerWeb.generate_search_query("ATCAI")

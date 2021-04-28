@@ -63,16 +63,6 @@ def list_piwebapi_sources(
         print("Not authorized")
 
 
-class NoEncodeSession(requests.Session):
-    """Override requests.Session to avoid percent-encoding asterisk,
-    which causes Aspen Web API to fail.
-    """
-
-    def send(self, *args, **kwargs):
-        args[0].url = args[0].url.replace(urllib.parse.quote("*"), "*")
-        return requests.Session.send(self, *args, **kwargs)
-
-
 class AspenHandlerWeb:
     def __init__(
         self,
@@ -87,26 +77,10 @@ class AspenHandlerWeb:
             url = r"https://aspenone.api.equinor.com"
         self.base_url = url
         self.datasource = datasource
-        self.session = NoEncodeSession()
+        self.session = requests.Session()
         self.session.verify = verifySSL if verifySSL is not None else True
         self.session.auth = auth if auth else get_auth_aspen()
         self._connection_string = ""  # Used for raw SQL queries
-
-    @staticmethod
-    def stringify(params):
-        """Aspen web api doesn't like percent-encoded arguments.
-        This method converts a set of parameters on dict-form to
-        a continuous string, compatible with Aspen WEB API.
-
-        Chose to use NoEncodeSession() instead, but keeping this
-        method in case it is needed at some point.
-
-        :param params: Parameters to request's get()
-        :type params: dict
-        :return: String-based parameter to send to get()
-        :rtype: str
-        """
-        return "&".join("%s=%s" % (k, v) for k, v in params.items())
 
     @staticmethod
     def generate_connection_string(host, *_, **__):
@@ -116,6 +90,8 @@ class AspenHandlerWeb:
     def generate_search_query(tag=None, desc=None, datasource=None):
         if not datasource:
             raise ValueError("Data source is required argument")
+        # Aspen Web API expects single space instead of consecutive spaces.
+        tag = " ".join(tag.split())
         params = {"datasource": datasource, "tag": tag, "max": 100, "getTrendable": 0}
         return params
 
@@ -314,8 +290,15 @@ class AspenHandlerWeb:
         desc = desc.replace("*", ".*") if isinstance(desc, str) else None
 
         params = self.generate_search_query(tag, desc, self.datasource)
-        url = urljoin(self.base_url, "Browse")
-        res = self.session.get(url, params=params)
+        # Ensure space is encoded as "%20" instead of default "+" and leave asterisks
+        # unencoded. Otherwise searches for tags containing spaces break, as do wildcard
+        # searches.
+        encoded_params = urllib.parse.urlencode(
+            params, safe="*", quote_via=urllib.parse.quote
+        )
+        url = urljoin(self.base_url, "Browse?")
+        url += encoded_params
+        res = self.session.get(url)
 
         if res.status_code != 200:
             raise ConnectionError
@@ -880,7 +863,9 @@ class PIHandlerWeb:
         if get_status:
             df["Status"] = (
                 # Values are boolean, but no need to do .astype(int)
-                df["Questionable"] + 2 * (1 - df["Good"]) + 4 * df["Substituted"]
+                df["Questionable"]
+                + 2 * (1 - df["Good"])
+                + 4 * df["Substituted"]
             )
             df = df.drop(columns=["Good", "Questionable", "Substituted"])
 
