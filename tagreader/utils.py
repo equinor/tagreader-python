@@ -148,8 +148,11 @@ def add_statoil_root_certificate(noisy=True):
 def is_equinor() -> bool:
     """Determines whether code is running on an Equinor host
 
+    If Windows host:
     Finds host's domain in Windows Registry at
     HKLM\\SYSTEM\\ControlSet001\\Services\\Tcpip\\Parameters\\Domain
+    If Linux host:
+    Checks whether statoil.no is search domain
 
     Returns:
         bool: True if Equnor
@@ -162,6 +165,7 @@ def is_equinor() -> bool:
         if "statoil" in domain[0]:
             return True
     else:
+        print(platform.system)
         with open("/etc/resolv.conf", "r") as f:
             if "statoil.no" in f.read():
                 return True
