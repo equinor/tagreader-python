@@ -6,7 +6,7 @@ import pandas as pd
 
 
 def is_windows() -> bool:
-    return platform.system == "Windows"
+    return platform.system() == "Windows"
 
 
 if is_windows():
@@ -165,7 +165,6 @@ def is_equinor() -> bool:
         if "statoil" in domain[0]:
             return True
     else:
-        print(platform.system)
         with open("/etc/resolv.conf", "r") as f:
             if "statoil.no" in f.read():
                 return True
