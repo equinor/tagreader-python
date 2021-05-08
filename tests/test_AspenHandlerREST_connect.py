@@ -7,6 +7,7 @@ from tagreader.clients import IMSClient, list_sources
 from tagreader.web_handlers import (
     list_aspenone_sources,
     AspenHandlerWeb,
+    get_verifySSL
 )
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
@@ -18,7 +19,7 @@ if is_GITHUBACTION:
         allow_module_level=True,
     )
 
-verifySSL = not is_AZUREPIPELINE  # Certificate unavailable there
+verifySSL = False if is_AZUREPIPELINE else get_verifySSL()
 
 SOURCE = "SNA"
 TAG = "ATCAI"

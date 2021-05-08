@@ -8,6 +8,7 @@ from tagreader.utils import (
 from tagreader.web_handlers import (
     list_piwebapi_sources,
     PIHandlerWeb,
+    get_verifySSL
 )
 from tagreader.clients import IMSClient, list_sources
 
@@ -19,7 +20,7 @@ if is_GITHUBACTION:
         "All tests in module require connection to PI server", allow_module_level=True
     )
 
-verifySSL = not is_AZUREPIPELINE  # Certificate unavailable there
+verifySSL = False if is_AZUREPIPELINE else get_verifySSL()
 
 BASE_URL = "https://piwebapi.equinor.com/piwebapi"
 SOURCE = "PINO"
@@ -62,7 +63,7 @@ def test_list_all_piwebapi_sources():
 
 
 def test_list_sources_piwebapi():
-    res = list_sources("pi", verifySSL=verifySSL)
+    res = list_sources("piwebapi", verifySSL=verifySSL)
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:

@@ -1,4 +1,12 @@
 import pytest
+from tagreader.utils import is_windows
+
+if not is_windows():
+    pytest.skip(
+        "All tests in module require Windows",
+        allow_module_level=True
+    )
+
 import os
 import pyodbc
 import pandas as pd

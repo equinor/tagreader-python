@@ -1,16 +1,17 @@
 import os
 import pytest
 import pandas as pd
-from tagreader.utils import ReaderType
+from tagreader.utils import ReaderType, is_windows
 from tagreader.clients import (
     get_missing_intervals,
     get_next_timeslice,
     IMSClient,
 )
-from tagreader.odbc_handlers import (
-    AspenHandlerODBC,
-    PIHandlerODBC,
-)
+if is_windows():
+    from tagreader.odbc_handlers import (
+        AspenHandlerODBC,
+        PIHandlerODBC,
+    )
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -53,7 +54,8 @@ def test_get_missing_intervals():
 
 
 @pytest.mark.skipif(
-    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
+    is_GITHUBACTION or not is_windows(),
+    reason="ODBC drivers require Windows and are unavailable in GitHub Actions"
 )
 def test_PI_init_odbc_client_with_host_port():
     host = "thehostname"
@@ -67,7 +69,8 @@ def test_PI_init_odbc_client_with_host_port():
 
 
 @pytest.mark.skipif(
-    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
+    is_GITHUBACTION or not is_windows(),
+    reason="ODBC drivers require Windows and are unavailable in GitHub Actions"
 )
 def test_IP21_init_odbc_client_with_host_port():
     host = "thehostname"
@@ -81,7 +84,8 @@ def test_IP21_init_odbc_client_with_host_port():
 
 
 @pytest.mark.skipif(
-    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
+    is_GITHUBACTION or not is_windows(),
+    reason="ODBC drivers require Windows and are unavailable in GitHub Actions"
 )
 def test_PI_connection_string_override():
     connstr = "someuserspecifiedconnectionstring"
@@ -95,7 +99,8 @@ def test_PI_connection_string_override():
 
 
 @pytest.mark.skipif(
-    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
+    is_GITHUBACTION or not is_windows(),
+    reason="ODBC drivers require Windows and are unavailable in GitHub Actions"
 )
 def test_IP21_connection_string_override():
     connstr = "someuserspecifiedconnectionstring"
@@ -109,7 +114,8 @@ def test_IP21_connection_string_override():
 
 
 @pytest.mark.skipif(
-    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
+    is_GITHUBACTION or not is_windows(),
+    reason="ODBC drivers require Windows and are unavailable in GitHub Actions"
 )
 def test_init_odbc_clients():
     with pytest.raises(ValueError):

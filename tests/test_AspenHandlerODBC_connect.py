@@ -1,9 +1,18 @@
+from tagreader.utils import is_windows
 import pytest
-import os
-import pyodbc
-import pandas as pd
 
+if not is_windows():
+    pytest.skip(
+        "All tests in module require Windows",
+        allow_module_level=True
+    )
+
+import os
+import pandas as pd
+import pyodbc
 from tagreader.clients import IMSClient, list_sources
+
+
 from tagreader.odbc_handlers import list_aspen_sources
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ

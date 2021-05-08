@@ -1,7 +1,13 @@
 import pytest
 import pandas as pd
-from tagreader import utils
-from tagreader.utils import ReaderType
+from tagreader.utils import ReaderType, ensure_datetime_with_tz, is_windows
+
+if not is_windows():
+    pytest.skip(
+        "All tests in module require Windows",
+        allow_module_level=True
+    )
+
 from tagreader.odbc_handlers import AspenHandlerODBC
 
 START_TIME = "2018-01-17 16:00:00"
@@ -48,8 +54,8 @@ def test_generate_connection_string(AspenHandler):
     ],
 )
 def test_generate_tag_read_query(read_type):
-    starttime = utils.ensure_datetime_with_tz(START_TIME)
-    stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
+    starttime = ensure_datetime_with_tz(START_TIME)
+    stoptime = ensure_datetime_with_tz(STOP_TIME)
     ts = pd.Timedelta(SAMPLE_TIME, unit="s")
 
     if read_type == "SNAPSHOT":
@@ -142,8 +148,8 @@ def test_generate_tag_read_query(read_type):
     ],
 )
 def test_generate_tag_read_query_with_status(read_type):
-    starttime = utils.ensure_datetime_with_tz(START_TIME)
-    stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
+    starttime = ensure_datetime_with_tz(START_TIME)
+    stoptime = ensure_datetime_with_tz(STOP_TIME)
     ts = pd.Timedelta(SAMPLE_TIME, unit="s")
 
     if read_type == "SNAPSHOT":
@@ -230,8 +236,8 @@ def test_generate_tag_read_query_with_status(read_type):
 
 
 def test_genreadquery_long_sampletime():
-    starttime = utils.ensure_datetime_with_tz(START_TIME)
-    stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
+    starttime = ensure_datetime_with_tz(START_TIME)
+    stoptime = ensure_datetime_with_tz(STOP_TIME)
     ts = pd.Timedelta(86401, unit="s")
 
     res = AspenHandlerODBC.generate_read_query(

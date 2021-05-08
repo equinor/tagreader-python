@@ -2,11 +2,17 @@ import os
 import pytest
 import pandas as pd
 from tagreader import IMSClient
-from tagreader.utils import ReaderType, ensure_datetime_with_tz
+from tagreader.utils import ReaderType, ensure_datetime_with_tz, is_windows
 from tagreader.cache import SmartCache
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
+
+if not is_windows():
+    pytest.skip(
+        "All tests in module require Windows",
+        allow_module_level=True
+    )
 
 if is_GITHUBACTION:
     pytest.skip(

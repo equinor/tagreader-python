@@ -12,11 +12,18 @@ from .utils import (
     logging,
     ReaderType,
     urljoin,
+    is_windows,
 )
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
 )
+
+
+def get_verifySSL():
+    if is_windows():
+        return True
+    return "/etc/ssl/certs/ca-bundle.trust.crt"
 
 
 def get_auth_pi():
@@ -30,7 +37,7 @@ def get_auth_aspen():
 def list_aspenone_sources(
     url=r"https://aspenone.api.equinor.com",
     auth=get_auth_aspen(),
-    verifySSL=True,
+    verifySSL=get_verifySSL(),
 ):
     import urllib3
 
@@ -50,7 +57,9 @@ def list_aspenone_sources(
 
 
 def list_piwebapi_sources(
-    url=r"https://piwebapi.equinor.com/piwebapi", auth=get_auth_pi(), verifySSL=True
+    url=r"https://piwebapi.equinor.com/piwebapi",
+    auth=get_auth_pi(),
+    verifySSL=get_verifySSL()
 ):
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verifySSL)
@@ -78,8 +87,8 @@ class AspenHandlerWeb:
         self.base_url = url
         self.datasource = datasource
         self.session = requests.Session()
-        self.session.verify = verifySSL if verifySSL is not None else True
-        self.session.auth = auth if auth else get_auth_aspen()
+        self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
+        self.session.auth = auth if auth is not None else get_auth_aspen()
         self._connection_string = ""  # Used for raw SQL queries
 
     @staticmethod
@@ -516,8 +525,8 @@ class PIHandlerWeb:
         self.base_url = url
         self.datasource = datasource
         self.session = requests.Session()
-        self.session.verify = verifySSL if verifySSL is not None else True
-        self.session.auth = auth if auth else get_auth_pi()
+        self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
+        self.session.auth = auth if auth is not None else get_auth_pi()
         self.webidcache = {}
 
     @staticmethod

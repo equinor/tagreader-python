@@ -1,8 +1,16 @@
 import enum
 import logging
+import platform
 import warnings
-import winreg
 import pandas as pd
+
+
+def is_windows() -> bool:
+    return platform.system == "Windows"
+
+
+if is_windows():
+    import winreg
 
 
 def find_registry_key(base_key, search_key_name):
@@ -146,10 +154,15 @@ def is_equinor() -> bool:
     Returns:
         bool: True if Equnor
     """
-    with winreg.OpenKey(
-        winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\ControlSet001\Services\Tcpip\Parameters"
-    ) as key:
-        domain = winreg.QueryValueEx(key, "Domain")
-    if "statoil" in domain[0]:
-        return True
+    if is_windows():
+        with winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\ControlSet001\Services\Tcpip\Parameters"
+        ) as key:
+            domain = winreg.QueryValueEx(key, "Domain")
+        if "statoil" in domain[0]:
+            return True
+    else:
+        with open("/etc/resolv.conf", "r") as f:
+            if "statoil.no" in f.read():
+                return True
     return False
