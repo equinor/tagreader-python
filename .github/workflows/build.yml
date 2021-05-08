@@ -27,6 +27,7 @@ jobs:
     - name: Install dependencies Linux
       if: matrix.os == 'ubuntu-latest'
       run: |
+        apt-get install libkrb5-dev 
         python -m pip install --upgrade pip
         pip install -r linux-requirements.txt
     - name: Lint with flake8
