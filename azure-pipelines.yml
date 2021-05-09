@@ -22,16 +22,14 @@ steps:
 - script: |
     python -m pip install --upgrade pip
     pip install -r requirements.txt
-    pip install pytest pytest-xdist pytest-azurepipelines coverage
+    pip install pytest pytest-xdist pytest-azurepipelines
   displayName: 'Install dependencies'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
 
 - script: |
-    coverage erase
-    del /f coverage.xml
-    coverage run -m pytest
-    coverage xml --include='tagreader/*'
+    pip install pytest-cov
+    pytest --cov=tagreader
   condition: and(succeeded(), eq(variables['python.version'], '3.6'))
   displayName: 'Run tests with coverage'
   env: 
