@@ -44,7 +44,7 @@ DF3 = pd.DataFrame({TAGNAME: range(0, len(idx))}, index=idx)
 
 @pytest.fixture(autouse=True)
 def cache():
-    cache = BucketCache("testcache.h5")
+    cache = BucketCache("testbucketcache.h5")
     yield cache
     cache.remove()
 

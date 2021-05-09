@@ -39,7 +39,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --statistics
     - name: Test with pytest
       run: |
-        pip install pytest
+        pip install pytest pytest-xdist
         # Ignore extratests/tests which doesn't exist here
         pytest tests
 
