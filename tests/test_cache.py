@@ -1,8 +1,16 @@
 import pytest
 import os
 import pandas as pd
+from importlib.util import find_spec
+
 from tagreader.utils import ReaderType
 from tagreader.cache import SmartCache, safe_tagname
+
+if find_spec("tables") is None:
+    pytest.skip(
+        "Cache requires package 'tables'",
+        allow_module_level=True
+    )
 
 os.environ["NUMEXPR_MAX_THREADS"] = "8"
 

@@ -1,8 +1,10 @@
 import os
 import pandas as pd
-from .utils import ReaderType
-
+import warnings
+from importlib.util import find_spec
 from typing import Tuple, Union, List, Dict
+
+from .utils import ReaderType
 
 
 def safe_tagname(tagname: str) -> str:
@@ -22,6 +24,9 @@ def timestamp_to_epoch(timestamp: pd.Timestamp) -> int:
 
 class BucketCache:
     def __init__(self, filename: str, path: str = ".") -> None:
+        if find_spec("tables") is None:
+            warnings.warn("Package 'tables' not installed. Disabling cache.")
+            return None
         self.filename = os.path.splitext(filename)[0] + ".h5"
         self.filename = os.path.join(path, self.filename)
 
@@ -242,6 +247,9 @@ class BucketCache:
 
 class SmartCache:
     def __init__(self, filename: str, path: str = ".") -> None:
+        if find_spec("tables") is None:
+            warnings.warn("Package 'tables' not installed. Disabling cache.")
+            return None
         self.filename = os.path.splitext(filename)[0] + ".h5"
         self.filename = os.path.join(path, self.filename)
         # self.open(self.filename)

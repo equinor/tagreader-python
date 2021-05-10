@@ -274,9 +274,10 @@ class IMSClient:
             verifySSL=verifySSL,
             auth=auth,
         )
-        self.cache = SmartCache(datasource)
 
     def connect(self):
+        if not hasattr(self, "cache"):
+            self.cache = SmartCache(self.datasource)
         self.handler.connect()
 
     def search_tag(self, tag=None, desc=None):

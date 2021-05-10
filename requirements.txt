@@ -41,7 +41,7 @@ requests==2.25.1
     #   requests-kerberos
 six==1.15.0
     # via python-dateutil
-tables==3.6.1
+tables==3.6.1 ; platform_system == "Linux" or python_version < "3.9"
     # via -r requirements.in
 urllib3==1.26.3
     # via requests
