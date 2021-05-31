@@ -43,7 +43,7 @@ six==1.15.0
     # via python-dateutil
 tables==3.6.1
     # via -r requirements.in
-urllib3==1.26.3
+urllib3==1.26.5
     # via requests
 winkerberos==0.7.0
     # via requests-kerberos
