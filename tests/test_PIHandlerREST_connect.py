@@ -1,5 +1,6 @@
-import pytest
 import os
+import pytest
+import sys
 import pandas as pd
 from tagreader.utils import (
     ReaderType,
@@ -256,3 +257,13 @@ def test_to_DST_skips_time(Client):
 def test_tags_with_no_data_included_in_results(Client):
     df = Client.read([TAGS["Float32"]], "2099-01-01 00:00:00", "2099-01-02 00:00:00")
     assert len(df.columns) == 1
+
+
+@pytest.mark.skipif(
+    sys.platform == "linux" or sys.version_info <= (3, 9),
+    reason="Test only for Windows w/Py 3.9",
+)
+def test_connect_no_pytables():
+    with pytest.warns(UserWarning):
+        c = IMSClient(datasource="whatever", host="host", imstype="piwebapi")
+        c.connect()

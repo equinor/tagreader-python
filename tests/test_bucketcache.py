@@ -1,9 +1,11 @@
 import pytest
 import pandas as pd
-
+import sys
 from tagreader.utils import ReaderType
 from tagreader.cache import safe_tagname, timestamp_to_epoch, BucketCache
 
+if sys.platform == "win32" and sys.version_info >= (3, 9):
+    pytest.skip("tables missing for Python 3.9 in Windows", allow_module_level=True)
 
 TAGNAME = "tag1"
 READERTYPE = ReaderType.INT

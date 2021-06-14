@@ -22,10 +22,10 @@ will) be modified to work on Linux using REST APIs.
 
 ## Requirements
 
-Python 3.6, 3.7 or 3.8 (*) with the following packages:
+Python >=3.6 (*) with the following packages:
 
   + pandas >= 1.0.0
-  + tables
+  + tables (*)
   + requests
   + requests-kerberos
   + certifi >= 2020.04.05
@@ -35,9 +35,9 @@ If using ODBC connections, you must also install proprietary drivers for
 PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for
 Microsoft Windows.
 
-*) Please note that Python 3.9 is currently not supported due to [lack of 
-Windows wheels](https://github.com/PyTables/PyTables/issues/823) for the 
-PyTables package. 
+*) Please note that for Python 3.9 there are currently no [Windows wheels
+available](https://github.com/PyTables/PyTables/issues/823) for the tables 
+package. Tagreader will still function, but the cache will be disabled.
 
 ## Installation
 

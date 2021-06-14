@@ -264,6 +264,23 @@ class IMSClient:
         self.cache = SmartCache(datasource)
 
     def connect(self):
+        if self.cache is not None:
+            try:
+                import tables  # noqa: F401
+            except ModuleNotFoundError:
+                import sys
+                warning = "Disabling cache due to missing package 'tables'"
+                if (
+                    sys.version_info >= (3, 9)
+                    and sys.platform == "win32"
+                ):
+                    warning += (
+                        "\ntables is currently not available for Python 3.9 for Windows"
+                        "\nMore info: https://github.com/PyTables/PyTables/issues/823"
+                    )
+                warnings.warn(warning)
+                self.cache = None
+
         self.handler.connect()
 
     def search_tag(self, tag=None, desc=None):
@@ -337,10 +354,15 @@ class IMSClient:
                         tag, start, stop, ts, read_type, metadata, get_status
                     )
                     if len(df.index) > 0:
-                        if cache is not None and read_type not in [
-                            ReaderType.SNAPSHOT,
-                            ReaderType.RAW,
-                        ] and not get_status:
+                        if (
+                            cache is not None
+                            and read_type
+                            not in [
+                                ReaderType.SNAPSHOT,
+                                ReaderType.RAW,
+                            ]
+                            and not get_status
+                        ):
                             cache.store(df, read_type, ts)
                     frames.append(df)
                     if len(df) < self.handler._max_rows:

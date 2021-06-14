@@ -41,7 +41,7 @@ def test_get_missing_intervals():
         df,
         start_time="2018-01-18 05:00:00",
         stop_time="2018-01-18 06:00:00",
-        ts=pd.Timedelta(ts, unit='s'),
+        ts=pd.Timedelta(ts, unit="s"),
         read_type=ReaderType.INT,
     )
     assert missing[0] == (idx[2], idx[2])
