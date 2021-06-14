@@ -1,10 +1,14 @@
-import pytest
 import os
+import pytest
+import sys
 import pandas as pd
 from tagreader.utils import ReaderType
 from tagreader.cache import SmartCache, safe_tagname
 
 os.environ["NUMEXPR_MAX_THREADS"] = "8"
+
+if sys.platform == "win32" and sys.version_info >= (3, 9):
+    pytest.skip("tables missing for Python 3.9 in Windows", allow_module_level=True)
 
 
 @pytest.fixture()

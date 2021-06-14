@@ -3,4 +3,4 @@ pandas>=1.0.0
 pyodbc; platform_system == 'Windows'
 requests
 requests-kerberos
-tables
+tables; platform_system == "Linux" or python_version < '3.9'

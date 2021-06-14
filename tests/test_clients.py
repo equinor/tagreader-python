@@ -1,5 +1,6 @@
 import os
 import pytest
+import sys
 import pandas as pd
 from tagreader.utils import ReaderType
 from tagreader.clients import (
@@ -41,7 +42,7 @@ def test_get_missing_intervals():
         df,
         start_time="2018-01-18 05:00:00",
         stop_time="2018-01-18 06:00:00",
-        ts=pd.Timedelta(ts, unit='s'),
+        ts=pd.Timedelta(ts, unit="s"),
         read_type=ReaderType.INT,
     )
     assert missing[0] == (idx[2], idx[2])
@@ -126,3 +127,13 @@ def test_init_odbc_clients():
     assert isinstance(c.handler, PIHandlerODBC)
     c = IMSClient("snA", "aspen")
     assert isinstance(c.handler, AspenHandlerODBC)
+
+
+@pytest.mark.skipif(
+    sys.platform == "linux" or sys.version_info <= (3, 9),
+    reason="Test only for Windows w/Py 3.9",
+)
+def test_no_pytables():
+    with pytest.warns(UserWarning):
+        c = IMSClient(datasource="whatever", host="host", imstype="piwebapi")
+        c.connect()
