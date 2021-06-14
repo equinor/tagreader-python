@@ -1,6 +1,5 @@
 import os
 import pytest
-import sys
 import pandas as pd
 from tagreader.utils import ReaderType
 from tagreader.clients import (
@@ -127,13 +126,3 @@ def test_init_odbc_clients():
     assert isinstance(c.handler, PIHandlerODBC)
     c = IMSClient("snA", "aspen")
     assert isinstance(c.handler, AspenHandlerODBC)
-
-
-@pytest.mark.skipif(
-    sys.platform == "linux" or sys.version_info <= (3, 9),
-    reason="Test only for Windows w/Py 3.9",
-)
-def test_no_pytables():
-    with pytest.warns(UserWarning):
-        c = IMSClient(datasource="whatever", host="host", imstype="piwebapi")
-        c.connect()
