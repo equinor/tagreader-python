@@ -10,8 +10,6 @@ argon2-cffi==20.1.0
     # via notebook
 async-generator==1.10
     # via nbclient
-atomicwrites==1.4.0
-    # via pytest
 attrs==20.3.0
     # via
     #   jsonschema
@@ -28,10 +26,6 @@ click==7.1.2
     # via
     #   black
     #   pip-tools
-colorama==0.4.4
-    # via
-    #   ipython
-    #   pytest
 decorator==4.4.2
     # via
     #   ipython
@@ -51,17 +45,17 @@ ipykernel==5.4.3
     #   jupyter-console
     #   notebook
     #   qtconsole
+ipython==7.16.1
+    # via
+    #   ipykernel
+    #   ipywidgets
+    #   jupyter-console
 ipython-genutils==0.2.0
     # via
     #   nbformat
     #   notebook
     #   qtconsole
     #   traitlets
-ipython==7.16.1
-    # via
-    #   ipykernel
-    #   ipywidgets
-    #   jupyter-console
 ipywidgets==7.6.3
     # via jupyter
 jedi==0.18.0
@@ -72,6 +66,8 @@ jinja2==2.11.3
     #   notebook
 jsonschema==3.2.0
     # via nbformat
+jupyter==1.0.0
+    # via -r dev-requirements.in
 jupyter-client==6.1.11
     # via
     #   ipykernel
@@ -88,8 +84,6 @@ jupyter-core==4.7.1
     #   nbformat
     #   notebook
     #   qtconsole
-jupyter==1.0.0
-    # via -r dev-requirements.in
 jupyterlab-pygments==0.1.2
     # via nbconvert
 jupyterlab-widgets==1.0.0
@@ -100,12 +94,12 @@ mccabe==0.6.1
     # via flake8
 mistune==0.8.4
     # via nbconvert
+mypy==0.800
+    # via -r dev-requirements.in
 mypy-extensions==0.4.3
     # via
     #   black
     #   mypy
-mypy==0.800
-    # via -r dev-requirements.in
 nbclient==0.5.1
     # via nbconvert
 nbconvert==6.0.7
@@ -120,7 +114,7 @@ nbformat==5.1.2
     #   notebook
 nest-asyncio==1.5.1
     # via nbclient
-notebook==6.2.0
+notebook==6.4.1
     # via
     #   jupyter
     #   widgetsnbextension
@@ -134,6 +128,8 @@ parso==0.8.1
     # via jedi
 pathspec==0.8.1
     # via black
+pexpect==4.8.0
+    # via ipython
 pickleshare==0.7.5
     # via ipython
 pip-tools==5.5.0
@@ -146,6 +142,10 @@ prompt-toolkit==3.0.14
     # via
     #   ipython
     #   jupyter-console
+ptyprocess==0.7.0
+    # via
+    #   pexpect
+    #   terminado
 py==1.10.0
     # via pytest
 pycodestyle==2.6.0
@@ -169,10 +169,6 @@ pytest==6.2.2
     # via -r dev-requirements.in
 python-dateutil==2.8.1
     # via jupyter-client
-pywin32==300
-    # via jupyter-core
-pywinpty==0.5.7
-    # via terminado
 pyzmq==22.0.2
     # via
     #   jupyter-client
