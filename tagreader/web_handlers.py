@@ -806,7 +806,7 @@ class PIHandlerWeb:
             # Summary (aggregated) data and DigitalSets return Value as dict
             df = pd.json_normalize(data=j, record_path="Items")
 
-        # Some sort of return default empty datafranme function would be better here
+        # Defining a function to return a default empty dataframe would be better
         if len(df.columns) == 0:
             df['Value'] = None
             df['Timestamp'] = None
