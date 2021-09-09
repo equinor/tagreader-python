@@ -1,18 +1,14 @@
-import warnings
-import requests
-import urllib
 import re
-import pandas as pd
-import numpy as np
+import urllib
+import warnings
 from typing import Union
 
-from requests_kerberos import HTTPKerberosAuth, OPTIONAL
+import numpy as np
+import pandas as pd
+import requests
+from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
-from .utils import (
-    logging,
-    ReaderType,
-    urljoin,
-)
+from .utils import ReaderType, logging, urljoin
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
@@ -810,6 +806,14 @@ class PIHandlerWeb:
             # Summary (aggregated) data and DigitalSets return Value as dict
             df = pd.json_normalize(data=j, record_path="Items")
 
+        # Some sort of return default empty datafranme function would be better here
+        if len(df.columns) == 0:
+            df['Value'] = None
+            df['Timestamp'] = None
+            df["Good"] = None
+            df["Questionable"] = None
+            df["Substituted"] = None
+
         # Summary data, digitalset or invalid data
         if "Value" not in df.columns:
             # Either digitalset or invalid data. Set invalid to NaN
@@ -863,9 +867,9 @@ class PIHandlerWeb:
         if get_status:
             df["Status"] = (
                 # Values are boolean, but no need to do .astype(int)
-                df["Questionable"]
-                + 2 * (1 - df["Good"])
-                + 4 * df["Substituted"]
+                df["Questionable"] +
+                2 * (1 - df["Good"]) +
+                4 * df["Substituted"]
             )
             df = df.drop(columns=["Good", "Questionable", "Substituted"])
 
