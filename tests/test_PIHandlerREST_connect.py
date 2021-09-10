@@ -1,16 +1,11 @@
 import os
-import pytest
 import sys
+
 import pandas as pd
-from tagreader.utils import (
-    ReaderType,
-    ensure_datetime_with_tz,
-)
-from tagreader.web_handlers import (
-    list_piwebapi_sources,
-    PIHandlerWeb,
-)
+import pytest
 from tagreader.clients import IMSClient, list_sources
+from tagreader.utils import ReaderType, ensure_datetime_with_tz
+from tagreader.web_handlers import PIHandlerWeb, list_piwebapi_sources
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -257,6 +252,16 @@ def test_to_DST_skips_time(Client):
 def test_tags_with_no_data_included_in_results(Client):
     df = Client.read([TAGS["Float32"]], "2099-01-01 00:00:00", "2099-01-02 00:00:00")
     assert len(df.columns) == 1
+
+
+def test_tags_raw_with_no_data_included_in_results(Client):
+    df = Client.read(
+        [TAGS["Float32"]],
+        "2099-01-01 00:00:00",
+        "2099-01-02 00:00:00",
+        read_type=ReaderType.RAW,
+    )
+    assert df.empty
 
 
 @pytest.mark.skipif(

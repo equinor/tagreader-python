@@ -1,18 +1,14 @@
-import warnings
-import requests
-import urllib
 import re
-import pandas as pd
-import numpy as np
+import urllib
+import warnings
 from typing import Union
 
-from requests_kerberos import HTTPKerberosAuth, OPTIONAL
+import numpy as np
+import pandas as pd
+import requests
+from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
-from .utils import (
-    logging,
-    ReaderType,
-    urljoin,
-)
+from .utils import ReaderType, logging, urljoin
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
@@ -809,6 +805,10 @@ class PIHandlerWeb:
         else:
             # Summary (aggregated) data and DigitalSets return Value as dict
             df = pd.json_normalize(data=j, record_path="Items")
+
+        # Can happen for RAW reads w/o data in interval
+        if df.empty:
+            return df
 
         # Summary data, digitalset or invalid data
         if "Value" not in df.columns:

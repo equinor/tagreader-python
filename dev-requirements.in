@@ -1,7 +1,8 @@
-pytest
 black
 flake8
-mypy
+isort
 jupyter
-setuptools-scm
+mypy
 pip-tools
+pytest
+setuptools-scm
