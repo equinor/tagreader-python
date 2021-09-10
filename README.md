@@ -22,7 +22,7 @@ will) be modified to work on Linux using REST APIs.
 
 ## Requirements
 
-Python >=3.6 (*) with the following packages:
+Python >=3.7 (*) with the following packages:
 
   + pandas >= 1.0.0
   + tables (*)

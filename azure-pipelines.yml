@@ -6,8 +6,6 @@ pool:
 
 strategy:
   matrix:
-    Python36:
-      python.version: '3.6'
     Python37:
       python.version: '3.7'
     Python38:
@@ -34,7 +32,7 @@ steps:
     del /f coverage.xml
     coverage run -m pytest
     coverage xml --include='tagreader/*'
-  condition: and(succeeded(), eq(variables['python.version'], '3.6'))
+  condition: and(succeeded(), eq(variables['python.version'], '3.8'))
   displayName: 'Run tests with coverage'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
@@ -42,13 +40,13 @@ steps:
 - script: |
     echo $(python.version)
     pytest
-  condition: and(succeeded(), not(eq(variables['python.version'], '3.6')))
+  condition: and(succeeded(), not(eq(variables['python.version'], '3.8')))
   displayName: 'Run tests'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
 
 - task: PublishCodeCoverageResults@1
-  condition: and(succeeded(), eq(variables['python.version'], '3.6'))
+  condition: and(succeeded(), eq(variables['python.version'], '3.8'))
   inputs:
     codeCoverageTool: Cobertura
     summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'

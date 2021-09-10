@@ -34,7 +34,7 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 
 # Requirements
 
-Python >= 3.6 with the following packages:
+Python >= 3.7 with the following packages:
 
   + pandas >= 1.0.0
   + pytables
@@ -282,12 +282,12 @@ In summary, here is the resulting status value from tagreader for different comb
 
 | tagreader | Aspen Web API | Aspen ODBC | PI Web API                                                        | PI ODBC                                                          |
 | :-------: | :-----------: | :--------: | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
-| 0         | l = 0         | status = 0 | Good = True<br /> Questionable = False<br /> Substituted = False  | status = 0<br /> questionable = False<br /> substituted = False  |
-| 1         | l = 1         | status = 1 | Good = True<br /> Questionable = True<br /> Substituted = False   | status = 0<br /> questionable = True<br /> substituted = False   |
-| 2         | l = 2         | status = 2 | Good = False<br /> Questionable = False<br /> Substituted = False | status != 0<br /> questionable = False<br /> substituted = False |
-| 4         | l = 4         | status = 4 | Good = True<br /> Questionable = False<br /> Substituted = True   | status = 0<br /> questionable = False<br /> substituted = True   |
-| 5         | l = 5         | status = 5 | Good = True<br /> Questionable = True<br /> Substituted = True    | status = 0<br /> questionable = True<br /> substituted = True    |
-| 6         | l = 6         | status = 6 | Good = False<br /> Questionable = False<br /> Substituted = True  | status != 0<br /> questionable = False<br /> substituted = True  |
+|     0     |     l = 0     | status = 0 | Good = True<br /> Questionable = False<br /> Substituted = False  | status = 0<br /> questionable = False<br /> substituted = False  |
+|     1     |     l = 1     | status = 1 | Good = True<br /> Questionable = True<br /> Substituted = False   | status = 0<br /> questionable = True<br /> substituted = False   |
+|     2     |     l = 2     | status = 2 | Good = False<br /> Questionable = False<br /> Substituted = False | status != 0<br /> questionable = False<br /> substituted = False |
+|     4     |     l = 4     | status = 4 | Good = True<br /> Questionable = False<br /> Substituted = True   | status = 0<br /> questionable = False<br /> substituted = True   |
+|     5     |     l = 5     | status = 5 | Good = True<br /> Questionable = True<br /> Substituted = True    | status = 0<br /> questionable = True<br /> substituted = True    |
+|     6     |     l = 6     | status = 6 | Good = False<br /> Questionable = False<br /> Substituted = True  | status != 0<br /> questionable = False<br /> substituted = True  |
 
 Please keep in mind when using `get_status`:
 * This is an experimental feature. It may work as intended, or it may result in erroneous status values in some cases. If that happens, please create an issue.

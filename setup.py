@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from typing import List
+
 from setuptools import setup
 
 long_description = """
@@ -22,7 +23,7 @@ elsewhere when using REST APIs.
 
 ## Requirements
 
-Python >= 3.6 with the following packages:
+Python >= 3.7 with the following packages:
 
   + pandas >= 1.0.0
   + pytables
@@ -81,7 +82,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
@@ -92,7 +92,7 @@ setup(
     packages=["tagreader"],
     platforms=["Windows"],
     package_data={"": ["*.md"]},
-    python_requires="~=3.6",
+    python_requires="~=3.7",
     setup_requires=["setuptools_scm"],
     use_scm_version={"write_to": "tagreader/version.py"},
     install_requires=get_install_requirements(),
