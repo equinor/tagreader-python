@@ -149,3 +149,5 @@ test_scripts/*
 # Certificate files
 *.pem
 *.cer
+
+adhoc/

@@ -10,6 +10,12 @@ from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
 from .utils import ReaderType, logging, urljoin
 
+# Requests will use simplejson if it has been installed, so handle both errors here
+try:
+    from simplejson.errors import JSONDecodeError
+except ImportError:
+    from json.decoder import JSONDecodeError
+
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
 )
@@ -420,7 +426,17 @@ class AspenHandlerWeb:
         if len(res.text) == 0:  # res.text='' for timestamps in future
             return pd.DataFrame(columns=[tag])
 
-        j = res.json()
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+            import json
+
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            j = json.loads(txt)
+
         if "er" in j["data"][0]["samples"][0]:
             warnings.warn(j["data"][0]["samples"][0]["es"])
             return pd.DataFrame(columns=[tag])
