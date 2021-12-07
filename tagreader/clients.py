@@ -263,7 +263,8 @@ class IMSClient:
         )
         self.cache = SmartCache(datasource)
 
-    def connect(self):
+
+    def init_cache(self):
         if self.cache is not None:
             try:
                 import tables  # noqa: F401
@@ -281,7 +282,11 @@ class IMSClient:
                 warnings.warn(warning)
                 self.cache = None
 
+
+    def connect(self):
+        self.init_cache()
         self.handler.connect()
+
 
     def search_tag(self, tag=None, desc=None):
         warnings.warn("This function is deprecated. Please call 'search()' instead")
@@ -363,7 +368,11 @@ class IMSClient:
                             ]
                             and not get_status
                         ):
-                            cache.store(df, read_type, ts)
+                            try:
+                                cache.store(df, read_type, ts)
+                            except ImportError:
+                                self.init_cache()
+
                     frames.append(df)
                     if len(df) < self.handler._max_rows:
                         break
