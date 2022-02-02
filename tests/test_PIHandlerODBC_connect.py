@@ -13,7 +13,7 @@ if is_GITHUBACTION:
         "All tests in module require connection to PI server", allow_module_level=True
     )
 
-SOURCE = "PINO"
+SOURCE = "PIMAM"
 
 TAGS = {
     "Float32": "BA:CONC.1",
