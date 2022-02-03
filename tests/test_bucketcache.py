@@ -1,11 +1,15 @@
-import pytest
-import pandas as pd
-import sys
-from tagreader.utils import ReaderType
-from tagreader.cache import safe_tagname, timestamp_to_epoch, BucketCache
+from importlib.util import find_spec
 
-if sys.platform == "win32" and sys.version_info >= (3, 9):
-    pytest.skip("tables missing for Python 3.9 in Windows", allow_module_level=True)
+import pandas as pd
+import pytest
+from tagreader.cache import BucketCache, safe_tagname, timestamp_to_epoch
+from tagreader.utils import ReaderType
+
+if find_spec("tables") is None:
+    pytest.skip(
+        "Bucketcache requires package 'tables'",
+        allow_module_level=True
+    )
 
 TAGNAME = "tag1"
 READERTYPE = ReaderType.INT
@@ -46,7 +50,7 @@ DF3 = pd.DataFrame({TAGNAME: range(0, len(idx))}, index=idx)
 
 @pytest.fixture(autouse=True)
 def cache():
-    cache = BucketCache("testcache.h5")
+    cache = BucketCache("testbucketcache.h5")
     yield cache
     cache.remove()
 
