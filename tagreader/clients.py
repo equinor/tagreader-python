@@ -268,17 +268,7 @@ class IMSClient:
             try:
                 import tables  # noqa: F401
             except ModuleNotFoundError:
-                import sys
-                warning = "Disabling cache due to missing package 'tables'"
-                if (
-                    sys.version_info >= (3, 9)
-                    and sys.platform == "win32"
-                ):
-                    warning += (
-                        "\ntables is currently not available for Python 3.9 for Windows"
-                        "\nMore info: https://github.com/PyTables/PyTables/issues/823"
-                    )
-                warnings.warn(warning)
+                warnings.warn("Disabling cache due to missing package 'tables'")
                 self.cache = None
 
         self.handler.connect()
