@@ -9,13 +9,14 @@ import pandas as pd
 def is_windows() -> bool:
     return platform.system() == "Windows"
 
+
 def is_mac() -> bool:
     return platform.system() == "Darwin"
 
 
 if is_windows():
     import winreg
-    
+
 
 if is_mac():
     import socket
