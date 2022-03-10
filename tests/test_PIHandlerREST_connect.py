@@ -264,11 +264,7 @@ def test_tags_raw_with_no_data_included_in_results(Client):
     assert df.empty
 
 
-@pytest.mark.skipif(
-    sys.platform == "linux" or sys.version_info <= (3, 9),
-    reason="Test only for Windows w/Py 3.9",
-)
-def test_connect_no_pytables():
-    with pytest.warns(UserWarning):
-        c = IMSClient(datasource="whatever", host="host", imstype="piwebapi")
-        c.connect()
+# def test_connect_no_pytables():
+#     with pytest.warns(UserWarning):
+#         c = IMSClient(datasource="whatever", host="host", imstype="piwebapi")
+#         c.connect()
