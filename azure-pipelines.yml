@@ -12,6 +12,9 @@ strategy:
       python.version: '3.8'
     Python39:
       python.version: '3.9'
+    Python310:
+      python.version: '3.10'
+
 
 steps:
 - task: UsePythonVersion@0
@@ -21,7 +24,7 @@ steps:
 
 - script: |
     python -m pip install --upgrade pip
-    pip install -r requirements.txt
+    pip install -r requirements.in
     pip install pytest pytest-azurepipelines coverage
   displayName: 'Install dependencies'
   env: 
@@ -32,7 +35,7 @@ steps:
     del /f coverage.xml
     coverage run -m pytest
     coverage xml --include='tagreader/*'
-  condition: and(succeeded(), eq(variables['python.version'], '3.8'))
+  condition: and(succeeded(), eq(variables['python.version'], '3.10'))
   displayName: 'Run tests with coverage'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
@@ -40,13 +43,13 @@ steps:
 - script: |
     echo $(python.version)
     pytest
-  condition: and(succeeded(), not(eq(variables['python.version'], '3.8')))
+  condition: and(succeeded(), not(eq(variables['python.version'], '3.10')))
   displayName: 'Run tests'
   env: 
     HTTPS_PROXY: $(var_http_proxy)
 
 - task: PublishCodeCoverageResults@1
-  condition: and(succeeded(), eq(variables['python.version'], '3.8'))
+  condition: and(succeeded(), eq(variables['python.version'], '3.10'))
   inputs:
     codeCoverageTool: Cobertura
     summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'

@@ -1,4 +1,4 @@
--r requirements.txt 
+-c requirements.txt 
 black
 flake8
 isort
