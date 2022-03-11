@@ -166,10 +166,13 @@ c = tagreader.IMSClient("PINO", "pi")
 c.connect()
 ```
 
-Connecting to the Peregrino IP.21 data source using AspenTech Process Data REST Web API, specifying that all naive time stamps as well as the returned data shall use Rio local time:
+Connecting to the Peregrino IP.21 data source using AspenTech Process Data REST Web API, specifying that all naive time stamps as well as the returned data shall use Rio local time, and using the local endpoint in Brazil:
 
 ``` python
-c = tagreader.IMSClient("PER", "aspenone", tz="Brazil/East")
+c = tagreader.IMSClient(datasource="PER", 
+                        imstype="aspenone", 
+                        tz="Brazil/East", 
+                        url="https://aspenone-per.equinor.com/ProcessExplorer/ProcessData/AtProcessDataREST.dll")
 c.connect()
 ```
 
@@ -181,7 +184,11 @@ from requests_ntlm import HttpNtlmAuth
 user = "mydomain\\" + getpass.getuser()
 pwd = getpass.getpass()
 auth = HttpNtlmAuth(user, pwd)
-c = tagreader.IMSClient(datasource="myplant", url="api.mycompany.com/aspenone", imstype="aspenone", auth=auth, verifySSL=False)
+c = tagreader.IMSClient(datasource="myplant", 
+                        url="https://api.mycompany.com/aspenone", 
+                        imstype="aspenone", 
+                        auth=auth, 
+                        verifySSL=False)
 c.connect()
 ```
 

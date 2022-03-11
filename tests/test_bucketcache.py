@@ -114,7 +114,11 @@ def test_key_path_stepped(cache):
 def test_key_path_with_status(cache):
     assert (
         cache._key_path(
-            tagname=TAGNAME, readtype=READERTYPE, ts=60, stepped=False, status=True,
+            tagname=TAGNAME,
+            readtype=READERTYPE,
+            ts=60,
+            stepped=False,
+            status=True,
         )
         == "/tag1/INT/s60/status"
     )
@@ -135,16 +139,36 @@ def test_key_path_RAW(cache):
 
 def test_get_missing_intervals(cache):
     cache.store(
-        DF1, TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1,
+        DF1,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_1,
+        ENDTIME_1,
     )
 
     cache.store(
-        DF2, TAGNAME, READERTYPE, TS, False, False, STARTTIME_2, ENDTIME_2,
+        DF2,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_2,
+        ENDTIME_2,
     )
 
     # Perfect coverage, no missing intervals
     missing_intervals = cache.get_missing_intervals(
-        TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_1,
+        ENDTIME_1,
     )
 
     assert len(missing_intervals) == 0
@@ -197,20 +221,46 @@ def test_get_missing_intervals(cache):
 
 def test_get_intersecting_datasets(cache):
     cache.store(
-        DF1, TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1,
+        DF1,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_1,
+        ENDTIME_1,
     )
 
     cache.store(
-        DF2, TAGNAME, READERTYPE, TS, False, False, STARTTIME_2, ENDTIME_2,
+        DF2,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_2,
+        ENDTIME_2,
     )
 
     intersecting_datasets = cache.get_intersecting_datasets(
-        TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_1,
+        ENDTIME_1,
     )
 
     # Perfect coverage
     intersecting_datasets = cache.get_intersecting_datasets(
-        TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_1,
+        ENDTIME_1,
     )
 
     assert len(intersecting_datasets) == 1
@@ -317,7 +367,14 @@ def test_store_empty_df(cache):
 
 def test_store_single_df(cache):
     cache.store(
-        DF1, TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1,
+        DF1,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_1,
+        ENDTIME_1,
     )
     df_read = cache.fetch(TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1)
     pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
@@ -325,10 +382,24 @@ def test_store_single_df(cache):
 
 def test_fetch(cache):
     cache.store(
-        DF1, TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1,
+        DF1,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_1,
+        ENDTIME_1,
     )
     cache.store(
-        DF2, TAGNAME, READERTYPE, TS, False, False, STARTTIME_2, ENDTIME_2,
+        DF2,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_2,
+        ENDTIME_2,
     )
 
     df_read = cache.fetch(
@@ -366,15 +437,29 @@ def test_fetch(cache):
         STARTTIME_1 - pd.Timedelta("15m"),
         ENDTIME_2 + pd.Timedelta("15m"),
     )
-    pd.testing.assert_frame_equal(DF1.append(DF2), df_read, check_freq=False)
+    pd.testing.assert_frame_equal(pd.concat([DF1, DF2]), df_read, check_freq=False)
 
 
 def test_store_overlapping_df(cache):
     cache.store(
-        DF1, TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_1,
+        DF1,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_1,
+        ENDTIME_1,
     )
     cache.store(
-        DF2, TAGNAME, READERTYPE, TS, False, False, STARTTIME_2, ENDTIME_2,
+        DF2,
+        TAGNAME,
+        READERTYPE,
+        TS,
+        False,
+        False,
+        STARTTIME_2,
+        ENDTIME_2,
     )
     cache.store(DF3, TAGNAME, READERTYPE, TS, False, False, STARTTIME_3, ENDTIME_3)
     with pd.HDFStore(cache.filename, mode="r") as f:
@@ -388,11 +473,16 @@ def test_store_overlapping_df(cache):
     assert int(starttime) == STARTTIME_1_EPOCH
     assert int(endtime) == ENDTIME_2_EPOCH
     df_read = cache.fetch(TAGNAME, READERTYPE, TS, False, False, STARTTIME_1, ENDTIME_2)
-    df_expected = (
-        DF1[STARTTIME_1 : STARTTIME_3 - pd.Timedelta(TS, unit="s")]
-        .append(DF3[STARTTIME_3:ENDTIME_3])
-        .append(DF2[ENDTIME_3 + pd.Timedelta(TS, unit="s") : ENDTIME_2])
+    df_expected = pd.concat(
+        [
+            DF1[STARTTIME_1 : STARTTIME_3 - pd.Timedelta(TS, unit="s")],
+            DF3[STARTTIME_3:ENDTIME_3],
+            DF2[ENDTIME_3 + pd.Timedelta(TS, unit="s") : ENDTIME_2],
+        ]
     )
+
     pd.testing.assert_frame_equal(
-        df_read, df_expected, check_freq=False,
+        df_read,
+        df_expected,
+        check_freq=False,
     )

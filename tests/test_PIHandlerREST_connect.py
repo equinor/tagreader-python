@@ -18,10 +18,10 @@ if is_GITHUBACTION:
 verifySSL = not is_AZUREPIPELINE  # Certificate unavailable there
 
 BASE_URL = "https://piwebapi.equinor.com/piwebapi"
-SOURCE = "PINO"
+SOURCE = "PIMAM"
 TAGS = {
-    "Float32": "BA:CONC.1",
-    "Digital": "BA:ACTIVE.1",
+    "Float32": "CDT158",  # BA:CONC.1
+    "Digital": "CDM158",  # BA:ACTIVE.1
     "Int32": "CDEP158",
 }
 
@@ -93,14 +93,14 @@ def test_tag_to_webid(PIHandler):
     assert len(res) >= 20
     with pytest.raises(AssertionError):
         res = PIHandler.tag_to_webid("SINUSOID*")
-    with pytest.warns(None):
+    with pytest.warns():
         res = PIHandler.tag_to_webid("somerandomgarbage")
 
 
 @pytest.mark.parametrize(
     ("read_type", "size"),
     [
-        ("RAW", 5),
+        ("RAW", 10),
         # pytest.param(
         #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
         # ),
@@ -157,7 +157,7 @@ def test_read_with_status(Client):
         read_type=ReaderType.RAW,
         get_status=True,
     )
-    assert df.shape == (5, 2) or df.shape == (4, 2)
+    assert df.shape == (10, 2)
     assert df[TAGS["Float32"] + "::status"].iloc[0] == 0
 
 
@@ -179,19 +179,20 @@ def test_read_only_invalid_data_yields_nan_for_invalid(Client):
 
 
 def test_read_invalid_data_mixed_with_valid_yields_nan_for_invalid(Client):
+    # Hint, found first valid datapoint for tag
     tag = TAGS["Float32"]
-    df = Client.read(tag, "2012-10-09 11:00:00", "2012-10-09 11:30:00", 600)
+    df = Client.read(tag, "2018-04-23 15:20:00", "2018-04-23 15:50:00", 600)
     assert df.shape == (4, 1)
     assert df[tag].iloc[[0, 1]].isna().all()
     assert df[tag].iloc[[2, 3]].notnull().all()
 
 
-def test_digitalread_is_one_or_zero(Client):
+def test_digitalread_yields_integers(Client):
     tag = TAGS["Digital"]
-    df = Client.read(tag, START_TIME, STOP_TIME, SAMPLE_TIME, ReaderType.INT)
-    assert df[tag].max() == 1
-    assert df[tag].min() == 0
-    assert df[tag].isin([0, 1]).all()
+    df = Client.read(
+        tag, start_time=START_TIME, end_time=STOP_TIME, ts=600, read_type=ReaderType.INT
+    )
+    assert all(x.is_integer() for x in df[tag])
 
 
 def test_get_unit(Client):
@@ -203,8 +204,8 @@ def test_get_unit(Client):
 
 def test_get_description(Client):
     res = Client.get_descriptions(list(TAGS.values()))
-    assert res[TAGS["Float32"]] == "Concentration Reactor 1"
-    assert res[TAGS["Digital"]] == "Batch Active Reactor 1"
+    assert res[TAGS["Float32"]] == "Atmospheric Tower OH Vapor"
+    assert res[TAGS["Digital"]] == "Light Naphtha End Point Control"
     assert res[TAGS["Int32"]] == "Light Naphtha End Point"
 
 
@@ -264,11 +265,7 @@ def test_tags_raw_with_no_data_included_in_results(Client):
     assert df.empty
 
 
-@pytest.mark.skipif(
-    sys.platform == "linux" or sys.version_info <= (3, 9),
-    reason="Test only for Windows w/Py 3.9",
-)
-def test_connect_no_pytables():
-    with pytest.warns(UserWarning):
-        c = IMSClient(datasource="whatever", host="host", imstype="piwebapi")
-        c.connect()
+# def test_connect_no_pytables():
+#     with pytest.warns(UserWarning):
+#         c = IMSClient(datasource="whatever", host="host", imstype="piwebapi")
+#         c.connect()
