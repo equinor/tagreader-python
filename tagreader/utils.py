@@ -178,7 +178,7 @@ def is_equinor() -> bool:
         if "statoil" in domain[0]:
             return True
     elif is_mac():
-        s = macos_ca_certs = subprocess.run(
+        s = subprocess.run(
             ["security", "find-certificate", "-a", "-c" "client.statoil.net"], stdout=subprocess.PIPE).stdout
 
         host = socket.gethostname()
