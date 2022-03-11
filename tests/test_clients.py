@@ -1,16 +1,12 @@
 import os
-import pytest
+
 import pandas as pd
-from tagreader.utils import ReaderType
-from tagreader.clients import (
-    get_missing_intervals,
-    get_next_timeslice,
-    IMSClient,
-)
-from tagreader.odbc_handlers import (
-    AspenHandlerODBC,
-    PIHandlerODBC,
-)
+import pytest
+from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
+from tagreader.utils import ReaderType, is_windows
+
+if is_windows():
+    from tagreader.odbc_handlers import AspenHandlerODBC, PIHandlerODBC
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -53,76 +49,62 @@ def test_get_missing_intervals():
 
 
 @pytest.mark.skipif(
-    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
+    is_GITHUBACTION or not is_windows(),
+    reason="ODBC drivers require Windows and are unavailable in GitHub Actions",
 )
-def test_PI_init_odbc_client_with_host_port():
-    host = "thehostname"
-    port = 999
-    c = IMSClient(datasource="whatever", imstype="pi", host=host)
-    assert c.handler.host == host
-    assert c.handler.port == 5450
-    c = IMSClient(datasource="whatever", imstype="pi", host=host, port=port)
-    assert c.handler.host == host
-    assert c.handler.port == port
+class TestODBC:
+    def test_PI_init_odbc_client_with_host_port():
+        host = "thehostname"
+        port = 999
+        c = IMSClient(datasource="whatever", imstype="pi", host=host)
+        assert c.handler.host == host
+        assert c.handler.port == 5450
+        c = IMSClient(datasource="whatever", imstype="pi", host=host, port=port)
+        assert c.handler.host == host
+        assert c.handler.port == port
 
+    def test_IP21_init_odbc_client_with_host_port():
+        host = "thehostname"
+        port = 999
+        c = IMSClient(datasource="whatever", imstype="ip21", host=host)
+        assert c.handler.host == host
+        assert c.handler.port == 10014
+        c = IMSClient(datasource="whatever", imstype="ip21", host=host, port=port)
+        assert c.handler.host == host
+        assert c.handler.port == port
 
-@pytest.mark.skipif(
-    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
-)
-def test_IP21_init_odbc_client_with_host_port():
-    host = "thehostname"
-    port = 999
-    c = IMSClient(datasource="whatever", imstype="ip21", host=host)
-    assert c.handler.host == host
-    assert c.handler.port == 10014
-    c = IMSClient(datasource="whatever", imstype="ip21", host=host, port=port)
-    assert c.handler.host == host
-    assert c.handler.port == port
+    def test_PI_connection_string_override():
+        connstr = "someuserspecifiedconnectionstring"
+        c = IMSClient(
+            datasource="whatever",
+            host="host",
+            imstype="pi",
+            handler_options={"connection_string": connstr},
+        )
+        assert c.handler.generate_connection_string() == connstr
 
+    def test_IP21_connection_string_override():
+        connstr = "someuserspecifiedconnectionstring"
+        c = IMSClient(
+            datasource="whatever",
+            host="host",
+            imstype="ip21",
+            handler_options={"connection_string": connstr},
+        )
+        assert c.handler.generate_connection_string() == connstr
 
-@pytest.mark.skipif(
-    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
-)
-def test_PI_connection_string_override():
-    connstr = "someuserspecifiedconnectionstring"
-    c = IMSClient(
-        datasource="whatever",
-        host="host",
-        imstype="pi",
-        handler_options={"connection_string": connstr},
-    )
-    assert c.handler.generate_connection_string() == connstr
-
-
-@pytest.mark.skipif(
-    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
-)
-def test_IP21_connection_string_override():
-    connstr = "someuserspecifiedconnectionstring"
-    c = IMSClient(
-        datasource="whatever",
-        host="host",
-        imstype="ip21",
-        handler_options={"connection_string": connstr},
-    )
-    assert c.handler.generate_connection_string() == connstr
-
-
-@pytest.mark.skipif(
-    is_GITHUBACTION, reason="ODBC drivers unavailable in GitHub Actions"
-)
-def test_init_odbc_clients():
-    with pytest.raises(ValueError):
-        c = IMSClient("xyz")
-    with pytest.raises(ValueError):
-        c = IMSClient("sNa", "pi")
-    with pytest.raises(ValueError):
-        c = IMSClient("Ono-imS", "aspen")
-    with pytest.raises(ValueError):
-        c = IMSClient("ono-ims", "aspen")
-    with pytest.raises(ValueError):
-        c = IMSClient("sna", "pi")
-    c = IMSClient("onO-iMs", "pi")
-    assert isinstance(c.handler, PIHandlerODBC)
-    c = IMSClient("snA", "aspen")
-    assert isinstance(c.handler, AspenHandlerODBC)
+    def test_init_odbc_clients():
+        with pytest.raises(ValueError):
+            c = IMSClient("xyz")
+        with pytest.raises(ValueError):
+            c = IMSClient("sNa", "pi")
+        with pytest.raises(ValueError):
+            c = IMSClient("Ono-imS", "aspen")
+        with pytest.raises(ValueError):
+            c = IMSClient("ono-ims", "aspen")
+        with pytest.raises(ValueError):
+            c = IMSClient("sna", "pi")
+        c = IMSClient("onO-iMs", "pi")
+        assert isinstance(c.handler, PIHandlerODBC)
+        c = IMSClient("snA", "aspen")
+        assert isinstance(c.handler, AspenHandlerODBC)

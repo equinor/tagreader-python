@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
-from tagreader.web_handlers import PIHandlerWeb, list_piwebapi_sources
+from tagreader.web_handlers import PIHandlerWeb, get_verifySSL, list_piwebapi_sources
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -15,7 +15,7 @@ if is_GITHUBACTION:
         "All tests in module require connection to PI server", allow_module_level=True
     )
 
-verifySSL = not is_AZUREPIPELINE  # Certificate unavailable there
+verifySSL = False if is_AZUREPIPELINE else get_verifySSL()
 
 BASE_URL = "https://piwebapi.equinor.com/piwebapi"
 SOURCE = "PIMAM"
@@ -58,7 +58,7 @@ def test_list_all_piwebapi_sources():
 
 
 def test_list_sources_piwebapi():
-    res = list_sources("pi", verifySSL=verifySSL)
+    res = list_sources("piwebapi", verifySSL=verifySSL)
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:

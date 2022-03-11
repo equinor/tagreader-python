@@ -1,8 +1,20 @@
 import enum
 import logging
+import platform
 import warnings
-import winreg
+
 import pandas as pd
+
+
+def is_windows() -> bool:
+    return platform.system() == "Windows"
+
+def is_linux() -> bool:
+    return platform.system() == "Linux"
+
+
+if is_windows():
+    import winreg
 
 
 def find_registry_key(base_key, search_key_name):
@@ -99,9 +111,10 @@ def add_statoil_root_certificate(noisy=True):
     Returns:
         bool: True if function completes successfully
     """
-    import ssl
-    import certifi
     import hashlib
+    import ssl
+
+    import certifi
 
     STATOIL_ROOT_PEM_HASH = "ce7bb185ab908d2fea28c7d097841d9d5bbf2c76"
 
@@ -140,16 +153,24 @@ def add_statoil_root_certificate(noisy=True):
 def is_equinor() -> bool:
     """Determines whether code is running on an Equinor host
 
+    If Windows host:
     Finds host's domain in Windows Registry at
     HKLM\\SYSTEM\\ControlSet001\\Services\\Tcpip\\Parameters\\Domain
+    If Linux host:
+    Checks whether statoil.no is search domain
 
     Returns:
         bool: True if Equnor
     """
-    with winreg.OpenKey(
-        winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\ControlSet001\Services\Tcpip\Parameters"
-    ) as key:
-        domain = winreg.QueryValueEx(key, "Domain")
-    if "statoil" in domain[0]:
-        return True
+    if is_windows():
+        with winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\ControlSet001\Services\Tcpip\Parameters"
+        ) as key:
+            domain = winreg.QueryValueEx(key, "Domain")
+        if "statoil" in domain[0]:
+            return True
+    else:
+        with open("/etc/resolv.conf", "r") as f:
+            if "statoil.no" in f.read():
+                return True
     return False
