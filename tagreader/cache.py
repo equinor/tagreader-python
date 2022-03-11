@@ -1,8 +1,9 @@
 import os
-import pandas as pd
-from .utils import ReaderType
+from typing import Dict, List, Tuple, Union
 
-from typing import Tuple, Union, List, Dict
+import pandas as pd
+
+from .utils import ReaderType
 
 
 def safe_tagname(tagname: str) -> str:
@@ -130,7 +131,7 @@ class BucketCache:
                     )
                     starttime = min(starttime, this_start)
                     endtime = max(endtime, this_end)
-                    df = df.append(f.get(dataset))
+                    df = pd.concat([df, f.get(dataset)])
                     del f[dataset]
             df = df[~df.index.duplicated(keep="first")].sort_index()
         key = self._key_path(tagname, readtype, ts, stepped, status, starttime, endtime)
@@ -233,8 +234,16 @@ class BucketCache:
 
         with pd.HDFStore(self.filename, mode="r") as f:
             for dataset in datasets:
-                df = df.append(
-                    f.select(dataset, where="index >= starttime and index <= endtime")
+                # df = df.append(
+                #     f.select(dataset, where="index >= starttime and index <= endtime")
+                # )
+                df = pd.concat(
+                    [
+                        df,
+                        f.select(
+                            dataset, where="index >= starttime and index <= endtime"
+                        ),
+                    ]
                 )
 
         return df.sort_index()

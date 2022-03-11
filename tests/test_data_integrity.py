@@ -1,10 +1,11 @@
 import os
-import pytest
 import sys
+
 import pandas as pd
+import pytest
 from tagreader import IMSClient
-from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.cache import SmartCache
+from tagreader.utils import ReaderType, ensure_datetime_with_tz
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -162,10 +163,6 @@ def test_concat_proper_fill_up(PIClientWeb):
     PIClientWeb.handler._max_rows = max_rows_backup
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32" and sys.version_info >= (3, 9),
-    reason="Test only for Windows w/Py 3.9",
-)
 def test_cache_proper_fill_up(PIClientWeb):
     PIClientWeb.cache = SmartCache(PI_DS)
     if os.path.exists(PI_DS + ".h5"):

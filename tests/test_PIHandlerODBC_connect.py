@@ -1,10 +1,11 @@
-import pytest
 import os
-import pyodbc
+
 import pandas as pd
-from tagreader.utils import ReaderType, ensure_datetime_with_tz
-from tagreader.odbc_handlers import list_pi_sources
+import pyodbc
+import pytest
 from tagreader.clients import IMSClient, list_sources
+from tagreader.odbc_handlers import list_pi_sources
+from tagreader.utils import ReaderType, ensure_datetime_with_tz
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 
@@ -16,8 +17,8 @@ if is_GITHUBACTION:
 SOURCE = "PIMAM"
 
 TAGS = {
-    "Float32": "BA:CONC.1",
-    "Digital": "BA:ACTIVE.1",
+    "Float32": "CDT158",  # BA:CONC.1
+    "Digital": "CDM158",  # BA:ACTIVE.1
     "Int32": "CDEP158",
 }
 
@@ -72,7 +73,7 @@ def test_search(Client):
 @pytest.mark.parametrize(
     ("read_type", "size"),
     [
-        ("RAW", 5),
+        ("RAW", 10),
         # pytest.param(
         #     "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
         # ),
@@ -122,18 +123,16 @@ def test_read_with_status(Client):
         read_type=ReaderType.RAW,
         get_status=True,
     )
-    assert df.shape == (5, 2)
+    assert df.shape == (10, 2)
     assert df[TAGS["Float32"] + "::status"].iloc[0] == 0
 
 
-def test_digitalread_is_one_or_zero(Client):
+def test_digitalread_yields_integers(Client):
     tag = TAGS["Digital"]
     df = Client.read(
         tag, start_time=START_TIME, end_time=STOP_TIME, ts=600, read_type=ReaderType.INT
     )
-    assert df[tag].max() == 1
-    assert df[tag].min() == 0
-    assert df[tag].isin([0, 1]).all()
+    assert all(x.is_integer() for x in df[tag])
 
 
 def test_get_unit(Client):
@@ -145,8 +144,8 @@ def test_get_unit(Client):
 
 def test_get_description(Client):
     res = Client.get_descriptions(list(TAGS.values()))
-    assert res[TAGS["Float32"]] == "Concentration Reactor 1"
-    assert res[TAGS["Digital"]] == "Batch Active Reactor 1"
+    assert res[TAGS["Float32"]] == "Atmospheric Tower OH Vapor"
+    assert res[TAGS["Digital"]] == "Light Naphtha End Point Control"
     assert res[TAGS["Int32"]] == "Light Naphtha End Point"
 
 
@@ -192,14 +191,12 @@ def test_to_DST_skips_time(Client):
 
 
 def test_tags_with_no_data_included_in_results(Client):
-    df = Client.read(
-        [TAGS["Float32"]], "2099-01-01 00:00:00", "2099-01-02 00:00:00"
-    )
+    df = Client.read([TAGS["Float32"]], "2099-01-01 00:00:00", "2099-01-02 00:00:00")
     assert len(df.columns) == 1
 
 
 def test_query_sql(Client):
-    tag = TAGS['Float32']
+    tag = TAGS["Float32"]
     query = f"SELECT descriptor, engunits FROM pipoint.pipoint2 WHERE tag='{tag}'"
     res = Client.query_sql(query, parse=True)
     assert isinstance(res, pd.DataFrame)
