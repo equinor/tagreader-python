@@ -1,13 +1,9 @@
-import pytest
 import os
 
+import pytest
 from pytest import raises
-
 from tagreader.clients import IMSClient, list_sources
-from tagreader.web_handlers import (
-    list_aspenone_sources,
-    AspenHandlerWeb,
-)
+from tagreader.web_handlers import AspenHandlerWeb, list_aspenone_sources
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ

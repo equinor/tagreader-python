@@ -1,5 +1,5 @@
 [submodule "extratests"]
-	path = extratests
+	path = tests/extratests
 	url = https://github.com/equinor/tagreader-python-extra-tests.git
 [submodules "extratests"]
 	branch = master
