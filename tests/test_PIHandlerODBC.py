@@ -1,7 +1,10 @@
-import pytest
 import pandas as pd
+import pytest
 from tagreader import utils
-from tagreader.utils import ReaderType
+from tagreader.utils import ReaderType, is_windows
+
+if not is_windows():
+    pytest.skip("All tests in module require Windows", allow_module_level=True)
 
 START_TIME = "2018-01-17 16:00:00"
 STOP_TIME = "2018-01-17 17:00:00"

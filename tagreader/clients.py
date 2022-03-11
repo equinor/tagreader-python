@@ -1,34 +1,38 @@
 import os
-import pyodbc
-import pandas as pd
 import warnings
 from itertools import groupby
 from operator import itemgetter
+
+import pandas as pd
+
+from .cache import BucketCache, SmartCache
 from .utils import (
+    ReaderType,
     ensure_datetime_with_tz,
     find_registry_key,
     find_registry_key_from_name,
+    is_windows,
     logging,
-    ReaderType,
-    winreg,
-)
-from .cache import BucketCache, SmartCache
-from .odbc_handlers import (
-    PIHandlerODBC,
-    AspenHandlerODBC,
-    list_pi_sources,
-    list_aspen_sources,
 )
 from .web_handlers import (
-    PIHandlerWeb,
     AspenHandlerWeb,
-    list_piwebapi_sources,
-    list_aspenone_sources,
-    get_auth_pi,
+    PIHandlerWeb,
     get_auth_aspen,
+    get_auth_pi,
+    list_aspenone_sources,
+    list_piwebapi_sources,
 )
 
-from typing import Union
+if is_windows():
+    import pyodbc
+
+    from .odbc_handlers import (
+        AspenHandlerODBC,
+        PIHandlerODBC,
+        list_aspen_sources,
+        list_pi_sources,
+    )
+    from .utils import winreg
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
@@ -181,6 +185,11 @@ def get_handler(
         raise ValueError(f"`imstype` must be one of {accepted_imstypes}")
 
     if imstype.lower() == "pi":
+        if not is_windows():
+            raise RuntimeError(
+                "ODBC drivers not available for non-Windows environments. "
+                "Try Web API ('piwebapi') instead."
+            )
         if "PI ODBC Driver" not in pyodbc.drivers():
             raise RuntimeError(
                 "No PI ODBC driver detected. "
@@ -199,6 +208,11 @@ def get_handler(
         return PIHandlerODBC(host=host, port=port, options=options)
 
     if imstype.lower() in ["aspen", "ip21"]:
+        if not is_windows():
+            raise RuntimeError(
+                "ODBC drivers not available for non-Windows environments. "
+                "Try Web API ('aspenone') instead."
+            )
         if "AspenTech SQLplus" not in pyodbc.drivers():
             raise RuntimeError(
                 "No Aspen SQLplus ODBC driver detected. "
@@ -484,8 +498,14 @@ class IMSClient:
             )
         return pd.concat(cols, axis=1)
 
-    def query_sql(
-        self, query: str, parse: bool = True
-    ) -> Union[pd.DataFrame, pyodbc.Cursor, str]:
+    def query_sql(self, query: str, parse: bool = True):
+        """[summary]
+        Args:
+            query (str): [description]
+            parse (bool, optional): Whether to attempt to parse query return
+                                    value as table. Defaults to True.
+        Returns:
+            Union[pd.DataFrame, pyodbc.Cursor, str]: Return value
+        """
         df_or_cursor = self.handler.query_sql(query=query, parse=parse)
         return df_or_cursor
