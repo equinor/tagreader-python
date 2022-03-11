@@ -53,7 +53,7 @@ def test_get_missing_intervals():
     reason="ODBC drivers require Windows and are unavailable in GitHub Actions",
 )
 class TestODBC:
-    def test_PI_init_odbc_client_with_host_port():
+    def test_PI_init_odbc_client_with_host_port(self):
         host = "thehostname"
         port = 999
         c = IMSClient(datasource="whatever", imstype="pi", host=host)
@@ -63,7 +63,7 @@ class TestODBC:
         assert c.handler.host == host
         assert c.handler.port == port
 
-    def test_IP21_init_odbc_client_with_host_port():
+    def test_IP21_init_odbc_client_with_host_port(self):
         host = "thehostname"
         port = 999
         c = IMSClient(datasource="whatever", imstype="ip21", host=host)
@@ -73,7 +73,7 @@ class TestODBC:
         assert c.handler.host == host
         assert c.handler.port == port
 
-    def test_PI_connection_string_override():
+    def test_PI_connection_string_override(self):
         connstr = "someuserspecifiedconnectionstring"
         c = IMSClient(
             datasource="whatever",
@@ -83,7 +83,7 @@ class TestODBC:
         )
         assert c.handler.generate_connection_string() == connstr
 
-    def test_IP21_connection_string_override():
+    def test_IP21_connection_string_override(self):
         connstr = "someuserspecifiedconnectionstring"
         c = IMSClient(
             datasource="whatever",
@@ -93,7 +93,7 @@ class TestODBC:
         )
         assert c.handler.generate_connection_string() == connstr
 
-    def test_init_odbc_clients():
+    def test_init_odbc_clients(self):
         with pytest.raises(ValueError):
             c = IMSClient("xyz")
         with pytest.raises(ValueError):
