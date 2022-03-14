@@ -1,11 +1,11 @@
-from importlib.util import find_spec
+import sys
 
 import pandas as pd
 import pytest
 from tagreader.cache import BucketCache, safe_tagname, timestamp_to_epoch
 from tagreader.utils import ReaderType
 
-if find_spec("tables") is None:
+if "tables" not in sys.modules:
     pytest.skip(
         "Bucketcache requires package 'tables'",
         allow_module_level=True

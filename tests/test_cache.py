@@ -1,12 +1,12 @@
 import os
-from importlib.util import find_spec
+import sys
 
 import pandas as pd
 import pytest
 from tagreader.cache import SmartCache, safe_tagname
 from tagreader.utils import ReaderType
 
-if find_spec("tables") is None:
+if "tables" not in sys.modules:
     pytest.skip(
         "Cache requires package 'tables'",
         allow_module_level=True
