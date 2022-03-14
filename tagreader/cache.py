@@ -1,5 +1,4 @@
 import os
-import sys
 import warnings
 from typing import Dict, List, Tuple, Union
 
@@ -25,8 +24,10 @@ def timestamp_to_epoch(timestamp: pd.Timestamp) -> int:
 
 class BucketCache:
     def __init__(self, filename: str, path: str = ".") -> None:
-        if "tables" not in sys.modules:
-            warnings.warn("Package 'tables' not imported. Disabling cache.")
+        try:
+            import tables  # noqa: F401
+        except ModuleNotFoundError:
+            warnings.warn("Package 'tables' not installed. Disabling cache.")
             return None
         self.filename = os.path.splitext(filename)[0] + ".h5"
         self.filename = os.path.join(path, self.filename)
@@ -256,8 +257,10 @@ class BucketCache:
 
 class SmartCache:
     def __init__(self, filename: str, path: str = ".") -> None:
-        if "tables" not in sys.modules:
-            warnings.warn("Package 'tables' not imported. Disabling cache.")
+        try:
+            import tables  # noqa: F401
+        except ModuleNotFoundError:
+            warnings.warn("Package 'tables' not installed. Disabling cache.")
             return None
         self.filename = os.path.splitext(filename)[0] + ".h5"
         self.filename = os.path.join(path, self.filename)
