@@ -14,6 +14,10 @@ def is_mac() -> bool:
     return platform.system() == "Darwin"
 
 
+def is_linux() -> bool:
+    return platform.system() == "Linux"
+
+
 if is_windows():
     import winreg
 
@@ -187,8 +191,11 @@ def is_equinor() -> bool:
             return True
         elif "client.statoil.net" in host and host in str(s):
             return True
-    else:
+    elif is_linux():
         with open("/etc/resolv.conf", "r") as f:
             if "statoil.no" in f.read():
                 return True
+    else:
+        raise OSError(
+            f"Unsupported system: {platform.system()}. Please report this as an issue.")
     return False
