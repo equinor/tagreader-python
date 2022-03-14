@@ -5,6 +5,12 @@ import pytest
 from tagreader.cache import BucketCache, safe_tagname, timestamp_to_epoch
 from tagreader.utils import ReaderType
 
+if "tables" not in sys.modules:
+    pytest.skip(
+        "Bucketcache requires package 'tables'",
+        allow_module_level=True
+    )
+
 TAGNAME = "tag1"
 READERTYPE = ReaderType.INT
 
