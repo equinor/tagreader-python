@@ -1,11 +1,15 @@
 import os
 
 import pandas as pd
-import pyodbc
 import pytest
 from tagreader.clients import IMSClient, list_sources
+from tagreader.utils import ReaderType, ensure_datetime_with_tz, is_windows
+
+if not is_windows():
+    pytest.skip("All tests in module require Windows", allow_module_level=True)
+
+import pyodbc
 from tagreader.odbc_handlers import list_pi_sources
-from tagreader.utils import ReaderType, ensure_datetime_with_tz
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 

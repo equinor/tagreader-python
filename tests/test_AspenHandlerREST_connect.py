@@ -3,7 +3,7 @@ import os
 import pytest
 from pytest import raises
 from tagreader.clients import IMSClient, list_sources
-from tagreader.web_handlers import AspenHandlerWeb, list_aspenone_sources
+from tagreader.web_handlers import AspenHandlerWeb, get_verifySSL, list_aspenone_sources
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -14,7 +14,7 @@ if is_GITHUBACTION:
         allow_module_level=True,
     )
 
-verifySSL = not is_AZUREPIPELINE  # Certificate unavailable there
+verifySSL = False if is_AZUREPIPELINE else get_verifySSL()
 
 SOURCE = "SNA"
 TAG = "ATCAI"
