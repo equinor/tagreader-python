@@ -10,12 +10,21 @@ def is_windows() -> bool:
     return platform.system() == "Windows"
 
 
+def is_mac() -> bool:
+    return platform.system() == "Darwin"
+
+
 def is_linux() -> bool:
     return platform.system() == "Linux"
 
 
 if is_windows():
     import winreg
+
+
+if is_mac():
+    import socket
+    import subprocess
 
 
 def find_registry_key(base_key, search_key_name):
@@ -157,6 +166,8 @@ def is_equinor() -> bool:
     If Windows host:
     Finds host's domain in Windows Registry at
     HKLM\\SYSTEM\\ControlSet001\\Services\\Tcpip\\Parameters\\Domain
+    If mac os host:
+    Finds statoil.net as AD hostname in certificates
     If Linux host:
     Checks whether statoil.no is search domain
 
@@ -170,8 +181,21 @@ def is_equinor() -> bool:
             domain = winreg.QueryValueEx(key, "Domain")
         if "statoil" in domain[0]:
             return True
-    else:
+    elif is_mac():
+        s = subprocess.run(
+            ["security", "find-certificate", "-a", "-c" "client.statoil.net"], stdout=subprocess.PIPE).stdout
+
+        host = socket.gethostname()
+
+        if host + ".client.statoil.net" in str(s):
+            return True
+        elif "client.statoil.net" in host and host in str(s):
+            return True
+    elif is_linux():
         with open("/etc/resolv.conf", "r") as f:
             if "statoil.no" in f.read():
                 return True
+    else:
+        raise OSError(
+            f"Unsupported system: {platform.system()}. Please report this as an issue.")
     return False
