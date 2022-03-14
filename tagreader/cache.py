@@ -257,7 +257,7 @@ class BucketCache:
 class SmartCache:
     def __init__(self, filename: str, path: str = ".") -> None:
         if "tables" not in sys.modules:
-            warnings.warn("Package 'tables' not installed. Disabling cache.")
+            warnings.warn("Package 'tables' not imported. Disabling cache.")
             return None
         self.filename = os.path.splitext(filename)[0] + ".h5"
         self.filename = os.path.join(path, self.filename)
