@@ -1,7 +1,7 @@
 import datetime
 import os
 
-import pytest
+import pandas as pd
 from pytz import timezone
 from tagreader.utils import ensure_datetime_with_tz, is_equinor, urljoin
 
@@ -29,6 +29,19 @@ def test_ensure_is_datetime():
         timezone("Brazil/East").localize(datetime.datetime(2003, 1, 2, 0, 0, 0)),
         tz="Europe/Oslo",
     ) == timezone("Brazil/East").localize(datetime.datetime(2003, 1, 2, 0, 0, 0))
+
+    ts = pd.Timestamp(2018, 1, 10, 13, 45, 15)
+    ts_with_tz = timezone("Europe/Oslo").localize(ts)
+
+    assert ensure_datetime_with_tz(ts_with_tz) == ts_with_tz
+    assert ensure_datetime_with_tz(ts) == ts_with_tz
+
+    # Assure datetime input is supported
+    dt = datetime.datetime(2018, 1, 10, 13, 45, 15)
+    dt_with_tz = timezone("Europe/Oslo").localize(dt)
+
+    assert ensure_datetime_with_tz(dt_with_tz) == dt_with_tz
+    assert ensure_datetime_with_tz(dt) == dt_with_tz
 
 
 def test_urljoin():

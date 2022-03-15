@@ -1,9 +1,11 @@
+import datetime
 import enum
 import logging
 import platform
 import warnings
 
 import pandas as pd
+import pytz
 
 
 def is_windows() -> bool:
@@ -67,7 +69,16 @@ def ensure_datetime_with_tz(date_stamp, tz="Europe/Oslo"):
         date_stamp = pd.to_datetime(date_stamp, dayfirst=True)
 
     if not date_stamp.tzinfo:
-        date_stamp = date_stamp.tz_localize(tz)
+        # pd.Timestamp matches isinstance datetime.datetime,
+        # but datetime.datetime does not support tz_localize
+        if isinstance(date_stamp, pd.Timestamp):
+            date_stamp = date_stamp.tz_localize(pytz.timezone(tz))
+        elif isinstance(date_stamp, datetime.datetime):
+            date_stamp = date_stamp.astimezone(pytz.timezone(tz))
+        else:
+           date_stamp = date_stamp.tz_localize(tz)
+
+
     return date_stamp
 
 
