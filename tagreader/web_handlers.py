@@ -604,7 +604,6 @@ class PIHandlerWeb:
         metadata=None,
         get_status=False,
     ):
-        timecast_format_query = "%d-%b-%y %H:%M:%S"
 
         if read_type in [
             ReaderType.COUNT,
