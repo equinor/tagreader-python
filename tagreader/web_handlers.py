@@ -8,7 +8,7 @@ import pandas as pd
 import requests
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
-from .utils import ReaderType, is_windows, logging, urljoin
+from .utils import ReaderType, is_mac, is_windows, logging, urljoin
 
 # Requests will use simplejson if it has been installed, so handle both errors here
 try:
@@ -23,6 +23,8 @@ logging.basicConfig(
 
 def get_verifySSL():
     if is_windows():
+        return True
+    elif is_mac():
         return True
     return "/etc/ssl/certs/ca-bundle.trust.crt"
 
