@@ -1,15 +1,13 @@
 import sys
+from importlib.util import find_spec
 
 import pandas as pd
 import pytest
 from tagreader.cache import BucketCache, safe_tagname, timestamp_to_epoch
 from tagreader.utils import ReaderType
 
-if "tables" not in sys.modules:
-    pytest.skip(
-        "Bucketcache requires package 'tables'",
-        allow_module_level=True
-    )
+if not find_spec("tables"):
+    pytest.skip("Bucketcache requires package 'tables'", allow_module_level=True)
 
 TAGNAME = "tag1"
 READERTYPE = ReaderType.INT

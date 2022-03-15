@@ -1,13 +1,9 @@
-import os
 import datetime
+import os
+
 import pytest
 from pytz import timezone
-
-from tagreader.utils import (
-    ensure_datetime_with_tz,
-    urljoin,
-    is_equinor
-)
+from tagreader.utils import ensure_datetime_with_tz, is_equinor, urljoin
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -43,6 +39,8 @@ def test_urljoin():
     assert urljoin("https://some.where/to", "go/") == "https://some.where/to/go/"
 
 
-@pytest.mark.skipif(is_GITHUBACTION, reason="Only valid for Windows environments")
-def test_equnor():
-    assert is_equinor() is True
+def test_equinor():
+    if is_GITHUBACTION:
+        assert is_equinor() is False
+    else:
+        assert is_equinor() is True

@@ -6,32 +6,17 @@ from operator import itemgetter
 import pandas as pd
 
 from .cache import BucketCache, SmartCache
-from .utils import (
-    ReaderType,
-    ensure_datetime_with_tz,
-    find_registry_key,
-    find_registry_key_from_name,
-    is_windows,
-    logging,
-)
-from .web_handlers import (
-    AspenHandlerWeb,
-    PIHandlerWeb,
-    get_auth_aspen,
-    get_auth_pi,
-    list_aspenone_sources,
-    list_piwebapi_sources,
-)
+from .utils import (ReaderType, ensure_datetime_with_tz, find_registry_key,
+                    find_registry_key_from_name, is_windows, logging)
+from .web_handlers import (AspenHandlerWeb, PIHandlerWeb, get_auth_aspen,
+                           get_auth_pi, list_aspenone_sources,
+                           list_piwebapi_sources)
 
 if is_windows():
     import pyodbc
 
-    from .odbc_handlers import (
-        AspenHandlerODBC,
-        PIHandlerODBC,
-        list_aspen_sources,
-        list_pi_sources,
-    )
+    from .odbc_handlers import (AspenHandlerODBC, PIHandlerODBC,
+                                list_aspen_sources, list_pi_sources)
     from .utils import winreg
 
 logging.basicConfig(
@@ -278,13 +263,6 @@ class IMSClient:
         self.cache = SmartCache(datasource)
 
     def connect(self):
-        if self.cache is not None:
-            try:
-                import tables  # noqa: F401
-            except ModuleNotFoundError:
-                warnings.warn("Disabling cache due to missing package 'tables'")
-                self.cache = None
-
         self.handler.connect()
 
     def search_tag(self, tag=None, desc=None):
