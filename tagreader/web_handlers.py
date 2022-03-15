@@ -1,3 +1,4 @@
+import datetime
 import re
 import urllib
 import warnings
@@ -5,10 +6,11 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
+import pytz
 import requests
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
-from .utils import ReaderType, is_windows, logging, urljoin
+from .utils import ReaderType, is_mac, is_windows, logging, urljoin
 
 # Requests will use simplejson if it has been installed, so handle both errors here
 try:
@@ -23,6 +25,8 @@ logging.basicConfig(
 
 def get_verifySSL():
     if is_windows():
+        return True
+    elif is_mac():
         return True
     return "/etc/ssl/certs/ca-bundle.trust.crt"
 
@@ -541,6 +545,14 @@ class PIHandlerWeb:
         self.webidcache = {}
 
     @staticmethod
+    def _time_to_UTC_string(time):
+        timecast_format_query = "%d-%b-%y %H:%M:%S"
+        if isinstance(time, datetime.datetime):
+            return time.astimezone(pytz.UTC).strftime(timecast_format_query)
+        else:
+            return time.tz_convert("UTC").strftime(timecast_format_query)
+
+    @staticmethod
     def generate_connection_string(host, *_, **__):
         raise NotImplementedError
 
@@ -626,15 +638,11 @@ class PIHandlerWeb:
         params = {}
 
         if read_type != ReaderType.SNAPSHOT:
-            params["startTime"] = start_time.tz_convert("UTC").strftime(
-                timecast_format_query
-            )
-            params["endTime"] = stop_time.tz_convert("UTC").strftime(
-                timecast_format_query
-            )
+            params["startTime"] = self._time_to_UTC_string(start_time)
+            params["endTime"] = self._time_to_UTC_string(stop_time)
             params["timeZone"] = "UTC"
         elif read_type == ReaderType.SNAPSHOT and stop_time is not None:
-            params["time"] = stop_time.tz_convert("UTC").strftime(timecast_format_query)
+            params["time"] = self._time_to_UTC_string(stop_time)
             params["timeZone"] = "UTC"
 
         summary_type = {
@@ -858,7 +866,7 @@ class PIHandlerWeb:
         df = df.filter(["Timestamp", "Value", "Good", "Questionable", "Substituted"])
 
         try:
-            if read_type == ReaderType.RAW:
+            if read_type == ReaderType.RAW or read_type == ReaderType.SNAPSHOT:
                 # Sub-second timestamps are common
                 df["Timestamp"] = pd.to_datetime(
                     df["Timestamp"], format="%Y-%m-%dT%H:%M:%S.%fZ", utc=True

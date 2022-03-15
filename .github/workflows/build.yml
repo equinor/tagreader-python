@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         python: [3.7, 3.8, 3.9, '3.10']
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v2
@@ -37,8 +37,7 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        # Ignore extratests/tests which doesn't exist here
-        pytest tests
+        pytest
 
   testdeploy-if-tagged:
     needs: test
