@@ -25,16 +25,20 @@ will) be modified to work on Linux using REST APIs.
 Python >=3.7 with the following packages:
 
   + pandas >= 1.0.0
-  + tables
+  + tables (*)
   + requests
   + requests-kerberos
   + certifi >= 2020.04.05
-  + pyodbc (if using ODBC connections)
+  + pyodbc (**)
 
-If using ODBC connections, you must also install proprietary drivers for
+*) If tables is not installed, caching of fetched data will be disabled. 
+Tables will therefore be installed alongside Tagreader unless it is known 
+to fail, which is the case for Macs with M1 chip.
+
+**) If using ODBC connections, you must also install proprietary drivers for
 PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for
-Microsoft Windows.
-
+Microsoft Windows. Pyodbc will therefore not be installed for non-Windows
+systems.
 
 ## Installation
 

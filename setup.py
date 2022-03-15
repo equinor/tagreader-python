@@ -23,17 +23,23 @@ elsewhere when using REST APIs.
 
 ## Requirements
 
-Python >= 3.7 with the following packages:
+Python >=3.7 with the following packages:
 
   + pandas >= 1.0.0
-  + pytables
+  + tables (*)
   + requests
-  + requests_kerberos
-  + pyodbc (if using ODBC connections, Windows only)
+  + requests-kerberos
+  + certifi >= 2020.04.05
+  + pyodbc (**)
 
-If using ODBC connections, you must also install proprietary drivers for
+*) If tables is not installed, caching of fetched data will be disabled. 
+Tables will be installed alongside Tagreader unless it is known to fail, 
+which is the case for Macs with M1 chip.
+
+**) If using ODBC connections, you must also install proprietary drivers for
 PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for
-Microsoft Windows.
+Microsoft Windows. Pyodbc will therefore not be installed for non-Windows
+systems.
 
 ## Installation
 
