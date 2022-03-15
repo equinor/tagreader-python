@@ -9,7 +9,7 @@ is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
 
 
-def test_ensure_is_datetime():
+def test_ensure_is_datetime_string():
     assert ensure_datetime_with_tz("10. jan. 2018 13:45:15") == timezone(
         "Europe/Oslo"
     ).localize(datetime.datetime(2018, 1, 10, 13, 45, 15))
@@ -30,13 +30,15 @@ def test_ensure_is_datetime():
         tz="Europe/Oslo",
     ) == timezone("Brazil/East").localize(datetime.datetime(2003, 1, 2, 0, 0, 0))
 
+
+def test_ensure_is_datetime_pd_timestamp():
     ts = pd.Timestamp(2018, 1, 10, 13, 45, 15)
     ts_with_tz = timezone("Europe/Oslo").localize(ts)
-
     assert ensure_datetime_with_tz(ts_with_tz) == ts_with_tz
     assert ensure_datetime_with_tz(ts) == ts_with_tz
 
-    # Assure datetime input is supported
+
+def test_ensure_is_datetime_datetime():
     dt = datetime.datetime(2018, 1, 10, 13, 45, 15)
     dt_with_tz = timezone("Europe/Oslo").localize(dt)
 
