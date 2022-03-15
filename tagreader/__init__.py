@@ -13,5 +13,5 @@ except ImportError:
 
     __version__ = "unknown-" + datetime.today().strftime("%Y%m%d")
 
-if is_equinor() and (is_windows() or is_mac()):
+if is_equinor():
     add_statoil_root_certificate(noisy=False)

@@ -130,7 +130,9 @@ def add_statoil_root_certificate(noisy=True):
 
     found = False
 
-    if is_windows():
+    if is_linux():
+        return True
+    elif is_windows():
         if noisy:
             print("Scanning CA certs in Windows cert store", end="")
         for cert in ssl.enum_certificates("CA"):
