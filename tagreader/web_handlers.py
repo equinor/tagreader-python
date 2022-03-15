@@ -59,6 +59,7 @@ def list_aspenone_sources(
         print("Not found")
     elif res.status_code == 401:
         print("Not authorized")
+    res.raise_for_status()
 
 
 def list_piwebapi_sources(
@@ -75,6 +76,7 @@ def list_piwebapi_sources(
         print("Not found")
     elif res.status_code == 401:
         print("Not authorized")
+    res.raise_for_status()
 
 
 class AspenHandlerWeb:
@@ -223,8 +225,7 @@ class AspenHandlerWeb:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         res = self.session.get(url, params=params)
-        if res.status_code != 200:
-            raise ConnectionError
+        res.raise_for_status()
         j = res.json()
         for item in j["data"]:
             if item["n"] == datasource:
@@ -232,7 +233,11 @@ class AspenHandlerWeb:
         return False
 
     def connect(self):
-        self.verify_connection(self.datasource)
+        try:
+            self.verify_connection(self.datasource)
+        except requests.ConnectionError:
+            raise ConnectionError(
+                f"Not able to connect to {self.base_url}. Check network connection.") from None
 
     @staticmethod
     def split_tagmap(tagmap):
@@ -275,8 +280,7 @@ class AspenHandlerWeb:
         params = self.generate_get_map_query(tagname)
         url = urljoin(self.base_url, "TagInfo")
         res = self.session.get(url, params=params)
-        if res.status_code != 200:
-            raise ConnectionError
+        res.raise_for_status()
         j = res.json()
 
         if "tags" not in j["data"]:
@@ -314,8 +318,7 @@ class AspenHandlerWeb:
         url += encoded_params
         res = self.session.get(url)
 
-        if res.status_code != 200:
-            raise ConnectionError
+        res.raise_for_status()
         j = res.json()
 
         if "tags" not in j["data"]:
@@ -341,8 +344,7 @@ class AspenHandlerWeb:
         query = self.generate_get_unit_query(tag)
         url = urljoin(self.base_url, "TagInfo")
         res = self.session.get(url, params=query)
-        if res.status_code != 200:
-            raise ConnectionError
+        res.raise_for_status()
         j = res.json()
         try:
             attrdata = j["data"]["tags"][0]["attrData"]
@@ -378,8 +380,7 @@ class AspenHandlerWeb:
         query = self.generate_get_description_query(tag)
         url = urljoin(self.base_url, "TagInfo")
         res = self.session.get(url, params=query)
-        if res.status_code != 200:
-            raise ConnectionError
+        res.raise_for_status()
         j = res.json()
         try:
             desc = j["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
@@ -432,8 +433,7 @@ class AspenHandlerWeb:
         )
 
         res = self.session.get(url, params=params)
-        if res.status_code != 200:
-            raise ConnectionError
+        res.raise_for_status()
 
         if len(res.text) == 0:  # res.text='' for timestamps in future
             return pd.DataFrame(columns=[tag])
@@ -515,8 +515,7 @@ class AspenHandlerWeb:
                 max_rows=self._max_rows,
             )
         res = self.session.get(url, params=params)
-        if res.status_code != 200:
-            raise ConnectionError
+        res.raise_for_status()
         # For now just return result as text regardless of value of parse
         if parse:
             raise NotImplementedError(
@@ -609,7 +608,6 @@ class PIHandlerWeb:
         metadata=None,
         get_status=False,
     ):
-        timecast_format_query = "%d-%b-%y %H:%M:%S"
 
         if read_type in [
             ReaderType.COUNT,
@@ -699,8 +697,7 @@ class PIHandlerWeb:
 
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         res = self.session.get(url)
-        if res.status_code != 200:
-            raise ConnectionError
+        res.raise_for_status()
         j = res.json()
         for item in j["Items"]:
             if item["Name"] == datasource:
@@ -708,7 +705,11 @@ class PIHandlerWeb:
         return False
 
     def connect(self):
-        self.verify_connection(self.datasource)
+        try:
+            self.verify_connection(self.datasource)
+        except requests.ConnectionError:
+            raise ConnectionError(
+                f"Not able to connect to {self.base_url}. Check network connection.") from None
 
     def search(self, tag=None, desc=None):
         params = self.generate_search_query(tag, desc, self.datasource)
@@ -718,8 +719,7 @@ class PIHandlerWeb:
         while not done:
             res = self.session.get(url, params=params)
 
-            if res.status_code != 200:
-                raise ConnectionError
+            res.raise_for_status()
             j = res.json()
             for item in j["Items"]:
                 description = item["Description"] if "Description" in item else ""
@@ -740,8 +740,7 @@ class PIHandlerWeb:
             return None
         url = urljoin(self.base_url, "points", webid)
         res = self.session.get(url)
-        if res.status_code != 200:
-            raise ConnectionError
+        res.raise_for_status()
         j = res.json()
         unit = j["EngineeringUnits"]
         return unit
@@ -752,8 +751,7 @@ class PIHandlerWeb:
             return None
         url = urljoin(self.base_url, "points", webid)
         res = self.session.get(url)
-        if res.status_code != 200:
-            raise ConnectionError
+        res.raise_for_status()
         j = res.json()
         description = j["Descriptor"]
         return description
@@ -772,8 +770,7 @@ class PIHandlerWeb:
             params["fields"] = "name;webid"
             url = urljoin(self.base_url, "search", "query")
             res = self.session.get(url, params=params)
-            if res.status_code != 200:
-                raise ConnectionError
+            res.raise_for_status()
             j = res.json()
 
             if len(j["Errors"]) > 0:
@@ -828,8 +825,7 @@ class PIHandlerWeb:
         )
         url = urljoin(self.base_url, url)
         res = self.session.get(url, params=params)
-        if res.status_code != 200:
-            raise ConnectionError
+        res.raise_for_status()
 
         j = res.json()
         if read_type == ReaderType.SNAPSHOT:
@@ -895,9 +891,9 @@ class PIHandlerWeb:
         if get_status:
             df["Status"] = (
                 # Values are boolean, but no need to do .astype(int)
-                df["Questionable"]
-                + 2 * (1 - df["Good"])
-                + 4 * df["Substituted"]
+                df["Questionable"] +
+                2 * (1 - df["Good"]) +
+                4 * df["Substituted"]
             )
             df = df.drop(columns=["Good", "Questionable", "Substituted"])
 
