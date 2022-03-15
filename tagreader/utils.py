@@ -110,9 +110,9 @@ class ReaderType(enum.IntEnum):
 
 
 def add_statoil_root_certificate(noisy=True):
-    """This is a utility function for Equinor employees on Equinor machines.
+    """This is a utility function for Equinor employees on Equinor managed machines.
 
-    The function searches for the Statoil Root certificate in the Windows
+    The function searches for the Statoil Root certificate in the
     cert store and imports it to the cacert bundle. Does nothing if not
     running on Equinor host.
 
@@ -128,22 +128,39 @@ def add_statoil_root_certificate(noisy=True):
 
     STATOIL_ROOT_PEM_HASH = "ce7bb185ab908d2fea28c7d097841d9d5bbf2c76"
 
-    if noisy:
-        print("Scanning CA certs in Windows cert store", end="")
     found = False
-    for cert in ssl.enum_certificates("CA"):
+
+    if is_windows():
         if noisy:
-            print(".", end="")
-        der = cert[0]
-        if hashlib.sha1(der).hexdigest() == STATOIL_ROOT_PEM_HASH:
-            found = True
+            print("Scanning CA certs in Windows cert store", end="")
+        for cert in ssl.enum_certificates("CA"):
             if noisy:
-                print(" found it!")
-            pem = ssl.DER_cert_to_PEM_cert(cert[0])
-            if pem in certifi.contents():
+                print(".", end="")
+            der = cert[0]
+            if hashlib.sha1(der).hexdigest() == STATOIL_ROOT_PEM_HASH:
+                found = True
                 if noisy:
-                    print("Certificate already exists in certifi store. Nothing to do.")
-                break
+                    print(" found it!")
+                    break
+    elif is_mac():
+        import subprocess
+        macos_ca_certs = subprocess.run(["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-Z"],
+                                        stdout=subprocess.PIPE).stdout
+
+        if STATOIL_ROOT_PEM_HASH.upper() in str(macos_ca_certs).upper():
+            c = get_macos_statoil_certificates()
+            for cert in c:
+                if hashlib.sha1(cert).hexdigest() == STATOIL_ROOT_PEM_HASH:
+                    der = cert
+                    found = True
+                    break
+
+    if found:
+        pem = ssl.DER_cert_to_PEM_cert(der)
+        if pem in certifi.contents():
+            if noisy:
+                print("Certificate already exists in certifi store. Nothing to do.")
+        else:
             if noisy:
                 print("Writing certificate to certifi store.")
             cafile = certifi.where()
@@ -151,13 +168,24 @@ def add_statoil_root_certificate(noisy=True):
                 f.write(bytes(pem, "ascii"))
             if noisy:
                 print("Completed")
-            break
+    else:
+        warnings.warn("Unable to locate root certificate on this host.")
 
-    if not found:
-        warnings.warn("Unable to locate Statoil root certificate on this host.")
-        return False
+    return found
 
-    return True
+
+def get_macos_statoil_certificates():
+    import ssl
+    import tempfile
+
+    ctx = ssl.create_default_context()
+    macos_ca_certs = subprocess.run(
+        ["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-p"], stdout=subprocess.PIPE).stdout
+    with tempfile.NamedTemporaryFile('w+b') as tmp_file:
+        tmp_file.write(macos_ca_certs)
+        ctx.load_verify_locations(tmp_file.name)
+
+    return ctx.get_ca_certs(binary_form=True)
 
 
 def is_equinor() -> bool:
@@ -172,7 +200,7 @@ def is_equinor() -> bool:
     Checks whether statoil.no is search domain
 
     Returns:
-        bool: True if Equnor
+        bool: True if Equinor
     """
     if is_windows():
         with winreg.OpenKey(

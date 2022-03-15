@@ -1,6 +1,6 @@
 from .clients import IMSClient, list_sources  # noqa: F401
 from .utils import ReaderType  # noqa: F401
-from .utils import add_statoil_root_certificate, is_equinor, is_windows
+from .utils import add_statoil_root_certificate, is_equinor, is_windows, is_mac
 
 if is_windows():
     from .odbc_handlers import list_aspen_servers, list_pi_servers  # noqa: F401
@@ -13,5 +13,5 @@ except ImportError:
 
     __version__ = "unknown-" + datetime.today().strftime("%Y%m%d")
 
-if is_equinor() and is_windows():
+if is_equinor() and (is_windows() or is_mac()):
     add_statoil_root_certificate(noisy=False)
