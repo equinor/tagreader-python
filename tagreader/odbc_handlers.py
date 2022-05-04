@@ -1,10 +1,12 @@
 import os
-import pyodbc
-import pandas as pd
-import numpy as np
 import warnings
 from typing import Union
-from .utils import logging, winreg, find_registry_key, ReaderType
+
+import numpy as np
+import pandas as pd
+import pyodbc
+
+from .utils import ReaderType, find_registry_key, logging, winreg
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
@@ -342,25 +344,26 @@ class AspenHandlerODBC:
         metadata=None,
         get_status=False,
     ):
-        # if get_status:
-        #     raise NotImplementedError
         (cleantag, mapping) = tag.split(";") if ";" in tag else (tag, None)
         mapdef = dict()
+
         if mapping is not None:
             mapdef = self._get_specific_mapdef(cleantag, mapping)
         query = self.generate_read_query(
             cleantag, mapdef, start_time, stop_time, sample_time, read_type, get_status
         )
-        # logging.debug(f'Executing SQL query {query!r}')
-        df = pd.read_sql(
-            query,
-            self.conn,
-            index_col="time",
-            parse_dates={"time": "%Y-%m-%dT%H:%M:%S.%fZ"},
-        ).fillna(value=np.nan)
-        # This warning will trigger also for (at least some) valid tags with no data.
-        # if len(df.index) == 0:
-        #     warnings.warn(f"Tag {tag} not found")
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message="^pandas.*SQLAlchemy.*", category=UserWarning
+            )
+            df = pd.read_sql(
+                query,
+                self.conn,
+                index_col="time",
+                parse_dates={"time": "%Y-%m-%dT%H:%M:%S.%fZ"},
+            ).fillna(value=np.nan)
+
         if get_status:
             df["status"] = df["status"].astype(int)
         df = df.tz_localize("UTC")
@@ -374,7 +377,11 @@ class AspenHandlerODBC:
             cursor.execute(query)
             return cursor
         else:
-            res = pd.read_sql(query, self.conn)
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", message="^pandas.*SQLAlchemy.*", category=UserWarning
+                )
+                res = pd.read_sql(query, self.conn)
             return res
 
 
@@ -590,13 +597,18 @@ class PIHandlerODBC:
         query = self.generate_read_query(
             tag, start_time, stop_time, sample_time, read_type, get_status=get_status
         )
-        # logging.debug(f'Executing SQL query {query!r}')
-        df = pd.read_sql(
-            query,
-            self.conn,
-            index_col="time",
-            parse_dates={"time": "%Y-%m-%d %H:%M:%S"},
-        ).fillna(value=np.nan)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message="^pandas.*SQLAlchemy.*", category=UserWarning
+            )
+            df = pd.read_sql(
+                query,
+                self.conn,
+                index_col="time",
+                parse_dates={"time": "%Y-%m-%d %H:%M:%S"},
+            ).fillna(value=np.nan)
+
         # PI ODBC reports aggregate values for both end points, using the end of
         # interval as anchor. Normalize to using start of insterval as anchor, and
         # remove initial point which is out of defined range.
@@ -635,5 +647,9 @@ class PIHandlerODBC:
             cursor.execute(query)
             return cursor
         else:
-            res = pd.read_sql(query, self.conn)
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", message="^pandas.*SQLAlchemy.*", category=UserWarning
+                )
+                res = pd.read_sql(query, self.conn)
             return res
