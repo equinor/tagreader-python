@@ -1,8 +1,8 @@
 import os
-import sys
 
 import pandas as pd
 import pytest
+import urllib3
 from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.web_handlers import PIHandlerWeb, get_verifySSL, list_piwebapi_sources
@@ -16,6 +16,8 @@ if is_GITHUBACTION:
     )
 
 verifySSL = False if is_AZUREPIPELINE else get_verifySSL()
+if is_AZUREPIPELINE:
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://piwebapi.equinor.com/piwebapi"
 SOURCE = "PIMAM"

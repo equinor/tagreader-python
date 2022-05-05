@@ -1,6 +1,7 @@
 import os
 
 import pytest
+import urllib3
 from pytest import raises
 from tagreader.clients import IMSClient, list_sources
 from tagreader.web_handlers import AspenHandlerWeb, get_verifySSL, list_aspenone_sources
@@ -15,6 +16,8 @@ if is_GITHUBACTION:
     )
 
 verifySSL = False if is_AZUREPIPELINE else get_verifySSL()
+if is_AZUREPIPELINE:
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 SOURCE = "SNA"
 TAG = "ATCAI"
