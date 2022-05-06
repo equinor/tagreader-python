@@ -1,5 +1,4 @@
 import os
-import warnings
 
 import pandas as pd
 import pytest
@@ -17,11 +16,6 @@ if is_GITHUBACTION:
     )
 
 verifySSL = False if is_AZUREPIPELINE else get_verifySSL()
-if is_AZUREPIPELINE:
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    warnings.filterwarnings(
-        "ignore", category=urllib3.exceptions.InsecureRequestWarning
-    )
 
 BASE_URL = "https://piwebapi.equinor.com/piwebapi"
 SOURCE = "PIMAM"
@@ -80,16 +74,14 @@ def test_verify_connection(PIHandler):
 def test_search_tag(Client):
     res = Client.search("SINUSOID")
     assert 1 == len(res)
-    res = Client.search("BA:*.1")
-    assert 5 <= len(res)
+    res = Client.search("SIN*")
+    assert 3 <= len(res)
     [taglist, desclist] = zip(*res)
-    assert "BA:CONC.1" in taglist
-    assert desclist[taglist.index("BA:CONC.1")] == "Concentration Reactor 1"
-    res = Client.search(tag="BA:*.1")
-    assert 5 <= len(res)
-    res = Client.search(desc="Concentration Reactor 1")
+    assert "SINUSOIDU" in taglist
+    assert desclist[taglist.index("SINUSOID")] == "12 Hour Sine Wave"
+    res = Client.search(desc="12 Hour Sine Wave")
     assert 1 <= len(res)
-    res = Client.search("BA*.1", "*Active*")
+    res = Client.search("SINUSOID", desc="*Sine*")
     assert 1 <= len(res)
 
 

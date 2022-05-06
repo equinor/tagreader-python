@@ -24,9 +24,7 @@ logging.basicConfig(
 
 
 def get_verifySSL():
-    if is_windows():
-        return True
-    elif is_mac():
+    if is_windows() or is_mac():
         return True
     return "/etc/ssl/certs/ca-bundle.trust.crt"
 
@@ -41,12 +39,18 @@ def get_auth_aspen():
 
 def list_aspenone_sources(
     url=r"https://aspenone.api.equinor.com",
-    auth=get_auth_aspen(),
-    verifySSL=get_verifySSL,
+    auth=None,
+    verifySSL=None,
 ):
-    import urllib3
+    if auth is None:
+        auth = get_auth_aspen()
 
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    if verifySSL is False:
+        requests.packages.urllib3.disable_warnings(
+            requests.packages.urllib3.exceptions.InsecureRequestWarning
+        )
+    elif verifySSL is None:
+        verifySSL = get_verifySSL()
 
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
@@ -64,9 +68,19 @@ def list_aspenone_sources(
 
 def list_piwebapi_sources(
     url=r"https://piwebapi.equinor.com/piwebapi",
-    auth=get_auth_pi(),
-    verifySSL=get_verifySSL,
+    auth=None,
+    verifySSL=None,
 ):
+    if auth is None:
+        auth = get_auth_pi()
+
+    if verifySSL is False:
+        requests.packages.urllib3.disable_warnings(
+            requests.packages.urllib3.exceptions.InsecureRequestWarning
+        )
+    elif verifySSL is None:
+        verifySSL = get_verifySSL()
+
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verifySSL)
     if res.status_code == 200:
@@ -91,11 +105,15 @@ class AspenHandlerWeb:
         self._max_rows = options.get("max_rows", 100000)
         if url is None:
             url = r"https://aspenone.api.equinor.com"
-        self.base_url = url
         self.datasource = datasource
+        self.base_url = url
         self.session = requests.Session()
-        self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
         self.session.auth = auth if auth is not None else get_auth_aspen()
+        if verifySSL is False:
+            requests.packages.urllib3.disable_warnings(
+                requests.packages.urllib3.exceptions.InsecureRequestWarning
+            )
+        self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
         self._connection_string = ""  # Used for raw SQL queries
 
     @staticmethod
@@ -220,9 +238,9 @@ class AspenHandlerWeb:
         url = urljoin(self.base_url, "Datasources")
         params = {"service": "ProcessData", "allQuotes": 1}
         if not self.session.verify:
-            import urllib3
-
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            requests.packages.urllib3.disable_warnings(
+                requests.packages.urllib3.exceptions.InsecureRequestWarning
+            )
 
         res = self.session.get(url, params=params)
         res.raise_for_status()
@@ -540,8 +558,12 @@ class PIHandlerWeb:
         self.base_url = url
         self.datasource = datasource
         self.session = requests.Session()
-        self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
         self.session.auth = auth if auth is not None else get_auth_pi()
+        if verifySSL is False:
+            requests.packages.urllib3.disable_warnings(
+                requests.packages.urllib3.exceptions.InsecureRequestWarning
+            )
+        self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
         self.webidcache = {}
 
     @staticmethod
@@ -693,10 +715,6 @@ class PIHandlerWeb:
         :rtype: Bool
         """
         url = urljoin(self.base_url, "dataservers")
-        if not self.session.verify:
-            import urllib3
-
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         res = self.session.get(url)
         res.raise_for_status()
         j = res.json()
