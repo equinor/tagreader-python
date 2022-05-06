@@ -1,8 +1,8 @@
 import os
-import sys
 
 import pandas as pd
 import pytest
+import urllib3
 from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.web_handlers import PIHandlerWeb, get_verifySSL, list_piwebapi_sources
@@ -74,16 +74,14 @@ def test_verify_connection(PIHandler):
 def test_search_tag(Client):
     res = Client.search("SINUSOID")
     assert 1 == len(res)
-    res = Client.search("BA:*.1")
-    assert 5 <= len(res)
+    res = Client.search("SIN*")
+    assert 3 <= len(res)
     [taglist, desclist] = zip(*res)
-    assert "BA:CONC.1" in taglist
-    assert desclist[taglist.index("BA:CONC.1")] == "Concentration Reactor 1"
-    res = Client.search(tag="BA:*.1")
-    assert 5 <= len(res)
-    res = Client.search(desc="Concentration Reactor 1")
+    assert "SINUSOIDU" in taglist
+    assert desclist[taglist.index("SINUSOID")] == "12 Hour Sine Wave"
+    res = Client.search(desc="12 Hour Sine Wave")
     assert 1 <= len(res)
-    res = Client.search("BA*.1", "*Active*")
+    res = Client.search("SINUSOID", desc="*Sine*")
     assert 1 <= len(res)
 
 
