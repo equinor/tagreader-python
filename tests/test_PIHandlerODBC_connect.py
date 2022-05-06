@@ -59,19 +59,18 @@ def test_list_sources_pi():
         assert 3 <= len(r)
 
 
-def test_search(Client):
-    res = Client.search("BA:*.1")
-    assert 5 == len(res)
+def test_search_tag(Client):
+    res = Client.search("SINUSOID")
+    assert 1 == len(res)
+    res = Client.search("SIN*")
+    assert 3 <= len(res)
     [taglist, desclist] = zip(*res)
-    assert "BA:CONC.1" in taglist
-    assert desclist[taglist.index("BA:CONC.1")] == "Concentration Reactor 1"
-
-    res = Client.search(tag="BA:*.1")
-    assert 5 == len(res)
-    res = Client.search(desc="Batch Active Reactor 1")
-    assert 1 == len(res)
-    res = Client.search("BA*.1", "*Active*")
-    assert 1 == len(res)
+    assert "SINUSOIDU" in taglist
+    assert desclist[taglist.index("SINUSOID")] == "12 Hour Sine Wave"
+    res = Client.search(desc="12 Hour Sine Wave")
+    assert 1 <= len(res)
+    res = Client.search("SINUSOID", desc="*Sine*")
+    assert 1 <= len(res)
 
 
 @pytest.mark.parametrize(
