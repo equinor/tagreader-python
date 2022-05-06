@@ -237,7 +237,8 @@ class AspenHandlerWeb:
             self.verify_connection(self.datasource)
         except requests.ConnectionError:
             raise ConnectionError(
-                f"Not able to connect to {self.base_url}. Check network connection.") from None
+                f"Not able to connect to {self.base_url}. Check network connection."
+            ) from None
 
     @staticmethod
     def split_tagmap(tagmap):
@@ -709,7 +710,8 @@ class PIHandlerWeb:
             self.verify_connection(self.datasource)
         except requests.ConnectionError:
             raise ConnectionError(
-                f"Not able to connect to {self.base_url}. Check network connection.") from None
+                f"Not able to connect to {self.base_url}. Check network connection."
+            ) from None
 
     def search(self, tag=None, desc=None):
         params = self.generate_search_query(tag, desc, self.datasource)
@@ -891,9 +893,9 @@ class PIHandlerWeb:
         if get_status:
             df["Status"] = (
                 # Values are boolean, but no need to do .astype(int)
-                df["Questionable"] +
-                2 * (1 - df["Good"]) +
-                4 * df["Substituted"]
+                df["Questionable"]
+                + 2 * (1 - df["Good"])
+                + 4 * df["Substituted"]
             )
             df = df.drop(columns=["Good", "Questionable", "Substituted"])
 
