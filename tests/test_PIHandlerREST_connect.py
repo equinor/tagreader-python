@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import pandas as pd
 import pytest
@@ -18,6 +19,7 @@ if is_GITHUBACTION:
 verifySSL = False if is_AZUREPIPELINE else get_verifySSL()
 if is_AZUREPIPELINE:
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    warnings.filterwarnings("ignore", urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://piwebapi.equinor.com/piwebapi"
 SOURCE = "PIMAM"
