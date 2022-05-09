@@ -88,12 +88,19 @@ def test_search_tag(client: IMSClient) -> None:
     assert desclist[taglist.index("ATCMIXTIME1")] == "MIX TANK 1 TIMER"
     res = client.search(tag="ATCM*", desc=None)
     assert 5 <= len(res)
-    res = client.search("AspenCalcTrigger1", desc=None)
+    assert isinstance(res, list)
+    assert isinstance(res[0], tuple)
+    res = client.search(tag="ATCM*", return_desc=False)
+    assert 5 <= len(res)
+    assert isinstance(res, list)
+    assert isinstance(res[0], str)
+    res = client.search("AspenCalcTrigger1")
     assert res == [("AspenCalcTrigger1", "")]
     res = client.search("ATC*", "Sine*")
     assert res == [("ATCAI", "Sine Input")]
     with pytest.raises(ValueError):
-        _ = client.search(desc="Sine Input")  # noqa
+        res = client.search(desc="Sine Input")
+    res = client.search("")
 
 
 def test_read_unknown_tag(client: IMSClient) -> None:

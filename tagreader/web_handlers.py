@@ -379,7 +379,11 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 return k
 
     def search(
-        self, tag: Optional[str], desc: Optional[str], timeout: Optional[int] = None
+        self,
+        tag: Optional[str],
+        desc: Optional[str],
+        timeout: Optional[int] = None,
+        return_desc=True,
     ) -> List[Tuple[str, str]]:
         if tag is None:
             raise ValueError("Tag is a required argument")
@@ -408,14 +412,20 @@ class AspenHandlerWeb(BaseHandlerWeb):
         ret = []
         for item in data["data"]["tags"]:
             tagname = item["t"]
-            description = self._get_tag_description(tagname)
-            ret.append((tagname, description))
+            if not desc and not return_desc:
+                ret.append(tagname)
+            else:
+                description = self._get_tag_description(tagname)
+                ret.append((tagname, description))
 
         if not desc:
-            return ret
+            pass
+        else:
+            r = re.compile(desc)
+            ret = [x for x in ret if r.search(x[1])]
+            if not return_desc:
+                ret = [x[0] for x in ret]
 
-        r = re.compile(desc)
-        ret = [x for x in ret if r.search(x[1])]
         return ret
 
     def _get_tag_metadata(self, tag: str):
@@ -791,6 +801,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         tag: Optional[str] = None,
         desc: Optional[str] = None,
         timeout: Optional[int] = None,
+        return_desc: bool = True,
     ) -> List[Tuple]:
         params = self.generate_search_query(
             tag=tag, desc=desc, datasource=self.datasource
@@ -809,6 +820,10 @@ class PIHandlerWeb(BaseHandlerWeb):
                 params["start"] = next_start  # noqa
             else:
                 done = True
+
+        if not return_desc:
+            ret = [x[0] for x in ret]
+
         return ret
 
     def _get_tag_metadata(self, tag: str) -> Dict[str, str]:

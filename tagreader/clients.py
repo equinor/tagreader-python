@@ -309,8 +309,11 @@ class IMSClient:
         tag: Optional[str] = None,
         desc: Optional[str] = None,
         timeout: Optional[int] = None,
+        return_desc: bool = True,
     ) -> List[Tuple[str, str]]:
-        return self.handler.search(tag=tag, desc=desc, timeout=timeout)
+        return self.handler.search(
+            tag=tag, desc=desc, timeout=timeout, return_desc=return_desc
+        )
 
     def _get_metadata(self, tag: str):
         return self.handler._get_tag_metadata(

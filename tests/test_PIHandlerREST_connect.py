@@ -89,11 +89,17 @@ def test_search_tag(client: IMSClient) -> None:
     res = client.search("SINUSOID")
     assert 1 == len(res)
     res = client.search("SIN*")
+    assert isinstance(res, list)
     assert 3 <= len(res)
+    assert isinstance(res[0], tuple)
     [taglist, desclist] = zip(*res)
     assert "SINUSOIDU" in taglist
     assert desclist[taglist.index("SINUSOID")] == "12 Hour Sine Wave"
-    res = client.search(tag=None, desc="12 Hour Sine Wave")
+    res = client.search("SIN*", return_desc=False)
+    assert 3 <= len(res)
+    assert isinstance(res, list)
+    assert isinstance(res[0], str)
+    res = client.search(desc="12 Hour Sine Wave")
     assert 1 <= len(res)
     res = client.search(tag="SINUSOID", desc="*Sine*")
     assert 1 <= len(res)
