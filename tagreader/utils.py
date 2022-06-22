@@ -145,7 +145,7 @@ def add_statoil_root_certificate(noisy=True):
                 found = True
                 if noisy:
                     print(" found it!")
-                    break
+                break
     elif is_mac():
         import subprocess
         macos_ca_certs = subprocess.run(["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-Z"],
