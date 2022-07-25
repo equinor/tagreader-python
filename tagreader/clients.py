@@ -446,7 +446,9 @@ class IMSClient:
 
         Values for ReaderType.* that should work for all handlers are:
             INT, RAW, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
+
         """
+        
         if isinstance(tags, str):
             tags = [tags]
         if read_type in [ReaderType.RAW, ReaderType.SNAPSHOT] and len(tags) > 1:
@@ -460,7 +462,11 @@ class IMSClient:
             end_time = ensure_datetime_with_tz(end_time, tz=self.tz)
         if not isinstance(ts, pd.Timedelta):
             ts = pd.Timedelta(ts, unit="s")
-
+        #Issue#3 Transform the tags into dictionary and back to list to reduce unique tags and preserve order. Added a warning to user that duplicate tags have been found and reduced
+        oldlen=len(tags)
+        tags=list(dict.fromkeys(tags)) #
+        if oldlen>len(tags):
+            warnings.warn("DuplicateTags"); print("Duplicate tags found, removed duplicates.")
         cols = []
         for tag in tags:
             cols.append(
