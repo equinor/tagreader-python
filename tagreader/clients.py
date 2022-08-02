@@ -380,9 +380,6 @@ class IMSClient:
             tags = [tags]
         units = {}
         for tag in tags:
-            if self.search(tag)==[]: #check for nonexisting string
-                print("Tag not found: "+str(tag))
-                break
             if self.cache is not None:
                 r = self.cache.fetch_tag_metadata(tag, "unit")
                 if "unit" in r:
@@ -399,9 +396,6 @@ class IMSClient:
             tags = [tags]
         descriptions = {}
         for tag in tags:
-            if self.search(tag)==[]: #check for nonexisting string
-                print("Tag not found: "+str(tag))
-                break
             if self.cache is not None:
                 r = self.cache.fetch_tag_metadata(tag, "description")
                 if "description" in r:
@@ -472,7 +466,7 @@ class IMSClient:
         oldlen=len(tags)
         tags=list(dict.fromkeys(tags)) #
         if oldlen>len(tags):
-            warnings.warn("Duplicate tags found, removed duplicates.");
+            warnings.warn("DuplicateTags"); print("Duplicate tags found, removed duplicates.")
         cols = []
         for tag in tags:
             cols.append(
