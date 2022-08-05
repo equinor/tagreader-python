@@ -6,22 +6,44 @@ from operator import itemgetter
 import pandas as pd
 
 from .cache import BucketCache, SmartCache
-from .utils import (ReaderType, ensure_datetime_with_tz, find_registry_key,
-                    find_registry_key_from_name, is_windows, logging)
-from .web_handlers import (AspenHandlerWeb, PIHandlerWeb, get_auth_aspen,
-                           get_auth_pi, list_aspenone_sources,
-                           list_piwebapi_sources)
+from .utils import (
+    ReaderType,
+    ensure_datetime_with_tz,
+    find_registry_key,
+    find_registry_key_from_name,
+    is_windows,
+    logging,
+)
+from .web_handlers import (
+    AspenHandlerWeb,
+    PIHandlerWeb,
+    get_auth_aspen,
+    get_auth_pi,
+    list_aspenone_sources,
+    list_piwebapi_sources,
+)
 
 if is_windows():
     import pyodbc
 
-    from .odbc_handlers import (AspenHandlerODBC, PIHandlerODBC,
-                                list_aspen_sources, list_pi_sources)
+    from .odbc_handlers import (
+        AspenHandlerODBC,
+        PIHandlerODBC,
+        list_aspen_sources,
+        list_pi_sources,
+    )
     from .utils import winreg
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
 )
+
+
+class DuplicateTagsWarning(UserWarning):
+    pass
+
+
+warnings.simplefilter("always", DuplicateTagsWarning)
 
 
 def list_sources(imstype, url=None, auth=None, verifySSL=None):
@@ -447,6 +469,7 @@ class IMSClient:
         Values for ReaderType.* that should work for all handlers are:
             INT, RAW, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
         """
+
         if isinstance(tags, str):
             tags = [tags]
         if read_type in [ReaderType.RAW, ReaderType.SNAPSHOT] and len(tags) > 1:
@@ -461,6 +484,14 @@ class IMSClient:
         if not isinstance(ts, pd.Timedelta):
             ts = pd.Timedelta(ts, unit="s")
 
+        oldtags = tags
+        tags = list(dict.fromkeys(tags))
+        if len(oldtags) > len(tags):
+            duplicates = set([x for n, x in enumerate(oldtags) if x in oldtags[:n]])
+            warnings.warn(
+                f"Duplicate tags found, removed duplicates: {', '.join(duplicates)}",
+                DuplicateTagsWarning,
+            )
         cols = []
         for tag in tags:
             cols.append(
