@@ -400,11 +400,16 @@ class AspenHandlerWeb:
         url = urljoin(self.base_url, "TagInfo")
         res = self.session.get(url, params=query)
         res.raise_for_status()
-        j = res.json()
+        desc = ""
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            warnings.warn(f"Unable to fetch description for {tag}: {res.text}")
+            return ""
         try:
             desc = j["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
-        except Exception:
-            desc = ""
+        except KeyError:
+            warnings.warn(f"Unable to fetch description for {tag} from JSON: {j}")
         return desc
 
     def read_tag(
