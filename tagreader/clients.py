@@ -6,17 +6,32 @@ from operator import itemgetter
 import pandas as pd
 
 from .cache import BucketCache, SmartCache
-from .utils import (ReaderType, ensure_datetime_with_tz, find_registry_key,
-                    find_registry_key_from_name, is_windows, logging)
-from .web_handlers import (AspenHandlerWeb, PIHandlerWeb, get_auth_aspen,
-                           get_auth_pi, list_aspenone_sources,
-                           list_piwebapi_sources)
+from .utils import (
+    ReaderType,
+    ensure_datetime_with_tz,
+    find_registry_key,
+    find_registry_key_from_name,
+    is_windows,
+    logging,
+)
+from .web_handlers import (
+    AspenHandlerWeb,
+    PIHandlerWeb,
+    get_auth_aspen,
+    get_auth_pi,
+    list_aspenone_sources,
+    list_piwebapi_sources,
+)
 
 if is_windows():
     import pyodbc
 
-    from .odbc_handlers import (AspenHandlerODBC, PIHandlerODBC,
-                                list_aspen_sources, list_pi_sources)
+    from .odbc_handlers import (
+        AspenHandlerODBC,
+        PIHandlerODBC,
+        list_aspen_sources,
+        list_pi_sources,
+    )
     from .utils import winreg
 
 logging.basicConfig(
@@ -380,15 +395,20 @@ class IMSClient:
             tags = [tags]
         units = {}
         for tag in tags:
-            if self.cache is not None:
-                r = self.cache.fetch_tag_metadata(tag, "unit")
-                if "unit" in r:
-                    units[tag] = r["unit"]
-            if tag not in units:
-                unit = self.handler._get_tag_unit(tag)
-                if self.cache is not None and unit is not None:
-                    self.cache.store_tag_metadata(tag, {"unit": unit})
-                units[tag] = unit
+            try:
+                if self.cache is not None:
+                    r = self.cache.fetch_tag_metadata(tag, "unit")
+                    if "unit" in r:
+                        units[tag] = r["unit"]
+                if tag not in units:
+                    unit = self.handler._get_tag_unit(tag)
+                    if self.cache is not None and unit is not None:
+                        self.cache.store_tag_metadata(tag, {"unit": unit})
+                    units[tag] = unit
+            except:
+                if self.search(tag) == []:  # check for nonexisting string
+                    print("Tag not found: " + str(tag))
+                    break
         return units
 
     def get_descriptions(self, tags):
@@ -396,15 +416,20 @@ class IMSClient:
             tags = [tags]
         descriptions = {}
         for tag in tags:
-            if self.cache is not None:
-                r = self.cache.fetch_tag_metadata(tag, "description")
-                if "description" in r:
-                    descriptions[tag] = r["description"]
-            if tag not in descriptions:
-                desc = self.handler._get_tag_description(tag)
-                if self.cache is not None and desc is not None:
-                    self.cache.store_tag_metadata(tag, {"description": desc})
-                descriptions[tag] = desc
+            try:
+                if self.cache is not None:
+                    r = self.cache.fetch_tag_metadata(tag, "description")
+                    if "description" in r:
+                        descriptions[tag] = r["description"]
+                if tag not in descriptions:
+                    desc = self.handler._get_tag_description(tag)
+                    if self.cache is not None and desc is not None:
+                        self.cache.store_tag_metadata(tag, {"description": desc})
+                    descriptions[tag] = desc
+            except:
+                if self.search(tag) == []:  # check for nonexisting string
+                    print("Tag not found: " + str(tag))
+                    break
         return descriptions
 
     def read_tags(self, tags, start_time, stop_time, ts, read_type=ReaderType.INT):
