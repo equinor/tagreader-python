@@ -6,32 +6,17 @@ from operator import itemgetter
 import pandas as pd
 
 from .cache import BucketCache, SmartCache
-from .utils import (
-    ReaderType,
-    ensure_datetime_with_tz,
-    find_registry_key,
-    find_registry_key_from_name,
-    is_windows,
-    logging,
-)
-from .web_handlers import (
-    AspenHandlerWeb,
-    PIHandlerWeb,
-    get_auth_aspen,
-    get_auth_pi,
-    list_aspenone_sources,
-    list_piwebapi_sources,
-)
+from .utils import (ReaderType, ensure_datetime_with_tz, find_registry_key,
+                    find_registry_key_from_name, is_windows, logging)
+from .web_handlers import (AspenHandlerWeb, PIHandlerWeb, get_auth_aspen,
+                           get_auth_pi, list_aspenone_sources,
+                           list_piwebapi_sources)
 
 if is_windows():
     import pyodbc
 
-    from .odbc_handlers import (
-        AspenHandlerODBC,
-        PIHandlerODBC,
-        list_aspen_sources,
-        list_pi_sources,
-    )
+    from .odbc_handlers import (AspenHandlerODBC, PIHandlerODBC,
+                                list_aspen_sources, list_pi_sources)
     from .utils import winreg
 
 logging.basicConfig(
@@ -186,6 +171,12 @@ def get_handler(
     verifySSL=None,
     auth=None,
 ):
+    if imstype is None:
+        if datasource in list_aspenone_sources():
+            imstype = 'aspenone'
+        elif datasource in list_piwebapi_sources():
+            imstype = 'piwebapi'
+
     accepted_imstypes = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
 
     if not imstype or imstype.lower() not in accepted_imstypes:
