@@ -1,4 +1,6 @@
 certifi>=2020.04.05
+msal
+msal_extensions
 pandas>=1.0.0
 pyodbc; platform_system == 'Windows'
 requests

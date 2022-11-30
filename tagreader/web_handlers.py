@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 import urllib
 import warnings
@@ -10,7 +11,7 @@ import pytz
 import requests
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
-from .utils import ReaderType, is_mac, is_windows, logging, urljoin
+from .utils import ReaderType, is_mac, is_windows, urljoin
 
 # Requests will use simplejson if it has been installed, so handle both errors here
 try:
@@ -21,6 +22,8 @@ except ImportError:
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
 )
+
+internal = False
 
 
 def get_verifySSL():
@@ -38,12 +41,26 @@ def get_url_pi():
 
 
 def get_auth_aspen():
-    return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+    if internal:
+        return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+    else:
+        from .BearerAuth import BearerAuth
+
+        tenantID = '3aa4a235-b6e2-48d5-9195-7fcf05b459b0'
+        clientID = '7adaaa99-897f-428c-8a5f-4053db565b32'
+        scopes = [
+            "https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData//user_impersonation"]
+        auth = BearerAuth.get_bearer_token(
+            tenantID=tenantID, clientID=clientID, scopes=scopes, verbose=True)
+        return auth
 
 
 def get_url_aspen():
-    # internal url (redirects to dll)
-    return r"https://aspenone.api.equinor.com"
+    if internal:
+        # internal url (redirects to url including AtProcessDataREST.dll)
+        return r"https://aspenone.api.equinor.com"
+    else:
+        return r"https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData/AtProcessDataREST.dll"
 
 
 def list_aspenone_sources(url=None, auth=None, verifySSL=None):
@@ -105,7 +122,6 @@ def list_piwebapi_sources(url=None, auth=None, verifySSL=None):
     elif res.status_code == 401:
         print("Not authorized")
     res.raise_for_status()
-
 
 
 class AspenHandlerWeb:

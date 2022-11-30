@@ -153,6 +153,11 @@ test_scripts/*
 adhoc/
 
 tests/test_adhoc.py
+.DS_Store
+token_cache.bin
 
 # SNYK
 .dccache
+
+# Merge files
+*.orig
