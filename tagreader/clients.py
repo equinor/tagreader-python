@@ -40,7 +40,7 @@ def list_sources(imstype, url=None, auth=None, verifySSL=None):
     if imstype is None or imstype.lower() not in accepted_values:
         import platform
         raise ValueError(
-            f"Input `imstype` must be one of {accepted_values} when called from an {platform.system()} environment.")
+            f"Input `imstype` must be one of {accepted_values} when called from {platform.system()} environment.")
     
     if imstype.lower() == "pi":
         return list_pi_sources()
