@@ -62,7 +62,7 @@ ipython-genutils==0.2.0
     #   nbformat
     #   notebook
     #   qtconsole
-ipywidgets==7.6.5
+ipywidgets==8.0.3
     # via jupyter
 isort==5.10.1
     # via -r dev-requirements.in
