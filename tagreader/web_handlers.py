@@ -33,15 +33,23 @@ def get_auth_pi():
     return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
 
+def get_url_pi():
+    return r"https://piwebapi.equinor.com/piwebapi"
+
+
 def get_auth_aspen():
     return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
 
-def list_aspenone_sources(
-    url=r"https://aspenone.api.equinor.com",
-    auth=None,
-    verifySSL=None,
-):
+def get_url_aspen():
+    # internal url (redirects to dll)
+    return r"https://aspenone.api.equinor.com"
+
+
+def list_aspenone_sources(url=None, auth=None, verifySSL=None):
+    if url is None:
+        url = get_url_aspen()
+
     if auth is None:
         auth = get_auth_aspen()
 
@@ -69,11 +77,10 @@ def list_aspenone_sources(
     res.raise_for_status()
 
 
-def list_piwebapi_sources(
-    url=r"https://piwebapi.equinor.com/piwebapi",
-    auth=None,
-    verifySSL=None,
-):
+def list_piwebapi_sources(url=None, auth=None, verifySSL=None):
+    if url is None:
+        url = get_url_pi()
+
     if auth is None:
         auth = get_auth_pi()
 
@@ -112,7 +119,7 @@ class AspenHandlerWeb:
     ):
         self._max_rows = options.get("max_rows", 100000)
         if url is None:
-            url = r"https://aspenone.api.equinor.com"
+            url = get_url_aspen()
         self.datasource = datasource
         self.base_url = url
         self.session = requests.Session()
@@ -562,7 +569,7 @@ class PIHandlerWeb:
     ):
         self._max_rows = options.get("max_rows", 10000)
         if url is None:
-            url = r"https://piwebapi.equinor.com/piwebapi"
+            url = get_url_pi()
         self.base_url = url
         self.datasource = datasource
         self.session = requests.Session()
@@ -919,9 +926,9 @@ class PIHandlerWeb:
         if get_status:
             df["Status"] = (
                 # Values are boolean, but no need to do .astype(int)
-                df["Questionable"]
-                + 2 * (1 - df["Good"])
-                + 4 * df["Substituted"]
+                df["Questionable"] +
+                2 * (1 - df["Good"]) +
+                4 * df["Substituted"]
             )
             df = df.drop(columns=["Good", "Questionable", "Substituted"])
 

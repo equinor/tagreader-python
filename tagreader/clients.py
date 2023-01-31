@@ -9,8 +9,8 @@ from .cache import BucketCache, SmartCache
 from .utils import (ReaderType, ensure_datetime_with_tz, find_registry_key,
                     find_registry_key_from_name, is_windows, logging)
 from .web_handlers import (AspenHandlerWeb, PIHandlerWeb, get_auth_aspen,
-                           get_auth_pi, list_aspenone_sources,
-                           list_piwebapi_sources)
+                           get_auth_pi, get_url_aspen, get_url_pi,
+                           list_aspenone_sources, list_piwebapi_sources)
 
 if is_windows():
     import pyodbc
@@ -47,16 +47,12 @@ def list_sources(imstype, url=None, auth=None, verifySSL=None):
     elif imstype.lower() in ["aspen", "ip21"]:
         return list_aspen_sources()
     elif imstype.lower() == "piwebapi":
-        if url is None:
-            url = r"https://piwebapi.equinor.com/piwebapi"
         if auth is None:
             auth = get_auth_pi()
         if verifySSL is None:
             verifySSL = True
         return list_piwebapi_sources(url=url, auth=auth, verifySSL=verifySSL)
     elif imstype.lower() == "aspenone":
-        if url is None:
-            url = r"https://aspenone.api.equinor.com"
         if auth is None:
             auth = get_auth_aspen()
         if verifySSL is None:
