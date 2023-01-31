@@ -146,6 +146,7 @@ def add_statoil_root_certificate(noisy=True):
                 if noisy:
                     print(" found it!")
                 break
+    # file deepcode ignore InsecureHash: <Only hashes to compare with known hash>
     elif is_mac():
         import subprocess
         macos_ca_certs = subprocess.run(["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-Z"],
