@@ -9,8 +9,8 @@ from .cache import BucketCache, SmartCache
 from .utils import (ReaderType, ensure_datetime_with_tz, find_registry_key,
                     find_registry_key_from_name, is_windows, logging)
 from .web_handlers import (AspenHandlerWeb, PIHandlerWeb, get_auth_aspen,
-                           get_auth_pi, get_url_aspen, get_url_pi,
-                           list_aspenone_sources, list_piwebapi_sources)
+                           get_auth_pi, list_aspenone_sources,
+                           list_piwebapi_sources)
 
 if is_windows():
     import pyodbc
