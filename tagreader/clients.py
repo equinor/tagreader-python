@@ -32,10 +32,16 @@ warnings.simplefilter("always", DuplicateTagsWarning)
 
 
 def list_sources(imstype, url=None, auth=None, verifySSL=None):
-    accepted_values = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
-    if not imstype or imstype.lower() not in accepted_values:
-        raise ValueError(f"`imstype` must be one of {accepted_values}")
+    accepted_values = ["piwebapi", "aspenone"]
+    win_accepted_values = ["pi", "aspen", "ip21"]
+    if is_windows():
+        accepted_values.extend(win_accepted_values)
 
+    if imstype is None or imstype.lower() not in accepted_values:
+        import platform
+        raise ValueError(
+            f"Input `imstype` must be one of {accepted_values} when called from {platform.system()} environment.")
+    
     if imstype.lower() == "pi":
         return list_pi_sources()
     elif imstype.lower() in ["aspen", "ip21"]:
@@ -101,6 +107,9 @@ def get_server_address_aspen(datasource):
     host and port based on the path above and the UUID.
     """
 
+    if not is_windows():
+        return None
+
     regkey_clsid = winreg.OpenKey(
         winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Classes\Wow6432Node\CLSID"
     )
@@ -137,6 +146,10 @@ def get_server_address_pi(datasource):
     :return: host, port
     :type: tuple(string, int)
     """
+
+    if not is_windows():
+        return None
+
     try:
         reg_key = winreg.OpenKey(
             winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\PISystem\PI-SDK"
@@ -167,6 +180,12 @@ def get_handler(
     verifySSL=None,
     auth=None,
 ):
+    if imstype is None:
+        if datasource in list_aspenone_sources():
+            imstype = 'aspenone'
+        elif datasource in list_piwebapi_sources():
+            imstype = 'piwebapi'
+
     accepted_imstypes = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
 
     if not imstype or imstype.lower() not in accepted_imstypes:

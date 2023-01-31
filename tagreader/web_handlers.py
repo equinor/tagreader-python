@@ -65,8 +65,11 @@ def list_aspenone_sources(url=None, auth=None, verifySSL=None):
 
     res = requests.get(url_, params=params, auth=auth, verify=verifySSL)
     if res.status_code == 200:
-        source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
-        return source_list
+        try:
+            source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
+            return source_list
+        except JSONDecodeError:
+            print("Did not return json")
     elif res.status_code == 404:
         print("Not found")
     elif res.status_code == 401:
@@ -90,14 +93,19 @@ def list_piwebapi_sources(url=None, auth=None, verifySSL=None):
 
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verifySSL)
+
     if res.status_code == 200:
-        source_list = [r["Name"] for r in res.json()["Items"]]
-        return source_list
+        try:
+            source_list = [r["Name"] for r in res.json()["Items"]]
+            return source_list
+        except JSONDecodeError:
+            print("Did not return json")
     elif res.status_code == 404:
         print("Not found")
     elif res.status_code == 401:
         print("Not authorized")
     res.raise_for_status()
+
 
 
 class AspenHandlerWeb:

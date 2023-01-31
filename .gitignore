@@ -153,3 +153,6 @@ test_scripts/*
 adhoc/
 
 tests/test_adhoc.py
+
+# SNYK
+.dccache
