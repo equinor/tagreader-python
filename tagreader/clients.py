@@ -184,6 +184,12 @@ def get_handler(
     verifySSL=None,
     auth=None,
 ):
+    if imstype is None:
+        if datasource in list_aspenone_sources():
+            imstype = 'aspenone'
+        elif datasource in list_piwebapi_sources():
+            imstype = 'piwebapi'
+
     accepted_imstypes = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
 
     if not imstype or imstype.lower() not in accepted_imstypes:
