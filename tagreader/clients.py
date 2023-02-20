@@ -6,22 +6,12 @@ from operator import itemgetter
 import pandas as pd
 
 from .cache import BucketCache, SmartCache
-from .utils import (
-    ReaderType,
-    ensure_datetime_with_tz,
-    find_registry_key,
-    find_registry_key_from_name,
-    is_windows,
-    logging,
-)
-from .web_handlers import (
-    AspenHandlerWeb,
-    PIHandlerWeb,
-    get_auth_aspen,
-    get_auth_pi,
-    list_aspenone_sources,
-    list_piwebapi_sources,
-)
+
+from .utils import (ReaderType, ensure_datetime_with_tz, find_registry_key,
+                    find_registry_key_from_name, is_windows, logging)
+from .web_handlers import (AspenHandlerWeb, PIHandlerWeb, get_auth_aspen,
+                           get_auth_pi, get_url_aspen, get_url_pi,
+                           list_aspenone_sources, list_piwebapi_sources)
 
 if is_windows():
     import pyodbc
@@ -39,26 +29,35 @@ logging.basicConfig(
 )
 
 
-def list_sources(imstype, url=None, auth=None, verifySSL=None):
-    accepted_values = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
-    if not imstype or imstype.lower() not in accepted_values:
-        raise ValueError(f"`imstype` must be one of {accepted_values}")
+class DuplicateTagsWarning(UserWarning):
+    pass
 
+
+warnings.simplefilter("always", DuplicateTagsWarning)
+
+
+def list_sources(imstype, url=None, auth=None, verifySSL=None):
+    accepted_values = ["piwebapi", "aspenone"]
+    win_accepted_values = ["pi", "aspen", "ip21"]
+    if is_windows():
+        accepted_values.extend(win_accepted_values)
+
+    if imstype is None or imstype.lower() not in accepted_values:
+        import platform
+        raise ValueError(
+            f"Input `imstype` must be one of {accepted_values} when called from {platform.system()} environment.")
+    
     if imstype.lower() == "pi":
         return list_pi_sources()
     elif imstype.lower() in ["aspen", "ip21"]:
         return list_aspen_sources()
     elif imstype.lower() == "piwebapi":
-        if url is None:
-            url = r"https://piwebapi.equinor.com/piwebapi"
         if auth is None:
             auth = get_auth_pi()
         if verifySSL is None:
             verifySSL = True
         return list_piwebapi_sources(url=url, auth=auth, verifySSL=verifySSL)
     elif imstype.lower() == "aspenone":
-        if url is None:
-            url = r"https://aspenone.api.equinor.com"
         if auth is None:
             auth = get_auth_aspen()
         if verifySSL is None:
@@ -113,6 +112,9 @@ def get_server_address_aspen(datasource):
     host and port based on the path above and the UUID.
     """
 
+    if not is_windows():
+        return None
+
     regkey_clsid = winreg.OpenKey(
         winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Classes\Wow6432Node\CLSID"
     )
@@ -149,6 +151,10 @@ def get_server_address_pi(datasource):
     :return: host, port
     :type: tuple(string, int)
     """
+
+    if not is_windows():
+        return None
+
     try:
         reg_key = winreg.OpenKey(
             winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\PISystem\PI-SDK"
@@ -179,6 +185,12 @@ def get_handler(
     verifySSL=None,
     auth=None,
 ):
+    if imstype is None:
+        if datasource in list_aspenone_sources():
+            imstype = 'aspenone'
+        elif datasource in list_piwebapi_sources():
+            imstype = 'piwebapi'
+
     accepted_imstypes = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
 
     if not imstype or imstype.lower() not in accepted_imstypes:
@@ -472,6 +484,7 @@ class IMSClient:
         Values for ReaderType.* that should work for all handlers are:
             INT, RAW, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
         """
+
         if isinstance(tags, str):
             tags = [tags]
         if read_type in [ReaderType.RAW, ReaderType.SNAPSHOT] and len(tags) > 1:
@@ -486,6 +499,14 @@ class IMSClient:
         if not isinstance(ts, pd.Timedelta):
             ts = pd.Timedelta(ts, unit="s")
 
+        oldtags = tags
+        tags = list(dict.fromkeys(tags))
+        if len(oldtags) > len(tags):
+            duplicates = set([x for n, x in enumerate(oldtags) if x in oldtags[:n]])
+            warnings.warn(
+                f"Duplicate tags found, removed duplicates: {', '.join(duplicates)}",
+                DuplicateTagsWarning,
+            )
         cols = []
         for tag in tags:
             cols.append(
