@@ -28,12 +28,12 @@ Python >=3.7 with the following packages:
   + tables (*)
   + requests
   + requests-kerberos
-  + certifi >= 2020.04.05
+  + certifi >= 2022.12.7
   + pyodbc (**)
 
 *) If tables is not installed, caching of fetched data will be disabled.
 Tables will be installed alongside Tagreader unless the installation is
-known to fail, which is the case for Macs with M1 chip.
+known to fail, which is the case for Macs with ARM CPU.
 
 **) If using ODBC connections, you must also install proprietary drivers for
 PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for
