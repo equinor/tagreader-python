@@ -9,11 +9,11 @@ jobs:
     name: 🔖 Release Please
     runs-on: ubuntu-latest
     steps:
-      - name: Create Release
+      - name: PyPI Release
         id: release
         uses: google-github-actions/release-please-action@v3
         with:
-          release-type: rust
+          release-type: python
           bump-minor-pre-major: true
           changelog-types: >
             [{"type":"build", "section":"📦 Build system","hidden":false},
