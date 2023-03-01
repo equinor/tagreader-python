@@ -44,7 +44,7 @@ def get_token_cache(token_location: str = "", verbose: bool = False) -> Union[Fi
 
 
 def get_app_with_cache(client_id, authority, token_location: str = "", verbose: bool = False):
-    cache = get_token_cache(location=token_location, verbose=verbose)
+    cache = get_token_cache(token_location=token_location, verbose=verbose)
     return msal.PublicClientApplication(
         client_id=client_id, authority=authority, token_cache=cache)
 
