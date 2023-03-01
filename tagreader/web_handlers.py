@@ -48,9 +48,8 @@ def get_auth_aspen(use_internal=False):
         clientID = '7adaaa99-897f-428c-8a5f-4053db565b32'
         scopes = [
             "https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData//user_impersonation"]
-        auth = BearerAuth.get_bearer_token(
+        return BearerAuth.get_bearer_token_auth(
             tenantID=tenantID, clientID=clientID, scopes=scopes, verbose=True)
-        return auth
 
 
 def get_url_aspen(use_internal: bool = False) -> str:

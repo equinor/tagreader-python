@@ -16,56 +16,43 @@ def get_login_name():
             return os.getenv(name)
 
 
-def msal_persistence(location: str) -> Union[FilePersistence, FilePersistenceWithDataProtection, KeychainPersistence]:
-    """Build and return a persistence instance, i.e., token cache. The type of persistence depends on the system.
+def get_token_cache(token_location: str = "", verbose: bool = False) -> Union[FilePersistence, FilePersistenceWithDataProtection, KeychainPersistence]:
+    """Get PersistedTokenCache object.
 
     Args:
-        location (str): File path or keychain location based on system.
-
-    Returns:
-        BasePersistence: Persistence instance where token cache is stored
-    """
-
-    if sys.platform.startswith('win'):
-        return FilePersistenceWithDataProtection(location)
-    if sys.platform.startswith('darwin'):
-        return KeychainPersistence(location, "my_service_name", "my_account_name")
-    return FilePersistence(location)
-
-
-def get_token_cache(location: str = "", verbose: bool = False) -> Union[FilePersistence, FilePersistenceWithDataProtection, KeychainPersistence]:
-    """_summary_
-
-    Args:
-        location (str, optional): File path or keychain location based on system. Defaults to "".
+        token_location (str, optional): File path or keychain location based on system. Defaults to "" which defaults to "token_cache.bin".
         verbose (bool, optional): Set true to print debug messages. Defaults to False.
 
     Returns:
         BasePersistence: Persistence instance where token cache is stored
     """
-    if location is None or len(location) == 0:
-        location = "token_cache.bin"
+    if token_location is None or len(token_location) == 0:
+        token_location = "token_cache.bin"
 
-    persistence = msal_persistence(location)
+    if sys.platform.startswith('win'):
+        persistence = FilePersistenceWithDataProtection(token_location)
+    elif sys.platform.startswith('darwin'):
+        persistence = KeychainPersistence(
+            token_location, "my_service_name", "my_account_name")
+    else:
+        persistence = FilePersistence(token_location)
+
     if verbose:
         print("Is this MSAL persistence cache encrypted?",
               persistence.is_encrypted)
-    cache = PersistedTokenCache(persistence)
-    return cache
+    return PersistedTokenCache(persistence)
 
 
 def get_app_with_cache(client_id, authority, token_location: str = "", verbose: bool = False):
     cache = get_token_cache(location=token_location, verbose=verbose)
-    app = msal.PublicClientApplication(
+    return msal.PublicClientApplication(
         client_id=client_id, authority=authority, token_cache=cache)
-    return app
 
 
 class BearerAuth(requests.auth.AuthBase):
     """Class for getting bearer token authentication using msal.
 
-    Args:
-        requests (_type_): _description_
+    Get BearerAuth object by calling get_bearer_token.
     """
 
     def __init__(self, token):
@@ -76,7 +63,23 @@ class BearerAuth(requests.auth.AuthBase):
         return r
 
     @staticmethod
-    def get_bearer_token(tenantID: str, clientID: str, scopes: List[str], username: str = f"{get_login_name()}@equinor.com", authority: str = None, verbose: bool = False):
+    def get_bearer_token_auth(tenantID: str, clientID: str, scopes: List[str], username: str = f"{get_login_name()}@equinor.com", authority: str = None, verbose: bool = False):
+        """Get BearerAuth object with access token for an azure application.
+
+        Args:
+            tenantID (str): Azure tenant ID.
+            clientID (str): Azure Client ID to request token from.
+            scopes (List[str]): Scopes to request token for.
+            username (str, optional): User name to get token for. Defaults to f"{get_login_name()}@equinor.com".
+            authority (str, optional): Authority to get token from. Defaults to None which transforms to f"https://login.microsoftonline.com/{tenantID}".
+            verbose (bool, optional): Set true to print debug messages. Defaults to False.
+
+        Raises:
+            Exception: If fails to authenticate.
+
+        Returns:
+            BearerAuth: Authorization object with bearer token.
+        """
         if authority is None or (isinstance(len, str) and len(authority) == 0):
             authority = f"https://login.microsoftonline.com/{tenantID}"
 
