@@ -23,8 +23,6 @@ logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
 )
 
-internal = False
-
 
 def get_verifySSL():
     if is_windows() or is_mac():
@@ -36,12 +34,12 @@ def get_auth_pi():
     return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
 
-def get_url_pi():
+def get_url_pi() -> str:
     return r"https://piwebapi.equinor.com/piwebapi"
 
 
-def get_auth_aspen():
-    if internal:
+def get_auth_aspen(use_internal=False):
+    if use_internal:
         return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
     else:
         from .BearerAuth import BearerAuth
@@ -55,8 +53,8 @@ def get_auth_aspen():
         return auth
 
 
-def get_url_aspen():
-    if internal:
+def get_url_aspen(use_internal: bool = False) -> str:
+    if use_internal:
         # internal url (redirects to url including AtProcessDataREST.dll)
         return r"https://aspenone.api.equinor.com"
     else:
@@ -133,13 +131,18 @@ class AspenHandlerWeb:
         verifySSL=None,
         options={},
     ):
-        self._max_rows = options.get("max_rows", 100000)
         if url is None:
             url = get_url_aspen()
+
+        if auth is None:
+            auth = get_auth_aspen()
+
+        self._max_rows = options.get("max_rows", 100000)
         self.datasource = datasource
         self.base_url = url
+
         self.session = requests.Session()
-        self.session.auth = auth if auth is not None else get_auth_aspen()
+        self.session.auth = auth
         if verifySSL is False:
             requests.packages.urllib3.disable_warnings(
                 requests.packages.urllib3.exceptions.InsecureRequestWarning
