@@ -141,12 +141,12 @@ def add_statoil_root_certificate(noisy=True):
             if noisy:
                 print(".", end="")
             der = cert[0]
+            # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
             if hashlib.sha1(der).hexdigest() == STATOIL_ROOT_PEM_HASH:
                 found = True
                 if noisy:
                     print(" found it!")
                 break
-    # file deepcode ignore InsecureHash: <Only hashes to compare with known hash>
     elif is_mac():
         import subprocess
         macos_ca_certs = subprocess.run(["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-Z"],
@@ -155,6 +155,7 @@ def add_statoil_root_certificate(noisy=True):
         if STATOIL_ROOT_PEM_HASH.upper() in str(macos_ca_certs).upper():
             c = get_macos_statoil_certificates()
             for cert in c:
+                # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
                 if hashlib.sha1(cert).hexdigest() == STATOIL_ROOT_PEM_HASH:
                     der = cert
                     found = True
@@ -220,6 +221,7 @@ def is_equinor() -> bool:
 
         host = socket.gethostname()
 
+        # deepcode ignore IdenticalBranches: Not an error. First test is just more precise.
         if host + ".client.statoil.net" in str(s):
             return True
         elif "client.statoil.net" in host and host in str(s):
