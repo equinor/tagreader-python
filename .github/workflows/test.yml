@@ -45,16 +45,16 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Test Results (Python ${{ matrix.os }} - ${{ matrix.python-version }})
-          name: pytest.xml
+          file: pytest.xml
 
   publish-test-results:
-      name: 📰 Publish test results
-      if: always()
-      needs: code-test
-      runs-on: ubuntu-latest
-      permissions:
-        checks: write
-        pull-requests: write
+    name: 📰 Publish test results
+    if: always()
+    needs: code-test
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
 
     steps:
       - name: Download Artifacts
