@@ -5,8 +5,7 @@ import pytest
 
 from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
-from tagreader.web_handlers import (PIHandlerWeb, get_verifySSL,
-                                    list_piwebapi_sources)
+from tagreader.web_handlers import PIHandlerWeb, get_verifySSL, list_piwebapi_sources
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ

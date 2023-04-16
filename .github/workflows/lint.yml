@@ -5,8 +5,8 @@ on:
   workflow_call:
 
 jobs:
-  code-quality:
-    name: ✨ Lint
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
