@@ -6,7 +6,7 @@ on:
 
 jobs:
   code-test:
-    name: 🧪 Test (${{ matrix.python-version }} - ${{ matrix.os }})
+    name: Test (${{ matrix.python-version }} - ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -45,10 +45,10 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Test Results (Python ${{ matrix.os }} - ${{ matrix.python-version }})
-          file: pytest.xml
+          path: pytest.xml
 
   publish-test-results:
-    name: 📰 Publish test results
+    name: Publish test results
     if: always()
     needs: code-test
     runs-on: ubuntu-latest
