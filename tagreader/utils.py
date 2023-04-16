@@ -148,8 +148,11 @@ def add_statoil_root_certificate(noisy=True):
                 break
     elif is_mac():
         import subprocess
-        macos_ca_certs = subprocess.run(["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-Z"],
-                                        stdout=subprocess.PIPE).stdout
+
+        macos_ca_certs = subprocess.run(
+            ["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-Z"],
+            stdout=subprocess.PIPE,
+        ).stdout
 
         if STATOIL_ROOT_PEM_HASH.upper() in str(macos_ca_certs).upper():
             c = get_macos_statoil_certificates()
@@ -184,8 +187,10 @@ def get_macos_statoil_certificates():
 
     ctx = ssl.create_default_context()
     macos_ca_certs = subprocess.run(
-        ["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-p"], stdout=subprocess.PIPE).stdout
-    with tempfile.NamedTemporaryFile('w+b') as tmp_file:
+        ["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-p"],
+        stdout=subprocess.PIPE,
+    ).stdout
+    with tempfile.NamedTemporaryFile("w+b") as tmp_file:
         tmp_file.write(macos_ca_certs)
         ctx.load_verify_locations(tmp_file.name)
 
@@ -215,7 +220,9 @@ def is_equinor() -> bool:
             return True
     elif is_mac():
         s = subprocess.run(
-            ["security", "find-certificate", "-a", "-c" "client.statoil.net"], stdout=subprocess.PIPE).stdout
+            ["security", "find-certificate", "-a", "-c" "client.statoil.net"],
+            stdout=subprocess.PIPE,
+        ).stdout
 
         host = socket.gethostname()
 
@@ -229,5 +236,6 @@ def is_equinor() -> bool:
                 return True
     else:
         raise OSError(
-            f"Unsupported system: {platform.system()}. Please report this as an issue.")
+            f"Unsupported system: {platform.system()}. Please report this as an issue."
+        )
     return False

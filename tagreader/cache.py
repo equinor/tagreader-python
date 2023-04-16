@@ -165,7 +165,6 @@ class BucketCache:
         starttime: pd.Timestamp,
         endtime: pd.Timestamp,
     ) -> List[str]:
-
         if not os.path.isfile(self.filename):
             return []
         intersecting_datasets = []
@@ -192,7 +191,6 @@ class BucketCache:
         starttime: pd.Timestamp,
         endtime: pd.Timestamp,
     ) -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
-
         datasets = self.get_intersecting_datasets(
             tagname, readtype, ts, stepped, status, starttime, endtime
         )
