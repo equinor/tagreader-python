@@ -107,7 +107,6 @@ def list_piwebapi_sources(url=None, auth=None, verifySSL=None):
     res.raise_for_status()
 
 
-
 class AspenHandlerWeb:
     def __init__(
         self,
@@ -646,7 +645,6 @@ class PIHandlerWeb:
         metadata=None,
         get_status=False,
     ):
-
         if read_type in [
             ReaderType.COUNT,
             ReaderType.GOOD,
@@ -926,9 +924,9 @@ class PIHandlerWeb:
         if get_status:
             df["Status"] = (
                 # Values are boolean, but no need to do .astype(int)
-                df["Questionable"] +
-                2 * (1 - df["Good"]) +
-                4 * df["Substituted"]
+                df["Questionable"]
+                + 2 * (1 - df["Good"])
+                + 4 * df["Substituted"]
             )
             df = df.drop(columns=["Good", "Questionable", "Substituted"])
 

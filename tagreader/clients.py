@@ -6,17 +6,34 @@ from operator import itemgetter
 import pandas as pd
 
 from .cache import BucketCache, SmartCache
-from .utils import (ReaderType, ensure_datetime_with_tz, find_registry_key,
-                    find_registry_key_from_name, is_windows, logging)
-from .web_handlers import (AspenHandlerWeb, PIHandlerWeb, get_auth_aspen,
-                           get_auth_pi, get_url_aspen, get_url_pi,
-                           list_aspenone_sources, list_piwebapi_sources)
+from .utils import (
+    ReaderType,
+    ensure_datetime_with_tz,
+    find_registry_key,
+    find_registry_key_from_name,
+    is_windows,
+    logging,
+)
+from .web_handlers import (
+    AspenHandlerWeb,
+    PIHandlerWeb,
+    get_auth_aspen,
+    get_auth_pi,
+    get_url_aspen,
+    get_url_pi,
+    list_aspenone_sources,
+    list_piwebapi_sources,
+)
 
 if is_windows():
     import pyodbc
 
-    from .odbc_handlers import (AspenHandlerODBC, PIHandlerODBC,
-                                list_aspen_sources, list_pi_sources)
+    from .odbc_handlers import (
+        AspenHandlerODBC,
+        PIHandlerODBC,
+        list_aspen_sources,
+        list_pi_sources,
+    )
     from .utils import winreg
 
 logging.basicConfig(
@@ -39,9 +56,11 @@ def list_sources(imstype, url=None, auth=None, verifySSL=None):
 
     if imstype is None or imstype.lower() not in accepted_values:
         import platform
+
         raise ValueError(
-            f"Input `imstype` must be one of {accepted_values} when called from {platform.system()} environment.")
-    
+            f"Input `imstype` must be one of {accepted_values} when called from {platform.system()} environment."
+        )
+
     if imstype.lower() == "pi":
         return list_pi_sources()
     elif imstype.lower() in ["aspen", "ip21"]:
@@ -182,9 +201,9 @@ def get_handler(
 ):
     if imstype is None:
         if datasource in list_aspenone_sources():
-            imstype = 'aspenone'
+            imstype = "aspenone"
         elif datasource in list_piwebapi_sources():
-            imstype = 'piwebapi'
+            imstype = "piwebapi"
 
     accepted_imstypes = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
 
@@ -352,7 +371,7 @@ class IMSClient:
 
             metadata = self._get_metadata(tag)
             frames = [df]
-            for (start, stop) in missing_intervals:
+            for start, stop in missing_intervals:
                 while True:
                     df = self.handler.read_tag(
                         tag, start, stop, ts, read_type, metadata, get_status
