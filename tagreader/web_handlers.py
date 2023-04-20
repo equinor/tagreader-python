@@ -551,9 +551,20 @@ class AspenHandlerWeb:
         res.raise_for_status()
         # For now just return result as text regardless of value of parse
         if parse:
-            raise NotImplementedError(
-                "Use parse=False to receive and handle text result instead"
-            )
+            dict = res.json()['data'][0]
+            
+            cols = []
+            for i in dict['cols']:
+                cols.append(i['n'])
+                
+            rows = []
+            
+            for i in dict['rows']:
+                element = []
+                for j in i['fld']:
+                    element.append(j['v'])
+                rows.append(element)
+            return pd.DataFrame(data=rows, columns=cols)
         return res.text
 
 
