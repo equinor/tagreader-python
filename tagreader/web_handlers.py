@@ -519,7 +519,10 @@ class AspenHandlerWeb:
                 'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
                 f'm="{max_rows}" to="30" s="1">'
             )
-
+        query = query.replace("\t"," ").replace('\n'," ") # Replace new lines and tabs that are typical in formatted SQL queries with spaces. 
+        
+        # Need a solution to LIKE comments. These have a % symbol in the query that does not seem to pass through the request
+        
         connstr += f"<![CDATA[{query}]]></SQL>"
         return connstr
 
