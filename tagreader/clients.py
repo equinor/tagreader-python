@@ -9,8 +9,8 @@ from .cache import BucketCache, SmartCache
 from .utils import (ReaderType, ensure_datetime_with_tz, find_registry_key,
                     find_registry_key_from_name, is_windows, logging)
 from .web_handlers import (AspenHandlerWeb, PIHandlerWeb, get_auth_aspen,
-                           get_auth_pi, list_aspenone_sources,
-                           list_piwebapi_sources)
+                           get_auth_pi, get_url_aspen, get_url_pi,
+                           list_aspenone_sources, list_piwebapi_sources)
 
 if is_windows():
     import pyodbc
@@ -39,9 +39,11 @@ def list_sources(imstype, url=None, auth=None, verifySSL=None):
 
     if imstype is None or imstype.lower() not in accepted_values:
         import platform
+
         raise ValueError(
-            f"Input `imstype` must be one of {accepted_values} when called from {platform.system()} environment.")
-    
+            f"Input `imstype` must be one of {accepted_values} when called from {platform.system()} environment."
+        )
+
     if imstype.lower() == "pi":
         return list_pi_sources()
     elif imstype.lower() in ["aspen", "ip21"]:
@@ -182,9 +184,9 @@ def get_handler(
 ):
     if imstype is None:
         if datasource in list_aspenone_sources():
-            imstype = 'aspenone'
+            imstype = "aspenone"
         elif datasource in list_piwebapi_sources():
-            imstype = 'piwebapi'
+            imstype = "piwebapi"
 
     accepted_imstypes = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
 
@@ -311,9 +313,9 @@ class IMSClient:
             df = pd.DataFrame()
 
             if (
-                isinstance(cache, SmartCache)
-                and read_type != ReaderType.RAW
-                and not get_status
+                isinstance(cache, SmartCache) and
+                read_type != ReaderType.RAW and
+                not get_status
             ):
                 time_slice = get_next_timeslice(start_time, stop_time, ts)
                 df = cache.fetch(
@@ -352,20 +354,20 @@ class IMSClient:
 
             metadata = self._get_metadata(tag)
             frames = [df]
-            for (start, stop) in missing_intervals:
+            for start, stop in missing_intervals:
                 while True:
                     df = self.handler.read_tag(
                         tag, start, stop, ts, read_type, metadata, get_status
                     )
                     if len(df.index) > 0:
                         if (
-                            cache is not None
-                            and read_type
+                            cache is not None and
+                            read_type
                             not in [
                                 ReaderType.SNAPSHOT,
                                 ReaderType.RAW,
-                            ]
-                            and not get_status
+                            ] and
+                            not get_status
                         ):
                             cache.store(df, read_type, ts)
                     frames.append(df)

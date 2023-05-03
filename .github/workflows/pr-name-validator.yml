@@ -1,0 +1,36 @@
+name: 🔍️ PR Name Validation
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  PR_LABEL: 'invalid_PR_title'
+jobs:
+  lint-pr:
+    name: Lint pull request title
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Checkout current PR
+        run: gh pr checkout $GITHUB_HEAD_REF
+
+      - name: Create Label
+        continue-on-error: true
+        run: gh label create ${{ env.PR_LABEL }}
+
+      - name: Lint pull request title
+        uses: jef/conventional-commits-pr-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Remove label
+        run: gh pr edit --remove-label ${{ env.PR_LABEL }}
+
+      - name: Add label
+        if: ${{ failure() }}
+        run: gh pr edit --add-label ${{ env.PR_LABEL }}

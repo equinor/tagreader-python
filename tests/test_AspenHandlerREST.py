@@ -189,34 +189,27 @@ def test_genreadquery_long_sampletime(AspenHandler):
 
 def test_generate_sql_query(AspenHandler):
     res = AspenHandler.generate_sql_query(
-        connection_string="myconnstring",
-        query="myquery",
-        max_rows=9999
+        connection_string="myconnstring", query="myquery", max_rows=9999
     )
     expected = (
-        '<SQL c="myconnstring" m="9999" to="30" s="1">'
-        '<![CDATA[myquery]]></SQL>'
+        '<SQL c="myconnstring" m="9999" to="30" s="1">' "<![CDATA[myquery]]></SQL>"
     )
     assert res == expected
     res = AspenHandler.generate_sql_query(
-        datasource="mydatasource",
-        query="myquery",
-        max_rows=9999
+        datasource="mydatasource", query="myquery", max_rows=9999
     )
     expected = (
         '<SQL t="SQLplus" ds="mydatasource" '
         'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
         'm="9999" to="30" s="1">'
-        '<![CDATA[myquery]]></SQL>'
+        "<![CDATA[myquery]]></SQL>"
     )
     assert res == expected
 
 
 def test_initialize_connectionstring(AspenHandler):
     AspenHandler.initialize_connectionstring(
-        host="myhost",
-        port=999,
-        connection_string="myconnstr"
+        host="myhost", port=999, connection_string="myconnstr"
     )
     assert AspenHandler._connection_string == "myconnstr"
     AspenHandler.initialize_connectionstring(

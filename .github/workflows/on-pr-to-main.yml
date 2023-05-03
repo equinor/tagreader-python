@@ -1,0 +1,20 @@
+name: ➕ Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: "💎 Code Quality"
+    uses: ./.github/workflows/lint.yml
+
+  test:
+    name: '🧪 Test Code'
+    uses: ./.github/workflows/test.yml
+    secrets: inherit

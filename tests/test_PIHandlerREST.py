@@ -1,6 +1,7 @@
-import pytest
 import pandas as pd
-from tagreader.utils import ensure_datetime_with_tz, ReaderType
+import pytest
+
+from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.web_handlers import PIHandlerWeb
 
 START_TIME = "2020-04-01 11:05:00"

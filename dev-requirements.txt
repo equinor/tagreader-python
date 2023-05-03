@@ -51,7 +51,7 @@ ipykernel==6.9.1
     #   jupyter-console
     #   notebook
     #   qtconsole
-ipython==8.1.1
+ipython==8.10.0
     # via
     #   ipykernel
     #   ipywidgets
@@ -62,7 +62,7 @@ ipython-genutils==0.2.0
     #   nbformat
     #   notebook
     #   qtconsole
-ipywidgets==7.6.5
+ipywidgets==8.0.4
     # via jupyter
 isort==5.10.1
     # via -r dev-requirements.in
@@ -114,7 +114,7 @@ mypy-extensions==0.4.3
     #   mypy
 nbclient==0.5.12
     # via nbconvert
-nbconvert==6.4.2
+nbconvert==7.2.9
     # via
     #   jupyter
     #   notebook
@@ -130,7 +130,7 @@ nest-asyncio==1.5.4
     #   jupyter-client
     #   nbclient
     #   notebook
-notebook==6.4.10
+notebook==6.4.12
     # via
     #   jupyter
     #   widgetsnbextension
@@ -257,7 +257,7 @@ wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via bleach
-wheel==0.37.1
+wheel==0.38.4
     # via pip-tools
 widgetsnbextension==3.5.2
     # via ipywidgets
