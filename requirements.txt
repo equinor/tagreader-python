@@ -33,7 +33,7 @@ pandas==1.4.1
     # via -r requirements.in
 pycparser==2.21
     # via cffi
-pyodbc==4.0.32 ; platform_system == "Windows"
+pyodbc==4.0.39; platform_system == "Windows"
     # via -r requirements.in
 pyparsing==3.0.7
     # via packaging
