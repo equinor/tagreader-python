@@ -2,6 +2,54 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.0.0](https://github.com/equinor/tagreader-python/compare/v3.0.2...v4.0.0) (2023-05-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* Python 3.7 is no longer supported due to end-of-life
+
+### 🧪 Tests
+
+* fix tests, don't raise error if package tables is not installed ([#145](https://github.com/equinor/tagreader-python/issues/145)) ([df84ec9](https://github.com/equinor/tagreader-python/commit/df84ec994a23d452a9b7a5575aa76ed0e9470d73))
+
+
+### ✨ Features
+
+* auto_detect ims type if not provided ([#130](https://github.com/equinor/tagreader-python/issues/130)) ([d53e314](https://github.com/equinor/tagreader-python/commit/d53e31418db78b0015cdcc887c7e2247c6e1b740))
+* remove duplicate tags ([#121](https://github.com/equinor/tagreader-python/issues/121)) ([c297990](https://github.com/equinor/tagreader-python/commit/c297990a4bb59d717a26ef2f8a6003734b5dc7c5))
+
+
+### 🔨 Refactor
+
+* get url to aspen/pi endpoints from function ([#144](https://github.com/equinor/tagreader-python/issues/144)) ([4e22b5c](https://github.com/equinor/tagreader-python/commit/4e22b5c2d67a9e165a786cb1f2e168da7f9294c0))
+
+
+### 🐛 Bug Fixes
+
+* catch exception when request does not return json ([#133](https://github.com/equinor/tagreader-python/issues/133)) ([c81d811](https://github.com/equinor/tagreader-python/commit/c81d8115cfe1677160839f3c72787184b569ffff))
+* don't call unavailable functions on mac ([#129](https://github.com/equinor/tagreader-python/issues/129)) ([c6f363c](https://github.com/equinor/tagreader-python/commit/c6f363cfa8dc9627c33df6bd589fb51838861deb))
+* timestamp parsing for Pandas 2.0 ([#177](https://github.com/equinor/tagreader-python/issues/177)) ([bdf0217](https://github.com/equinor/tagreader-python/commit/bdf0217ddcce09ee94e4da07c21e533eaef502ab))
+
+
+### 👷 CI/CD
+
+* add dependabot config ([f800f37](https://github.com/equinor/tagreader-python/commit/f800f37584892cfac061a9ada44897d30e394ebb))
+* add pr-name-validator ([79f2982](https://github.com/equinor/tagreader-python/commit/79f298284d5758acbcf8afa3733ca90e1999a204))
+* add release-please ([45370d1](https://github.com/equinor/tagreader-python/commit/45370d1147b354c6bbfa9e999c4a682a10d83c86))
+* fix release please ([7c0ea48](https://github.com/equinor/tagreader-python/commit/7c0ea487bc0b28bb6b88d787e6362bba5b6e2475))
+* test and lint pull requests ([#178](https://github.com/equinor/tagreader-python/issues/178)) ([2e63a29](https://github.com/equinor/tagreader-python/commit/2e63a2927f5d289f0b9921169ee989b6bd70f5d7))
+* use Poetry for packaging and dependency management ([922353b](https://github.com/equinor/tagreader-python/commit/922353bf8f2fc127a3c2a4d19558108c82754f59)), closes [#185](https://github.com/equinor/tagreader-python/issues/185)
+
+
+### 🧹 Chores
+
+* align docs with requirements ([2c4f5d6](https://github.com/equinor/tagreader-python/commit/2c4f5d677c8a622174935e0f02e6d373e1cb36a9))
+* bump notebook from 6.4.10 to 6.4.12 ([#117](https://github.com/equinor/tagreader-python/issues/117)) ([02c088a](https://github.com/equinor/tagreader-python/commit/02c088abeb7de63735f1578d6685632c96760b6d))
+* **deps:** bump actions/checkout from 2 to 3 ([#166](https://github.com/equinor/tagreader-python/issues/166)) ([53bd904](https://github.com/equinor/tagreader-python/commit/53bd90428c51988a9df849ec21374ca1b0e7fe81))
+* **deps:** bump actions/setup-python from 1 to 4 ([#165](https://github.com/equinor/tagreader-python/issues/165)) ([07a9caa](https://github.com/equinor/tagreader-python/commit/07a9caa480491c13978730cb0b70144a3f870909))
+* scheduled weekly dependency update for week 08 ([#163](https://github.com/equinor/tagreader-python/issues/163)) ([02645ee](https://github.com/equinor/tagreader-python/commit/02645eee7418ea800646024f366caefc4aacace4))
+
 ## [1.1.0] - 2020-06-18
 Improved handling of tags with maps for Aspen IP.21.
 
