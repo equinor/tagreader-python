@@ -22,13 +22,13 @@ to cache results.
 
 ## Requirements
 
-Python >=3.7 with the following packages:
+Python >=3.8 with the following packages:
 
   + pandas >= 1.0.0
   + tables (*)
   + requests
   + requests-kerberos
-  + certifi >= 2022.12.7
+  + certifi >= 2023.5.7
   + pyodbc (**)
 
 *) If tables is not installed, caching of fetched data will be disabled.
