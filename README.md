@@ -53,6 +53,15 @@ to install some proprietary drivers. There is more information in the
 [manual](docs/manual.md#odbc-drivers). Please note that the web APIs should
 normally be preferred.
 
+## Usage example
+
+```
+import tagreader
+c = tagreader.IMSClient("mysource", "aspenone")
+print(c.search("tag*"))
+df = c.read_tags(["tag1", "tag2"], "18.06.2020 08:00:00", "18.06.2020 09:00:00", 60)
+```
+
 ## Documentation
 
 There is a [quickstart](docs/quickstart.ipynb) example file that should get

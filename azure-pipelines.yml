@@ -6,14 +6,14 @@ pool:
 
 strategy:
   matrix:
-    Python37:
-      python.version: '3.7'
     Python38:
       python.version: '3.8'
     Python39:
       python.version: '3.9'
     Python310:
       python.version: '3.10'
+    Python311:
+      python.version: '3.11'
 
 steps:
 - task: UsePythonVersion@0
@@ -22,8 +22,10 @@ steps:
   displayName: 'Use Python $(python.version)'
 
 - script: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.in
+    python -m pip install --upgrade pip pipx
+    pipx install poetry
+    poetry export -f requirements.txt --output requirements.txt
+    pip install -r requirements.txt
     pip install pytest pytest-azurepipelines pytest-cov
   displayName: 'Install dependencies'
   env: 
