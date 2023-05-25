@@ -105,7 +105,7 @@ class BucketCache:
                 res[p] = metadata.get(p)
         return res
 
-    def remove(self, filename: str = None) -> None:
+    def remove(self, filename: str = None) -> None:  # type: ignore[assignment]
         if not filename:
             filename = self.filename
         if os.path.isfile(filename):
@@ -372,7 +372,7 @@ class SmartCache:
                 res[p] = metadata.get(p)
         return res
 
-    def remove(self, filename: str = None) -> None:
+    def remove(self, filename: str = None) -> None:  # type: ignore[assignment]
         if not filename:
             filename = self.filename
             # self.close()
@@ -417,9 +417,9 @@ class SmartCache:
 
     def delete_key(
         self,
-        tagname: str = None,
-        readtype: ReaderType = None,
-        ts: Union[int, List[int]] = None,
+        tagname: str = None,  # type: ignore[assignment]
+        readtype: ReaderType = None,  # type: ignore[assignment]
+        ts: Union[int, List[int]] = None,  # type: ignore[assignment]
     ) -> None:
         with pd.HDFStore(self.filename) as f:
             for key in f:

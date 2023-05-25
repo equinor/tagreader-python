@@ -34,7 +34,7 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 
 # Requirements
 
-Python >= 3.7 with the following packages:
+Python >= 3.8 with the following packages:
 
   + pandas >= 1.0.0
   + pytables

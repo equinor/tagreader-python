@@ -22,18 +22,18 @@ to cache results.
 
 ## Requirements
 
-Python >=3.7 with the following packages:
+Python >=3.8 with the following packages:
 
   + pandas >= 1.0.0
   + tables (*)
   + requests
   + requests-kerberos
-  + certifi >= 2020.04.05
+  + certifi >= 2023.5.7
   + pyodbc (**)
 
 *) If tables is not installed, caching of fetched data will be disabled.
 Tables will be installed alongside Tagreader unless the installation is
-known to fail, which is the case for Macs with M1 chip.
+known to fail, which is the case for Macs with ARM CPU.
 
 **) If using ODBC connections, you must also install proprietary drivers for
 PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for
@@ -52,6 +52,15 @@ If you wish to use ODBC connections to the IMS servers, you will also need
 to install some proprietary drivers. There is more information in the 
 [manual](docs/manual.md#odbc-drivers). Please note that the web APIs should
 normally be preferred.
+
+## Usage example
+
+```
+import tagreader
+c = tagreader.IMSClient("mysource", "aspenone")
+print(c.search("tag*"))
+df = c.read_tags(["tag1", "tag2"], "18.06.2020 08:00:00", "18.06.2020 09:00:00", 60)
+```
 
 ## Documentation
 

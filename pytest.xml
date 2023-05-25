@@ -1,0 +1,2608 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="40" skipped="12" tests="135" time="34.313" timestamp="2023-05-24T10:32:54.087659" hostname="AC-DQWYQ9T06W"><testcase classname="" name="tests.test_AspenHandlerODBC" file="tests/test_AspenHandlerODBC.py" time="0.000"><skipped message="collection skipped">('/Users/MASL/PycharmProjects/tagreader-python/tests/test_AspenHandlerODBC.py', 6, 'Skipped: All tests in module require Windows')</skipped></testcase><testcase classname="" name="tests.test_AspenHandlerODBC_connect" file="tests/test_AspenHandlerODBC_connect.py" time="0.000"><skipped message="collection skipped">('/Users/MASL/PycharmProjects/tagreader-python/tests/test_AspenHandlerODBC_connect.py', 9, 'Skipped: All tests in module require Windows')</skipped></testcase><testcase classname="" name="tests.test_PIHandlerODBC" file="tests/test_PIHandlerODBC.py" time="0.000"><skipped message="collection skipped">('/Users/MASL/PycharmProjects/tagreader-python/tests/test_PIHandlerODBC.py', 7, 'Skipped: All tests in module require Windows')</skipped></testcase><testcase classname="" name="tests.test_PIHandlerODBC_connect" file="tests/test_PIHandlerODBC_connect.py" time="0.000"><skipped message="collection skipped">('/Users/MASL/PycharmProjects/tagreader-python/tests/test_PIHandlerODBC_connect.py', 9, 'Skipped: All tests in module require Windows')</skipped></testcase><testcase classname="" name="tests.test_data_integrity" file="tests/test_data_integrity.py" time="0.000"><skipped message="collection skipped">('/Users/MASL/PycharmProjects/tagreader-python/tests/test_data_integrity.py', 14, 'Skipped: All tests in module require Windows')</skipped></testcase><testcase classname="" name="tests.extratests.tests.test_extra_AspenHandlerODBC_connect" file="tests/extratests/tests/test_extra_AspenHandlerODBC_connect.py" time="0.000"><skipped message="collection skipped">('/Users/MASL/PycharmProjects/tagreader-python/tests/extratests/tests/test_extra_AspenHandlerODBC_connect.py', 9, 'Skipped: All tests in module require Windows')</skipped></testcase><testcase classname="" name="tests.extratests.tests.test_extra_PIHandlerODBC_connect" file="tests/extratests/tests/test_extra_PIHandlerODBC_connect.py" time="0.000"><skipped message="collection skipped">('/Users/MASL/PycharmProjects/tagreader-python/tests/extratests/tests/test_extra_PIHandlerODBC_connect.py', 6, 'Skipped: All tests in module require Windows')</skipped></testcase><testcase classname="tests.test_AspenHandlerREST" name="test_generate_search_query" file="tests/test_AspenHandlerREST.py" line="17" time="0.000" /><testcase classname="tests.test_AspenHandlerREST" name="test_split_tagmap" file="tests/test_AspenHandlerREST.py" line="37" time="0.000" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_description_query" file="tests/test_AspenHandlerREST.py" line="45" time="0.000" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_unit_query" file="tests/test_AspenHandlerREST.py" line="53" time="0.000" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_map_query" file="tests/test_AspenHandlerREST.py" line="61" time="0.000" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_tag_read_query[RAW]" file="tests/test_AspenHandlerREST.py" line="68" time="0.510" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_tag_read_query[SHAPEPRESERVING]" file="tests/test_AspenHandlerREST.py" line="68" time="0.001" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_tag_read_query[INT]" file="tests/test_AspenHandlerREST.py" line="68" time="0.000" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_tag_read_query[MIN]" file="tests/test_AspenHandlerREST.py" line="68" time="0.000" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_tag_read_query[MAX]" file="tests/test_AspenHandlerREST.py" line="68" time="0.000" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_tag_read_query[RNG]" file="tests/test_AspenHandlerREST.py" line="68" time="0.000" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_tag_read_query[AVG]" file="tests/test_AspenHandlerREST.py" line="68" time="0.001" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_tag_read_query[VAR]" file="tests/test_AspenHandlerREST.py" line="68" time="0.001" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_tag_read_query[STD]" file="tests/test_AspenHandlerREST.py" line="68" time="0.001" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_tag_read_query[SNAPSHOT]" file="tests/test_AspenHandlerREST.py" line="68" time="0.001" /><testcase classname="tests.test_AspenHandlerREST" name="test_genreadquery_long_sampletime" file="tests/test_AspenHandlerREST.py" line="171" time="0.001" /><testcase classname="tests.test_AspenHandlerREST" name="test_generate_sql_query" file="tests/test_AspenHandlerREST.py" line="189" time="0.000" /><testcase classname="tests.test_AspenHandlerREST" name="test_initialize_connectionstring" file="tests/test_AspenHandlerREST.py" line="209" time="0.000" /><testcase classname="tests.test_AspenHandlerREST_connect" name="test_list_all_aspenone_sources" file="tests/test_AspenHandlerREST_connect.py" line="41" time="0.416" /><testcase classname="tests.test_AspenHandlerREST_connect" name="test_list_sources_aspenone" file="tests/test_AspenHandlerREST_connect.py" line="50" time="0.348" /><testcase classname="tests.test_AspenHandlerREST_connect" name="test_verify_connection" file="tests/test_AspenHandlerREST_connect.py" line="59" time="0.420" /><testcase classname="tests.test_AspenHandlerREST_connect" name="test_search_tag" file="tests/test_AspenHandlerREST_connect.py" line="64" time="0.634"><failure message="AssertionError: assert [] == [('ATCAI', 'Sine Input')]&#10;  Right contains one more item: ('ATCAI', 'Sine Input')&#10;  Use -v to get more diff">Client = &lt;tagreader.clients.IMSClient object at 0x1332e1510&gt;
+
+    def test_search_tag(Client):
+        res = Client.search("sospecificitcannotpossiblyexist")
+        assert 0 == len(res)
+        res = Client.search("ATCAI")
+&gt;       assert res == [("ATCAI", "Sine Input")]
+E       AssertionError: assert [] == [('ATCAI', 'Sine Input')]
+E         Right contains one more item: ('ATCAI', 'Sine Input')
+E         Use -v to get more diff
+
+tests/test_AspenHandlerREST_connect.py:69: AssertionError</failure></testcase><testcase classname="tests.test_AspenHandlerREST_connect" name="test_read_unknown_tag" file="tests/test_AspenHandlerREST_connect.py" line="84" time="0.744"><failure message="AssertionError: assert 0 &gt; 0&#10; +  where 0 = len(DatetimeIndex([], dtype='datetime64[ns, Europe/Oslo]', freq=None))&#10; +    where DatetimeIndex([], dtype='datetime64[ns, Europe/Oslo]', freq=None) = Empty DataFrame\nColumns: [ATCAI, sorandomitcantexist]\nIndex: [].index">Client = &lt;tagreader.clients.IMSClient object at 0x1332e0ed0&gt;
+
+    def test_read_unknown_tag(Client):
+        with pytest.warns(UserWarning):
+            df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
+        assert len(df.index) == 0
+        with pytest.warns(UserWarning):
+            df = Client.read([TAG, "sorandomitcantexist"], START_TIME, STOP_TIME)
+&gt;       assert len(df.index) &gt; 0
+E       AssertionError: assert 0 &gt; 0
+E        +  where 0 = len(DatetimeIndex([], dtype='datetime64[ns, Europe/Oslo]', freq=None))
+E        +    where DatetimeIndex([], dtype='datetime64[ns, Europe/Oslo]', freq=None) = Empty DataFrame\nColumns: [ATCAI, sorandomitcantexist]\nIndex: [].index
+
+tests/test_AspenHandlerREST_connect.py:91: AssertionError</failure></testcase><testcase classname="tests.test_AspenHandlerREST_connect" name="test_query_sql" file="tests/test_AspenHandlerREST_connect.py" line="94" time="1.127" /><testcase classname="tests.test_PIHandlerREST" name="test_escape_chars" file="tests/test_PIHandlerREST.py" line="18" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_search_query" file="tests/test_PIHandlerREST.py" line="24" time="0.000" /><testcase classname="tests.test_PIHandlerREST" name="test_is_summary" file="tests/test_PIHandlerREST.py" line="41" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query[RAW]" file="tests/test_PIHandlerREST.py" line="56" time="0.002" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query[INT]" file="tests/test_PIHandlerREST.py" line="56" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query[MIN]" file="tests/test_PIHandlerREST.py" line="56" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query[MAX]" file="tests/test_PIHandlerREST.py" line="56" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query[RNG]" file="tests/test_PIHandlerREST.py" line="56" time="0.002" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query[AVG]" file="tests/test_PIHandlerREST.py" line="56" time="0.002" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query[STD]" file="tests/test_PIHandlerREST.py" line="56" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query[VAR]" file="tests/test_PIHandlerREST.py" line="56" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query[SNAPSHOT]" file="tests/test_PIHandlerREST.py" line="56" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query_with_status[RAW]" file="tests/test_PIHandlerREST.py" line="123" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query_with_status[INT]" file="tests/test_PIHandlerREST.py" line="123" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query_with_status[MIN]" file="tests/test_PIHandlerREST.py" line="123" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query_with_status[MAX]" file="tests/test_PIHandlerREST.py" line="123" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query_with_status[RNG]" file="tests/test_PIHandlerREST.py" line="123" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query_with_status[AVG]" file="tests/test_PIHandlerREST.py" line="123" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query_with_status[STD]" file="tests/test_PIHandlerREST.py" line="123" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query_with_status[VAR]" file="tests/test_PIHandlerREST.py" line="123" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_generate_read_query_with_status[SNAPSHOT]" file="tests/test_PIHandlerREST.py" line="123" time="0.001" /><testcase classname="tests.test_PIHandlerREST" name="test_genreadquery_long_sampletime" file="tests/test_PIHandlerREST.py" line="200" time="0.000" /><testcase classname="tests.test_PIHandlerREST_connect" name="test_list_all_piwebapi_sources" file="tests/test_PIHandlerREST_connect.py" line="49" time="0.523" /><testcase classname="tests.test_PIHandlerREST_connect" name="test_list_sources_piwebapi" file="tests/test_PIHandlerREST_connect.py" line="58" time="0.306" /><testcase classname="tests.test_PIHandlerREST_connect" name="test_verify_connection" file="tests/test_PIHandlerREST_connect.py" line="67" time="0.480" /><testcase classname="tests.test_PIHandlerREST_connect" name="test_search_tag" file="tests/test_PIHandlerREST_connect.py" line="72" time="0.529"><failure message="assert 1 == 0&#10; +  where 0 = len([])">Client = &lt;tagreader.clients.IMSClient object at 0x133a0c7d0&gt;
+
+    def test_search_tag(Client):
+        res = Client.search("SINUSOID")
+&gt;       assert 1 == len(res)
+E       assert 1 == 0
+E        +  where 0 = len([])
+
+tests/test_PIHandlerREST_connect.py:75: AssertionError</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_tag_to_webid" file="tests/test_PIHandlerREST_connect.py" line="86" time="0.430"><failure message="UserWarning: Tag SINUSOID not found">PIHandler = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x1333e9e90&gt;
+
+    def test_tag_to_webid(PIHandler):
+&gt;       res = PIHandler.tag_to_webid("SINUSOID")
+
+tests/test_PIHandlerREST_connect.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x1333e9e90&gt;, tag = 'SINUSOID'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag SINUSOID not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read[RAW-10]" file="tests/test_PIHandlerREST_connect.py" line="96" time="0.500"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x13324e410&gt;, read_type = 'RAW', size = 10
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 10),
+            # pytest.param(
+            #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
+            # ),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "SNAPSHOT":
+            df = Client.read(
+                TAGS["Float32"],
+                read_type=getattr(ReaderType, read_type),
+            )
+        else:
+&gt;           df = Client.read(
+                TAGS["Float32"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                ts=SAMPLE_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+
+tests/test_PIHandlerREST_connect.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x13324de10&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read[INT-61]" file="tests/test_PIHandlerREST_connect.py" line="96" time="0.638"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133c77cd0&gt;, read_type = 'INT', size = 61
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 10),
+            # pytest.param(
+            #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
+            # ),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "SNAPSHOT":
+            df = Client.read(
+                TAGS["Float32"],
+                read_type=getattr(ReaderType, read_type),
+            )
+        else:
+&gt;           df = Client.read(
+                TAGS["Float32"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                ts=SAMPLE_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+
+tests/test_PIHandlerREST_connect.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133c77e10&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read[MIN-60]" file="tests/test_PIHandlerREST_connect.py" line="96" time="0.612"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133ced750&gt;, read_type = 'MIN', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 10),
+            # pytest.param(
+            #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
+            # ),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "SNAPSHOT":
+            df = Client.read(
+                TAGS["Float32"],
+                read_type=getattr(ReaderType, read_type),
+            )
+        else:
+&gt;           df = Client.read(
+                TAGS["Float32"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                ts=SAMPLE_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+
+tests/test_PIHandlerREST_connect.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133ced5d0&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read[MAX-60]" file="tests/test_PIHandlerREST_connect.py" line="96" time="0.533"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133c72c90&gt;, read_type = 'MAX', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 10),
+            # pytest.param(
+            #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
+            # ),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "SNAPSHOT":
+            df = Client.read(
+                TAGS["Float32"],
+                read_type=getattr(ReaderType, read_type),
+            )
+        else:
+&gt;           df = Client.read(
+                TAGS["Float32"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                ts=SAMPLE_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+
+tests/test_PIHandlerREST_connect.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133c72cd0&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read[RNG-60]" file="tests/test_PIHandlerREST_connect.py" line="96" time="0.708"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133c504d0&gt;, read_type = 'RNG', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 10),
+            # pytest.param(
+            #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
+            # ),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "SNAPSHOT":
+            df = Client.read(
+                TAGS["Float32"],
+                read_type=getattr(ReaderType, read_type),
+            )
+        else:
+&gt;           df = Client.read(
+                TAGS["Float32"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                ts=SAMPLE_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+
+tests/test_PIHandlerREST_connect.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133c506d0&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read[AVG-60]" file="tests/test_PIHandlerREST_connect.py" line="96" time="0.501"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133ce5c10&gt;, read_type = 'AVG', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 10),
+            # pytest.param(
+            #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
+            # ),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "SNAPSHOT":
+            df = Client.read(
+                TAGS["Float32"],
+                read_type=getattr(ReaderType, read_type),
+            )
+        else:
+&gt;           df = Client.read(
+                TAGS["Float32"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                ts=SAMPLE_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+
+tests/test_PIHandlerREST_connect.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133ce5c90&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read[VAR-60]" file="tests/test_PIHandlerREST_connect.py" line="96" time="0.531"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133c00790&gt;, read_type = 'VAR', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 10),
+            # pytest.param(
+            #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
+            # ),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "SNAPSHOT":
+            df = Client.read(
+                TAGS["Float32"],
+                read_type=getattr(ReaderType, read_type),
+            )
+        else:
+&gt;           df = Client.read(
+                TAGS["Float32"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                ts=SAMPLE_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+
+tests/test_PIHandlerREST_connect.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133c00310&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read[STD-60]" file="tests/test_PIHandlerREST_connect.py" line="96" time="0.760"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133a10d90&gt;, read_type = 'STD', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 10),
+            # pytest.param(
+            #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
+            # ),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "SNAPSHOT":
+            df = Client.read(
+                TAGS["Float32"],
+                read_type=getattr(ReaderType, read_type),
+            )
+        else:
+&gt;           df = Client.read(
+                TAGS["Float32"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                ts=SAMPLE_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+
+tests/test_PIHandlerREST_connect.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133a10f90&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read[SNAPSHOT-1]" file="tests/test_PIHandlerREST_connect.py" line="96" time="0.486"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133ac2410&gt;, read_type = 'SNAPSHOT', size = 1
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 10),
+            # pytest.param(
+            #      "SHAPEPRESERVING", 0, marks=pytest.mark.skip(reason="Not implemented")
+            # ),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip(reason="Not implemented")),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "SNAPSHOT":
+&gt;           df = Client.read(
+                TAGS["Float32"],
+                read_type=getattr(ReaderType, read_type),
+            )
+
+tests/test_PIHandlerREST_connect.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:324: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133ac11d0&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read_with_status" file="tests/test_PIHandlerREST_connect.py" line="147" time="0.560"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133af67d0&gt;
+
+    def test_read_with_status(Client):
+&gt;       df = Client.read(
+            TAGS["Float32"],
+            start_time=START_TIME,
+            end_time=STOP_TIME,
+            ts=SAMPLE_TIME,
+            read_type=ReaderType.RAW,
+            get_status=True,
+        )
+
+tests/test_PIHandlerREST_connect.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133af6510&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read_raw_long" file="tests/test_PIHandlerREST_connect.py" line="160" time="0.488"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133a571d0&gt;
+
+    def test_read_raw_long(Client):
+&gt;       df = Client.read(
+            TAGS["Float32"],
+            start_time=START_TIME,
+            end_time="2020-04-11 20:00:00",
+            read_type=ReaderType.RAW,
+        )
+
+tests/test_PIHandlerREST_connect.py:162: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133a57b50&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read_only_invalid_data_yields_nan_for_invalid" file="tests/test_PIHandlerREST_connect.py" line="170" time="0.550"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133a10ed0&gt;
+
+    def test_read_only_invalid_data_yields_nan_for_invalid(Client):
+        tag = TAGS["Float32"]
+&gt;       df = Client.read(tag, "2012-10-09 10:30:00", "2012-10-09 11:00:00", 600)
+
+tests/test_PIHandlerREST_connect.py:173: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133a10e50&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_read_invalid_data_mixed_with_valid_yields_nan_for_invalid" file="tests/test_PIHandlerREST_connect.py" line="177" time="0.490"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133adda10&gt;
+
+    def test_read_invalid_data_mixed_with_valid_yields_nan_for_invalid(Client):
+        # Hint, found first valid datapoint for tag
+        tag = TAGS["Float32"]
+&gt;       df = Client.read(tag, "2018-04-23 15:20:00", "2018-04-23 15:50:00", 600)
+
+tests/test_PIHandlerREST_connect.py:181: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133adec90&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_digitalread_yields_integers" file="tests/test_PIHandlerREST_connect.py" line="186" time="0.936"><failure message="UserWarning: Tag CDM158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133dc0190&gt;
+
+    def test_digitalread_yields_integers(Client):
+        tag = TAGS["Digital"]
+&gt;       df = Client.read(
+            tag, start_time=START_TIME, end_time=STOP_TIME, ts=600, read_type=ReaderType.INT
+        )
+
+tests/test_PIHandlerREST_connect.py:189: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133dc01d0&gt;, tag = 'CDM158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDM158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_get_unit" file="tests/test_PIHandlerREST_connect.py" line="194" time="0.751"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133260790&gt;
+
+    def test_get_unit(Client):
+&gt;       res = Client.get_units(list(TAGS.values()))
+
+tests/test_PIHandlerREST_connect.py:196: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:429: in get_units
+    unit = self.handler._get_tag_unit(tag)
+tagreader/web_handlers.py:771: in _get_tag_unit
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133260150&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_get_description" file="tests/test_PIHandlerREST_connect.py" line="201" time="0.585"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133adc650&gt;
+
+    def test_get_description(Client):
+&gt;       res = Client.get_descriptions(list(TAGS.values()))
+
+tests/test_PIHandlerREST_connect.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:445: in get_descriptions
+    desc = self.handler._get_tag_description(tag)
+tagreader/web_handlers.py:782: in _get_tag_description
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133adf490&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_from_DST_folds_time" file="tests/test_PIHandlerREST_connect.py" line="208" time="0.756"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133a10d90&gt;
+
+    def test_from_DST_folds_time(Client):
+        if os.path.exists(SOURCE + ".h5"):
+            os.remove(SOURCE + ".h5")
+        tag = TAGS["Float32"]
+        interval = ["2017-10-29 00:30:00", "2017-10-29 04:30:00"]
+&gt;       df = Client.read([tag], interval[0], interval[1], 600)
+
+tests/test_PIHandlerREST_connect.py:214: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133a10b50&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_to_DST_skips_time" file="tests/test_PIHandlerREST_connect.py" line="225" time="0.533"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133a012d0&gt;
+
+    def test_to_DST_skips_time(Client):
+        if os.path.exists(SOURCE + ".h5"):
+            os.remove(SOURCE + ".h5")
+        tag = TAGS["Float32"]
+        interval = ["2018-03-25 00:30:00", "2018-03-25 03:30:00"]
+&gt;       df = Client.read([tag], interval[0], interval[1], 600)
+
+tests/test_PIHandlerREST_connect.py:231: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133a00850&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_tags_with_no_data_included_in_results" file="tests/test_PIHandlerREST_connect.py" line="249" time="0.849"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133435650&gt;
+
+    def test_tags_with_no_data_included_in_results(Client):
+&gt;       df = Client.read([TAGS["Float32"]], "2099-01-01 00:00:00", "2099-01-02 00:00:00")
+
+tests/test_PIHandlerREST_connect.py:251: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x1334379d0&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_PIHandlerREST_connect" name="test_tags_raw_with_no_data_included_in_results" file="tests/test_PIHandlerREST_connect.py" line="254" time="0.556"><failure message="UserWarning: Tag CDT158 not found">Client = &lt;tagreader.clients.IMSClient object at 0x133a54350&gt;
+
+    def test_tags_raw_with_no_data_included_in_results(Client):
+&gt;       df = Client.read(
+            [TAGS["Float32"]],
+            "2099-01-01 00:00:00",
+            "2099-01-02 00:00:00",
+            read_type=ReaderType.RAW,
+        )
+
+tests/test_PIHandlerREST_connect.py:256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+tagreader/web_handlers.py:852: in read_tag
+    webid = self.tag_to_webid(tag)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.PIHandlerWeb object at 0x133a55f90&gt;, tag = 'CDT158'
+
+    def tag_to_webid(self, tag):
+        """Given a tag, returns the WebId.
+    
+        :param tag: The tag
+        :type tag: str
+        :raises ConnectionError: If connection or query fails
+        :return: WebId
+        :rtype: str
+        """
+        if tag not in self.webidcache:
+            params = self.generate_search_query(tag=tag, datasource=self.datasource)
+            params["fields"] = "name;webid"
+            url = urljoin(self.base_url, "search", "query")
+            res = self.session.get(url, params=params)
+            res.raise_for_status()
+            j = res.json()
+    
+            if len(j["Errors"]) &gt; 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"  # noqa: E501
+                raise ValueError(msg)
+    
+            if len(j["Items"]) &gt; 1:
+                # Compare elements and if same, return the first
+                first = j["Items"][0]
+                for item in j["Items"][1:]:
+                    if item != first:
+                        raise AssertionError(
+                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."  # noqa: E501
+                        )
+            elif len(j["Items"]) == 0:
+&gt;               warnings.warn(f"Tag {tag} not found")
+E               UserWarning: Tag CDT158 not found
+
+tagreader/web_handlers.py:822: UserWarning</failure></testcase><testcase classname="tests.test_bucketcache" name="test_timestamp_to_epoch" file="tests/test_bucketcache.py" line="55" time="0.001" /><testcase classname="tests.test_bucketcache" name="test_safe_tagname" file="tests/test_bucketcache.py" line="66" time="0.000" /><testcase classname="tests.test_bucketcache" name="test_get_intervals_from_dataset_name" file="tests/test_bucketcache.py" line="70" time="0.000" /><testcase classname="tests.test_bucketcache" name="test_key_path_with_time" file="tests/test_bucketcache.py" line="81" time="0.000" /><testcase classname="tests.test_bucketcache" name="test_key_path_stepped" file="tests/test_bucketcache.py" line="96" time="0.000" /><testcase classname="tests.test_bucketcache" name="test_key_path_with_status" file="tests/test_bucketcache.py" line="111" time="0.000" /><testcase classname="tests.test_bucketcache" name="test_key_path_RAW" file="tests/test_bucketcache.py" line="124" time="0.000" /><testcase classname="tests.test_bucketcache" name="test_get_missing_intervals" file="tests/test_bucketcache.py" line="137" time="0.444" /><testcase classname="tests.test_bucketcache" name="test_get_intersecting_datasets" file="tests/test_bucketcache.py" line="219" time="0.027" /><testcase classname="tests.test_bucketcache" name="test_store_metadata" file="tests/test_bucketcache.py" line="334" time="0.012" /><testcase classname="tests.test_bucketcache" name="test_store_empty_df" file="tests/test_bucketcache.py" line="345" time="0.027" /><testcase classname="tests.test_bucketcache" name="test_store_single_df" file="tests/test_bucketcache.py" line="365" time="0.011" /><testcase classname="tests.test_bucketcache" name="test_fetch" file="tests/test_bucketcache.py" line="380" time="0.033" /><testcase classname="tests.test_bucketcache" name="test_store_overlapping_df" file="tests/test_bucketcache.py" line="440" time="0.045" /><testcase classname="tests.test_cache" name="test_safe_tagname" file="tests/test_cache.py" line="34" time="0.000" /><testcase classname="tests.test_cache" name="test_key_path" file="tests/test_cache.py" line="38" time="0.000" /><testcase classname="tests.test_cache" name="test_cache_single_store_and_fetch" file="tests/test_cache.py" line="42" time="0.012" /><testcase classname="tests.test_cache" name="test_cache_multiple_store_single_fetch" file="tests/test_cache.py" line="48" time="0.018" /><testcase classname="tests.test_cache" name="test_interval_reads" file="tests/test_cache.py" line="57" time="0.018" /><testcase classname="tests.test_cache" name="test_match_tag" file="tests/test_cache.py" line="78" time="0.000" /><testcase classname="tests.test_cache" name="test_delete_tag" file="tests/test_cache.py" line="147" time="0.015" /><testcase classname="tests.test_cache" name="test_store_empty_df" file="tests/test_cache.py" line="160" time="0.005" /><testcase classname="tests.test_cache" name="test_store_metadata" file="tests/test_cache.py" line="171" time="0.006" /><testcase classname="tests.test_cache" name="test_to_DST_skips_time" file="tests/test_cache.py" line="182" time="0.012" /><testcase classname="tests.test_cache" name="test_from_DST_folds_time" file="tests/test_cache.py" line="200" time="0.006" /><testcase classname="tests.test_clients" name="test_get_next_timeslice" file="tests/test_clients.py" line="15" time="0.001" /><testcase classname="tests.test_clients" name="test_get_missing_intervals" file="tests/test_clients.py" line="26" time="0.001" /><testcase classname="tests.test_clients.TestODBC" name="test_PI_init_odbc_client_with_host_port" file="tests/test_clients.py" line="55" time="0.000"><skipped type="pytest.skip" message="ODBC drivers require Windows and are unavailable in GitHub Actions">/Users/MASL/PycharmProjects/tagreader-python/tests/test_clients.py:56: ODBC drivers require Windows and are unavailable in GitHub Actions</skipped></testcase><testcase classname="tests.test_clients.TestODBC" name="test_IP21_init_odbc_client_with_host_port" file="tests/test_clients.py" line="65" time="0.000"><skipped type="pytest.skip" message="ODBC drivers require Windows and are unavailable in GitHub Actions">/Users/MASL/PycharmProjects/tagreader-python/tests/test_clients.py:66: ODBC drivers require Windows and are unavailable in GitHub Actions</skipped></testcase><testcase classname="tests.test_clients.TestODBC" name="test_PI_connection_string_override" file="tests/test_clients.py" line="75" time="0.000"><skipped type="pytest.skip" message="ODBC drivers require Windows and are unavailable in GitHub Actions">/Users/MASL/PycharmProjects/tagreader-python/tests/test_clients.py:76: ODBC drivers require Windows and are unavailable in GitHub Actions</skipped></testcase><testcase classname="tests.test_clients.TestODBC" name="test_IP21_connection_string_override" file="tests/test_clients.py" line="85" time="0.000"><skipped type="pytest.skip" message="ODBC drivers require Windows and are unavailable in GitHub Actions">/Users/MASL/PycharmProjects/tagreader-python/tests/test_clients.py:86: ODBC drivers require Windows and are unavailable in GitHub Actions</skipped></testcase><testcase classname="tests.test_clients.TestODBC" name="test_init_odbc_clients" file="tests/test_clients.py" line="95" time="0.000"><skipped type="pytest.skip" message="ODBC drivers require Windows and are unavailable in GitHub Actions">/Users/MASL/PycharmProjects/tagreader-python/tests/test_clients.py:96: ODBC drivers require Windows and are unavailable in GitHub Actions</skipped></testcase><testcase classname="tests.test_utils" name="test_ensure_is_datetime_string" file="tests/test_utils.py" line="11" time="0.003" /><testcase classname="tests.test_utils" name="test_ensure_is_datetime_pd_timestamp" file="tests/test_utils.py" line="33" time="0.000" /><testcase classname="tests.test_utils" name="test_ensure_is_datetime_datetime" file="tests/test_utils.py" line="40" time="0.000" /><testcase classname="tests.test_utils" name="test_urljoin" file="tests/test_utils.py" line="48" time="0.000" /><testcase classname="tests.test_utils" name="test_equinor" file="tests/test_utils.py" line="56" time="0.020" /><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_search_tag_multiple_mappings" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="50" time="0.480"><failure message="AssertionError: assert [] == [('20B-LIC__8...R.SEP. OLJE')]&#10;  Right contains one more item: ('20B-LIC__811', 'V 1.TR.SEP. OLJE')&#10;  Use -v to get more diff">Client = &lt;tagreader.clients.IMSClient object at 0x1332e0690&gt;
+
+    def test_search_tag_multiple_mappings(Client):
+        # Tag reports 5 default mappings using current methods
+        res = Client.search("20B-LIC__811")
+&gt;       assert res == [("20B-LIC__811", "V 1.TR.SEP. OLJE")]
+E       AssertionError: assert [] == [('20B-LIC__8...R.SEP. OLJE')]
+E         Right contains one more item: ('20B-LIC__811', 'V 1.TR.SEP. OLJE')
+E         Use -v to get more diff
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:54: AssertionError</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_search_tag_double_spaces" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="56" time="0.543" /><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_search_tag_asterisk" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="64" time="0.494"><failure message="assert 0 == 2&#10; +  where 0 = len([])">Client = &lt;tagreader.clients.IMSClient object at 0x133d79b50&gt;
+
+    def test_search_tag_asterisk(Client):
+        res = Client.search("ATCB*")
+&gt;       assert len(res) == 2
+E       assert 0 == 2
+E        +  where 0 = len([])
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:67: AssertionError</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_get_unit" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="69" time="0.776"><failure message="KeyError">self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d783d0&gt;, tag = 'ATCAI'
+
+    def _get_tag_unit(self, tag):
+        query = self.generate_get_unit_query(tag)
+        url = urljoin(self.base_url, "TagInfo")
+        res = self.session.get(url, params=query)
+        res.raise_for_status()
+        j = res.json()
+        try:
+&gt;           attrdata = j["data"]["tags"][0]["attrData"]
+E           KeyError: 'attrData'
+
+tagreader/web_handlers.py:383: KeyError
+
+During handling of the above exception, another exception occurred:
+
+AspenHandler = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d783d0&gt;, Client = &lt;tagreader.clients.IMSClient object at 0x133d2dfd0&gt;
+
+    def test_get_unit(AspenHandler, Client):
+&gt;       assert AspenHandler._get_tag_unit("ATCAI") == "psig"
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d783d0&gt;, tag = 'ATCAI'
+
+    def _get_tag_unit(self, tag):
+        query = self.generate_get_unit_query(tag)
+        url = urljoin(self.base_url, "TagInfo")
+        res = self.session.get(url, params=query)
+        res.raise_for_status()
+        j = res.json()
+        try:
+            attrdata = j["data"]["tags"][0]["attrData"]
+        except Exception:
+            print(f"Error. I got this: {j}")
+&gt;           raise KeyError
+E           KeyError
+
+tagreader/web_handlers.py:386: KeyError</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_get_description" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="80" time="0.411"><failure message="AssertionError: assert '' == 'Sine Input'&#10;  - Sine Input">AspenHandler = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133a13950&gt;
+
+    def test_get_description(AspenHandler):
+&gt;       assert AspenHandler._get_tag_description("ATCAI") == "Sine Input"
+E       AssertionError: assert '' == 'Sine Input'
+E         - Sine Input
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:82: AssertionError</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_get_maps" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="89" time="0.612"><failure message="KeyError: 'categories'">AspenHandler = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d0c850&gt;
+
+    def test_get_maps(AspenHandler):
+&gt;       assert AspenHandler._get_maps("ATCAI") == {
+            "IP_AnalogMap": True,
+            "IP_AnalogAlmMap": False,
+        }
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d0c850&gt;, tagname = 'ATCAI'
+
+    def _get_maps(self, tagname):
+        params = self.generate_get_map_query(tagname)
+        url = urljoin(self.base_url, "TagInfo")
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+        j = res.json()
+    
+        if "tags" not in j["data"]:
+            return {}
+    
+        ret = {}
+&gt;       for item in j["data"]["tags"][0]["categories"][0]["ta"]:
+E       KeyError: 'categories'
+
+tagreader/web_handlers.py:323: KeyError</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_get_default_mapname" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="99" time="0.384"><failure message="KeyError: 'categories'">AspenHandler = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d4e4d0&gt;
+
+    def test_get_default_mapname(AspenHandler):
+&gt;       assert AspenHandler._get_default_mapname("ATCAI") == "IP_AnalogMap"
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/web_handlers.py:329: in _get_default_mapname
+    allmaps = self._get_maps(tagname)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d4e4d0&gt;, tagname = 'ATCAI'
+
+    def _get_maps(self, tagname):
+        params = self.generate_get_map_query(tagname)
+        url = urljoin(self.base_url, "TagInfo")
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+        j = res.json()
+    
+        if "tags" not in j["data"]:
+            return {}
+    
+        ret = {}
+&gt;       for item in j["data"]["tags"][0]["categories"][0]["ta"]:
+E       KeyError: 'categories'
+
+tagreader/web_handlers.py:323: KeyError</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_read[RAW-12]" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="104" time="0.546"><failure message="UserWarning: Tag Name 17B-HIC__063 is invalid">Client = &lt;tagreader.clients.IMSClient object at 0x133d4ce90&gt;, read_type = 'RAW', size = 12
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 12),  # 14, but two duplicate times that are deduplicated
+            # pytest.param("SHAPEPRESERVING", 0, marks=pytest.mark.skip),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "RAW":
+&gt;           df = Client.read(
+                TAGS["HIC"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                read_type=getattr(ReaderType, read_type),
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d4f350&gt;, tag = '17B-HIC__063;CS ProcVal', start_time = Timestamp('2018-05-01 10:00:00+0200', tz='Europe/Oslo')
+stop_time = Timestamp('2018-05-01 11:00:00+0200', tz='Europe/Oslo'), sample_time = Timedelta('0 days 00:01:00'), read_type = &lt;ReaderType.RAW: 1&gt;, metadata = {}, get_status = False
+
+    def read_tag(
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
+    ):
+        if read_type not in [
+            ReaderType.INT,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.AVG,
+            ReaderType.VAR,
+            ReaderType.STD,
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
+        ]:
+            raise NotImplementedError
+    
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
+    
+        # Actual and bestfit read types allow specifying maxpoints.
+        # Aggregate reads limit to 10 000 points and issue a moredata-token.
+        # TODO: May need to look into using this later - most likely more
+        # efficient than creating new query starting at previous stoptime.
+        # Interpolated reads return error message if more than 100 000 points,
+        # so we need to limit the range. Note -1 because INT normally includes
+        # both start and end time.
+        if read_type == ReaderType.INT:
+            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+    
+        tagname, mapname = self.split_tagmap(tag)
+    
+        params = self.generate_read_query(
+            tagname, mapname, start_time, stop_time, sample_time, read_type
+        )
+    
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+    
+        if len(res.text) == 0:  # res.text='' for timestamps in future
+            return pd.DataFrame(columns=[tag])
+    
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+            import json
+    
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            j = json.loads(txt)
+    
+        if "er" in j["data"][0]["samples"][0]:
+&gt;           warnings.warn(j["data"][0]["samples"][0]["es"])
+E           UserWarning: Tag Name 17B-HIC__063 is invalid
+
+tagreader/web_handlers.py:486: UserWarning</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_read[INT-61]" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="104" time="0.481"><failure message="UserWarning: Tag Name 17B-HIC__063 is invalid">Client = &lt;tagreader.clients.IMSClient object at 0x133d97350&gt;, read_type = 'INT', size = 61
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 12),  # 14, but two duplicate times that are deduplicated
+            # pytest.param("SHAPEPRESERVING", 0, marks=pytest.mark.skip),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "RAW":
+            df = Client.read(
+                TAGS["HIC"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+        elif read_type == "SNAPSHOT":
+            df = Client.read(TAGS["HIC"], read_type=getattr(ReaderType, read_type))
+        else:
+&gt;           df = Client.read(
+                TAGS["HIC"], START_TIME, STOP_TIME, 60, getattr(ReaderType, read_type)
+            )
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d97290&gt;, tag = '17B-HIC__063;CS ProcVal', start_time = Timestamp('2018-05-01 10:00:00+0200', tz='Europe/Oslo')
+stop_time = Timestamp('2018-05-01 11:00:00+0200', tz='Europe/Oslo'), sample_time = Timedelta('0 days 00:01:00'), read_type = &lt;ReaderType.INT: 3&gt;, metadata = {}, get_status = False
+
+    def read_tag(
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
+    ):
+        if read_type not in [
+            ReaderType.INT,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.AVG,
+            ReaderType.VAR,
+            ReaderType.STD,
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
+        ]:
+            raise NotImplementedError
+    
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
+    
+        # Actual and bestfit read types allow specifying maxpoints.
+        # Aggregate reads limit to 10 000 points and issue a moredata-token.
+        # TODO: May need to look into using this later - most likely more
+        # efficient than creating new query starting at previous stoptime.
+        # Interpolated reads return error message if more than 100 000 points,
+        # so we need to limit the range. Note -1 because INT normally includes
+        # both start and end time.
+        if read_type == ReaderType.INT:
+            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+    
+        tagname, mapname = self.split_tagmap(tag)
+    
+        params = self.generate_read_query(
+            tagname, mapname, start_time, stop_time, sample_time, read_type
+        )
+    
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+    
+        if len(res.text) == 0:  # res.text='' for timestamps in future
+            return pd.DataFrame(columns=[tag])
+    
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+            import json
+    
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            j = json.loads(txt)
+    
+        if "er" in j["data"][0]["samples"][0]:
+&gt;           warnings.warn(j["data"][0]["samples"][0]["es"])
+E           UserWarning: Tag Name 17B-HIC__063 is invalid
+
+tagreader/web_handlers.py:486: UserWarning</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_read[MIN-60]" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="104" time="0.477"><failure message="UserWarning: Tag Name 17B-HIC__063 is invalid">Client = &lt;tagreader.clients.IMSClient object at 0x137b75650&gt;, read_type = 'MIN', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 12),  # 14, but two duplicate times that are deduplicated
+            # pytest.param("SHAPEPRESERVING", 0, marks=pytest.mark.skip),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "RAW":
+            df = Client.read(
+                TAGS["HIC"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+        elif read_type == "SNAPSHOT":
+            df = Client.read(TAGS["HIC"], read_type=getattr(ReaderType, read_type))
+        else:
+&gt;           df = Client.read(
+                TAGS["HIC"], START_TIME, STOP_TIME, 60, getattr(ReaderType, read_type)
+            )
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x137b75c10&gt;, tag = '17B-HIC__063;CS ProcVal', start_time = Timestamp('2018-05-01 10:00:00+0200', tz='Europe/Oslo')
+stop_time = Timestamp('2018-05-01 11:00:00+0200', tz='Europe/Oslo'), sample_time = Timedelta('0 days 00:01:00'), read_type = &lt;ReaderType.MIN: 4&gt;, metadata = {}, get_status = False
+
+    def read_tag(
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
+    ):
+        if read_type not in [
+            ReaderType.INT,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.AVG,
+            ReaderType.VAR,
+            ReaderType.STD,
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
+        ]:
+            raise NotImplementedError
+    
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
+    
+        # Actual and bestfit read types allow specifying maxpoints.
+        # Aggregate reads limit to 10 000 points and issue a moredata-token.
+        # TODO: May need to look into using this later - most likely more
+        # efficient than creating new query starting at previous stoptime.
+        # Interpolated reads return error message if more than 100 000 points,
+        # so we need to limit the range. Note -1 because INT normally includes
+        # both start and end time.
+        if read_type == ReaderType.INT:
+            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+    
+        tagname, mapname = self.split_tagmap(tag)
+    
+        params = self.generate_read_query(
+            tagname, mapname, start_time, stop_time, sample_time, read_type
+        )
+    
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+    
+        if len(res.text) == 0:  # res.text='' for timestamps in future
+            return pd.DataFrame(columns=[tag])
+    
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+            import json
+    
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            j = json.loads(txt)
+    
+        if "er" in j["data"][0]["samples"][0]:
+&gt;           warnings.warn(j["data"][0]["samples"][0]["es"])
+E           UserWarning: Tag Name 17B-HIC__063 is invalid
+
+tagreader/web_handlers.py:486: UserWarning</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_read[MAX-60]" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="104" time="0.495"><failure message="UserWarning: Tag Name 17B-HIC__063 is invalid">Client = &lt;tagreader.clients.IMSClient object at 0x133d669d0&gt;, read_type = 'MAX', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 12),  # 14, but two duplicate times that are deduplicated
+            # pytest.param("SHAPEPRESERVING", 0, marks=pytest.mark.skip),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "RAW":
+            df = Client.read(
+                TAGS["HIC"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+        elif read_type == "SNAPSHOT":
+            df = Client.read(TAGS["HIC"], read_type=getattr(ReaderType, read_type))
+        else:
+&gt;           df = Client.read(
+                TAGS["HIC"], START_TIME, STOP_TIME, 60, getattr(ReaderType, read_type)
+            )
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d66750&gt;, tag = '17B-HIC__063;CS ProcVal', start_time = Timestamp('2018-05-01 10:00:00+0200', tz='Europe/Oslo')
+stop_time = Timestamp('2018-05-01 11:00:00+0200', tz='Europe/Oslo'), sample_time = Timedelta('0 days 00:01:00'), read_type = &lt;ReaderType.MAX: 5&gt;, metadata = {}, get_status = False
+
+    def read_tag(
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
+    ):
+        if read_type not in [
+            ReaderType.INT,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.AVG,
+            ReaderType.VAR,
+            ReaderType.STD,
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
+        ]:
+            raise NotImplementedError
+    
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
+    
+        # Actual and bestfit read types allow specifying maxpoints.
+        # Aggregate reads limit to 10 000 points and issue a moredata-token.
+        # TODO: May need to look into using this later - most likely more
+        # efficient than creating new query starting at previous stoptime.
+        # Interpolated reads return error message if more than 100 000 points,
+        # so we need to limit the range. Note -1 because INT normally includes
+        # both start and end time.
+        if read_type == ReaderType.INT:
+            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+    
+        tagname, mapname = self.split_tagmap(tag)
+    
+        params = self.generate_read_query(
+            tagname, mapname, start_time, stop_time, sample_time, read_type
+        )
+    
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+    
+        if len(res.text) == 0:  # res.text='' for timestamps in future
+            return pd.DataFrame(columns=[tag])
+    
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+            import json
+    
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            j = json.loads(txt)
+    
+        if "er" in j["data"][0]["samples"][0]:
+&gt;           warnings.warn(j["data"][0]["samples"][0]["es"])
+E           UserWarning: Tag Name 17B-HIC__063 is invalid
+
+tagreader/web_handlers.py:486: UserWarning</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_read[RNG-60]" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="104" time="0.471"><failure message="UserWarning: Tag Name 17B-HIC__063 is invalid">Client = &lt;tagreader.clients.IMSClient object at 0x133d2e5d0&gt;, read_type = 'RNG', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 12),  # 14, but two duplicate times that are deduplicated
+            # pytest.param("SHAPEPRESERVING", 0, marks=pytest.mark.skip),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "RAW":
+            df = Client.read(
+                TAGS["HIC"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+        elif read_type == "SNAPSHOT":
+            df = Client.read(TAGS["HIC"], read_type=getattr(ReaderType, read_type))
+        else:
+&gt;           df = Client.read(
+                TAGS["HIC"], START_TIME, STOP_TIME, 60, getattr(ReaderType, read_type)
+            )
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d2fed0&gt;, tag = '17B-HIC__063;CS ProcVal', start_time = Timestamp('2018-05-01 10:00:00+0200', tz='Europe/Oslo')
+stop_time = Timestamp('2018-05-01 11:00:00+0200', tz='Europe/Oslo'), sample_time = Timedelta('0 days 00:01:00'), read_type = &lt;ReaderType.RNG: 9&gt;, metadata = {}, get_status = False
+
+    def read_tag(
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
+    ):
+        if read_type not in [
+            ReaderType.INT,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.AVG,
+            ReaderType.VAR,
+            ReaderType.STD,
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
+        ]:
+            raise NotImplementedError
+    
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
+    
+        # Actual and bestfit read types allow specifying maxpoints.
+        # Aggregate reads limit to 10 000 points and issue a moredata-token.
+        # TODO: May need to look into using this later - most likely more
+        # efficient than creating new query starting at previous stoptime.
+        # Interpolated reads return error message if more than 100 000 points,
+        # so we need to limit the range. Note -1 because INT normally includes
+        # both start and end time.
+        if read_type == ReaderType.INT:
+            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+    
+        tagname, mapname = self.split_tagmap(tag)
+    
+        params = self.generate_read_query(
+            tagname, mapname, start_time, stop_time, sample_time, read_type
+        )
+    
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+    
+        if len(res.text) == 0:  # res.text='' for timestamps in future
+            return pd.DataFrame(columns=[tag])
+    
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+            import json
+    
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            j = json.loads(txt)
+    
+        if "er" in j["data"][0]["samples"][0]:
+&gt;           warnings.warn(j["data"][0]["samples"][0]["es"])
+E           UserWarning: Tag Name 17B-HIC__063 is invalid
+
+tagreader/web_handlers.py:486: UserWarning</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_read[AVG-60]" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="104" time="0.497"><failure message="UserWarning: Tag Name 17B-HIC__063 is invalid">Client = &lt;tagreader.clients.IMSClient object at 0x137914150&gt;, read_type = 'AVG', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 12),  # 14, but two duplicate times that are deduplicated
+            # pytest.param("SHAPEPRESERVING", 0, marks=pytest.mark.skip),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "RAW":
+            df = Client.read(
+                TAGS["HIC"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+        elif read_type == "SNAPSHOT":
+            df = Client.read(TAGS["HIC"], read_type=getattr(ReaderType, read_type))
+        else:
+&gt;           df = Client.read(
+                TAGS["HIC"], START_TIME, STOP_TIME, 60, getattr(ReaderType, read_type)
+            )
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x137917ed0&gt;, tag = '17B-HIC__063;CS ProcVal', start_time = Timestamp('2018-05-01 10:00:00+0200', tz='Europe/Oslo')
+stop_time = Timestamp('2018-05-01 11:00:00+0200', tz='Europe/Oslo'), sample_time = Timedelta('0 days 00:01:00'), read_type = &lt;ReaderType.AVG: 6&gt;, metadata = {}, get_status = False
+
+    def read_tag(
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
+    ):
+        if read_type not in [
+            ReaderType.INT,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.AVG,
+            ReaderType.VAR,
+            ReaderType.STD,
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
+        ]:
+            raise NotImplementedError
+    
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
+    
+        # Actual and bestfit read types allow specifying maxpoints.
+        # Aggregate reads limit to 10 000 points and issue a moredata-token.
+        # TODO: May need to look into using this later - most likely more
+        # efficient than creating new query starting at previous stoptime.
+        # Interpolated reads return error message if more than 100 000 points,
+        # so we need to limit the range. Note -1 because INT normally includes
+        # both start and end time.
+        if read_type == ReaderType.INT:
+            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+    
+        tagname, mapname = self.split_tagmap(tag)
+    
+        params = self.generate_read_query(
+            tagname, mapname, start_time, stop_time, sample_time, read_type
+        )
+    
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+    
+        if len(res.text) == 0:  # res.text='' for timestamps in future
+            return pd.DataFrame(columns=[tag])
+    
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+            import json
+    
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            j = json.loads(txt)
+    
+        if "er" in j["data"][0]["samples"][0]:
+&gt;           warnings.warn(j["data"][0]["samples"][0]["es"])
+E           UserWarning: Tag Name 17B-HIC__063 is invalid
+
+tagreader/web_handlers.py:486: UserWarning</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_read[VAR-60]" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="104" time="0.494"><failure message="UserWarning: Tag Name 17B-HIC__063 is invalid">Client = &lt;tagreader.clients.IMSClient object at 0x133dc2d10&gt;, read_type = 'VAR', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 12),  # 14, but two duplicate times that are deduplicated
+            # pytest.param("SHAPEPRESERVING", 0, marks=pytest.mark.skip),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "RAW":
+            df = Client.read(
+                TAGS["HIC"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+        elif read_type == "SNAPSHOT":
+            df = Client.read(TAGS["HIC"], read_type=getattr(ReaderType, read_type))
+        else:
+&gt;           df = Client.read(
+                TAGS["HIC"], START_TIME, STOP_TIME, 60, getattr(ReaderType, read_type)
+            )
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133dc1a50&gt;, tag = '17B-HIC__063;CS ProcVal', start_time = Timestamp('2018-05-01 10:00:00+0200', tz='Europe/Oslo')
+stop_time = Timestamp('2018-05-01 11:00:00+0200', tz='Europe/Oslo'), sample_time = Timedelta('0 days 00:01:00'), read_type = &lt;ReaderType.VAR: 7&gt;, metadata = {}, get_status = False
+
+    def read_tag(
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
+    ):
+        if read_type not in [
+            ReaderType.INT,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.AVG,
+            ReaderType.VAR,
+            ReaderType.STD,
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
+        ]:
+            raise NotImplementedError
+    
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
+    
+        # Actual and bestfit read types allow specifying maxpoints.
+        # Aggregate reads limit to 10 000 points and issue a moredata-token.
+        # TODO: May need to look into using this later - most likely more
+        # efficient than creating new query starting at previous stoptime.
+        # Interpolated reads return error message if more than 100 000 points,
+        # so we need to limit the range. Note -1 because INT normally includes
+        # both start and end time.
+        if read_type == ReaderType.INT:
+            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+    
+        tagname, mapname = self.split_tagmap(tag)
+    
+        params = self.generate_read_query(
+            tagname, mapname, start_time, stop_time, sample_time, read_type
+        )
+    
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+    
+        if len(res.text) == 0:  # res.text='' for timestamps in future
+            return pd.DataFrame(columns=[tag])
+    
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+            import json
+    
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            j = json.loads(txt)
+    
+        if "er" in j["data"][0]["samples"][0]:
+&gt;           warnings.warn(j["data"][0]["samples"][0]["es"])
+E           UserWarning: Tag Name 17B-HIC__063 is invalid
+
+tagreader/web_handlers.py:486: UserWarning</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_read[STD-60]" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="104" time="0.542"><failure message="UserWarning: Tag Name 17B-HIC__063 is invalid">Client = &lt;tagreader.clients.IMSClient object at 0x137bb8350&gt;, read_type = 'STD', size = 60
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 12),  # 14, but two duplicate times that are deduplicated
+            # pytest.param("SHAPEPRESERVING", 0, marks=pytest.mark.skip),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "RAW":
+            df = Client.read(
+                TAGS["HIC"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+        elif read_type == "SNAPSHOT":
+            df = Client.read(TAGS["HIC"], read_type=getattr(ReaderType, read_type))
+        else:
+&gt;           df = Client.read(
+                TAGS["HIC"], START_TIME, STOP_TIME, 60, getattr(ReaderType, read_type)
+            )
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x137bb93d0&gt;, tag = '17B-HIC__063;CS ProcVal', start_time = Timestamp('2018-05-01 10:00:00+0200', tz='Europe/Oslo')
+stop_time = Timestamp('2018-05-01 11:00:00+0200', tz='Europe/Oslo'), sample_time = Timedelta('0 days 00:01:00'), read_type = &lt;ReaderType.STD: 8&gt;, metadata = {}, get_status = False
+
+    def read_tag(
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
+    ):
+        if read_type not in [
+            ReaderType.INT,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.AVG,
+            ReaderType.VAR,
+            ReaderType.STD,
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
+        ]:
+            raise NotImplementedError
+    
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
+    
+        # Actual and bestfit read types allow specifying maxpoints.
+        # Aggregate reads limit to 10 000 points and issue a moredata-token.
+        # TODO: May need to look into using this later - most likely more
+        # efficient than creating new query starting at previous stoptime.
+        # Interpolated reads return error message if more than 100 000 points,
+        # so we need to limit the range. Note -1 because INT normally includes
+        # both start and end time.
+        if read_type == ReaderType.INT:
+            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+    
+        tagname, mapname = self.split_tagmap(tag)
+    
+        params = self.generate_read_query(
+            tagname, mapname, start_time, stop_time, sample_time, read_type
+        )
+    
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+    
+        if len(res.text) == 0:  # res.text='' for timestamps in future
+            return pd.DataFrame(columns=[tag])
+    
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+            import json
+    
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            j = json.loads(txt)
+    
+        if "er" in j["data"][0]["samples"][0]:
+&gt;           warnings.warn(j["data"][0]["samples"][0]["es"])
+E           UserWarning: Tag Name 17B-HIC__063 is invalid
+
+tagreader/web_handlers.py:486: UserWarning</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_read[SNAPSHOT-1]" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="104" time="0.520"><failure message="UserWarning: Invalid Tag ( 17B-HIC__063 )">Client = &lt;tagreader.clients.IMSClient object at 0x133c4e910&gt;, read_type = 'SNAPSHOT', size = 1
+
+    @pytest.mark.parametrize(
+        ("read_type", "size"),
+        [
+            ("RAW", 12),  # 14, but two duplicate times that are deduplicated
+            # pytest.param("SHAPEPRESERVING", 0, marks=pytest.mark.skip),
+            ("INT", 61),
+            ("MIN", 60),
+            ("MAX", 60),
+            ("RNG", 60),
+            ("AVG", 60),
+            ("VAR", 60),
+            ("STD", 60),
+            # pytest.param("COUNT", 0, marks=pytest.mark.skip),
+            # pytest.param("GOOD", 0, marks=pytest.mark.skip),
+            # pytest.param("BAD", 0, marks=pytest.mark.skip),
+            # pytest.param("TOTAL", 0, marks=pytest.mark.skip),
+            # pytest.param("SUM", 0, marks=pytest.mark.skip),
+            ("SNAPSHOT", 1),
+        ],
+    )
+    def test_read(Client, read_type, size):
+        if read_type == "RAW":
+            df = Client.read(
+                TAGS["HIC"],
+                start_time=START_TIME,
+                end_time=STOP_TIME,
+                read_type=getattr(ReaderType, read_type),
+            )
+        elif read_type == "SNAPSHOT":
+&gt;           df = Client.read(TAGS["HIC"], read_type=getattr(ReaderType, read_type))
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:134: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:324: in _read_single_tag
+    df = self.handler.read_tag(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133c4e6d0&gt;, tag = '17B-HIC__063;CS ProcVal', start_time = None, stop_time = None, sample_time = Timedelta('0 days 00:01:00')
+read_type = &lt;ReaderType.SNAPSHOT: 15&gt;, metadata = {}, get_status = False
+
+    def read_tag(
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
+    ):
+        if read_type not in [
+            ReaderType.INT,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.AVG,
+            ReaderType.VAR,
+            ReaderType.STD,
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
+        ]:
+            raise NotImplementedError
+    
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
+    
+        # Actual and bestfit read types allow specifying maxpoints.
+        # Aggregate reads limit to 10 000 points and issue a moredata-token.
+        # TODO: May need to look into using this later - most likely more
+        # efficient than creating new query starting at previous stoptime.
+        # Interpolated reads return error message if more than 100 000 points,
+        # so we need to limit the range. Note -1 because INT normally includes
+        # both start and end time.
+        if read_type == ReaderType.INT:
+            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+    
+        tagname, mapname = self.split_tagmap(tag)
+    
+        params = self.generate_read_query(
+            tagname, mapname, start_time, stop_time, sample_time, read_type
+        )
+    
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+    
+        if len(res.text) == 0:  # res.text='' for timestamps in future
+            return pd.DataFrame(columns=[tag])
+    
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+            import json
+    
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            j = json.loads(txt)
+    
+        if "er" in j["data"][0]["samples"][0]:
+&gt;           warnings.warn(j["data"][0]["samples"][0]["es"])
+E           UserWarning: Invalid Tag ( 17B-HIC__063 )
+
+tagreader/web_handlers.py:486: UserWarning</failure></testcase><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_tags_with_no_data_included_in_results" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="147" time="0.841" /><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_tags_with_qnan_returned_as_nan" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="173" time="0.449" /><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_tag_with_status" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="181" time="0.527" /><testcase classname="tests.extratests.tests.test_extra_AspenHandlerREST_connect" name="test_nan_in_json" file="tests/extratests/tests/test_extra_AspenHandlerREST_connect.py" line="197" time="0.538"><failure message="UserWarning: Tag Name 16A-AI___127D is invalid">def test_nan_in_json():
+        c = IMSClient("SNA", "aspenone")
+        c.cache = None
+        c.connect()
+        # This used to raise JSONDecodeError
+&gt;       df = c.read("16A-AI___127D", "2021-03-23 06:00:00", "2021-03-23 08:00:00", 3600)
+
+tests/extratests/tests/test_extra_AspenHandlerREST_connect.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tagreader/clients.py:517: in read
+    self._read_single_tag(
+tagreader/clients.py:376: in _read_single_tag
+    df = self.handler.read_tag(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tagreader.web_handlers.AspenHandlerWeb object at 0x133d85810&gt;, tag = '16A-AI___127D', start_time = Timestamp('2021-03-23 06:00:00+0100', tz='Europe/Oslo')
+stop_time = Timestamp('2021-03-23 08:00:00+0100', tz='Europe/Oslo'), sample_time = Timedelta('0 days 01:00:00'), read_type = &lt;ReaderType.INT: 3&gt;, metadata = {}, get_status = False
+
+    def read_tag(
+        self,
+        tag,
+        start_time,
+        stop_time,
+        sample_time,
+        read_type,
+        metadata=None,
+        get_status=False,
+    ):
+        if read_type not in [
+            ReaderType.INT,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.AVG,
+            ReaderType.VAR,
+            ReaderType.STD,
+            ReaderType.SNAPSHOT,
+            ReaderType.RAW,
+        ]:
+            raise NotImplementedError
+    
+        if read_type == ReaderType.SNAPSHOT:
+            url = urljoin(self.base_url, "Attribute")
+        else:
+            url = urljoin(self.base_url, "History")
+    
+        # Actual and bestfit read types allow specifying maxpoints.
+        # Aggregate reads limit to 10 000 points and issue a moredata-token.
+        # TODO: May need to look into using this later - most likely more
+        # efficient than creating new query starting at previous stoptime.
+        # Interpolated reads return error message if more than 100 000 points,
+        # so we need to limit the range. Note -1 because INT normally includes
+        # both start and end time.
+        if read_type == ReaderType.INT:
+            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+    
+        tagname, mapname = self.split_tagmap(tag)
+    
+        params = self.generate_read_query(
+            tagname, mapname, start_time, stop_time, sample_time, read_type
+        )
+    
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+    
+        if len(res.text) == 0:  # res.text='' for timestamps in future
+            return pd.DataFrame(columns=[tag])
+    
+        try:
+            j = res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+            import json
+    
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            j = json.loads(txt)
+    
+        if "er" in j["data"][0]["samples"][0]:
+&gt;           warnings.warn(j["data"][0]["samples"][0]["es"])
+E           UserWarning: Tag Name 16A-AI___127D is invalid
+
+tagreader/web_handlers.py:486: UserWarning</failure></testcase></testsuite></testsuites>
