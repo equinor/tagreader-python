@@ -27,7 +27,7 @@ classifiers=[
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pandas = "^2.0.1"
+pandas = "^2.0.2"
 pyodbc = "^4.0.39"
 certifi = "^2023.5.7"
 requests = "^2.31.0"
