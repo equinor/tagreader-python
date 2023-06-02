@@ -1,10 +1,12 @@
 import os
 import warnings
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 import pyodbc
+import pytz
 
 from tagreader.utils import ReaderType, find_registry_key, logging, winreg
 
@@ -45,7 +47,7 @@ def list_aspen_sources() -> List[str]:
     return source_list
 
 
-def list_pi_sources():
+def list_pi_sources() -> List[str]:
     source_list = []
     reg_key = winreg.OpenKey(
         winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\PISystem\PI-SDK"
@@ -64,9 +66,9 @@ def list_pi_sources():
 class AspenHandlerODBC:
     def __init__(
         self,
-        host: Optional[str] = None,
-        port: Optional[int] = None,
-        options: Dict[str, Union[int, float, str]] = {},
+        host: Optional[str],
+        port: Optional[int],
+        options: Dict[str, Union[int, float, str]],
     ):
         self.host = host
         self.port = port
@@ -75,7 +77,7 @@ class AspenHandlerODBC:
         self._max_rows = options.get("max_rows", 100000)
         self._connection_string = options.get("connection_string", None)
 
-    def generate_connection_string(self):
+    def generate_connection_string(self) -> str:
         if self._connection_string is None:
             return f"DRIVER={{AspenTech SQLPlus}};HOST={self.host};PORT={self.port};READONLY=Y;MAXROWS={self._max_rows}"
         else:
@@ -85,9 +87,9 @@ class AspenHandlerODBC:
     def generate_read_query(
         tag: str,
         mapdef: Optional[Dict[str, str]],
-        start_time: pd.Timestamp,
-        stop_time: pd.Timestamp,
-        sample_time: Optional[Union[int, pd.Timestamp]],
+        start_time: datetime,
+        stop_time: datetime,
+        sample_time: Optional[timedelta],
         read_type: ReaderType,
         get_status: bool = False,
     ):
@@ -117,8 +119,9 @@ class AspenHandlerODBC:
 
         seconds = 0
         if read_type != ReaderType.SNAPSHOT:
-            start_time = start_time.tz_convert("UTC")
-            stop_time = stop_time.tz_convert("UTC")
+            start_time = start_time.astimezone(pytz.UTC)
+            if stop_time:
+                stop_time = stop_time.astimezone(pytz.UTC)
             seconds = int(sample_time.total_seconds())
             if read_type == ReaderType.SAMPLED:
                 seconds = 0
@@ -240,7 +243,7 @@ class AspenHandlerODBC:
 
     @staticmethod
     def _generate_query_search_tag(
-        mapdef: Optional[Dict[str, str]], desc: Optional[str] = None
+        mapdef: Optional[Dict[str, str]], desc: Optional[str]
     ):
         if mapdef["MAP_DefinitionRecord"] is None:
             return None
@@ -288,9 +291,7 @@ class AspenHandlerODBC:
                 return mapdef
         return None
 
-    def search(
-        self, tag: Optional[str] = None, desc: Optional[str] = None
-    ) -> List[Tuple[str, str]]:
+    def search(self, tag: Optional[str], desc: Optional[str]) -> List[Tuple[str, str]]:
         tag = tag.replace("*", "%") if isinstance(tag, str) else None
         desc = desc.replace("*", "%") if isinstance(desc, str) else None
 
@@ -351,17 +352,17 @@ class AspenHandlerODBC:
     def read_tag(
         self,
         tag: str,
-        start_time: pd.Timestamp,
-        stop_time: pd.Timestamp,
-        sample_time: Optional[Union[int, pd.Timestamp]],
+        start_time: datetime,
+        stop_time: datetime,
+        sample_time: Optional[timedelta],
         read_type: ReaderType,
-        metadata: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, str]],
         get_status: bool = False,
     ):
         (cleantag, mapping) = tag.split(";") if ";" in tag else (tag, None)
         mapdef = dict()
 
-        if mapping is not None:
+        if isinstance(mapping, str):
             mapdef = self._get_specific_mapdef(tagname=cleantag, mapping=mapping)
         query = self.generate_read_query(
             tag=cleantag,
@@ -408,9 +409,9 @@ class AspenHandlerODBC:
 class PIHandlerODBC:
     def __init__(
         self,
-        host: Optional[str] = None,
-        port: Optional[int] = None,
-        options: Dict[str, Union[int, float, str]] = {},
+        host: Optional[str],
+        port: Optional[int],
+        options: Dict[str, Union[int, float, str]],
     ):
         self.host = host
         self.port = port
@@ -426,7 +427,7 @@ class PIHandlerODBC:
 
         # print(self._das_server)
 
-    def generate_connection_string(self):
+    def generate_connection_string(self) -> str:
         if self._connection_string is None:
             return (
                 f"DRIVER={{PI ODBC Driver}};Server={self._das_server};"
@@ -438,7 +439,7 @@ class PIHandlerODBC:
             return self._connection_string
 
     @staticmethod
-    def generate_search_query(tag: Optional[str] = None, desc: Optional[str] = None):
+    def generate_search_query(tag: Optional[str], desc: Optional[str]):
         query = ["SELECT tag, descriptor as description FROM pipoint.pipoint2 WHERE"]
         if tag is not None:
             query.extend(["tag LIKE '{tag}'".format(tag=tag.replace("*", "%"))])
@@ -453,11 +454,11 @@ class PIHandlerODBC:
     def generate_read_query(
         self,
         tag: str,
-        start_time: pd.Timestamp,
-        stop_time: pd.Timestamp,
-        sample_time: Optional[Union[int, pd.Timestamp]],
+        start_time: datetime,
+        stop_time: datetime,
+        sample_time: Optional[timedelta],
         read_type: ReaderType,
-        metadata: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, str]],
         get_status: bool = False,
     ):
         if read_type in [
@@ -478,8 +479,9 @@ class PIHandlerODBC:
 
         seconds = 0
         if read_type != ReaderType.SNAPSHOT:
-            start_time = start_time.tz_convert("UTC")
-            stop_time = stop_time.tz_convert("UTC")
+            start_time = start_time.astimezone(pytz.UTC)
+            if stop_time:
+                stop_time = stop_time.astimezone(pytz.UTC)
             seconds = int(sample_time.total_seconds())
             if ReaderType.SAMPLED == read_type:
                 seconds = 0
@@ -561,9 +563,7 @@ class PIHandlerODBC:
         self.conn = pyodbc.connect(connection_string, autocommit=True)
         self.cursor = self.conn.cursor()
 
-    def search(
-        self, tag: Optional[str] = None, desc: Optional[str] = None
-    ) -> List[Tuple[str, str]]:
+    def search(self, tag: Optional[str], desc: Optional[str]) -> List[Tuple[str, str]]:
         query = self.generate_search_query(tag=tag, desc=desc)
         self.cursor.execute(query)
         return self.cursor.fetchall()
@@ -609,11 +609,11 @@ class PIHandlerODBC:
     def read_tag(
         self,
         tag: str,
-        start_time: pd.Timestamp,
-        stop_time: pd.Timestamp,
-        sample_time: Optional[Union[int, pd.Timestamp]],
+        start_time: datetime,
+        stop_time: datetime,
+        sample_time: Optional[timedelta],
         read_type: ReaderType,
-        metadata: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, str]],
         get_status: bool = False,
     ):
         if metadata is None:

@@ -1,27 +1,37 @@
-import pandas as pd
+from datetime import datetime, timedelta
+from typing import Generator
+
 import pytest
+import pytz
 
 from tagreader import utils
 from tagreader.utils import ReaderType, is_windows
 
 if not is_windows():
     pytest.skip("All tests in module require Windows", allow_module_level=True)
-
-START_TIME = "2018-01-17 16:00:00"
-STOP_TIME = "2018-01-17 17:00:00"
-SAMPLE_TIME = 60
-
-
-@pytest.fixture(scope="module")
-def PIHandler():
+else:
     from tagreader.odbc_handlers import PIHandlerODBC
 
+START_TIME = pytz.timezone("Europe/Oslo").localize(
+    datetime(2018, 1, 17, hour=16, minute=0, second=0)
+)
+STOP_TIME = pytz.timezone("Europe/Oslo").localize(
+    datetime(2018, 1, 17, hour=17, minute=0, second=0)
+)
+NONE_END_TIME = datetime(2100, 1, 1, 0, 0, tzinfo=pytz.UTC)
+SAMPLE_TIME = timedelta(seconds=60)
+
+
+@pytest.fixture(scope="module")  # type: ignore[misc]
+def PIHandler() -> Generator[PIHandlerODBC, None, None]:
     yield PIHandlerODBC(
-        "thehostname.statoil.net", 1234, options={"das_server": "the_das_server"}
+        host="thehostname.statoil.net",
+        port=1234,
+        options={"das_server": "the_das_server"},
     )
 
 
-def test_generate_connection_string(PIHandler):
+def test_generate_connection_string(PIHandler: PIHandlerODBC) -> None:
     res = PIHandler.generate_connection_string()
     expected = (
         "DRIVER={PI ODBC Driver};Server=the_das_server;Trusted_Connection=Yes;"
@@ -32,8 +42,8 @@ def test_generate_connection_string(PIHandler):
     assert expected == res
 
 
-@pytest.mark.parametrize(
-    "read_type",
+@pytest.mark.parametrize(  # type: ignore[misc]
+    "read_type_str",
     [
         "RAW",
         # pytest.param(
@@ -54,18 +64,29 @@ def test_generate_connection_string(PIHandler):
         "SNAPSHOT",
     ],
 )
-def test_generate_tag_read_query(PIHandler, read_type):
+def test_generate_tag_read_query(PIHandler: PIHandlerODBC, read_type_str: str) -> None:
+    read_type = getattr(ReaderType, read_type_str)
     starttime = utils.ensure_datetime_with_tz(START_TIME)
     stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
+    ts = SAMPLE_TIME
 
-    if read_type == "SNAPSHOT":
+    if read_type == ReaderType.SNAPSHOT:
         res = PIHandler.generate_read_query(
-            "thetag", None, None, None, getattr(ReaderType, read_type)
+            tag="thetag",
+            start_time=None,  # type: ignore[arg-type]
+            stop_time=None,  # type: ignore[arg-type]
+            sample_time=None,
+            read_type=read_type,
+            metadata={},
         )
     else:
         res = PIHandler.generate_read_query(
-            "thetag", starttime, stoptime, ts, getattr(ReaderType, read_type)
+            tag="thetag",
+            start_time=starttime,
+            stop_time=stoptime,
+            sample_time=ts,
+            read_type=read_type,
+            metadata={},
         )
 
     expected = {
@@ -122,11 +143,11 @@ def test_generate_tag_read_query(PIHandler, read_type):
             "FROM [piarchive]..[pisnapshot] WHERE tag='thetag'"
         ),
     }
-    assert expected[read_type] == res
+    assert expected[read_type.name] == res
 
 
-@pytest.mark.parametrize(
-    "read_type",
+@pytest.mark.parametrize(  # type: ignore[misc]
+    "read_type_str",
     [
         "RAW",
         # pytest.param(
@@ -147,23 +168,33 @@ def test_generate_tag_read_query(PIHandler, read_type):
         "SNAPSHOT",
     ],
 )
-def test_generate_tag_read_query_with_status(PIHandler, read_type):
+def test_generate_tag_read_query_with_status(
+    PIHandler: PIHandlerODBC, read_type_str: str
+) -> None:
+    read_type = getattr(ReaderType, read_type_str)
     starttime = utils.ensure_datetime_with_tz(START_TIME)
     stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
+    ts = SAMPLE_TIME
 
-    if read_type == "SNAPSHOT":
+    if read_type == read_type.SNAPSHOT:
         res = PIHandler.generate_read_query(
-            "thetag", None, None, None, getattr(ReaderType, read_type), get_status=True
+            tag="thetag",
+            start_time=None,  # type: ignore[arg-type]
+            stop_time=None,  # type: ignore[arg-type]
+            sample_time=None,
+            read_type=read_type,
+            get_status=True,
+            metadata={},
         )
     else:
         res = PIHandler.generate_read_query(
-            "thetag",
-            starttime,
-            stoptime,
-            ts,
-            getattr(ReaderType, read_type),
+            tag="thetag",
+            start_time=starttime,
+            stop_time=stoptime,
+            sample_time=ts,
+            read_type=read_type,
             get_status=True,
+            metadata={},
         )
 
     expected = {
@@ -229,16 +260,21 @@ def test_generate_tag_read_query_with_status(PIHandler, read_type):
             "FROM [piarchive]..[pisnapshot] WHERE tag='thetag'"
         ),
     }
-    assert expected[read_type] == res
+    assert expected[read_type.name] == res
 
 
-def test_genreadquery_long_sampletime(PIHandler):
+def test_genreadquery_long_sampletime(PIHandler: PIHandlerODBC) -> None:
     starttime = utils.ensure_datetime_with_tz(START_TIME)
     stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(86401, unit="s")
+    ts = timedelta(seconds=86401)
 
     res = PIHandler.generate_read_query(
-        "thetag", starttime, stoptime, ts, ReaderType.INT
+        tag="thetag",
+        start_time=starttime,
+        stop_time=stoptime,
+        sample_time=ts,
+        read_type=ReaderType.INT,
+        metadata={},
     )
 
     expected = (

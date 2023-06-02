@@ -1,8 +1,10 @@
 from abc import ABC
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union, cast
 
 import pandas as pd
+import pytz
 from diskcache import Cache
 
 from tagreader.logger import logger
@@ -17,11 +19,11 @@ def safe_tagname(tagname: str) -> str:
     return tagname
 
 
-def timestamp_to_epoch(timestamp: pd.Timestamp) -> int:
-    origin = pd.Timestamp("1970-01-01")
+def timestamp_to_epoch(timestamp: datetime) -> int:
+    origin = datetime(1970, 1, 1)
     if timestamp.tzinfo is not None:
-        timestamp = timestamp.tz_convert("UTC").tz_localize(None)
-    return (timestamp - origin) // pd.Timedelta("1s")
+        timestamp = timestamp.astimezone(pytz.utc).replace(tzinfo=None)
+    return (timestamp - origin) // timedelta(seconds=1)
 
 
 def _infer_pandas_index_freq(df: pd.DataFrame) -> pd.DataFrame:
@@ -63,20 +65,27 @@ class BaseCache(ABC):
     def put(self, key: str, value: pd.DataFrame) -> None:
         self.cache.add(key, value, expire=self._expire_time)
 
-    def get(self, key: str) -> pd.DataFrame:
-        return cast(pd.DataFrame, self.cache.get(key))
+    def get(self, key: str) -> Optional[pd.DataFrame]:
+        return cast(Optional[pd.DataFrame], self.cache.get(key))
 
     def delete(self, key: str) -> None:
         self.cache.delete(key)
 
     def get_metadata(
-        self, key: str, properties: Union[str, List[str]]
-    ) -> Dict[str, Union[str, int, float]]:
+        self, key: str, properties: Optional[Union[str, List[str]]]
+    ) -> Optional[Dict[str, Union[str, int, float]]]:
         if isinstance(properties, str):
             properties = [properties]
         _key = f"$metadata${key}"
-        metadata: Dict[str, Union[str, int, float]] = self.cache.get(_key)
-        return {k: v for (k, v) in metadata.items() if k in properties}
+        metadata = cast(
+            Optional[Dict[str, Union[str, int, float]]], self.cache.get(_key)
+        )
+        if metadata:
+            if properties:
+                return {k: v for (k, v) in metadata.items() if k in properties}
+            return metadata
+        else:
+            return None
 
     def put_metadata(
         self, key: str, value: Dict[str, Union[str, int, float]]
@@ -85,8 +94,11 @@ class BaseCache(ABC):
         combined_value = value
         if _key in self.cache:
             existing = self.cache.get(_key)
-            existing.update(value)
-            combined_value = existing
+            if existing:
+                existing.update(value)
+                combined_value = existing
+            else:
+                combined_value = value
             self.cache.delete(_key)
 
         self.cache.add(_key, combined_value, expire=self._expire_time)
@@ -102,11 +114,11 @@ class BucketCache(BaseCache):
         self,
         tagname: str,
         readtype: ReaderType,
-        ts: Union[int, pd.Timedelta],
+        ts: Union[int, timedelta],
         stepped: bool,
         status: bool,
-        starttime: Optional[pd.Timestamp] = None,
-        endtime: Optional[pd.Timestamp] = None,
+        starttime: Optional[datetime] = None,
+        endtime: Optional[datetime] = None,
     ) -> str:
         """Return a string on the form
         $tagname$readtype[$sample_time][$stepped][$status]$_starttime_endtime
@@ -121,7 +133,7 @@ class BucketCache(BaseCache):
 
         ts = (
             int(ts.total_seconds())
-            if readtype != ReaderType.RAW and isinstance(ts, pd.Timedelta)
+            if readtype != ReaderType.RAW and isinstance(ts, timedelta)
             else ts
         )
         timespan = ""
@@ -145,11 +157,11 @@ class BucketCache(BaseCache):
         df: pd.DataFrame,
         tagname: str,
         readtype: ReaderType,
-        ts: pd.Timedelta,
+        ts: timedelta,
         stepped: bool,
         status: bool,
-        starttime: pd.Timestamp,
-        endtime: pd.Timestamp,
+        starttime: datetime,
+        endtime: datetime,
     ) -> None:
         if df.empty:
             return
@@ -168,7 +180,9 @@ class BucketCache(BaseCache):
                 this_start, this_end = self._get_intervals_from_dataset_name(dataset)
                 starttime = min(starttime, this_start if this_start else starttime)
                 endtime = max(endtime, this_end if this_end else endtime)
-                df = clean_dataframe(pd.concat([df, self.get(dataset)], axis=0))
+                df2 = self.get(dataset)
+                if df2 is not None:
+                    df = pd.concat([df, df2], axis=0)
                 self.delete(dataset)
         key = self._key_path(
             tagname=tagname,
@@ -179,12 +193,12 @@ class BucketCache(BaseCache):
             starttime=starttime,
             endtime=endtime,
         )
-        self.put(key=key, value=df)
+        self.put(key=key, value=clean_dataframe(df))
 
     @staticmethod
     def _get_intervals_from_dataset_name(
         name: str,
-    ) -> Tuple[pd.Timestamp, pd.Timestamp]:
+    ) -> Tuple[datetime, datetime]:
         name_with_times = name.split("$")[-1]
         if not name_with_times.count("_") == 2:
             return (None, None)  # type: ignore[return-value]
@@ -197,11 +211,11 @@ class BucketCache(BaseCache):
         self,
         tagname: str,
         readtype: ReaderType,
-        ts: Union[int, pd.Timedelta],
+        ts: Union[int, timedelta],
         stepped: bool,
         status: bool,
-        starttime: pd.Timestamp,
-        endtime: pd.Timestamp,
+        starttime: datetime,
+        endtime: datetime,
     ) -> List[str]:
         if not len(self.cache) > 0:
             return []
@@ -228,12 +242,12 @@ class BucketCache(BaseCache):
         self,
         tagname: str,
         readtype: ReaderType,
-        ts: Union[int, pd.Timedelta],
+        ts: Union[int, timedelta],
         stepped: bool,
         status: bool,
-        starttime: pd.Timestamp,
-        endtime: pd.Timestamp,
-    ) -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
+        starttime: datetime,
+        endtime: datetime,
+    ) -> List[Tuple[datetime, datetime]]:
         datasets = self.get_intersecting_datasets(
             tagname=tagname,
             readtype=readtype,
@@ -270,17 +284,17 @@ class BucketCache(BaseCache):
         self,
         tagname: str,
         readtype: ReaderType,
-        ts: Union[int, pd.Timedelta],
+        ts: Union[int, timedelta],
         stepped: bool,
         status: bool,
-        starttime: pd.Timestamp,
-        endtime: pd.Timestamp,
+        starttime: datetime,
+        endtime: datetime,
     ) -> pd.DataFrame:
         df = pd.DataFrame()
         if not len(self.cache) > 0:
             return df
 
-        if isinstance(ts, pd.Timedelta):
+        if isinstance(ts, timedelta):
             ts = int(ts.total_seconds())
 
         datasets = self.get_intersecting_datasets(
@@ -294,11 +308,11 @@ class BucketCache(BaseCache):
         )
 
         for dataset in datasets:
-            df = clean_dataframe(
-                pd.concat([df, self.get(dataset).loc[starttime:endtime]], axis=0)  # type: ignore[call-overload, misc]
-            )
+            df2 = self.get(dataset)
+            if df2 is not None:
+                df = pd.concat([df, df2.loc[starttime:endtime]], axis=0)  # type: ignore[call-overload, misc]
 
-        return df
+        return clean_dataframe(df)
 
 
 class SmartCache(BaseCache):
@@ -306,7 +320,7 @@ class SmartCache(BaseCache):
     def key_path(
         df: Union[str, pd.DataFrame],
         readtype: ReaderType,
-        ts: Optional[Union[int, pd.Timedelta]] = None,
+        ts: Optional[Union[int, timedelta]] = None,
     ) -> str:
         """Return a string on the form
         XXX$sYY$ZZZ where XXX is the ReadType, YY is the interval between samples
@@ -314,7 +328,7 @@ class SmartCache(BaseCache):
         """
         name = str(list(df)[0]) if isinstance(df, pd.DataFrame) else df
         name = safe_tagname(name)
-        ts = int(ts.total_seconds()) if isinstance(ts, pd.Timedelta) else ts
+        ts = int(ts.total_seconds()) if isinstance(ts, timedelta) else ts
         if readtype != ReaderType.RAW:
             if ts is None:
                 # Determine sample time by reading interval between first two
@@ -333,17 +347,19 @@ class SmartCache(BaseCache):
         self,
         df: pd.DataFrame,
         readtype: ReaderType,
-        ts: Optional[Union[int, pd.Timedelta]] = None,
+        ts: Optional[Union[int, timedelta]] = None,
     ) -> None:
         key = self.key_path(df=df, readtype=readtype, ts=ts)
         if df.empty:
             return  # Weirdness ensues when using empty df in select statement below
         if key in self.cache:
-            data = clean_dataframe(pd.concat([df, self.get(key)], axis=0))
+            df2 = self.get(key)
+            if df2 is not None:
+                df = pd.concat([df, df2], axis=0)
             self.delete(key=key)
             self.put(
                 key=key,
-                value=data,
+                value=clean_dataframe(df),
             )
         else:
             self.put(key, df)
@@ -352,14 +368,16 @@ class SmartCache(BaseCache):
         self,
         tagname: str,
         readtype: ReaderType,
-        ts: Optional[Union[int, pd.Timedelta]] = None,
-        start_time: Optional[pd.Timestamp] = None,
-        stop_time: Optional[pd.Timestamp] = None,
+        ts: Optional[Union[int, timedelta]] = None,
+        start_time: Optional[datetime] = None,
+        stop_time: Optional[datetime] = None,
     ) -> pd.DataFrame:
         key = self.key_path(df=tagname, readtype=readtype, ts=ts)
-        df: pd.DataFrame = self.cache.get(key=key)
-        if start_time:
+        df = self.get(key=key)
+        if df is None:
+            return pd.DataFrame()
+        if start_time is not None:
             df = df.loc[df.index >= start_time]
-        if stop_time:
+        if stop_time is not None:
             df = df.loc[df.index <= stop_time]
         return df

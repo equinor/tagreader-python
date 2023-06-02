@@ -1,5 +1,8 @@
-import pandas as pd
+from datetime import datetime, timedelta
+from typing import Generator
+
 import pytest
+import pytz
 
 from tagreader.utils import ReaderType, ensure_datetime_with_tz, is_windows
 
@@ -10,18 +13,19 @@ from tagreader.odbc_handlers import AspenHandlerODBC
 
 START_TIME = "2018-01-17 16:00:00"
 STOP_TIME = "2018-01-17 17:00:00"
+NONE_END_TIME = datetime(2100, 1, 1, 0, 0, tzinfo=pytz.UTC)
 SAMPLE_TIME = 60
 
 
-@pytest.fixture(scope="module")
-def AspenHandler():
+@pytest.fixture(scope="module")  # type: ignore[misc]
+def aspen_handler() -> Generator[AspenHandlerODBC, None, None]:
     from tagreader.odbc_handlers import AspenHandlerODBC
 
-    yield AspenHandlerODBC("thehostname", 1234, options={"max_rows": 567890})
+    yield AspenHandlerODBC(host="thehostname", port=1234, options={"max_rows": 567890})
 
 
-def test_generate_connection_string(AspenHandler):
-    res = AspenHandler.generate_connection_string()
+def test_generate_connection_string(aspen_handler: AspenHandlerODBC) -> None:
+    res = aspen_handler.generate_connection_string()
     expected = (
         "DRIVER={AspenTech SQLPlus};HOST=thehostname;PORT=1234;"
         "READONLY=Y;MAXROWS=567890"
@@ -29,8 +33,8 @@ def test_generate_connection_string(AspenHandler):
     assert expected == res
 
 
-@pytest.mark.parametrize(
-    "read_type",
+@pytest.mark.parametrize(  # type: ignore[misc]
+    "read_type_str",
     [
         "RAW",
         # pytest.param(
@@ -51,18 +55,29 @@ def test_generate_connection_string(AspenHandler):
         "SNAPSHOT",
     ],
 )
-def test_generate_tag_read_query(read_type):
+def test_generate_tag_read_query(read_type_str: str) -> None:
+    read_type = getattr(ReaderType, read_type_str)
     starttime = ensure_datetime_with_tz(START_TIME)
     stoptime = ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
+    ts = timedelta(seconds=SAMPLE_TIME)
 
-    if read_type == "SNAPSHOT":
+    if read_type == ReaderType.SNAPSHOT:
         res = AspenHandlerODBC.generate_read_query(
-            "thetag", None, None, None, None, getattr(ReaderType, read_type)
+            tag="thetag",
+            mapdef=None,
+            start_time=None,  # type: ignore[arg-type]
+            stop_time=None,  # type: ignore[arg-type]
+            sample_time=None,
+            read_type=read_type,
         )
     else:
         res = AspenHandlerODBC.generate_read_query(
-            "thetag", None, starttime, stoptime, ts, getattr(ReaderType, read_type)
+            tag="thetag",
+            mapdef=None,
+            start_time=starttime,
+            stop_time=stoptime,
+            sample_time=ts,
+            read_type=read_type,
         )
 
     expected = {
@@ -120,11 +135,11 @@ def test_generate_tag_read_query(read_type):
         ),
     }
 
-    assert expected[read_type] == res
+    assert expected[read_type.name] == res
 
 
-@pytest.mark.parametrize(
-    "read_type",
+@pytest.mark.parametrize(  # type: ignore[misc]
+    "read_type_str",
     [
         "RAW",
         # pytest.param(
@@ -145,29 +160,30 @@ def test_generate_tag_read_query(read_type):
         # pytest.param("SNAPSHOT", marks=pytest.mark.skip(reason="Not implemented")),
     ],
 )
-def test_generate_tag_read_query_with_status(read_type):
+def test_generate_tag_read_query_with_status(read_type_str: str) -> None:
+    read_type = getattr(ReaderType, read_type_str)
     starttime = ensure_datetime_with_tz(START_TIME)
-    stoptime = ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
+    endtime = ensure_datetime_with_tz(STOP_TIME)
+    ts = timedelta(seconds=SAMPLE_TIME)
 
-    if read_type == "SNAPSHOT":
+    if read_type == ReaderType.SNAPSHOT:
         res = AspenHandlerODBC.generate_read_query(
-            "thetag",
-            None,
-            None,
-            None,
-            None,
-            getattr(ReaderType, read_type),
+            tag="thetag",
+            mapdef=None,
+            start_time=None,  # type: ignore[arg-type]
+            stop_time=None,  # type: ignore[arg-type]
+            sample_time=None,
+            read_type=read_type,
             get_status=True,
         )
     else:
         res = AspenHandlerODBC.generate_read_query(
-            "thetag",
-            None,
-            starttime,
-            stoptime,
-            ts,
-            getattr(ReaderType, read_type),
+            tag="thetag",
+            mapdef=None,
+            start_time=starttime,
+            stop_time=endtime,
+            sample_time=ts,
+            read_type=read_type,
             get_status=True,
         )
 
@@ -230,16 +246,21 @@ def test_generate_tag_read_query_with_status(read_type):
         ),
     }
 
-    assert expected[read_type] == res
+    assert expected[read_type.name] == res
 
 
-def test_genreadquery_long_sampletime():
+def test_genreadquery_long_sampletime() -> None:
     starttime = ensure_datetime_with_tz(START_TIME)
     stoptime = ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(86401, unit="s")
+    ts = timedelta(seconds=86401)
 
     res = AspenHandlerODBC.generate_read_query(
-        "thetag", None, starttime, stoptime, ts, ReaderType.INT
+        tag="thetag",
+        mapdef=None,
+        start_time=starttime,
+        stop_time=stoptime,
+        sample_time=ts,
+        read_type=ReaderType.INT,
     )
 
     expected = (
