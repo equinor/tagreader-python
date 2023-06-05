@@ -2,6 +2,14 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.0.2](https://github.com/equinor/tagreader-python/compare/v4.0.1...v4.0.2) (2023-06-05)
+
+
+### 👷 CI/CD
+
+* correct name for PyPi upload ([85fd96a](https://github.com/equinor/tagreader-python/commit/85fd96afe8630b4748de4b0471c9e92c64ead8ca))
+* correct PyPi upload secret ([a59ecff](https://github.com/equinor/tagreader-python/commit/a59ecff99dbd85f7637c6aee9da24f1eb080365b))
+
 ## [4.0.1](https://github.com/equinor/tagreader-python/compare/v4.0.0...v4.0.1) (2023-06-05)
 
 
