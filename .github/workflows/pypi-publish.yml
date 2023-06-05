@@ -32,7 +32,7 @@ jobs:
 
       - name: Build and publish
         env:
-          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_PASSWORD }}
         run: |
-          poetry config pypi-token.pypi $PYPI_PASSWORD
+          poetry config pypi-token.pypi POETRY_PYPI_TOKEN_PYPI
           poetry publish --build
