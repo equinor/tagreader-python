@@ -2,7 +2,8 @@ name: Upload Python Package
 
 on:
   release:
-    types: [published]
+    types:
+      - published
 
 jobs:
   deploy:
@@ -30,9 +31,9 @@ jobs:
       - name: Install deps
         run: poetry install --no-interaction
 
-      - name: Build and publish
+      - name: Publish to PyPI
         env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_PASSWORD }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          poetry config pypi-token.pypi POETRY_PYPI_TOKEN_PYPI
+          poetry config pypi-token.pypi $PYPI_TOKEN
           poetry publish --build
