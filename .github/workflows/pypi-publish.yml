@@ -34,5 +34,5 @@ jobs:
         env:
           PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
-          poetry config http-basic.pypi __token__ $PYPI_PASSWORD
+          poetry config pypi-token.pypi $PYPI_PASSWORD
           poetry publish --build
