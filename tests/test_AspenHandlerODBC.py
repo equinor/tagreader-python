@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+
 from tagreader.utils import ReaderType, ensure_datetime_with_tz, is_windows
 
 if not is_windows():

@@ -3,6 +3,7 @@ import os
 
 import pandas as pd
 from pytz import timezone
+
 from tagreader.utils import ensure_datetime_with_tz, is_equinor, urljoin
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ

@@ -1,12 +1,12 @@
 import os
 import warnings
-from typing import Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 import pyodbc
 
-from .utils import ReaderType, find_registry_key, logging, winreg
+from tagreader.utils import ReaderType, find_registry_key, logging, winreg
 
 logging.basicConfig(
     format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
@@ -33,7 +33,7 @@ def list_pi_servers():
     return list_pi_sources()
 
 
-def list_aspen_sources():
+def list_aspen_sources() -> List[str]:
     source_list = []
     reg_adsa = winreg.OpenKey(
         winreg.HKEY_CURRENT_USER,
@@ -62,7 +62,12 @@ def list_pi_sources():
 
 
 class AspenHandlerODBC:
-    def __init__(self, host=None, port=None, options={}):
+    def __init__(
+        self,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        options: Dict[str, Union[int, float, str]] = {},
+    ):
         self.host = host
         self.port = port
         self.conn = None
@@ -72,13 +77,19 @@ class AspenHandlerODBC:
 
     def generate_connection_string(self):
         if self._connection_string is None:
-            return f"DRIVER={{AspenTech SQLPlus}};HOST={self.host};PORT={self.port};READONLY=Y;MAXROWS={self._max_rows}"  # noqa E501
+            return f"DRIVER={{AspenTech SQLPlus}};HOST={self.host};PORT={self.port};READONLY=Y;MAXROWS={self._max_rows}"
         else:
             return self._connection_string
 
     @staticmethod
     def generate_read_query(
-        tag, mapdef, start_time, stop_time, sample_time, read_type, get_status=False
+        tag: str,
+        mapdef: Optional[Dict[str, str]],
+        start_time: pd.Timestamp,
+        stop_time: pd.Timestamp,
+        sample_time: Optional[Union[int, pd.Timestamp]],
+        read_type: ReaderType,
+        get_status: bool = False,
     ):
         if mapdef is None:
             mapdef = {}
@@ -119,7 +130,7 @@ class AspenHandlerODBC:
         timecast_format_query = "%Y-%m-%dT%H:%M:%SZ"  # 05-jan-18 14:00:00
 
         request_num = {
-            ReaderType.SAMPLED: 4,  # VALUES request (actual recorded data), history  # noqa: E501
+            ReaderType.SAMPLED: 4,  # VALUES request (actual recorded data), history
             ReaderType.SHAPEPRESERVING: 3,  # FITS request, history
             ReaderType.INT: 7,  # TIMES2_EXTENDED request, history
             ReaderType.COUNT: 0,  # Actual data points are used, aggregates
@@ -138,7 +149,7 @@ class AspenHandlerODBC:
             ReaderType.SNAPSHOT: '"' + str(tag) + '"',
         }.get(read_type, "aggregates")
         # For RAW: historyevent?
-        # Ref https://help.sap.com/saphelp_pco151/helpdata/en/4c/72e34ee631469ee10000000a15822d/content.htm?no_cache=true  # noqa: E501
+        # Ref https://help.sap.com/saphelp_pco151/helpdata/en/4c/72e34ee631469ee10000000a15822d/content.htm?no_cache=true
 
         ts = "ts"
         if from_column == "aggregates":
@@ -213,7 +224,7 @@ class AspenHandlerODBC:
         query.append("AND m.MAP_IsDefault = 'TRUE'")
         return " ".join(query)
 
-    def _get_mapdef_for_search(self, tag):
+    def _get_mapdef_for_search(self, tag: str):
         query = self._generate_query_get_mapdef_for_search(tag)
         self.cursor.execute(query)
         colnames = [col[0] for col in self.cursor.description]
@@ -228,7 +239,9 @@ class AspenHandlerODBC:
         return mapdef
 
     @staticmethod
-    def _generate_query_search_tag(mapdef, desc=None):
+    def _generate_query_search_tag(
+        mapdef: Optional[Dict[str, str]], desc: Optional[str] = None
+    ):
         if mapdef["MAP_DefinitionRecord"] is None:
             return None
         query = [
@@ -241,7 +254,7 @@ class AspenHandlerODBC:
         return " ".join(query)
 
     @staticmethod
-    def _generate_query_get_mapdefs(tag):
+    def _generate_query_get_mapdefs(tag: str) -> str:
         query = [
             "SELECT m.NAME, m.MAP_DefinitionRecord, m.MAP_IsDefault,",
             "m.MAP_Description, m.MAP_Units, m.MAP_Base, m.MAP_Range,",
@@ -251,7 +264,7 @@ class AspenHandlerODBC:
         ]
         return " ".join(query)
 
-    def _get_mapdefs(self, tag):
+    def _get_mapdefs(self, tag: str) -> List[Dict[str, str]]:
         query = self._generate_query_get_mapdefs(tag)
         self.cursor.execute(query)
         colnames = [col[0] for col in self.cursor.description]
@@ -259,24 +272,25 @@ class AspenHandlerODBC:
         mapdefs = [dict(zip(colnames, row)) for row in rows]
         return mapdefs
 
-    def _get_specific_mapdef(self, tagname, mapping):
+    def _get_specific_mapdef(
+        self, tagname: str, mapping: str
+    ) -> Optional[Dict[str, str]]:
         mapdefs = self._get_mapdefs(tagname)
         for mapdef in mapdefs:
             if mapdef["NAME"].lower() == mapping.lower():
                 return mapdef
         return None
 
-    def _get_default_mapdef(self, tagname):
+    def _get_default_mapdef(self, tagname: str) -> Optional[Dict[str, str]]:
         mapdefs = self._get_mapdefs(tagname)
         for mapdef in mapdefs:
             if mapdef["MAP_IsDefault"] == "TRUE":
                 return mapdef
         return None
 
-    def search(self, tag=None, desc=None):
-        if tag is None:
-            raise ValueError("Tag is a required argument")
-
+    def search(
+        self, tag: Optional[str] = None, desc: Optional[str] = None
+    ) -> List[Tuple[str, str]]:
         tag = tag.replace("*", "%") if isinstance(tag, str) else None
         desc = desc.replace("*", "%") if isinstance(desc, str) else None
 
@@ -301,15 +315,15 @@ class AspenHandlerODBC:
         res = list(set(res))
         return res
 
-    def _get_tag_metadata(self, tag):
+    def _get_tag_metadata(self, tag: str):
         return None
 
-    def _get_tag_unit(self, tag):
+    def _get_tag_unit(self, tag: str):
         (tagname, mapping) = tag.split(";") if ";" in tag else (tag, None)
         if mapping is None:
             mapdef = self._get_default_mapdef(tagname)
         else:
-            mapdef = self._get_specific_mapdef(tagname, mapping)
+            mapdef = self._get_specific_mapdef(tagname=tagname, mapping=mapping)
         query = f"SELECT name, \"{mapdef['MAP_Units']}\" as engunit FROM \"{tagname}\""
         self.cursor.execute(query)
         res = self.cursor.fetchone()
@@ -317,12 +331,12 @@ class AspenHandlerODBC:
             res.engunit = ""
         return res.engunit
 
-    def _get_tag_description(self, tag):
+    def _get_tag_description(self, tag: str):
         (tagname, mapping) = tag.split(";") if ";" in tag else (tag, None)
         if mapping is None:
             mapping = self._get_default_mapdef(tagname)
         else:
-            mapping = self._get_specific_mapdef(tagname, mapping)
+            mapping = self._get_specific_mapdef(tagname=tagname, mapping=mapping)
         query = [
             f"SELECT name, \"{mapping['MAP_Description']}\" as description",
             f' FROM "{tagname}"',
@@ -336,21 +350,27 @@ class AspenHandlerODBC:
 
     def read_tag(
         self,
-        tag,
-        start_time,
-        stop_time,
-        sample_time,
-        read_type,
-        metadata=None,
-        get_status=False,
+        tag: str,
+        start_time: pd.Timestamp,
+        stop_time: pd.Timestamp,
+        sample_time: Optional[Union[int, pd.Timestamp]],
+        read_type: ReaderType,
+        metadata: Optional[Dict[str, str]] = None,
+        get_status: bool = False,
     ):
         (cleantag, mapping) = tag.split(";") if ";" in tag else (tag, None)
         mapdef = dict()
 
         if mapping is not None:
-            mapdef = self._get_specific_mapdef(cleantag, mapping)
+            mapdef = self._get_specific_mapdef(tagname=cleantag, mapping=mapping)
         query = self.generate_read_query(
-            cleantag, mapdef, start_time, stop_time, sample_time, read_type, get_status
+            tag=cleantag,
+            mapdef=mapdef,
+            start_time=start_time,
+            stop_time=stop_time,
+            sample_time=sample_time,
+            read_type=read_type,
+            get_status=get_status,
         )
 
         with warnings.catch_warnings():
@@ -371,7 +391,7 @@ class AspenHandlerODBC:
 
     def query_sql(
         self, query: str, parse: bool = True
-    ) -> Union[pd.DataFrame, pyodbc.Cursor]:  # noqa:E501
+    ) -> Union[pd.DataFrame, pyodbc.Cursor]:
         if not parse:
             cursor = self.conn.cursor()
             cursor.execute(query)
@@ -386,7 +406,12 @@ class AspenHandlerODBC:
 
 
 class PIHandlerODBC:
-    def __init__(self, host=None, port=None, options={}):
+    def __init__(
+        self,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        options: Dict[str, Union[int, float, str]] = {},
+    ):
         self.host = host
         self.port = port
         self.conn = None
@@ -406,14 +431,14 @@ class PIHandlerODBC:
             return (
                 f"DRIVER={{PI ODBC Driver}};Server={self._das_server};"
                 "Trusted_Connection=Yes;Command Timeout=1800;Provider Type=PIOLEDB;"
-                f'Provider String={{Data source={self.host.replace(".statoil.net", "")};'  # noqa: E501
+                f'Provider String={{Data source={self.host.replace(".statoil.net", "")};'
                 "Integrated_Security=SSPI;Time Zone=UTC};"
             )
         else:
             return self._connection_string
 
     @staticmethod
-    def generate_search_query(tag=None, desc=None):
+    def generate_search_query(tag: Optional[str] = None, desc: Optional[str] = None):
         query = ["SELECT tag, descriptor as description FROM pipoint.pipoint2 WHERE"]
         if tag is not None:
             query.extend(["tag LIKE '{tag}'".format(tag=tag.replace("*", "%"))])
@@ -427,13 +452,13 @@ class PIHandlerODBC:
 
     def generate_read_query(
         self,
-        tag,
-        start_time,
-        stop_time,
-        sample_time,
-        read_type,
-        metadata=None,
-        get_status=False,
+        tag: str,
+        start_time: pd.Timestamp,
+        stop_time: pd.Timestamp,
+        sample_time: Optional[Union[int, pd.Timestamp]],
+        read_type: ReaderType,
+        metadata: Optional[Dict[str, str]] = None,
+        get_status: bool = False,
     ):
         if read_type in [
             ReaderType.COUNT,
@@ -494,7 +519,7 @@ class PIHandlerODBC:
         else:
             query = ["SELECT CAST(value as FLOAT32)"]
 
-        # query.extend([f"AS value, FORMAT(time, '{timecast_format_output}') AS timestamp FROM {source} WHERE tag='{tag}'"])  # noqa E501
+        # query.extend([f"AS value, FORMAT(time, '{timecast_format_output}') AS timestamp FROM {source} WHERE tag='{tag}'"])
         query.extend(["AS value,"])
 
         if get_status:
@@ -514,7 +539,7 @@ class PIHandlerODBC:
         elif ReaderType.SHAPEPRESERVING == read_type:
             query.extend(
                 [
-                    f"AND (intervalcount = {int((stop_time-start_time).total_seconds()/seconds)})"  # noqa E501
+                    f"AND (intervalcount = {int((stop_time - start_time).total_seconds() / seconds)})"
                 ]
             )
         elif ReaderType.RAW == read_type:
@@ -527,7 +552,7 @@ class PIHandlerODBC:
 
         return " ".join(query)
 
-    def set_options(self, options):
+    def set_options(self, options: Dict[str, str]):
         pass
 
     def connect(self):
@@ -536,14 +561,16 @@ class PIHandlerODBC:
         self.conn = pyodbc.connect(connection_string, autocommit=True)
         self.cursor = self.conn.cursor()
 
-    def search(self, tag=None, desc=None):
-        query = self.generate_search_query(tag, desc)
+    def search(
+        self, tag: Optional[str] = None, desc: Optional[str] = None
+    ) -> List[Tuple[str, str]]:
+        query = self.generate_search_query(tag=tag, desc=desc)
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
-    def _get_tag_metadata(self, tag):
+    def _get_tag_metadata(self, tag: str) -> Optional[Dict[str, str]]:
         # Returns None if tag not found.
-        query = f"SELECT digitalset, engunits, descriptor FROM pipoint.pipoint2 WHERE tag='{tag}'"  # noqa E501
+        query = f"SELECT digitalset, engunits, descriptor FROM pipoint.pipoint2 WHERE tag='{tag}'"
         self.cursor.execute(query)
         desc = self.cursor.description
         col_names = [col[0] for col in desc]
@@ -554,7 +581,7 @@ class PIHandlerODBC:
         metadata = dict(zip(col_names, res))
         return metadata
 
-    def _get_tag_description(self, tag):
+    def _get_tag_description(self, tag: str):
         query = f"SELECT descriptor FROM pipoint.pipoint2 WHERE tag='{tag}'"
         self.cursor.execute(query)
         desc = self.cursor.fetchone()
@@ -567,7 +594,7 @@ class PIHandlerODBC:
         return unit[0]
 
     @staticmethod
-    def _is_summary(read_type):
+    def _is_summary(read_type: ReaderType):
         if read_type in [
             ReaderType.AVG,
             ReaderType.MIN,
@@ -581,13 +608,13 @@ class PIHandlerODBC:
 
     def read_tag(
         self,
-        tag,
-        start_time,
-        stop_time,
-        sample_time,
-        read_type,
-        metadata=None,
-        get_status=False,
+        tag: str,
+        start_time: pd.Timestamp,
+        stop_time: pd.Timestamp,
+        sample_time: Optional[Union[int, pd.Timestamp]],
+        read_type: ReaderType,
+        metadata: Optional[Dict[str, str]] = None,
+        get_status: bool = False,
     ):
         if metadata is None:
             # Tag not found
@@ -595,7 +622,13 @@ class PIHandlerODBC:
             return pd.DataFrame()
 
         query = self.generate_read_query(
-            tag, start_time, stop_time, sample_time, read_type, get_status=get_status
+            tag=tag,
+            start_time=start_time,
+            stop_time=stop_time,
+            sample_time=sample_time,
+            read_type=read_type,
+            get_status=get_status,
+            metadata=None,
         )
 
         with warnings.catch_warnings():
@@ -620,7 +653,7 @@ class PIHandlerODBC:
 
         if len(metadata["digitalset"]) > 0:
             self.cursor.execute(
-                f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'"  # noqa: E501
+                f"SELECT code, offset FROM pids WHERE digitalset='{metadata['digitalset']}'"
             )
             digitalset = self.cursor.fetchall()
             code = [x[0] for x in digitalset]
@@ -641,7 +674,7 @@ class PIHandlerODBC:
 
     def query_sql(
         self, query: str, parse: bool = True
-    ) -> Union[pd.DataFrame, pyodbc.Cursor]:  # noqa: E501
+    ) -> Union[pd.DataFrame, pyodbc.Cursor]:
         if not parse:
             cursor = self.conn.cursor()
             cursor.execute(query)

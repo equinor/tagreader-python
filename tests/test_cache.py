@@ -4,6 +4,7 @@ from importlib.util import find_spec
 
 import pandas as pd
 import pytest
+
 from tagreader.cache import SmartCache, safe_tagname
 from tagreader.utils import ReaderType
 
