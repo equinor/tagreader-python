@@ -62,9 +62,18 @@ print(c.search("tag*"))
 df = c.read_tags(["tag1", "tag2"], "18.06.2020 08:00:00", "18.06.2020 09:00:00", 60)
 ```
 
+## Jupyter Notebook Quickstart
+Jupyter Notebook examples can be found in /examples. In order to run these examples, you need to install the optional
+dependencies.
+
+```bash
+pip install tagreader[notebooks]
+```
+
+
 ## Documentation
 
-There is a [quickstart](docs/quickstart.ipynb) example file that should get
+There is a [quickstart](examples/quickstart.ipynb) example file that should get
 you going. Also check out the [manual](docs/manual.md) for more information.
 
 ## Contributing
