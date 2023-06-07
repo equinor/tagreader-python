@@ -46,7 +46,7 @@ If using ODBC connections, you must also install proprietary drivers for PI ODBC
 
 # Before getting started
 
-It is highly recommended to go through the [quickstart](quickstart.ipynb) example. It contains references to relevant sections in this manual.
+It is highly recommended to go through the [quickstart](../examples/quickstart.ipynb) example. It contains references to relevant sections in this manual.
 
 # Installation
 
