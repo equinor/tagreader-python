@@ -1,13 +1,16 @@
 import datetime
 import re
-import urllib
+import urllib.parse
 import warnings
-from typing import Union
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
 import pandas as pd
 import pytz
 import requests
+import urllib3
+from requests import Response
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
 from .utils import ReaderType, is_mac, is_windows, logging, urljoin
@@ -54,9 +57,7 @@ def list_aspenone_sources(url=None, auth=None, verifySSL=None):
         auth = get_auth_aspen()
 
     if verifySSL is False:
-        requests.packages.urllib3.disable_warnings(
-            requests.packages.urllib3.exceptions.InsecureRequestWarning
-        )
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     elif verifySSL is None:
         verifySSL = get_verifySSL()
 
@@ -85,9 +86,7 @@ def list_piwebapi_sources(url=None, auth=None, verifySSL=None):
         auth = get_auth_pi()
 
     if verifySSL is False:
-        requests.packages.urllib3.disable_warnings(
-            requests.packages.urllib3.exceptions.InsecureRequestWarning
-        )
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     elif verifySSL is None:
         verifySSL = get_verifySSL()
 
@@ -107,27 +106,63 @@ def list_piwebapi_sources(url=None, auth=None, verifySSL=None):
     res.raise_for_status()
 
 
-class AspenHandlerWeb:
+class BaseHandlerWeb(ABC):
     def __init__(
         self,
-        datasource=None,
-        url=None,
-        auth=None,
-        verifySSL=None,
-        options={},
+        datasource: Optional[str] = None,
+        url: Optional[str] = None,
+        auth: Optional[Any] = None,
+        verifySSL: Optional[bool] = None,
     ):
-        self._max_rows = options.get("max_rows", 100000)
-        if url is None:
-            url = get_url_aspen()
         self.datasource = datasource
         self.base_url = url
         self.session = requests.Session()
         self.session.auth = auth if auth is not None else get_auth_aspen()
         if verifySSL is False:
-            requests.packages.urllib3.disable_warnings(
-                requests.packages.urllib3.exceptions.InsecureRequestWarning
-            )
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
+
+    def fetch(self, url, params=None) -> Response:
+        if not self.session.verify:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+        return res
+
+    def connect(self):
+        try:
+            self.verify_connection(self.datasource)
+        except requests.ConnectionError:
+            raise ConnectionError(
+                f"Not able to connect to {self.base_url}. Check network connection."
+            ) from None
+
+    @abstractmethod
+    def verify_connection(self, datasource: str):
+        ...
+
+
+class AspenHandlerWeb(BaseHandlerWeb):
+    def __init__(
+        self,
+        datasource: Optional[str] = None,
+        url: Optional[str] = None,
+        auth: Optional[Any] = None,
+        verifySSL: Optional[bool] = None,
+        options: Dict[str, Any] = {},
+    ):
+        if url is None:
+            url = get_url_aspen()
+        if auth is None:
+            auth = get_auth_aspen()
+        super().__init__(
+            datasource=datasource,
+            url=url,
+            auth=auth,
+            verifySSL=verifySSL,
+        )
+        self._max_rows = options.get("max_rows", 100000)
         self._connection_string = ""  # Used for raw SQL queries
 
     @staticmethod
@@ -251,26 +286,12 @@ class AspenHandlerWeb:
         """
         url = urljoin(self.base_url, "Datasources")
         params = {"service": "ProcessData", "allQuotes": 1}
-        if not self.session.verify:
-            requests.packages.urllib3.disable_warnings(
-                requests.packages.urllib3.exceptions.InsecureRequestWarning
-            )
-
-        res = self.session.get(url, params=params)
-        res.raise_for_status()
-        j = res.json()
+        r = self.fetch(url=url, params=params)
+        j = r.json()
         for item in j["data"]:
             if item["n"] == datasource:
                 return True
         return False
-
-    def connect(self):
-        try:
-            self.verify_connection(self.datasource)
-        except requests.ConnectionError:
-            raise ConnectionError(
-                f"Not able to connect to {self.base_url}. Check network connection."
-            ) from None
 
     @staticmethod
     def split_tagmap(tagmap):
@@ -312,8 +333,7 @@ class AspenHandlerWeb:
     def _get_maps(self, tagname):
         params = self.generate_get_map_query(tagname)
         url = urljoin(self.base_url, "TagInfo")
-        res = self.session.get(url, params=params)
-        res.raise_for_status()
+        res = self.fetch(url, params=params)
         j = res.json()
 
         if "tags" not in j["data"]:
@@ -349,9 +369,8 @@ class AspenHandlerWeb:
         )
         url = urljoin(self.base_url, "Browse?")
         url += encoded_params
-        res = self.session.get(url)
+        res = self.fetch(url)
 
-        res.raise_for_status()
         j = res.json()
 
         if "tags" not in j["data"]:
@@ -376,8 +395,7 @@ class AspenHandlerWeb:
     def _get_tag_unit(self, tag):
         query = self.generate_get_unit_query(tag)
         url = urljoin(self.base_url, "TagInfo")
-        res = self.session.get(url, params=query)
-        res.raise_for_status()
+        res = self.fetch(url, params=query)
         j = res.json()
         try:
             attrdata = j["data"]["tags"][0]["attrData"]
@@ -412,8 +430,7 @@ class AspenHandlerWeb:
     def _get_tag_description(self, tag):
         query = self.generate_get_description_query(tag)
         url = urljoin(self.base_url, "TagInfo")
-        res = self.session.get(url, params=query)
-        res.raise_for_status()
+        res = self.fetch(url, params=query)
         j = res.json()
         try:
             desc = j["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
@@ -465,8 +482,7 @@ class AspenHandlerWeb:
             tagname, mapname, start_time, stop_time, sample_time, read_type
         )
 
-        res = self.session.get(url, params=params)
-        res.raise_for_status()
+        res = self.fetch(url, params=params)
 
         if len(res.text) == 0:  # res.text='' for timestamps in future
             return pd.DataFrame(columns=[tag])
@@ -547,8 +563,7 @@ class AspenHandlerWeb:
                 query=query,
                 max_rows=self._max_rows,
             )
-        res = self.session.get(url, params=params)
-        res.raise_for_status()
+        res = self.fetch(url, params=params)
         # For now just return result as text regardless of value of parse
         if parse:
             raise NotImplementedError(
@@ -557,27 +572,26 @@ class AspenHandlerWeb:
         return res.text
 
 
-class PIHandlerWeb:
+class PIHandlerWeb(BaseHandlerWeb):
     def __init__(
         self,
-        url=None,
-        datasource=None,
-        auth=None,
-        verifySSL=None,
-        options={},
+        datasource: Optional[str] = None,
+        url: Optional[str] = None,
+        auth: Optional[Any] = None,
+        verifySSL: Optional[bool] = None,
+        options: Dict[str, Any] = {},
     ):
-        self._max_rows = options.get("max_rows", 10000)
         if url is None:
             url = get_url_pi()
-        self.base_url = url
-        self.datasource = datasource
-        self.session = requests.Session()
-        self.session.auth = auth if auth is not None else get_auth_pi()
-        if verifySSL is False:
-            requests.packages.urllib3.disable_warnings(
-                requests.packages.urllib3.exceptions.InsecureRequestWarning
-            )
-        self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
+        if auth is None:
+            auth = get_auth_pi()
+        super().__init__(
+            url=url,
+            datasource=datasource,
+            auth=auth,
+            verifySSL=verifySSL,
+        )
+        self._max_rows = options.get("max_rows", 10000)
         self.webidcache = {}
 
     @staticmethod
@@ -728,21 +742,12 @@ class PIHandlerWeb:
         :rtype: Bool
         """
         url = urljoin(self.base_url, "dataservers")
-        res = self.session.get(url)
-        res.raise_for_status()
+        res = self.fetch(url)
         j = res.json()
         for item in j["Items"]:
             if item["Name"] == datasource:
                 return True
         return False
-
-    def connect(self):
-        try:
-            self.verify_connection(self.datasource)
-        except requests.ConnectionError:
-            raise ConnectionError(
-                f"Not able to connect to {self.base_url}. Check network connection."
-            ) from None
 
     def search(self, tag=None, desc=None):
         params = self.generate_search_query(tag, desc, self.datasource)
@@ -750,9 +755,8 @@ class PIHandlerWeb:
         done = False
         ret = []
         while not done:
-            res = self.session.get(url, params=params)
+            res = self.fetch(url, params=params)
 
-            res.raise_for_status()
             j = res.json()
             for item in j["Items"]:
                 description = item["Description"] if "Description" in item else ""
@@ -772,8 +776,7 @@ class PIHandlerWeb:
         if webid is None:
             return None
         url = urljoin(self.base_url, "points", webid)
-        res = self.session.get(url)
-        res.raise_for_status()
+        res = self.fetch(url)
         j = res.json()
         unit = j["EngineeringUnits"]
         return unit
@@ -783,8 +786,7 @@ class PIHandlerWeb:
         if webid is None:
             return None
         url = urljoin(self.base_url, "points", webid)
-        res = self.session.get(url)
-        res.raise_for_status()
+        res = self.fetch(url)
         j = res.json()
         description = j["Descriptor"]
         return description
@@ -802,8 +804,7 @@ class PIHandlerWeb:
             params = self.generate_search_query(tag=tag, datasource=self.datasource)
             params["fields"] = "name;webid"
             url = urljoin(self.base_url, "search", "query")
-            res = self.session.get(url, params=params)
-            res.raise_for_status()
+            res = self.fetch(url, params=params)
             j = res.json()
 
             if len(j["Errors"]) > 0:
@@ -857,8 +858,7 @@ class PIHandlerWeb:
             webid, start_time, stop_time, sample_time, read_type, get_status=get_status
         )
         url = urljoin(self.base_url, url)
-        res = self.session.get(url, params=params)
-        res.raise_for_status()
+        res = self.fetch(url, params=params)
 
         j = res.json()
         if read_type == ReaderType.SNAPSHOT:
