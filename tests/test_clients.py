@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 import pytest
+
 from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
 from tagreader.utils import ReaderType, is_windows
 

@@ -3,6 +3,7 @@ import sys
 
 import pandas as pd
 import pytest
+
 from tagreader import IMSClient
 from tagreader.cache import SmartCache
 from tagreader.utils import ReaderType, ensure_datetime_with_tz, is_windows

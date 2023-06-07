@@ -2,6 +2,8 @@ import enum
 import logging
 import platform
 import warnings
+from datetime import datetime
+from typing import Union
 
 import pandas as pd
 import pytz
@@ -28,7 +30,7 @@ if is_mac():
     import subprocess
 
 
-def find_registry_key(base_key, search_key_name):
+def find_registry_key(base_key, search_key_name: str):
     search_key_name = search_key_name.lower()
     if base_key is not None:
         num_keys, _, _ = winreg.QueryInfoKey(base_key)
@@ -45,7 +47,7 @@ def find_registry_key(base_key, search_key_name):
     return None
 
 
-def find_registry_key_from_name(base_key, search_key_name):
+def find_registry_key_from_name(base_key, search_key_name: str):
     search_key_name = search_key_name.lower()
     num_keys, _, _ = winreg.QueryInfoKey(base_key)
     key = key_string = None
@@ -63,7 +65,10 @@ def find_registry_key_from_name(base_key, search_key_name):
     return key, key_string
 
 
-def ensure_datetime_with_tz(date_stamp, tz="Europe/Oslo"):
+def ensure_datetime_with_tz(
+    date_stamp: Union[datetime, str, pd.Timestamp],
+    tz: str = "Europe/Oslo",
+) -> pd.Timestamp:
     if isinstance(date_stamp, str):
         try:
             date_stamp = pd.to_datetime(date_stamp, format="ISO8601")
@@ -76,7 +81,7 @@ def ensure_datetime_with_tz(date_stamp, tz="Europe/Oslo"):
     return date_stamp
 
 
-def urljoin(*args):
+def urljoin(*args) -> str:
     """Joins components of URL. Ensures slashes are inserted or removed where
     needed, and does not strip trailing slash of last element.
 
@@ -114,7 +119,7 @@ class ReaderType(enum.IntEnum):
     SNAPSHOT = FINAL = LAST = enum.auto()  # Last sampled value
 
 
-def add_statoil_root_certificate(noisy=True):
+def add_statoil_root_certificate(noisy: bool = True) -> bool:
     """This is a utility function for Equinor employees on Equinor managed machines.
 
     The function searches for the Statoil Root certificate in the
@@ -134,6 +139,7 @@ def add_statoil_root_certificate(noisy=True):
     STATOIL_ROOT_PEM_HASH = "ce7bb185ab908d2fea28c7d097841d9d5bbf2c76"
 
     found = False
+    der = None
 
     if is_linux():
         return True
@@ -165,7 +171,7 @@ def add_statoil_root_certificate(noisy=True):
                     found = True
                     break
 
-    if found:
+    if found and der:
         pem = ssl.DER_cert_to_PEM_cert(der)
         if pem in certifi.contents():
             if noisy:

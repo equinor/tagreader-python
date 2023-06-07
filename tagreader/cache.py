@@ -1,11 +1,11 @@
 import os
 import warnings
 from importlib.util import find_spec
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union, cast
 
 import pandas as pd
 
-from .utils import ReaderType
+from tagreader.utils import ReaderType
 
 
 def safe_tagname(tagname: str) -> str:
@@ -20,7 +20,7 @@ def timestamp_to_epoch(timestamp: pd.Timestamp) -> int:
     origin = pd.Timestamp("1970-01-01")
     if timestamp.tzinfo is not None:
         timestamp = timestamp.tz_convert("UTC").tz_localize(None)
-    return (timestamp - origin) // pd.Timedelta("1s")  # type: ignore
+    return (timestamp - origin) // pd.Timedelta("1s")
 
 
 class BucketCache:
@@ -38,8 +38,8 @@ class BucketCache:
         ts: Union[int, pd.Timedelta],
         stepped: bool,
         status: bool,
-        starttime: pd.Timestamp = None,
-        endtime: pd.Timestamp = None,
+        starttime: Optional[pd.Timestamp] = None,
+        endtime: Optional[pd.Timestamp] = None,
     ) -> str:
         """Return a string on the form
         /tagname/readtype[/sample_time][/stepped][/status]/_starttime_endtime
@@ -60,7 +60,7 @@ class BucketCache:
         timespan = ""
         if starttime is not None:
             starttime_epoch = timestamp_to_epoch(starttime)
-            endtime_epoch = timestamp_to_epoch(endtime)
+            endtime_epoch = timestamp_to_epoch(endtime)  # type: ignore[arg-type]
             timespan = f"/_{starttime_epoch}_{endtime_epoch}"
 
         keyval = (
@@ -82,14 +82,14 @@ class BucketCache:
             if key not in f:
                 f.put(key, pd.DataFrame())
             origmetadata = {}
-            if "metadata" in f.get_storer(key).attrs:
-                origmetadata = f.get_storer(key).attrs.metadata
-            f.get_storer(key).attrs.metadata = {**origmetadata, **metadata}
+            if "metadata" in f.get_storer(key).attrs:  # type: ignore[operator]
+                origmetadata = f.get_storer(key).attrs.metadata  # type: ignore[operator]
+            f.get_storer(key).attrs.metadata = {**origmetadata, **metadata}  # type: ignore[operator]
 
     def fetch_tag_metadata(
         self, tagname: str, properties: Union[str, List[str]]
     ) -> Dict[str, Union[str, int]]:
-        res = {}  # type: Dict[str, Union[str, int]]
+        res: Dict[str, Union[str, int]] = {}
         if not os.path.isfile(self.filename):
             return res
         tagname = safe_tagname(tagname)
@@ -97,15 +97,15 @@ class BucketCache:
         if isinstance(properties, str):
             properties = [properties]
         with pd.HDFStore(self.filename, mode="r") as f:
-            if key not in f or "metadata" not in f.get_storer(key).attrs:
+            if key not in f or "metadata" not in f.get_storer(key).attrs:  # type: ignore[operator]
                 return {}
-            metadata = f.get_storer(key).attrs.metadata
+            metadata = f.get_storer(key).attrs.metadata  # type: ignore[operator]
         for p in properties:
             if p in metadata.keys():
                 res[p] = metadata.get(p)
         return res
 
-    def remove(self, filename: str = None) -> None:  # type: ignore[assignment]
+    def remove(self, filename: Optional[str] = None) -> None:
         if not filename:
             filename = self.filename
         if os.path.isfile(filename):
@@ -116,7 +116,7 @@ class BucketCache:
         df: pd.DataFrame,
         tagname: str,
         readtype: ReaderType,
-        ts: pd.Timestamp,
+        ts: pd.Timedelta,
         stepped: bool,
         status: bool,
         starttime: pd.Timestamp,
@@ -126,7 +126,13 @@ class BucketCache:
             return
 
         intersecting = self.get_intersecting_datasets(
-            tagname, readtype, ts, stepped, status, starttime, endtime
+            tagname=tagname,
+            readtype=readtype,
+            ts=ts,
+            stepped=stepped,
+            status=status,
+            starttime=starttime,
+            endtime=endtime,
         )
         if len(intersecting) > 0:
             with pd.HDFStore(self.filename, mode="a") as f:
@@ -136,10 +142,18 @@ class BucketCache:
                     )
                     starttime = min(starttime, this_start)
                     endtime = max(endtime, this_end)
-                    df = pd.concat([df, f.get(dataset)])
+                    df = pd.concat([df, f.get(dataset)])  # type: ignore[list-item]
                     del f[dataset]
             df = df[~df.index.duplicated(keep="first")].sort_index()
-        key = self._key_path(tagname, readtype, ts, stepped, status, starttime, endtime)
+        key = self._key_path(
+            tagname=tagname,
+            readtype=readtype,
+            ts=ts,
+            stepped=stepped,
+            status=status,
+            starttime=starttime,
+            endtime=endtime,
+        )
         with pd.HDFStore(self.filename, mode="a") as f:
             f.put(key, df, format="table")
 
@@ -149,7 +163,7 @@ class BucketCache:
     ) -> Tuple[pd.Timestamp, pd.Timestamp]:
         name_with_times = name.split("/")[-1]
         if not name_with_times.count("_") == 2:
-            return (None, None)
+            return (None, None)  # type: ignore[return-value]
         _, starttime_epoch, endtime_epoch = name_with_times.split("_")
         starttime = pd.to_datetime(int(starttime_epoch), unit="s").tz_localize("UTC")
         endtime = pd.to_datetime(int(endtime_epoch), unit="s").tz_localize("UTC")
@@ -170,7 +184,15 @@ class BucketCache:
         intersecting_datasets = []
         with pd.HDFStore(self.filename, mode="r") as f:
             for bucket in f.walk(
-                where=self._key_path(tagname, readtype, ts, stepped, status)
+                where=self._key_path(
+                    tagname=tagname,
+                    readtype=readtype,
+                    starttime=None,
+                    endtime=None,
+                    ts=ts,
+                    stepped=stepped,
+                    status=status,
+                )
             ):
                 for leaf in bucket[2]:
                     dataset = bucket[0] + "/" + leaf
@@ -192,7 +214,13 @@ class BucketCache:
         endtime: pd.Timestamp,
     ) -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
         datasets = self.get_intersecting_datasets(
-            tagname, readtype, ts, stepped, status, starttime, endtime
+            tagname=tagname,
+            readtype=readtype,
+            ts=ts,
+            stepped=stepped,
+            status=status,
+            starttime=starttime,
+            endtime=endtime,
         )
         missing_intervals = [(starttime, endtime)]
         for dataset in datasets:
@@ -232,7 +260,13 @@ class BucketCache:
             return df
 
         datasets = self.get_intersecting_datasets(
-            tagname, readtype, ts, stepped, status, starttime, endtime
+            tagname=tagname,
+            readtype=readtype,
+            ts=ts,
+            stepped=stepped,
+            status=status,
+            starttime=starttime,
+            endtime=endtime,
         )
 
         with pd.HDFStore(self.filename, mode="r") as f:
@@ -243,7 +277,7 @@ class BucketCache:
                 df = pd.concat(
                     [
                         df,
-                        f.select(
+                        f.select(  # type: ignore[list-item]
                             dataset, where="index >= starttime and index <= endtime"
                         ),
                     ]
@@ -273,21 +307,21 @@ class SmartCache:
     def key_path(
         df: Union[str, pd.DataFrame],
         readtype: ReaderType,
-        ts: Union[int, pd.Timedelta] = None,
+        ts: Optional[Union[int, pd.Timedelta]] = None,
     ) -> str:
         """Return a string on the form
         XXX/sYY/ZZZ where XXX is the ReadType, YY is the interval between samples
         (in seconds) and ZZZ is a safe tagname.
         """
         name = list(df)[0] if isinstance(df, pd.DataFrame) else df
-        name = safe_tagname(name)
+        name = safe_tagname(name)  # type: ignore[arg-type]
         ts = int(ts.total_seconds()) if isinstance(ts, pd.Timedelta) else ts
         if readtype != ReaderType.RAW:
             if ts is None:
                 # Determine sample time by reading interval between first two
                 # samples of dataframe.
                 if isinstance(df, pd.DataFrame):
-                    interval = int(df[0:2].index.to_series().diff().mean().value / 1e9)
+                    interval = int(df[0:2].index.to_series().diff().mean().value / 1e9)  # type: ignore[attr-defined]
                 else:
                     raise TypeError
             else:
@@ -300,9 +334,9 @@ class SmartCache:
         self,
         df: pd.DataFrame,
         readtype: ReaderType,
-        ts: Union[int, pd.Timedelta] = None,
+        ts: Optional[Union[int, pd.Timedelta]] = None,
     ) -> None:
-        key = self.key_path(df, readtype, ts)
+        key = self.key_path(df=df, readtype=readtype, ts=ts)
         if df.empty:
             return  # Weirdness ensues when using empty df in select statement below
         with pd.HDFStore(self.filename, mode="a") as f:
@@ -318,14 +352,14 @@ class SmartCache:
         self,
         tagname: str,
         readtype: ReaderType,
-        ts: Union[int, pd.Timestamp] = None,
-        start_time: pd.Timestamp = None,
-        stop_time: pd.Timestamp = None,
+        ts: Optional[Union[int, pd.Timestamp]] = None,
+        start_time: Optional[pd.Timestamp] = None,
+        stop_time: Optional[pd.Timestamp] = None,
     ) -> pd.DataFrame:
         df = pd.DataFrame()
         if not os.path.isfile(self.filename):
             return df
-        key = self.key_path(tagname, readtype, ts)
+        key = self.key_path(df=tagname, readtype=readtype, ts=ts)  # type: ignore[arg-type]
         where = []
         if start_time is not None:
             where.append("index >= start_time")
@@ -335,9 +369,9 @@ class SmartCache:
         with pd.HDFStore(self.filename, mode="r") as f:
             if key in f:
                 if wheretxt:
-                    df = f.select(key, where=wheretxt)
+                    df = f.select(key, where=wheretxt)  # type: ignore[assignment]
                 else:
-                    df = f.select(key)
+                    df = f.select(key)  # type: ignore[assignment]
         return df.sort_index()
 
     def store_tag_metadata(
@@ -349,14 +383,14 @@ class SmartCache:
             if key not in f:
                 f.put(key, pd.DataFrame())
             origmetadata = {}
-            if "metadata" in f.get_storer(key).attrs:
-                origmetadata = f.get_storer(key).attrs.metadata
-            f.get_storer(key).attrs.metadata = {**origmetadata, **metadata}
+            if "metadata" in f.get_storer(key).attrs:  # type: ignore[operator]
+                origmetadata = f.get_storer(key).attrs.metadata  # type: ignore[operator]
+            f.get_storer(key).attrs.metadata = {**origmetadata, **metadata}  # type: ignore[operator]
 
     def fetch_tag_metadata(
         self, tagname: str, properties: Union[str, List[str]]
     ) -> Dict[str, Union[str, int]]:
-        res = {}  # type: Dict[str, Union[str, int]]
+        res: Dict[str, Union[str, int]] = {}
         if not os.path.isfile(self.filename):
             return res
         tagname = safe_tagname(tagname)
@@ -364,36 +398,42 @@ class SmartCache:
         if isinstance(properties, str):
             properties = [properties]
         with pd.HDFStore(self.filename, mode="r") as f:
-            if key not in f or "metadata" not in f.get_storer(key).attrs:
+            if key not in f or "metadata" not in f.get_storer(key).attrs:  # type: ignore[operator]
                 return {}
-            metadata = f.get_storer(key).attrs.metadata
+            metadata = f.get_storer(key).attrs.metadata  # type: ignore[operator]
         for p in properties:
             if p in metadata.keys():
                 res[p] = metadata.get(p)
         return res
 
-    def remove(self, filename: str = None) -> None:  # type: ignore[assignment]
+    def remove(self, filename: Optional[str] = None) -> None:
         if not filename:
             filename = self.filename
             # self.close()
         if os.path.isfile(filename):
             os.unlink(filename)
 
-    def _match_tag(self, key, readtype=None, ts=None, tagname=None):  # type: ignore
+    def _match_tag(
+        self,
+        key: str,
+        readtype: Optional[Union[List[ReaderType], ReaderType]] = None,
+        ts: Optional[List[Optional[Union[int, pd.Timestamp]]]] = None,
+        tagname: Optional[Union[List[str], str]] = None,
+    ) -> bool:
         def readtype_to_str(rt):  # type: ignore
             return getattr(
                 rt, "name", rt
             )  # if isinstance(rt, ReaderType) always returns False...?
 
-        def timedelta_to_str(t):  # type: ignore
+        def timedelta_to_str(t):  # type: ignore[no-untyped-def]
             if isinstance(t, pd.Timedelta):
                 return str(int(t.total_seconds()))
             return t
 
-        key = "/" + key.lstrip("/")  # Ensure absolute path
-        readtype = readtype if isinstance(readtype, list) else [readtype]
+        key = "/" + key.lstrip("/")  # Ensure absolute path:
+        readtype = readtype if isinstance(readtype, list) else [readtype]  # type: ignore[list-item]
         ts = ts if isinstance(ts, list) else [ts]
-        tagname = tagname if isinstance(tagname, list) else [tagname]
+        tagname = tagname if isinstance(tagname, list) else [tagname]  # type: ignore[list-item]
         readtype = list(map(readtype_to_str, readtype))
         ts = list(map(timedelta_to_str, ts))
         if tagname[0] is not None:
@@ -401,10 +441,12 @@ class SmartCache:
         # print(f"Readtype: {readtype}, ts: {ts}, tagname: {tagname}")
         elements = key.split("/")[1:]
         if len(elements) == 2:
-            elements.insert(1, None)
+            elements.insert(1, None)  # type: ignore[arg-type]
         else:
-            elements[1] = int(elements[1][1:])  # Discard the initial s
-        if elements[0] not in readtype and readtype[0] is not None:
+            elements[1] = int(  # type: ignore[call-overload]
+                elements[1][1:]
+            )  # Discard the initial s
+        if elements[0] not in readtype and readtype[0] is not None:  # type: ignore[comparison-overlap]
             # print(f"{elements[0]} not in {readtype}")
             return False
         if elements[1] not in ts and ts[0] is not None:
@@ -417,15 +459,15 @@ class SmartCache:
 
     def delete_key(
         self,
-        tagname: str = None,  # type: ignore[assignment]
-        readtype: ReaderType = None,  # type: ignore[assignment]
-        ts: Union[int, List[int]] = None,  # type: ignore[assignment]
+        tagname: Optional[str] = None,
+        readtype: Optional[ReaderType] = None,
+        ts: Optional[Union[int, pd.Timestamp]] = None,
     ) -> None:
         with pd.HDFStore(self.filename) as f:
             for key in f:
-                if self._match_tag(key, tagname=tagname, readtype=readtype, ts=ts):
-                    f.remove(key)
+                if self._match_tag(key=key, tagname=tagname, readtype=readtype, ts=ts):  # type: ignore[arg-type]
+                    f.remove(key)  # type: ignore[operator]
 
-    def _get_hdfstore(self, mode: str = "r") -> pd.HDFStore:
-        f = pd.HDFStore(self.filename, mode)
+    def _get_hdfstore(self, mode: Literal["a", "w", "r", "r+"] = "r") -> pd.HDFStore:
+        f = pd.HDFStore(self.filename, mode=mode)
         return f

@@ -3,6 +3,7 @@ from importlib.util import find_spec
 
 import pandas as pd
 import pytest
+
 from tagreader.cache import BucketCache, safe_tagname, timestamp_to_epoch
 from tagreader.utils import ReaderType
 
