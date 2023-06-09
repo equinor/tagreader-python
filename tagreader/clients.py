@@ -1,27 +1,34 @@
 import os
 import warnings
+from datetime import datetime, timedelta
 from itertools import groupby
 from operator import itemgetter
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
-from .cache import BucketCache, SmartCache
-from .utils import (ReaderType, ensure_datetime_with_tz, find_registry_key,
-                    find_registry_key_from_name, is_windows, logging)
-from .web_handlers import (AspenHandlerWeb, PIHandlerWeb, get_auth_aspen,
-                           get_auth_pi, get_url_aspen, get_url_pi,
-                           list_aspenone_sources, list_piwebapi_sources)
+from tagreader.cache import BucketCache, SmartCache
+from tagreader.logger import logger
+from tagreader.utils import (ReaderType, ensure_datetime_with_tz,
+                             find_registry_key, find_registry_key_from_name,
+                             is_windows)
+from tagreader.web_handlers import (AspenHandlerWeb, PIHandlerWeb,
+                                    get_auth_aspen, get_auth_pi,
+                                    list_aspenone_sources,
+                                    list_piwebapi_sources)
+
+from .utils import logging
+from .web_handlers import get_url_aspen, get_url_pi
 
 if is_windows():
     import pyodbc
 
-    from .odbc_handlers import (AspenHandlerODBC, PIHandlerODBC,
-                                list_aspen_sources, list_pi_sources)
-    from .utils import winreg
+    from tagreader.odbc_handlers import (AspenHandlerODBC, PIHandlerODBC,
+                                         list_aspen_sources, list_pi_sources)
+    from tagreader.utils import winreg
 
 logging.basicConfig(
-    format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO
-)
+    format=" %(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 
 
 class DuplicateTagsWarning(UserWarning):
@@ -31,7 +38,12 @@ class DuplicateTagsWarning(UserWarning):
 warnings.simplefilter("always", DuplicateTagsWarning)
 
 
-def list_sources(imstype, url=None, auth=None, verifySSL=None):
+def list_sources(
+    imstype: str,
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verifySSL: bool = True,
+) -> List[str]:
     accepted_values = ["piwebapi", "aspenone"]
     win_accepted_values = ["pi", "aspen", "ip21"]
     if is_windows():
@@ -62,7 +74,13 @@ def list_sources(imstype, url=None, auth=None, verifySSL=None):
         return list_aspenone_sources(url=url, auth=auth, verifySSL=verifySSL)
 
 
-def get_missing_intervals(df, start_time, stop_time, ts, read_type):
+def get_missing_intervals(
+    df: pd.DataFrame,
+    start_time: pd.Timestamp,
+    stop_time: pd.Timestamp,
+    ts: Optional[Union[int, pd.Timestamp]],
+    read_type: ReaderType,
+):
     if (
         read_type == ReaderType.RAW
     ):  # Fixme: How to check for completeness for RAW data?
@@ -86,7 +104,12 @@ def get_missing_intervals(df, start_time, stop_time, ts, read_type):
     return missing_intervals
 
 
-def get_next_timeslice(start_time, stop_time, ts, max_steps=None):
+def get_next_timeslice(
+    start_time: pd.Timestamp,
+    stop_time: pd.Timestamp,
+    ts: Optional[Union[int, pd.Timestamp]],
+    max_steps: Optional[int] = None,
+) -> Tuple[datetime, datetime]:
     if max_steps is None:
         calc_stop_time = stop_time
     else:
@@ -100,7 +123,7 @@ def get_next_timeslice(start_time, stop_time, ts, max_steps=None):
     return start_time, calc_stop_time
 
 
-def get_server_address_aspen(datasource):
+def get_server_address_aspen(datasource: str) -> Optional[Tuple[str, int]]:
     """Data sources are listed under
     HKEY_CURRENT_USER\\Software\\AspenTech\\ADSA\\Caches\\AspenADSA\\username.
     For each data source there are multiple keys with Host entries. We start by
@@ -118,7 +141,8 @@ def get_server_address_aspen(datasource):
     regkey, _ = find_registry_key_from_name(
         regkey_clsid, "Aspen SQLplus service component"
     )
-    regkey_implemented_categories = winreg.OpenKeyEx(regkey, "Implemented Categories")
+    regkey_implemented_categories = winreg.OpenKeyEx(
+        regkey, "Implemented Categories")
 
     _, aspen_UUID = find_registry_key_from_name(
         regkey_implemented_categories, "Aspen SQLplus services"
@@ -138,7 +162,7 @@ def get_server_address_aspen(datasource):
         return None
 
 
-def get_server_address_pi(datasource):
+def get_server_address_pi(datasource: str) -> Optional[Tuple[str, int]]:
     """
     PI data sources are listed under
     HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\PISystem\\PI-SDK\\x.x\\ServerHandles or
@@ -173,14 +197,14 @@ def get_server_address_pi(datasource):
 
 
 def get_handler(
-    imstype,
-    datasource,
-    url=None,
-    host=None,
-    port=None,
-    options={},
-    verifySSL=None,
-    auth=None,
+    imstype: str,
+    datasource: str,
+    url: Optional[str] = None,
+    host: Optional[str] = None,
+    port: Optional[int] = None,
+    options: Dict[str, Union[int, float, str]] = {},
+    verifySSL: Optional[bool] = None,
+    auth: Optional[Any] = None,
 ):
     if imstype is None:
         if datasource in list_aspenone_sources():
@@ -261,22 +285,22 @@ def get_handler(
 class IMSClient:
     def __init__(
         self,
-        datasource,
-        imstype=None,
-        tz="Europe/Oslo",
-        url=None,
-        host=None,
-        port=None,
-        handler_options={},
-        verifySSL=None,
-        auth=None,
+        datasource: str,
+        imstype: Optional[str] = None,
+        tz: str = "Europe/Oslo",
+        url: Optional[str] = None,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        handler_options: Dict[str, Union[int, float, str]] = {},  # noqa:
+        verifySSL: bool = True,
+        auth: Optional[Any] = None,
     ):
         self.handler = None
         self.datasource = datasource.lower()  # FIXME
         self.tz = tz
         self.handler = get_handler(
-            imstype,
-            datasource,
+            imstype=imstype,
+            datasource=datasource,
             url=url,
             host=host,
             port=port,
@@ -284,28 +308,48 @@ class IMSClient:
             verifySSL=verifySSL,
             auth=auth,
         )
-        self.cache = SmartCache(datasource)
+        self.cache = SmartCache(filename=datasource)
 
     def connect(self):
         self.handler.connect()
 
-    def search_tag(self, tag=None, desc=None):
-        warnings.warn("This function is deprecated. Please call 'search()' instead")
+    def search_tag(
+        self, tag: Optional[str] = None, desc: Optional[str] = None
+    ) -> List[Tuple[str, str]]:
+        warnings.warn(
+            "This function is deprecated. Please call 'search()' instead")
         return self.search(tag=tag, desc=desc)
 
-    def search(self, tag=None, desc=None):
-        return self.handler.search(tag, desc)
+    def search(
+        self, tag: Optional[str] = None, desc: Optional[str] = None
+    ) -> List[Tuple[str, str]]:
+        return self.handler.search(tag=tag, desc=desc)
 
-    def _get_metadata(self, tag):
-        return self.handler._get_tag_metadata(tag)
+    def _get_metadata(self, tag: str):
+        return self.handler._get_tag_metadata(
+            tag
+        )  # noqa: Should probably expose this as a public method if needed.
 
     def _read_single_tag(
-        self, tag, start_time, stop_time, ts, read_type, get_status, cache=None
+        self,
+        tag: str,
+        start_time: Optional[pd.Timestamp],
+        stop_time: Optional[pd.Timestamp],
+        ts: Optional[Union[int, pd.Timestamp]],
+        read_type: ReaderType,
+        get_status: bool,
+        cache: Optional[Union[BucketCache, SmartCache]],
     ):
         if read_type == ReaderType.SNAPSHOT:
             metadata = self._get_metadata(tag)
             df = self.handler.read_tag(
-                tag, start_time, stop_time, ts, read_type, metadata, get_status
+                tag=tag,
+                start_time=start_time,
+                stop_time=stop_time,
+                sample_time=ts,
+                read_type=read_type,
+                metadata=metadata,
+                get_status=get_status,
             )
         else:
             stepped = False
@@ -317,22 +361,28 @@ class IMSClient:
                 read_type != ReaderType.RAW and
                 not get_status
             ):
-                time_slice = get_next_timeslice(start_time, stop_time, ts)
+                time_slice = get_next_timeslice(
+                    start_time=start_time, stop_time=stop_time, ts=ts, max_steps=None
+                )
                 df = cache.fetch(
-                    tag,
+                    tagname=tag,
                     readtype=read_type,
                     ts=ts,
                     start_time=time_slice[0],
                     stop_time=time_slice[1],
                 )
                 missing_intervals = get_missing_intervals(
-                    df, start_time, stop_time, ts, read_type
+                    df=df,
+                    start_time=start_time,
+                    stop_time=stop_time,
+                    ts=ts,
+                    read_type=read_type,
                 )
                 if not missing_intervals:
                     return df.tz_convert(self.tz).sort_index()
             elif isinstance(cache, BucketCache):
                 df = cache.fetch(
-                    tag,
+                    tagname=tag,
                     readtype=read_type,
                     ts=ts,
                     stepped=stepped,
@@ -341,7 +391,7 @@ class IMSClient:
                     endtime=stop_time,
                 )
                 missing_intervals = cache.get_missing_intervals(
-                    tag,
+                    tagname=tag,
                     readtype=read_type,
                     ts=ts,
                     stepped=stepped,
@@ -357,7 +407,13 @@ class IMSClient:
             for start, stop in missing_intervals:
                 while True:
                     df = self.handler.read_tag(
-                        tag, start, stop, ts, read_type, metadata, get_status
+                        tag=tag,
+                        start_time=start,
+                        stop_time=stop,
+                        sample_time=ts,
+                        read_type=read_type,
+                        metadata=metadata,
+                        get_status=get_status,
                     )
                     if len(df.index) > 0:
                         if (
@@ -369,7 +425,7 @@ class IMSClient:
                             ] and
                             not get_status
                         ):
-                            cache.store(df, read_type, ts)
+                            cache.store(df=df, readtype=read_type, ts=ts)
                     frames.append(df)
                     if len(df) < self.handler._max_rows:
                         break
@@ -399,40 +455,53 @@ class IMSClient:
         df = df.rename(columns={"value": tag})
         return df
 
-    def get_units(self, tags):
+    def get_units(self, tags: Union[str, List[str]]):
         if isinstance(tags, str):
             tags = [tags]
         units = {}
         for tag in tags:
             if self.cache is not None:
-                r = self.cache.fetch_tag_metadata(tag, "unit")
+                r = self.cache.fetch_tag_metadata(
+                    tagname=tag, properties="unit")
                 if "unit" in r:
                     units[tag] = r["unit"]
             if tag not in units:
                 unit = self.handler._get_tag_unit(tag)
                 if self.cache is not None and unit is not None:
-                    self.cache.store_tag_metadata(tag, {"unit": unit})
+                    self.cache.store_tag_metadata(
+                        tagname=tag, metadata={"unit": unit})
                 units[tag] = unit
         return units
 
-    def get_descriptions(self, tags):
+    def get_descriptions(self, tags: Union[str, List[str]]) -> Dict[str, str]:
         if isinstance(tags, str):
             tags = [tags]
         descriptions = {}
         for tag in tags:
             if self.cache is not None:
-                r = self.cache.fetch_tag_metadata(tag, "description")
+                r = self.cache.fetch_tag_metadata(
+                    tagname=tag, properties="description")
                 if "description" in r:
                     descriptions[tag] = r["description"]
             if tag not in descriptions:
                 desc = self.handler._get_tag_description(tag)
                 if self.cache is not None and desc is not None:
-                    self.cache.store_tag_metadata(tag, {"description": desc})
+                    self.cache.store_tag_metadata(
+                        tagname=tag, metadata={"description": desc}
+                    )
                 descriptions[tag] = desc
         return descriptions
 
-    def read_tags(self, tags, start_time, stop_time, ts, read_type=ReaderType.INT):
-        warnings.warn(
+    def read_tags(
+        self,
+        tags: Union[str, List[str]],
+        start_time: Optional[Union[datetime, pd.Timestamp, str]],
+        stop_time: Optional[Union[datetime, pd.Timestamp, str]],
+        ts: Optional[Union[timedelta, pd.Timedelta]] = timedelta(seconds=60),
+        read_type: ReaderType = ReaderType.INT,
+        get_status: bool = False,
+    ):
+        logger.warn(
             (
                 "This function has been renamed to read() and is deprecated. "
                 "Please call 'read()' instead"
@@ -444,18 +513,18 @@ class IMSClient:
             end_time=stop_time,
             ts=ts,
             read_type=read_type,
-            get_status=False,
+            get_status=get_status,
         )
 
     def read(
         self,
-        tags,
-        start_time=None,
-        end_time=None,
-        ts=60,
-        read_type=ReaderType.INT,
-        get_status=False,
-    ):
+        tags: Union[str, List[str]],
+        start_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
+        end_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
+        ts: Optional[Union[timedelta, pd.Timedelta, int]] = 60,
+        read_type: ReaderType = ReaderType.INT,
+        get_status: bool = False,
+    ) -> pd.DataFrame:
         """Reads values for the specified [tags] from the IMS server for the
         time interval from [start_time] to [stop_time] in intervals [ts].
 
@@ -489,21 +558,21 @@ class IMSClient:
         oldtags = tags
         tags = list(dict.fromkeys(tags))
         if len(oldtags) > len(tags):
-            duplicates = set([x for n, x in enumerate(oldtags) if x in oldtags[:n]])
-            warnings.warn(
-                f"Duplicate tags found, removed duplicates: {', '.join(duplicates)}",
-                DuplicateTagsWarning,
+            duplicates = set(
+                [x for n, x in enumerate(oldtags) if x in oldtags[:n]])
+            logger.warning(
+                f"Duplicate tags found, removed duplicates: {', '.join(duplicates)}"
             )
         cols = []
         for tag in tags:
             cols.append(
                 self._read_single_tag(
-                    tag,
-                    start_time,
-                    end_time,
-                    ts,
-                    read_type,
-                    get_status,
+                    tag=tag,
+                    start_time=start_time,
+                    stop_time=end_time,
+                    ts=ts,
+                    read_type=read_type,
+                    get_status=get_status,
                     cache=self.cache,
                 )
             )

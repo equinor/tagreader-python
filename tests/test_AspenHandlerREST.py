@@ -1,5 +1,6 @@
-import pytest
 import pandas as pd
+import pytest
+
 from tagreader import utils
 from tagreader.utils import ReaderType
 from tagreader.web_handlers import AspenHandlerWeb

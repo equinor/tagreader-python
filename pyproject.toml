@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "tagreader-python"
-version = "3.0.2"
+name = "tagreader"
+version = "4.0.3"
 description = "Tagreader is a Python package for reading trend data from the OSIsoft PI and Aspen Infoplus.21 IMS systems."
 authors = ["Einar S. Idsø <eiids@equinor.com>"]
 license = "MIT"
@@ -27,19 +27,23 @@ classifiers=[
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pandas = "^2.0.1"
+pandas = ">=1"
 pyodbc = "^4.0.39"
 certifi = "^2023.5.7"
 requests = "^2.31.0"
 requests-kerberos = "^0.14.0"
-tables = "^3.8.0"
 msal-extensions = "^1.0.0"
+tables = { version = "^3", markers = "platform_machine != 'arm64'" }
+jupyter = { version = "^1", optional = true }
+matplotlib = { version = "^3", optional = true }
 
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.3.2"
-jupyter = "^1.0.0"
-pytest = "^7.3.1"
+pre-commit = "^3"
+pytest = "^7"
+
+[tool.poetry.extras]
+notebooks = ["jupyter", "matplotlib"]
 
 [build-system]
 requires = ["poetry-core"]
