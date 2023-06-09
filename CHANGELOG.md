@@ -7,19 +7,19 @@ This changelog is deprecated. All changes are documented under [releases](https:
 
 ### 🔨 Refactor
 
-* create common base class for web handlers ([#195](https://github.com/equinor/tagreader-python/issues/195)) ([87dd8ce](https://github.com/equinor/tagreader-python/commit/87dd8ce83861d1d7b23a4830493941717e26ed1d))
-* move examples from docs/ to examples/ ([#197](https://github.com/equinor/tagreader-python/issues/197)) ([2fc7b03](https://github.com/equinor/tagreader-python/commit/2fc7b03b9f907bc1c7b7910eab676beac2c420b9))
-* move versioning to __version__.py ([#196](https://github.com/equinor/tagreader-python/issues/196)) ([c814738](https://github.com/equinor/tagreader-python/commit/c814738c1b3f2a6d9a1155943402bd731b1a3d91))
+* Create a common base class for web handlers ([#195](https://github.com/equinor/tagreader-python/issues/195)) ([87dd8ce](https://github.com/equinor/tagreader-python/commit/87dd8ce83861d1d7b23a4830493941717e26ed1d))
+* Move examples from docs/ to examples/ ([#197](https://github.com/equinor/tagreader-python/issues/197)) ([2fc7b03](https://github.com/equinor/tagreader-python/commit/2fc7b03b9f907bc1c7b7910eab676beac2c420b9))
+* Move versioning to __version__.py ([#196](https://github.com/equinor/tagreader-python/issues/196)) ([c814738](https://github.com/equinor/tagreader-python/commit/c814738c1b3f2a6d9a1155943402bd731b1a3d91))
 
 
 ### 🧹 Chores
 
-* enforce typing and validate using mypy ([#199](https://github.com/equinor/tagreader-python/issues/199)) ([6212bb2](https://github.com/equinor/tagreader-python/commit/6212bb20a7bca8730dd5b90085d1b62f0c10b155))
+* Enforce typing and validate using mypy to make the code more robust ([#199](https://github.com/equinor/tagreader-python/issues/199)) ([6212bb2](https://github.com/equinor/tagreader-python/commit/6212bb20a7bca8730dd5b90085d1b62f0c10b155))
 
 
 ### 📦 Build system
 
-* **deps:** don't install pytables for ARM64 ([fe9d553](https://github.com/equinor/tagreader-python/commit/fe9d5539d27c46240ed972dd5d4a8594cfe84879))
+* Don't install pytables for ARM64 ([fe9d553](https://github.com/equinor/tagreader-python/commit/fe9d5539d27c46240ed972dd5d4a8594cfe84879))
 
 ## [4.0.2](https://github.com/equinor/tagreader-python/compare/v4.0.1...v4.0.2) (2023-06-05)
 
