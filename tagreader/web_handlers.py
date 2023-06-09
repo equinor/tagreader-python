@@ -136,7 +136,6 @@ class BaseHandlerWeb(ABC):
         if auth is None:
             auth = get_auth_aspen()
 
-        self._max_rows = options.get("max_rows", 100000)
         self.datasource = datasource
         self.base_url = url
 
