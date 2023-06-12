@@ -381,3 +381,12 @@ class SmartCache(BaseCache):
         if stop_time is not None:
             df = df.loc[df.index <= stop_time]
         return df
+
+
+class WebIDCache(BaseCache):
+
+    def store(self) -> None:
+        ...
+
+    def fetch(self) -> None:
+        ...
