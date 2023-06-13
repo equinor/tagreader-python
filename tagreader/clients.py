@@ -488,9 +488,7 @@ class IMSClient:
             if tag not in descriptions:
                 desc = self.handler._get_tag_description(tag)
                 if self.cache is not None and desc is not None:
-                    self.cache.put_metadata(
-                        key=tag, value={"description": desc}
-                    )
+                    self.cache.put_metadata(key=tag, value={"description": desc})
                 descriptions[tag] = desc
         return descriptions
 

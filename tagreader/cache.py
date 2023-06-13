@@ -26,12 +26,10 @@ def timestamp_to_epoch(timestamp: pd.Timestamp) -> int:
 
 def _infer_pandas_index_freq(df: pd.DataFrame) -> pd.DataFrame:
     try:
-        if pd.infer_freq(df.index):
+        if pd.infer_freq(df.index):  # type: ignore[arg-type]
             df = df.asfreq(pd.infer_freq(df.index))  # type: ignore[arg-type]
     except (TypeError, ValueError) as e:
-        logger.warning(
-            f"Could not infer frequency of timeseries in Cache. {e}"
-        )
+        logger.warning(f"Could not infer frequency of timeseries in Cache. {e}")
     return df
 
 
@@ -72,7 +70,9 @@ class BaseCache(ABC):
         metadata: Dict[str, Union[str, int, float]] = self.cache.get(_key)
         return {k: v for (k, v) in metadata.items() if k in properties}
 
-    def put_metadata(self, key: str, value: Dict[str, Union[str, int, float]]) -> Dict[str, Union[str, int, float]]:
+    def put_metadata(
+        self, key: str, value: Dict[str, Union[str, int, float]]
+    ) -> Dict[str, Union[str, int, float]]:
         _key = f"$metadata${key}"
         combined_value = value
         if _key in self.cache:
@@ -160,7 +160,9 @@ class BucketCache(BaseCache):
                 this_start, this_end = self._get_intervals_from_dataset_name(dataset)
                 starttime = min(starttime, this_start if this_start else starttime)
                 endtime = max(endtime, this_end if this_end else endtime)
-                df = _infer_pandas_index_freq(pd.concat([df, self.get(dataset)], axis=0))
+                df = _infer_pandas_index_freq(
+                    pd.concat([df, self.get(dataset)], axis=0)
+                )
                 self.delete(dataset)
             df = df.drop_duplicates(subset="index", keep="last").sort_index()
         key = self._key_path(
@@ -287,7 +289,9 @@ class BucketCache(BaseCache):
         )
 
         for dataset in datasets:
-            df = _infer_pandas_index_freq(pd.concat([df, self.get(dataset).loc[starttime:endtime]], axis=0))
+            df = _infer_pandas_index_freq(
+                pd.concat([df, self.get(dataset).loc[starttime:endtime]], axis=0)  # type: ignore[call-overload, misc]
+            )
 
         return df.drop_duplicates(subset="index", keep="last").sort_index()
 
@@ -332,7 +336,10 @@ class SmartCache(BaseCache):
         if key in self.cache:
             data = _infer_pandas_index_freq(pd.concat([df, self.get(key)], axis=0))
             self.delete(key=key)
-            self.put(key=key, value=data.drop_duplicates(subset="index", keep="last").sort_index())
+            self.put(
+                key=key,
+                value=data.drop_duplicates(subset="index", keep="last").sort_index(),
+            )
         else:
             self.put(key, df)
 
