@@ -260,4 +260,3 @@ def test_tags_raw_with_no_data_included_in_results(Client):
         read_type=ReaderType.RAW,
     )
     assert df.empty
-
