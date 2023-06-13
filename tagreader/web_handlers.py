@@ -126,11 +126,19 @@ class BaseHandlerWeb(ABC):
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
 
-    def fetch(self, url, params=None) -> Response:
+    def fetch(self, url, params=None, json=None) -> Response:
         if not self.session.verify:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-        res = self.session.get(url, params=params)
+        res = self.session.get(url, json=json, params=params)
+        res.raise_for_status()
+        return res
+
+    def post(self, url, json=None, headers=None) -> Response:
+        if not self.session.verify:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+        res = self.session.post(url, json=json, headers=headers)
         res.raise_for_status()
         return res
 
@@ -676,7 +684,7 @@ class PIHandlerWeb(BaseHandlerWeb):
 
     def generate_read_query(
         self,
-        tag: str,
+        tag: None,
         start_time: pd.Timestamp,
         stop_time: pd.Timestamp,
         sample_time: Optional[Union[int, pd.Timestamp]],
@@ -684,6 +692,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         metadata: Optional[Dict[str, str]] = None,
         get_status: bool = False,
     ) -> Tuple[str, Dict[str, str]]:
+
         if read_type in [
             ReaderType.COUNT,
             ReaderType.GOOD,
@@ -694,21 +703,25 @@ class PIHandlerWeb(BaseHandlerWeb):
         ]:
             raise NotImplementedError
 
-        webid = tag
+        if tag:
+            webid = tag
+
+            get_action = {
+                ReaderType.INT: "interpolated",
+                ReaderType.RAW: "recorded",
+                ReaderType.SNAPSHOT: "value",
+                ReaderType.SHAPEPRESERVING: "plot",
+            }.get(read_type, "summary")
+
+            url = f"streams/{webid}/{get_action}"
+        else:
+            url = None
+
+        params = {}
 
         seconds = 0
         if read_type != ReaderType.SNAPSHOT:
             seconds = int(sample_time.total_seconds())
-
-        get_action = {
-            ReaderType.INT: "interpolated",
-            ReaderType.RAW: "recorded",
-            ReaderType.SNAPSHOT: "value",
-            ReaderType.SHAPEPRESERVING: "plot",
-        }.get(read_type, "summary")
-
-        url = f"streams/{webid}/{get_action}"
-        params = {}
 
         if read_type != ReaderType.SNAPSHOT:
             params["startTime"] = self._time_to_UTC_string(start_time)
@@ -885,7 +898,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         if not webid:
             return pd.DataFrame()
 
-        (url, params) = self.generate_read_query(
+        url, params = self.generate_read_query(
             tag=webid,
             start_time=start_time,
             stop_time=stop_time,
@@ -969,5 +982,215 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         return df.rename(columns={"Value": tag, "Status": tag + "::status"})
 
+
+    def read_multi_tag(
+        self,
+        tag_list: dict,
+        start_time: Optional[pd.Timestamp] = None,
+        stop_time: Optional[pd.Timestamp] = None,
+        sample_time: Optional[Union[int, pd.Timestamp]] = None,
+        read_type: ReaderType = ReaderType.INTERPOLATED,
+        metadata: Optional[Dict[str, str]] = None,
+        get_status: bool = False,
+    ):
+
+        if len(tag_list) > 950:
+            raise RuntimeError(
+                f"ERROR: Trying to read too many tags ({len(tag_list)}). Server will return a HTTP 429 Too Many "
+                f"Requests error. Max. is set to 950. Please split the request."
+            )
+
+        urls = {}
+
+        for tag in tag_list:
+
+            for interval in tag_list[tag]:
+
+                _, params = self.generate_read_query(
+                    start_time=tag_list[tag][interval]['start_time'],
+                    stop_time=tag_list[tag][interval]['stop_time'],
+                    sample_time=sample_time,
+                    read_type=read_type,
+                    tag=None,
+                    get_status=get_status
+                )
+
+                query_filter = self.create_filter(params)
+
+                webid = self.tag_to_webid(tag)
+
+                if not webid:
+                    return pd.DataFrame()
+
+                get_action = {
+                    ReaderType.INT: "interpolated",
+                    ReaderType.RAW: "recorded",
+                    ReaderType.SNAPSHOT: "value",
+                    ReaderType.SHAPEPRESERVING: "plot",
+                }.get(read_type, "summary")
+
+                url = f"streams/{webid}/{get_action}"
+
+                url = urljoin(self.base_url, f"{url}{query_filter}")
+
+                urls[tag] = {"Method": "Get", "Resource": url}
+
+        headers = {"Content-Type": "Application/json", "X-Requested-With": ""}
+
+        res = self.post(url=self.base_url + "/batch", json=urls, headers=headers)
+
+        j = res.json()
+
+        df = pd.DataFrame()
+
+        data = {}
+
+        for tag in j:
+            timestamps = []
+
+            data[tag] = []
+            if get_status:
+                data[f"{tag}::status"] = []
+
+            if read_type == ReaderType.SNAPSHOT:
+
+                if type(j[tag]['Content']['Value']) == float:
+                    data[tag].append(j[tag]['Content']['Value'])
+                else:
+                    data[tag].append(np.nan)
+
+                if get_status:
+                    data[tag + '::status'].append(j[tag]['Content']["Questionable"] + 2 * (1 - j[tag]['Content']["Good"])
+                                                 + 4 * j[tag]['Content']["Substituted"])
+
+                timestamps.append(j[tag]['Content']['Timestamp'])
+                df_tag = pd.DataFrame(data, index=timestamps)
+                df = pd.concat([df, df_tag], axis=1)
+                data = {}
+                timestamps = []
+
+            elif read_type in [ReaderType.INT, ReaderType.INTERPOLATED, ReaderType.INTERPOLATE, ReaderType.RAW]:
+                for item in j[tag]['Content']['Items']:
+
+                    if type(item['Value']) == float:
+                        data[tag].append(item['Value'])
+                    else:
+                        data[tag].append(np.nan)
+
+                    if get_status:
+                        data[tag + '::status'].append(item["Questionable"] + 2 * (1 - item["Good"])
+                                                     + 4 * item["Substituted"])
+
+                    timestamps.append(item['Timestamp'])
+
+                df_tag = pd.DataFrame(data, index=timestamps)
+                df = pd.concat([df, df_tag], axis=1)
+                data = {}
+                timestamps = []
+
+            else:
+                for item in j[tag]['Content']['Items']:
+
+                    if type(item['Value']['Value']) == float:
+                        data[tag].append(item['Value']['Value'])
+                    else:
+                        data[tag].append(np.nan)
+
+                    if get_status:
+                        data[tag + '::status'].append(item['Value']["Questionable"] + 2 * (1 - item['Value']["Good"]) +
+                                                     4 * item['Value']["Substituted"])
+
+                    timestamps.append(item['Value']['Timestamp'])
+
+                df_tag = pd.DataFrame(data, index=timestamps)
+                df = pd.concat([df, df_tag], axis=1)
+                data = {}
+                timestamps = []
+
+        # Can happen for RAW reads w/o data in interval
+        if df.empty:
+            return df
+
+        try:
+            if read_type == ReaderType.RAW or read_type == ReaderType.SNAPSHOT:
+                # Sub-second timestamps are common
+                df.index = pd.to_datetime(df.index, format="%Y-%m-%dT%H:%M:%S.%fZ", utc=True)
+            else:
+                # Sub-second timestamps are uncommon
+                df.index = pd.to_datetime(df.index, format="%Y-%m-%dT%H:%M:%SZ", utc=True)
+
+        except ValueError:
+            df.index = pd.to_datetime(df.index, utc=True)
+
+        if read_type == ReaderType.VAR:
+            df = df ** 2
+
+        df.index.name = "time"
+
+        # Correct weird bug in PI Web API where MAX timestamps end of interval while
+        # all the other summaries stamp start of interval by shifting all timestamps
+        # one interval down.
+        if read_type == ReaderType.MAX:
+            import pytz
+            min_start_time = datetime.datetime.now().astimezone(pytz.utc)
+            for tag in tag_list:
+                for interval in tag_list[tag]:
+                    if tag_list[tag][interval]['start_time'] < min_start_time:
+                        min_start_time = tag_list[tag][interval]['start_time']
+            if df.index[0] > min_start_time:
+                df.index = df.index - sample_time
+
+        return df
+
     def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
         raise NotImplementedError
+
+    def create_filter(self, params):
+        """
+        Creates URL filter from parameters. Returns a string that will be appended to the request URL.
+
+        :param params:
+        :return:
+        """
+        filter_list = []
+        if "interval" in params.keys():
+            filter_list.append(f"interval={params['interval']}")
+
+        if "summaryType" in params.keys():
+            filter_list.append(f"summaryType={params['summaryType']}")
+
+        if "startTime" in params.keys():
+            url_start_time_ = self.date_to_urldate(params["startTime"])
+            filter_list.append(f"starttime={url_start_time_}")
+
+        if "endTime" in params.keys():
+            url_stop_time = self.date_to_urldate(params["endTime"])
+            filter_list.append(f"endtime={url_stop_time}")
+
+        n = 0
+        if filter_list:
+            for filters in filter_list:
+                if n == 0:
+                    filter = f"?{filters}"
+                else:
+                    filter = f"{filter}&{filters}"
+                n += 1
+        else:
+            filter = ""
+
+        return filter
+
+    def date_to_urldate(self, date):
+        """
+        Converts timestamp to url date format.
+
+        :param date: Date and time in timestamp format
+        :return:
+        """
+
+        d = date.split("-")[0]
+        m = datetime.datetime.strptime(date.split("-")[1], '%b').month
+        y = date.split("-")[2][:2]
+        t = date.split(" ")[1]
+
+        return f"20{y}-{m}-{d}T{t}Z"
