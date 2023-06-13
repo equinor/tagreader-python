@@ -37,7 +37,7 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 Python >= 3.8 with the following packages:
 
   + pandas >= 1.0.0
-  + pytables
+  + diskcache
   + requests
   + requests_kerberos
   + pyodbc (if using ODBC connections, Windows only)

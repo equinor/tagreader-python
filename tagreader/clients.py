@@ -3,6 +3,7 @@ import warnings
 from datetime import datetime, timedelta
 from itertools import groupby
 from operator import itemgetter
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
@@ -313,7 +314,7 @@ class IMSClient:
             verifySSL=verifySSL,
             auth=auth,
         )
-        self.cache = SmartCache(filename=datasource)
+        self.cache = SmartCache(directory=Path(".") / ".cache" / datasource)
 
     def connect(self):
         self.handler.connect()
@@ -465,13 +466,13 @@ class IMSClient:
         units = {}
         for tag in tags:
             if self.cache is not None:
-                r = self.cache.fetch_tag_metadata(tagname=tag, properties="unit")
+                r = self.cache.get_metadata(key=tag, properties="unit")
                 if "unit" in r:
                     units[tag] = r["unit"]
             if tag not in units:
                 unit = self.handler._get_tag_unit(tag)
                 if self.cache is not None and unit is not None:
-                    self.cache.store_tag_metadata(tagname=tag, metadata={"unit": unit})
+                    self.cache.put_metadata(key=tag, value={"unit": unit})
                 units[tag] = unit
         return units
 
@@ -481,15 +482,13 @@ class IMSClient:
         descriptions = {}
         for tag in tags:
             if self.cache is not None:
-                r = self.cache.fetch_tag_metadata(tagname=tag, properties="description")
+                r = self.cache.get_metadata(key=tag, properties="description")
                 if "description" in r:
                     descriptions[tag] = r["description"]
             if tag not in descriptions:
                 desc = self.handler._get_tag_description(tag)
                 if self.cache is not None and desc is not None:
-                    self.cache.store_tag_metadata(
-                        tagname=tag, metadata={"description": desc}
-                    )
+                    self.cache.put_metadata(key=tag, value={"description": desc})
                 descriptions[tag] = desc
         return descriptions
 

@@ -168,10 +168,8 @@ def test_concat_proper_fill_up(PIClientWeb):
     PIClientWeb.handler._max_rows = max_rows_backup
 
 
-def test_cache_proper_fill_up(PIClientWeb):
-    PIClientWeb.cache = SmartCache(PI_DS)
-    if os.path.exists(PI_DS + ".h5"):
-        os.remove(PI_DS + ".h5")
+def test_cache_proper_fill_up(PIClientWeb, tmp_path):
+    PIClientWeb.cache = SmartCache(tmp_path)
     df_int_1 = PIClientWeb.read(
         PI_TAG, PI_START_TIME, PI_END_TIME, TS, read_type=ReaderType.INT
     )

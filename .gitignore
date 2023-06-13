@@ -44,6 +44,8 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+.cache*
+*cache*
 nosetests.xml
 coverage.xml
 *.cover
@@ -156,3 +158,6 @@ tests/test_adhoc.py
 
 # SNYK
 .dccache
+
+# Apple
+.DS_Store
