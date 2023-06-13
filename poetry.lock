@@ -679,6 +679,18 @@ files = [
 ]
 
 [[package]]
+name = "diskcache"
+version = "5.6.1"
+description = "Disk Cache -- Disk and file backed persistent cache."
+category = "main"
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "diskcache-5.6.1-py3-none-any.whl", hash = "sha256:558c6a2d5d7c721bb00e40711803d6804850c9f76c426ed81ecc627fe9d2ce2d"},
+    {file = "diskcache-5.6.1.tar.gz", hash = "sha256:e4c978532feff5814c4cc00fe1e11e40501985946643d73220d41ee7737c72c3"},
+]
+
+[[package]]
 name = "distlib"
 version = "0.3.6"
 description = "Distribution utilities"
@@ -3182,4 +3194,4 @@ notebooks = ["jupyter", "matplotlib"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "4f5c64765fbd8017d3208135390916b2367e26f1dc12cf9c9706754a9ac1173d"
+content-hash = "3bdb91c5e2afc717914ba226759a3b14109effff11099f683300eacf34e9d24a"

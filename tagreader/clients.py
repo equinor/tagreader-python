@@ -3,6 +3,7 @@ import warnings
 from datetime import datetime, timedelta
 from itertools import groupby
 from operator import itemgetter
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
@@ -313,7 +314,7 @@ class IMSClient:
             verifySSL=verifySSL,
             auth=auth,
         )
-        self.cache = SmartCache(filename=datasource)
+        self.cache = SmartCache(directory=Path(".") / datasource)
 
     def connect(self):
         self.handler.connect()
@@ -391,8 +392,8 @@ class IMSClient:
                     ts=ts,
                     stepped=stepped,
                     status=get_status,
-                    starttime=start_time,
-                    endtime=stop_time,
+                    start_time=start_time,
+                    stop_time=stop_time,
                 )
                 missing_intervals = cache.get_missing_intervals(
                     tagname=tag,
@@ -465,13 +466,13 @@ class IMSClient:
         units = {}
         for tag in tags:
             if self.cache is not None:
-                r = self.cache.fetch_tag_metadata(tagname=tag, properties="unit")
+                r = self.cache.get_metadata(tagname=tag, properties="unit")
                 if "unit" in r:
                     units[tag] = r["unit"]
             if tag not in units:
                 unit = self.handler._get_tag_unit(tag)
                 if self.cache is not None and unit is not None:
-                    self.cache.store_tag_metadata(tagname=tag, metadata={"unit": unit})
+                    self.cache.get_metadata(tagname=tag, metadata={"unit": unit})
                 units[tag] = unit
         return units
 
