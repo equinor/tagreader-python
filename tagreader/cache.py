@@ -33,6 +33,14 @@ def _infer_pandas_index_freq(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def _drop_duplicates_and_sort_index(df: pd.DataFrame) -> pd.DataFrame:
+    return df[~df.index.duplicated(keep="first")].sort_index()
+
+
+def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    return _infer_pandas_index_freq(_drop_duplicates_and_sort_index(df))
+
+
 class BaseCache(ABC):
     def __init__(
         self,
@@ -160,11 +168,8 @@ class BucketCache(BaseCache):
                 this_start, this_end = self._get_intervals_from_dataset_name(dataset)
                 starttime = min(starttime, this_start if this_start else starttime)
                 endtime = max(endtime, this_end if this_end else endtime)
-                df = _infer_pandas_index_freq(
-                    pd.concat([df, self.get(dataset)], axis=0)
-                )
+                df = clean_dataframe(pd.concat([df, self.get(dataset)], axis=0))
                 self.delete(dataset)
-            df = df.drop_duplicates(subset="index", keep="last").sort_index()
         key = self._key_path(
             tagname=tagname,
             readtype=readtype,
@@ -289,11 +294,11 @@ class BucketCache(BaseCache):
         )
 
         for dataset in datasets:
-            df = _infer_pandas_index_freq(
+            df = clean_dataframe(
                 pd.concat([df, self.get(dataset).loc[starttime:endtime]], axis=0)  # type: ignore[call-overload, misc]
             )
 
-        return df.drop_duplicates(subset="index", keep="last").sort_index()
+        return df
 
 
 class SmartCache(BaseCache):
@@ -334,11 +339,11 @@ class SmartCache(BaseCache):
         if df.empty:
             return  # Weirdness ensues when using empty df in select statement below
         if key in self.cache:
-            data = _infer_pandas_index_freq(pd.concat([df, self.get(key)], axis=0))
+            data = clean_dataframe(pd.concat([df, self.get(key)], axis=0))
             self.delete(key=key)
             self.put(
                 key=key,
-                value=data.drop_duplicates(subset="index", keep="last").sort_index(),
+                value=data,
             )
         else:
             self.put(key, df)
