@@ -25,15 +25,11 @@ to cache results.
 Python >=3.8 with the following packages:
 
   + pandas >= 1.0.0
-  + tables (*)
   + requests
   + requests-kerberos
   + certifi >= 2023.5.7
+  + diskcache
   + pyodbc (**)
-
-*) If tables is not installed, caching of fetched data will be disabled.
-Tables will be installed alongside Tagreader unless the installation is
-known to fail, which is the case for Macs with ARM CPU.
 
 **) If using ODBC connections, you must also install proprietary drivers for
 PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for
