@@ -156,3 +156,6 @@ tests/test_adhoc.py
 
 # SNYK
 .dccache
+
+# Apple
+.DS_Store
