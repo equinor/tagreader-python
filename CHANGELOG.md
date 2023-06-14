@@ -2,6 +2,13 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.1.1](https://github.com/equinor/tagreader-python/compare/v4.1.0...v4.1.1) (2023-06-14)
+
+
+### 📚 Documentation
+
+* add homepage and repo to pyproject.toml ([5e90bee](https://github.com/equinor/tagreader-python/commit/5e90beedead882948d0f0b6db189f23bbc71f814))
+
 ## [4.1.0](https://github.com/equinor/tagreader-python/compare/v4.0.3...v4.1.0) (2023-06-14)
 
 
