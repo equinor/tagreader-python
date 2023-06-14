@@ -1,4 +1,3 @@
-from abc import ABC
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union, cast
@@ -43,33 +42,27 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     return _infer_pandas_index_freq(_drop_duplicates_and_sort_index(df))
 
 
-class BaseCache(ABC):
+class BaseCache(Cache):  # type: ignore[misc]
+    """
+    Cache works as a Python dictionary with persistence. It is simple to use, and only requires a directory for
+    the cache. The default directory is <current path>/.cache/
+    """
+
     def __init__(
         self,
-        directory: Path = Path("."),
-        expire_time_in_seconds: Optional[int] = None,
+        directory: Path = Path(".") / ".cache",
         enable_stats: bool = False,
     ) -> None:
-        self.cache = Cache(directory=directory.as_posix())
-        self._expire_time = expire_time_in_seconds
+        super().__init__(directory=directory.as_posix())
 
         if enable_stats:
             self.enable_cache_statistics()
 
     def enable_cache_statistics(self) -> None:
-        self.cache.stats(enable=True)
+        self.stats(enable=True)
 
-    def clear_cache(self) -> None:
-        self.cache.clear()
-
-    def put(self, key: str, value: pd.DataFrame) -> None:
-        self.cache.add(key, value, expire=self._expire_time)
-
-    def get(self, key: str) -> Optional[pd.DataFrame]:
-        return cast(Optional[pd.DataFrame], self.cache.get(key))
-
-    def delete(self, key: str) -> None:
-        self.cache.delete(key)
+    def put(self, key: str, value: pd.DataFrame, expire: Optional[int] = None) -> None:
+        self.add(key=key, value=value, expire=expire)
 
     def get_metadata(
         self, key: str, properties: Optional[Union[str, List[str]]]
@@ -77,9 +70,7 @@ class BaseCache(ABC):
         if isinstance(properties, str):
             properties = [properties]
         _key = f"$metadata${key}"
-        metadata = cast(
-            Optional[Dict[str, Union[str, int, float]]], self.cache.get(_key)
-        )
+        metadata = cast(Optional[Dict[str, Union[str, int, float]]], self.get(_key))
         if metadata:
             if properties:
                 return {k: v for (k, v) in metadata.items() if k in properties}
@@ -88,25 +79,28 @@ class BaseCache(ABC):
             return None
 
     def put_metadata(
-        self, key: str, value: Dict[str, Union[str, int, float]]
+        self,
+        key: str,
+        value: Dict[str, Union[str, int, float]],
+        expire: Optional[int] = None,
     ) -> Dict[str, Union[str, int, float]]:
         _key = f"$metadata${key}"
         combined_value = value
-        if _key in self.cache:
-            existing = self.cache.get(_key)
+        if _key in self:
+            existing = self.get(_key)
             if existing:
                 existing.update(value)
                 combined_value = existing
             else:
                 combined_value = value
-            self.cache.delete(_key)
+            self.delete(_key)
 
-        self.cache.add(_key, combined_value, expire=self._expire_time)
+        self.add(_key, combined_value, expire=expire)
         return combined_value
 
     def delete_metadata(self, key: str) -> None:
         _key = f"$metadata${key}"
-        self.cache.delete(_key)
+        self.delete(_key)
 
 
 class BucketCache(BaseCache):
@@ -217,10 +211,10 @@ class BucketCache(BaseCache):
         starttime: datetime,
         endtime: datetime,
     ) -> List[str]:
-        if not len(self.cache) > 0:
+        if not len(self) > 0:
             return []
         intersecting_datasets = []
-        for dataset in self.cache.iterkeys():
+        for dataset in self.iterkeys():
             target_key = self._key_path(
                 tagname=tagname,
                 readtype=readtype,
@@ -291,7 +285,7 @@ class BucketCache(BaseCache):
         endtime: datetime,
     ) -> pd.DataFrame:
         df = pd.DataFrame()
-        if not len(self.cache) > 0:
+        if not len(self) > 0:
             return df
 
         if isinstance(ts, timedelta):
@@ -352,7 +346,7 @@ class SmartCache(BaseCache):
         key = self.key_path(df=df, readtype=readtype, ts=ts)
         if df.empty:
             return  # Weirdness ensues when using empty df in select statement below
-        if key in self.cache:
+        if key in self:
             df2 = self.get(key)
             if df2 is not None:
                 df = pd.concat([df, df2], axis=0)
@@ -373,7 +367,7 @@ class SmartCache(BaseCache):
         stop_time: Optional[datetime] = None,
     ) -> pd.DataFrame:
         key = self.key_path(df=tagname, readtype=readtype, ts=ts)
-        df = self.get(key=key)
+        df = cast(Optional[pd.DataFrame], self.get(key=key))
         if df is None:
             return pd.DataFrame()
         if start_time is not None:
@@ -381,12 +375,3 @@ class SmartCache(BaseCache):
         if stop_time is not None:
             df = df.loc[df.index <= stop_time]
         return df
-
-
-class WebIDCache(BaseCache):
-
-    def store(self) -> None:
-        ...
-
-    def fetch(self) -> None:
-        ...

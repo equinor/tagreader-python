@@ -13,7 +13,7 @@ import urllib3
 from requests import Response
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
-from tagreader.cache import WebIDCache
+from tagreader.cache import BaseCache
 from tagreader.logger import logger
 from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
 
@@ -622,7 +622,7 @@ class PIHandlerWeb(BaseHandlerWeb):
             verifySSL=verifySSL,
         )
         self._max_rows = options.get("max_rows", 10000)
-        self.webidcache = WebIDCache(directory=Path(".") / ".cache" / datasource)
+        self.webidcache = BaseCache(directory=Path(".") / ".cache" / datasource)
 
     @staticmethod
     def _time_to_UTC_string(time: datetime) -> str:
@@ -834,7 +834,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         :return: WebId
         :rtype: str
         """
-        if tag not in self.webidcache.cache.keys():
+        if tag not in self.webidcache:
             params = self.generate_search_query(
                 tag=tag, datasource=self.datasource, desc=None
             )
@@ -860,10 +860,8 @@ class PIHandlerWeb(BaseHandlerWeb):
                 return None
 
             webid = j["Items"][0]["WebId"]
-
-            self.webidcache.cache[tag] = webid
-
-        return self.webidcache.cache[tag]
+            self.webidcache[tag] = webid
+        return self.webidcache[tag]
 
     @staticmethod
     def _is_summary(read_type: ReaderType) -> bool:

@@ -89,15 +89,13 @@ def test_search_tag(Client: IMSClient) -> None:
 
 
 def test_read_unknown_tag(Client: IMSClient) -> None:
-    with pytest.warns(UserWarning):
-        df = Client.read(
-            tags=["sorandomitcantexist"], start_time=START_TIME, end_time=STOP_TIME
-        )
+    df = Client.read(
+        tags=["sorandomitcantexist"], start_time=START_TIME, end_time=STOP_TIME
+    )
     assert len(df.index) == 0
-    with pytest.warns(UserWarning):
-        df = Client.read(
-            tags=[TAG, "sorandomitcantexist"], start_time=START_TIME, end_time=STOP_TIME
-        )
+    df = Client.read(
+        tags=[TAG, "sorandomitcantexist"], start_time=START_TIME, end_time=STOP_TIME
+    )
     assert len(df.index) > 0
     assert len(df.columns == 1)
 

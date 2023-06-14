@@ -524,7 +524,7 @@ def test_store_overlapping_df(cache: BucketCache) -> None:
         endtime=ENDTIME_3,
     )
     leaves = None
-    for key in cache.cache.iterkeys():
+    for key in cache.iterkeys():
         if len(key) > 0:
             leaves = key
     _, starttime, endtime = leaves.split("_")  # type: ignore[union-attr]
