@@ -2,6 +2,29 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.1.0](https://github.com/equinor/tagreader-python/compare/v4.0.3...v4.1.0) (2023-06-14)
+
+
+### 🔨 Refactor
+
+* make code pass mypy and add strict type validation ([#190](https://github.com/equinor/tagreader-python/issues/190)) ([9efc942](https://github.com/equinor/tagreader-python/commit/9efc942eb6580e8c629e0a4bb5b2bb24af871f6f))
+
+
+### ✨ Features
+
+* add persistent web-id cache for PIWebAPI ([64eb76c](https://github.com/equinor/tagreader-python/commit/64eb76cd90e9e2d4091ebf97b716be53c9bde7ec))
+* use diskcache as caching backend ([f7f7a5f](https://github.com/equinor/tagreader-python/commit/f7f7a5ff0edefd21eeb60b41dbd94d6726cd0caf)), closes [#205](https://github.com/equinor/tagreader-python/issues/205)
+
+
+### 🐛 Bug Fixes
+
+* do not throw error when start and end time is submitted when using SNAPSHOT and ODBC connectors ([#213](https://github.com/equinor/tagreader-python/issues/213)) ([4e9a4c9](https://github.com/equinor/tagreader-python/commit/4e9a4c9011a05be3f73fa5719ef94ea30afe38e0))
+
+
+### 👷 CI/CD
+
+* correct PyPi test upload ([8217af6](https://github.com/equinor/tagreader-python/commit/8217af6bd6587c9ed6380f132b74abe297f143f6))
+
 ## [4.0.3](https://github.com/equinor/tagreader-python/compare/v4.0.2...v4.0.3) (2023-06-09)
 
 
