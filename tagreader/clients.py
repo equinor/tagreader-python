@@ -14,10 +14,11 @@ from tagreader.logger import logger
 from tagreader.utils import (
     IMSType,
     ReaderType,
+    convert_to_pydatetime,
     ensure_datetime_with_tz,
     find_registry_key,
     find_registry_key_from_name,
-    is_windows, convert_to_pydatetime,
+    is_windows,
 )
 from tagreader.web_handlers import (
     AspenHandlerWeb,
