@@ -1,12 +1,14 @@
 [tool.poetry]
 name = "tagreader"
-version = "4.1.0"
+version = "4.0.3"
 description = "Tagreader is a Python package for reading trend data from the OSIsoft PI and Aspen Infoplus.21 IMS systems."
 authors = ["Einar S. Idsø <eiids@equinor.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "tagreader"}]
 keywords=["Aspen InfoPlus.21", "OSIsoft PI"]
+homepage = "https://github.com/equinor/tagreader-python"
+repository = "https://github.com/equinor/tagreader-python"
 classifiers=[
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
