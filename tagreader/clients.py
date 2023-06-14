@@ -17,7 +17,7 @@ from tagreader.utils import (
     ensure_datetime_with_tz,
     find_registry_key,
     find_registry_key_from_name,
-    is_windows,
+    is_windows, convert_to_pydatetime,
 )
 from tagreader.web_handlers import (
     AspenHandlerWeb,
@@ -571,13 +571,13 @@ class IMSClient:
             start_time = NONE_START_TIME
         elif isinstance(start_time, (str, pd.Timestamp)):
             try:
-                start_time = ensure_datetime_with_tz(start_time)
+                start_time = convert_to_pydatetime(start_time)
             except ValueError:
-                start_time = ensure_datetime_with_tz(start_time)
+                start_time = convert_to_pydatetime(start_time)
         if end_time is None:
             end_time = datetime.utcnow()
         elif isinstance(end_time, (str, pd.Timestamp)):
-            end_time = ensure_datetime_with_tz(end_time)
+            end_time = convert_to_pydatetime(end_time)
 
         if isinstance(ts, pd.Timedelta):
             ts = ts.to_pytimedelta()
