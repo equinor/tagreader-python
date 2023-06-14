@@ -8,6 +8,7 @@ import pandas as pd
 import pyodbc
 import pytz
 
+from tagreader.logger import logger
 from tagreader.utils import ReaderType, find_registry_key, logging, winreg
 
 logging.basicConfig(
@@ -112,9 +113,10 @@ class AspenHandlerODBC:
             raise NotImplementedError
 
         if read_type == ReaderType.SNAPSHOT and stop_time is not None:
-            raise NotImplementedError(
-                "Timestamp not supported for IP.21 ODBC connection using 'SNAPSHOT'. "
-                "Try the web API 'aspenone' instead."
+            stop_time = None
+            logger.warning(
+                "End time is not supported for Aspen ODBC connection using 'SNAPSHOT'."
+                "Try the web API 'piwebapi' instead."
             )
 
         seconds = 0
@@ -212,7 +214,7 @@ class AspenHandlerODBC:
         self.cursor = self.conn.cursor()
 
     @staticmethod
-    def _generate_query_get_mapdef_for_search(tag):
+    def _generate_query_get_mapdef_for_search(tag: str) -> str:
         query = [
             "SELECT DISTINCT a.name as tagname, m.NAME, m.MAP_DefinitionRecord,",
             "m.MAP_IsDefault, m.MAP_Description, m.MAP_Units, m.MAP_Base, m.MAP_Range",
@@ -292,6 +294,9 @@ class AspenHandlerODBC:
         return None
 
     def search(self, tag: Optional[str], desc: Optional[str]) -> List[Tuple[str, str]]:
+        if tag is None:
+            raise ValueError("Tag is a required argument")
+
         tag = tag.replace("*", "%") if isinstance(tag, str) else None
         desc = desc.replace("*", "%") if isinstance(desc, str) else None
 
@@ -472,8 +477,9 @@ class PIHandlerODBC:
             raise NotImplementedError
 
         if read_type == ReaderType.SNAPSHOT and stop_time is not None:
-            raise NotImplementedError(
-                "Timestamp not supported for PI ODBC connection using 'SNAPSHOT'."
+            stop_time = None
+            logger.warning(
+                "End time is not supported for PI ODBC connection using 'SNAPSHOT'."
                 "Try the web API 'piwebapi' instead."
             )
 

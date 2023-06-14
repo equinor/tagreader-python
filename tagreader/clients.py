@@ -14,6 +14,7 @@ from tagreader.logger import logger
 from tagreader.utils import (
     IMSType,
     ReaderType,
+    convert_to_pydatetime,
     ensure_datetime_with_tz,
     find_registry_key,
     find_registry_key_from_name,
@@ -201,7 +202,7 @@ def get_server_address_pi(datasource: str) -> Optional[Tuple[str, int]]:
 
 
 def get_handler(
-    imstype: IMSType,
+    imstype: Optional[IMSType],
     datasource: str,
     url: Optional[str],
     host: Optional[str],
@@ -283,6 +284,11 @@ def get_handler(
             verifySSL=verifySSL,
             auth=auth,
         )
+
+    raise ValueError(
+        f"Could not infer IMSType for datasource: {datasource}."
+        f"Please specify correct datasource, imstype or host, or refer to the user docs."
+    )
 
 
 class IMSClient:
@@ -499,8 +505,8 @@ class IMSClient:
     def read_tags(
         self,
         tags: Union[str, List[str]],
-        start_time: Optional[Union[datetime, pd.Timestamp, str]],
-        stop_time: Optional[Union[datetime, pd.Timestamp, str]],
+        start_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
+        stop_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
         ts: Optional[Union[timedelta, pd.Timedelta]] = timedelta(seconds=60),
         read_type: ReaderType = ReaderType.INT,
         get_status: bool = False,
@@ -523,8 +529,8 @@ class IMSClient:
     def read(
         self,
         tags: Union[str, List[str]],
-        start_time: Optional[Union[datetime, pd.Timestamp, str]],
-        end_time: Optional[Union[datetime, pd.Timestamp, str]],
+        start_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
+        end_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
         ts: Union[timedelta, pd.Timedelta, int] = timedelta(seconds=60),
         read_type: ReaderType = ReaderType.INT,
         get_status: bool = False,
@@ -566,13 +572,13 @@ class IMSClient:
             start_time = NONE_START_TIME
         elif isinstance(start_time, (str, pd.Timestamp)):
             try:
-                start_time = datetime.fromisoformat(str(start_time))
+                start_time = convert_to_pydatetime(start_time)
             except ValueError:
-                start_time = datetime.fromisoformat(str(start_time))
+                start_time = convert_to_pydatetime(start_time)
         if end_time is None:
             end_time = datetime.utcnow()
         elif isinstance(end_time, (str, pd.Timestamp)):
-            end_time = datetime.fromisoformat(str(end_time))
+            end_time = convert_to_pydatetime(end_time)
 
         if isinstance(ts, pd.Timedelta):
             ts = ts.to_pytimedelta()
