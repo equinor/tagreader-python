@@ -2,6 +2,7 @@ import re
 import urllib.parse
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -12,6 +13,7 @@ import urllib3
 from requests import Response
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
+from tagreader.cache import BaseCache
 from tagreader.logger import logger
 from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
 
@@ -620,7 +622,7 @@ class PIHandlerWeb(BaseHandlerWeb):
             verifySSL=verifySSL,
         )
         self._max_rows = options.get("max_rows", 10000)
-        self.webidcache = {}
+        self.webidcache = BaseCache(directory=Path(".") / ".cache" / datasource)
 
     @staticmethod
     def _time_to_UTC_string(time: datetime) -> str:

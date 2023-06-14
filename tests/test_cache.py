@@ -5,7 +5,7 @@ from typing import Generator
 import pandas as pd
 import pytest
 
-from tagreader.cache import SmartCache, safe_tagname
+from tagreader.cache import BaseCache, SmartCache, safe_tagname
 from tagreader.utils import ReaderType
 
 os.environ["NUMEXPR_MAX_THREADS"] = "8"
@@ -27,6 +27,21 @@ def data() -> Generator[pd.DataFrame, None, None]:
 def cache(tmp_path: Path) -> Generator[SmartCache, None, None]:
     cache = SmartCache(directory=tmp_path)
     yield cache
+
+
+def test_base_cache(tmp_path: Path) -> None:
+    webidcache = BaseCache(directory=tmp_path)
+
+    webid = "F1DPwgwnpmLxqECAJV2HpxdobgmQIAAAUElMQUIuRVFVSU5PUi5DT01cMTMyMC9BSU0sMTctVFQtNzE5Ng"
+    tag = "example_tag_name"
+    webidcache[tag] = webid
+
+    del webidcache
+
+    webidcache = BaseCache(directory=tmp_path)
+
+    assert "example_tag_name" in webidcache
+    assert webidcache["example_tag_name"] == webid
 
 
 def test_safe_tagname() -> None:
