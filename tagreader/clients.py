@@ -201,7 +201,7 @@ def get_server_address_pi(datasource: str) -> Optional[Tuple[str, int]]:
 
 
 def get_handler(
-    imstype: IMSType,
+    imstype: Optional[IMSType],
     datasource: str,
     url: Optional[str],
     host: Optional[str],
@@ -283,6 +283,11 @@ def get_handler(
             verifySSL=verifySSL,
             auth=auth,
         )
+
+    raise ValueError(
+        f"Could not infer IMSType for datasource: {datasource}."
+        f"Please specify correct datasource, imstype or host, or refer to the user docs."
+    )
 
 
 class IMSClient:
