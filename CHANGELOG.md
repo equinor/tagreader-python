@@ -12,7 +12,7 @@ This changelog is deprecated. All changes are documented under [releases](https:
 
 ### ✨ Features
 
-* ad persistent web-id cache for PIWebAPI ([64eb76c](https://github.com/equinor/tagreader-python/commit/64eb76cd90e9e2d4091ebf97b716be53c9bde7ec))
+* add persistent web-id cache for PIWebAPI ([64eb76c](https://github.com/equinor/tagreader-python/commit/64eb76cd90e9e2d4091ebf97b716be53c9bde7ec))
 * use diskcache as caching backend ([f7f7a5f](https://github.com/equinor/tagreader-python/commit/f7f7a5ff0edefd21eeb60b41dbd94d6726cd0caf)), closes [#205](https://github.com/equinor/tagreader-python/issues/205)
 
 
