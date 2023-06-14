@@ -499,8 +499,8 @@ class IMSClient:
     def read_tags(
         self,
         tags: Union[str, List[str]],
-        start_time: Optional[Union[datetime, pd.Timestamp, str]],
-        stop_time: Optional[Union[datetime, pd.Timestamp, str]],
+        start_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
+        stop_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
         ts: Optional[Union[timedelta, pd.Timedelta]] = timedelta(seconds=60),
         read_type: ReaderType = ReaderType.INT,
         get_status: bool = False,
@@ -523,8 +523,8 @@ class IMSClient:
     def read(
         self,
         tags: Union[str, List[str]],
-        start_time: Optional[Union[datetime, pd.Timestamp, str]],
-        end_time: Optional[Union[datetime, pd.Timestamp, str]],
+        start_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
+        end_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
         ts: Union[timedelta, pd.Timedelta, int] = timedelta(seconds=60),
         read_type: ReaderType = ReaderType.INT,
         get_status: bool = False,

@@ -8,6 +8,7 @@ import pandas as pd
 import pyodbc
 import pytz
 
+from tagreader.logger import logger
 from tagreader.utils import ReaderType, find_registry_key, logging, winreg
 
 logging.basicConfig(
@@ -112,9 +113,10 @@ class AspenHandlerODBC:
             raise NotImplementedError
 
         if read_type == ReaderType.SNAPSHOT and stop_time is not None:
-            raise NotImplementedError(
-                "Timestamp not supported for IP.21 ODBC connection using 'SNAPSHOT'. "
-                "Try the web API 'aspenone' instead."
+            stop_time = None
+            logger.warning(
+                "End time is not supported for Aspen ODBC connection using 'SNAPSHOT'."
+                "Try the web API 'piwebapi' instead."
             )
 
         seconds = 0
@@ -472,8 +474,9 @@ class PIHandlerODBC:
             raise NotImplementedError
 
         if read_type == ReaderType.SNAPSHOT and stop_time is not None:
-            raise NotImplementedError(
-                "Timestamp not supported for PI ODBC connection using 'SNAPSHOT'."
+            stop_time = None
+            logger.warning(
+                "End time is not supported for PI ODBC connection using 'SNAPSHOT'."
                 "Try the web API 'piwebapi' instead."
             )
 
