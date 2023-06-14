@@ -566,13 +566,13 @@ class IMSClient:
             start_time = NONE_START_TIME
         elif isinstance(start_time, (str, pd.Timestamp)):
             try:
-                start_time = datetime.fromisoformat(str(start_time))
+                start_time = ensure_datetime_with_tz(start_time)
             except ValueError:
-                start_time = datetime.fromisoformat(str(start_time))
+                start_time = ensure_datetime_with_tz(start_time)
         if end_time is None:
             end_time = datetime.utcnow()
         elif isinstance(end_time, (str, pd.Timestamp)):
-            end_time = datetime.fromisoformat(str(end_time))
+            end_time = ensure_datetime_with_tz(end_time)
 
         if isinstance(ts, pd.Timedelta):
             ts = ts.to_pytimedelta()
