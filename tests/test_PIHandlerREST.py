@@ -1,4 +1,6 @@
-import pandas as pd
+from datetime import timedelta
+from typing import Generator
+
 import pytest
 
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
@@ -9,37 +11,47 @@ STOP_TIME = "2020-04-01 12:05:00"
 SAMPLE_TIME = 60
 
 
-@pytest.fixture()
-def PIHandler():
-    h = PIHandlerWeb(datasource="sourcename")
+@pytest.fixture  # type: ignore[misc]
+def PIHandler() -> Generator[PIHandlerWeb, None, None]:
+    h = PIHandlerWeb(
+        datasource="sourcename", auth=None, options={}, url=None, verifySSL=True
+    )
     h.webidcache["alreadyknowntag"] = "knownwebid"
     yield h
 
 
-def test_escape_chars():
+def test_escape_chars() -> None:
     assert (
         PIHandlerWeb.escape('+-&|(){}[]^"~*:\\') == r"\+\-\&\|\(\)\{\}\[\]\^\"\~*\:\\"
     )
 
 
-def test_generate_search_query():
-    assert PIHandlerWeb.generate_search_query("SINUSOID") == {"q": "name:SINUSOID"}
-    assert PIHandlerWeb.generate_search_query(r"BA:*.1", datasource="sourcename") == {
+def test_generate_search_query() -> None:
+    assert PIHandlerWeb.generate_search_query(
+        tag="SINUSOID", desc=None, datasource=None
+    ) == {"q": "name:SINUSOID"}
+    assert PIHandlerWeb.generate_search_query(
+        tag=r"BA:*.1", desc=None, datasource="sourcename"
+    ) == {
         "q": r"name:BA\:*.1",
         "scope": "pi:sourcename",
     }
-    assert PIHandlerWeb.generate_search_query(tag="BA:*.1") == {
+    assert PIHandlerWeb.generate_search_query(
+        tag="BA:*.1", datasource=None, desc=None
+    ) == {
         "q": r"name:BA\:*.1",
     }
-    assert PIHandlerWeb.generate_search_query(desc="Concentration Reactor 1") == {
+    assert PIHandlerWeb.generate_search_query(
+        desc="Concentration Reactor 1", datasource=None, tag=None
+    ) == {
         "q": r"description:Concentration\ Reactor\ 1",
     }
     assert PIHandlerWeb.generate_search_query(
-        tag="BA:*.1", desc="Concentration Reactor 1"
+        tag="BA:*.1", desc="Concentration Reactor 1", datasource=None
     ) == {"q": r"name:BA\:*.1 AND description:Concentration\ Reactor\ 1"}
 
 
-def test_is_summary(PIHandler):
+def test_is_summary(PIHandler: PIHandlerWeb) -> None:
     assert PIHandler._is_summary(ReaderType.AVG)
     assert PIHandler._is_summary(ReaderType.MIN)
     assert PIHandler._is_summary(ReaderType.MAX)
@@ -54,7 +66,7 @@ def test_is_summary(PIHandler):
     assert not PIHandler._is_summary(ReaderType.SNAPSHOT)
 
 
-@pytest.mark.parametrize(
+@pytest.mark.parametrize(  # type: ignore[misc]
     "read_type",
     [
         "RAW",
@@ -76,17 +88,18 @@ def test_is_summary(PIHandler):
         "SNAPSHOT",
     ],
 )
-def test_generate_read_query(PIHandler, read_type):
+def test_generate_read_query(PIHandler: PIHandlerWeb, read_type: str) -> None:
     starttime = ensure_datetime_with_tz(START_TIME)
     stoptime = ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
+    ts = timedelta(seconds=SAMPLE_TIME)
 
     (url, params) = PIHandler.generate_read_query(
-        PIHandler.tag_to_webid("alreadyknowntag"),
-        starttime,
-        stoptime,
-        ts,
-        getattr(ReaderType, read_type),
+        tag=PIHandler.tag_to_webid(tag="alreadyknowntag"),  # type: ignore[arg-type]
+        start_time=starttime,
+        stop_time=stoptime,
+        sample_time=ts,
+        read_type=getattr(ReaderType, read_type),
+        metadata=None,
     )
     if read_type != "SNAPSHOT":
         assert params["startTime"] == "01-Apr-20 09:05:00"
@@ -118,10 +131,10 @@ def test_generate_read_query(PIHandler, read_type):
     elif read_type == "RAW":
         assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/recorded"
         assert params["selectedFields"] == "Links;Items.Timestamp;Items.Value"
-        assert params["maxCount"] == 10000
+        assert params["maxCount"] == 10000  # type: ignore[comparison-overlap]
 
 
-@pytest.mark.parametrize(
+@pytest.mark.parametrize(  # type: ignore[misc]
     "read_type",
     [
         "RAW",
@@ -143,18 +156,21 @@ def test_generate_read_query(PIHandler, read_type):
         "SNAPSHOT",
     ],
 )
-def test_generate_read_query_with_status(PIHandler, read_type):
+def test_generate_read_query_with_status(
+    PIHandler: PIHandlerWeb, read_type: str
+) -> None:
     starttime = ensure_datetime_with_tz(START_TIME)
     stoptime = ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
+    ts = timedelta(seconds=SAMPLE_TIME)
 
     (url, params) = PIHandler.generate_read_query(
-        PIHandler.tag_to_webid("alreadyknowntag"),
-        starttime,
-        stoptime,
-        ts,
-        getattr(ReaderType, read_type),
+        tag=PIHandler.tag_to_webid("alreadyknowntag"),  # type: ignore[arg-type]
+        start_time=starttime,
+        stop_time=stoptime,
+        sample_time=ts,
+        read_type=getattr(ReaderType, read_type),
         get_status=True,
+        metadata=None,
     )
     if read_type != "SNAPSHOT":
         assert params["startTime"] == "01-Apr-20 09:05:00"
@@ -195,19 +211,20 @@ def test_generate_read_query_with_status(PIHandler, read_type):
             "Links;Items.Timestamp;Items.Value;"
             "Items.Good;Items.Questionable;Items.Substituted"
         )
-        assert params["maxCount"] == 10000
+        assert params["maxCount"] == 10000  # type: ignore[comparison-overlap]
 
 
-def test_genreadquery_long_sampletime(PIHandler):
+def test_genreadquery_long_sampletime(PIHandler: PIHandlerWeb) -> None:
     starttime = ensure_datetime_with_tz(START_TIME)
     stoptime = ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(86410, unit="s")
+    ts = timedelta(seconds=86410)
 
     (url, params) = PIHandler.generate_read_query(
-        PIHandler.tag_to_webid("alreadyknowntag"),
-        starttime,
-        stoptime,
-        ts,
-        ReaderType.INT,
+        tag=PIHandler.tag_to_webid("alreadyknowntag"),  # type: ignore[arg-type]
+        start_time=starttime,
+        stop_time=stoptime,
+        sample_time=ts,
+        read_type=ReaderType.INT,
+        metadata=None,
     )
     assert params["interval"] == f"{86410}s"

@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta
 
 import pandas as pd
 import pytest
@@ -14,18 +15,22 @@ is_AZUREPIPELINE = "TF_BUILD" in os.environ
 is_CI = is_GITHUBACTION or is_AZUREPIPELINE
 
 
-def test_get_next_timeslice():
-    start_time = pd.to_datetime("2018-01-02 14:00:00")
-    stop_time = pd.to_datetime("2018-01-02 14:15:00")
+def test_get_next_timeslice() -> None:
+    starttime = pd.to_datetime("2018-01-02 14:00:00")
+    endtime = pd.to_datetime("2018-01-02 14:15:00")
     # taglist = ['tag1', 'tag2', 'tag3']
-    ts = pd.Timedelta(60, unit="s")
-    res = get_next_timeslice(start_time, stop_time, ts, max_steps=20)
-    assert start_time, start_time + pd.Timedelta(6, unit="m") == res
-    res = get_next_timeslice(start_time, stop_time, ts, max_steps=100000)
-    assert start_time, stop_time == res
+    ts = timedelta(seconds=60)
+    res = get_next_timeslice(
+        start_time=starttime, stop_time=endtime, ts=ts, max_steps=20
+    )
+    assert starttime, starttime + timedelta(seconds=6) == res
+    res = get_next_timeslice(
+        start_time=starttime, stop_time=endtime, ts=ts, max_steps=100000
+    )
+    assert starttime, endtime == res
 
 
-def test_get_missing_intervals():
+def test_get_missing_intervals() -> None:
     length = 10
     ts = 60
     data = {"tag1": range(0, length)}
@@ -35,17 +40,17 @@ def test_get_missing_intervals():
     df_total = pd.DataFrame(data, index=idx)
     df = pd.concat([df_total.iloc[0:2], df_total.iloc[3:4], df_total.iloc[8:]])
     missing = get_missing_intervals(
-        df,
-        start_time="2018-01-18 05:00:00",
-        stop_time="2018-01-18 06:00:00",
-        ts=pd.Timedelta(ts, unit="s"),
+        df=df,
+        start_time=datetime(2018, 1, 18, 5, 0, 0),
+        stop_time=datetime(2018, 1, 18, 6, 0, 0),
+        ts=timedelta(seconds=ts),
         read_type=ReaderType.INT,
     )
     assert missing[0] == (idx[2], idx[2])
     assert missing[1] == (idx[4], idx[7])
     assert missing[2] == (
-        pd.Timestamp("2018-01-18 05:10:00"),
-        pd.Timestamp("2018-01-18 06:00:00"),
+        datetime(2018, 1, 18, 5, 10, 0),
+        datetime(2018, 1, 18, 6, 0, 0),
     )
 
 
@@ -54,7 +59,7 @@ def test_get_missing_intervals():
     reason="ODBC drivers require Windows and are unavailable in GitHub Actions",
 )
 class TestODBC:
-    def test_PI_init_odbc_client_with_host_port(self):
+    def test_PI_init_odbc_client_with_host_port(self) -> None:
         host = "thehostname"
         port = 999
         c = IMSClient(datasource="whatever", imstype="pi", host=host)
@@ -64,7 +69,7 @@ class TestODBC:
         assert c.handler.host == host
         assert c.handler.port == port
 
-    def test_IP21_init_odbc_client_with_host_port(self):
+    def test_IP21_init_odbc_client_with_host_port(self) -> None:
         host = "thehostname"
         port = 999
         c = IMSClient(datasource="whatever", imstype="ip21", host=host)
@@ -74,7 +79,7 @@ class TestODBC:
         assert c.handler.host == host
         assert c.handler.port == port
 
-    def test_PI_connection_string_override(self):
+    def test_PI_connection_string_override(self) -> None:
         connstr = "someuserspecifiedconnectionstring"
         c = IMSClient(
             datasource="whatever",
@@ -84,7 +89,7 @@ class TestODBC:
         )
         assert c.handler.generate_connection_string() == connstr
 
-    def test_IP21_connection_string_override(self):
+    def test_IP21_connection_string_override(self) -> None:
         connstr = "someuserspecifiedconnectionstring"
         c = IMSClient(
             datasource="whatever",
@@ -94,18 +99,18 @@ class TestODBC:
         )
         assert c.handler.generate_connection_string() == connstr
 
-    def test_init_odbc_clients(self):
+    def test_init_odbc_clients(self) -> None:
         with pytest.raises(ValueError):
-            c = IMSClient("xyz")
+            c = IMSClient(datasource="xyz")
         with pytest.raises(ValueError):
-            c = IMSClient("sNa", "pi")
+            c = IMSClient(datasource="sNa", imstype="pi")
         with pytest.raises(ValueError):
-            c = IMSClient("Ono-imS", "aspen")
+            c = IMSClient(datasource="Ono-imS", imstype="aspen")
         with pytest.raises(ValueError):
-            c = IMSClient("ono-ims", "aspen")
+            c = IMSClient(datasource="ono-ims", imstype="aspen")
         with pytest.raises(ValueError):
-            c = IMSClient("sna", "pi")
-        c = IMSClient("onO-iMs", "pi")
+            c = IMSClient(datasource="sna", imstype="pi")
+        c = IMSClient(datasource="onO-iMs", imstype="pi")
         assert isinstance(c.handler, PIHandlerODBC)
-        c = IMSClient("snA", "aspen")
+        c = IMSClient(datasource="snA", imstype="aspen")
         assert isinstance(c.handler, AspenHandlerODBC)

@@ -3,6 +3,7 @@ import logging
 import platform
 import warnings
 from datetime import datetime
+from enum import Enum
 from typing import Union
 
 import pandas as pd
@@ -67,16 +68,18 @@ def find_registry_key_from_name(base_key, search_key_name: str):
 
 def ensure_datetime_with_tz(
     date_stamp: Union[datetime, str, pd.Timestamp],
-    tz: str = "Europe/Oslo",
-) -> pd.Timestamp:
-    if isinstance(date_stamp, str):
+    tz: pytz.timezone = pytz.timezone("Europe/Oslo"),
+) -> datetime:
+    if isinstance(date_stamp, (pd.Timestamp, str)):
         try:
-            date_stamp = pd.to_datetime(date_stamp, format="ISO8601")
+            date_stamp = pd.to_datetime(
+                str(date_stamp), format="ISO8601"
+            ).to_pydatetime()
         except ValueError:
-            date_stamp = pd.to_datetime(date_stamp, dayfirst=True)
+            date_stamp = pd.to_datetime(str(date_stamp), dayfirst=True).to_pydatetime()
 
     if not date_stamp.tzinfo:
-        date_stamp = pytz.timezone(tz).localize(date_stamp)
+        date_stamp = tz.localize(date_stamp)
 
     return date_stamp
 
@@ -248,3 +251,11 @@ def is_equinor() -> bool:
             f"Unsupported system: {platform.system()}. Please report this as an issue."
         )
     return False
+
+
+class IMSType(str, Enum):
+    PIWEBAPI = "piwebapi"
+    ASPENONE = "aspenone"
+    PI = "pi"
+    ASPEN = "aspen"
+    IP21 = "ip21"

@@ -7,10 +7,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
+import pytz
 
 from tagreader.cache import BucketCache, SmartCache
 from tagreader.logger import logger
 from tagreader.utils import (
+    IMSType,
     ReaderType,
     ensure_datetime_with_tz,
     find_registry_key,
@@ -35,57 +37,48 @@ if is_windows():
         list_aspen_sources,
         list_pi_sources,
     )
-    from tagreader.utils import winreg
 
-
-class DuplicateTagsWarning(UserWarning):
-    pass
-
-
-warnings.simplefilter("always", DuplicateTagsWarning)
+NONE_START_TIME = datetime(1970, 1, 1, tzinfo=pytz.UTC)
 
 
 def list_sources(
-    imstype: str,
+    imstype: Union[IMSType, str],
     url: Optional[str] = None,
     auth: Optional[Any] = None,
     verifySSL: bool = True,
 ) -> List[str]:
-    accepted_values = ["piwebapi", "aspenone"]
-    win_accepted_values = ["pi", "aspen", "ip21"]
+    if isinstance(imstype, str):
+        try:
+            imstype = getattr(IMSType, imstype.upper())
+        except AttributeError:
+            raise ValueError(
+                f"imstype needs to be one of {', '.join([v for v in IMSType.__members__.values()])}."
+                f" We suggest to use the tagreader.IMSType enumerator when initiating a client."
+            )
+    accepted_values = [IMSType.PIWEBAPI, IMSType.ASPENONE]
+    win_accepted_values = [IMSType.PI, IMSType.ASPEN, IMSType.IP21]
     if is_windows():
         accepted_values.extend(win_accepted_values)
 
-    if imstype is None or imstype.lower() not in accepted_values:
-        import platform
-
-        raise ValueError(
-            f"Input `imstype` must be one of {accepted_values} when called from {platform.system()} environment."
-        )
-
-    if imstype.lower() == "pi":
+    if imstype == IMSType.PI:
         return list_pi_sources()
-    elif imstype.lower() in ["aspen", "ip21"]:
+    elif imstype in [IMSType.ASPEN, IMSType.IP21]:
         return list_aspen_sources()
-    elif imstype.lower() == "piwebapi":
+    elif imstype == IMSType.PIWEBAPI:
         if auth is None:
             auth = get_auth_pi()
-        if verifySSL is None:
-            verifySSL = True
         return list_piwebapi_sources(url=url, auth=auth, verifySSL=verifySSL)
-    elif imstype.lower() == "aspenone":
+    elif imstype == IMSType.ASPENONE:
         if auth is None:
             auth = get_auth_aspen()
-        if verifySSL is None:
-            verifySSL = True
         return list_aspenone_sources(url=url, auth=auth, verifySSL=verifySSL)
 
 
 def get_missing_intervals(
     df: pd.DataFrame,
-    start_time: pd.Timestamp,
-    stop_time: pd.Timestamp,
-    ts: Optional[Union[int, pd.Timestamp]],
+    start_time: datetime,
+    stop_time: datetime,
+    ts: Optional[timedelta],
     read_type: ReaderType,
 ):
     if (
@@ -102,7 +95,10 @@ def get_missing_intervals(
         if not k:
             seq = list(map(itemgetter(0), g))
             missing_intervals.append(
-                (pd.Timestamp(tvec[seq[0]]), pd.Timestamp(tvec[seq[-1]]))
+                (
+                    pd.Timestamp(tvec[seq[0]]).to_pydatetime(),
+                    pd.Timestamp(tvec[seq[-1]]).to_pydatetime(),
+                )
             )
             # Should be unnecessary to fetch overlapping points since get_next_timeslice
             # ensures start <= t <= stop
@@ -112,10 +108,10 @@ def get_missing_intervals(
 
 
 def get_next_timeslice(
-    start_time: pd.Timestamp,
-    stop_time: pd.Timestamp,
-    ts: Optional[Union[int, pd.Timestamp]],
-    max_steps: Optional[int] = None,
+    start_time: datetime,
+    stop_time: datetime,
+    ts: Optional[timedelta],
+    max_steps: Optional[int],
 ) -> Tuple[datetime, datetime]:
     if max_steps is None:
         calc_stop_time = stop_time
@@ -141,6 +137,7 @@ def get_server_address_aspen(datasource: str) -> Optional[Tuple[str, int]]:
 
     if not is_windows():
         return None
+    import winreg
 
     regkey_clsid = winreg.OpenKey(
         winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Classes\Wow6432Node\CLSID"
@@ -181,6 +178,7 @@ def get_server_address_pi(datasource: str) -> Optional[Tuple[str, int]]:
 
     if not is_windows():
         return None
+    import winreg
 
     try:
         reg_key = winreg.OpenKey(
@@ -203,27 +201,26 @@ def get_server_address_pi(datasource: str) -> Optional[Tuple[str, int]]:
 
 
 def get_handler(
-    imstype: str,
+    imstype: IMSType,
     datasource: str,
-    url: Optional[str] = None,
-    host: Optional[str] = None,
-    port: Optional[int] = None,
-    options: Dict[str, Union[int, float, str]] = {},
-    verifySSL: Optional[bool] = None,
-    auth: Optional[Any] = None,
+    url: Optional[str],
+    host: Optional[str],
+    port: Optional[int],
+    options: Dict[str, Union[int, float, str]],
+    verifySSL: Optional[bool],
+    auth: Optional[Any],
 ):
     if imstype is None:
-        if datasource in list_aspenone_sources():
-            imstype = "aspenone"
-        elif datasource in list_piwebapi_sources():
-            imstype = "piwebapi"
+        if datasource in list_aspenone_sources(
+            url=None, auth=None, verifySSL=verifySSL
+        ):
+            imstype = IMSType.ASPENONE
+        elif datasource in list_piwebapi_sources(
+            url=None, auth=None, verifySSL=verifySSL
+        ):
+            imstype = IMSType.PIWEBAPI
 
-    accepted_imstypes = ["pi", "aspen", "ip21", "piwebapi", "aspenone"]
-
-    if not imstype or imstype.lower() not in accepted_imstypes:
-        raise ValueError(f"`imstype` must be one of {accepted_imstypes}")
-
-    if imstype.lower() == "pi":
+    if imstype == IMSType.PI:
         if not is_windows():
             raise RuntimeError(
                 "ODBC drivers not available for non-Windows environments. "
@@ -246,7 +243,7 @@ def get_handler(
             port = 5450
         return PIHandlerODBC(host=host, port=port, options=options)
 
-    if imstype.lower() in ["aspen", "ip21"]:
+    if imstype in [IMSType.ASPEN, IMSType.IP21]:
         if not is_windows():
             raise RuntimeError(
                 "ODBC drivers not available for non-Windows environments. "
@@ -269,7 +266,7 @@ def get_handler(
             port = 10014
         return AspenHandlerODBC(host=host, port=port, options=options)
 
-    if imstype.lower() == "piwebapi":
+    if imstype == IMSType.PIWEBAPI:
         return PIHandlerWeb(
             url=url,
             datasource=datasource,
@@ -278,7 +275,7 @@ def get_handler(
             auth=auth,
         )
 
-    if imstype.lower() in ["aspenone"]:
+    if imstype == IMSType.ASPENONE:
         return AspenHandlerWeb(
             datasource=datasource,
             url=url,
@@ -292,8 +289,8 @@ class IMSClient:
     def __init__(
         self,
         datasource: str,
-        imstype: Optional[str] = None,
-        tz: str = "Europe/Oslo",
+        imstype: Optional[Union[str, IMSType]] = None,
+        tz: pytz.timezone = pytz.timezone("Europe/Oslo"),
         url: Optional[str] = None,
         host: Optional[str] = None,
         port: Optional[int] = None,
@@ -301,8 +298,15 @@ class IMSClient:
         verifySSL: bool = True,
         auth: Optional[Any] = None,
     ):
-        self.handler = None
-        self.datasource = datasource.lower()  # FIXME
+        if isinstance(imstype, str):
+            try:
+                imstype = getattr(IMSType, imstype.upper())
+            except AttributeError:
+                raise ValueError(
+                    f"imstype needs to be one of {', '.join([v for v in IMSType.__members__.values()])}."
+                    f" We suggest to use the tagreader.IMSType enumerator when initiating a client."
+                )
+
         self.tz = tz
         self.handler = get_handler(
             imstype=imstype,
@@ -316,7 +320,7 @@ class IMSClient:
         )
         self.cache = SmartCache(directory=Path(".") / ".cache" / datasource)
 
-    def connect(self):
+    def connect(self) -> None:
         self.handler.connect()
 
     def search_tag(
@@ -338,9 +342,9 @@ class IMSClient:
     def _read_single_tag(
         self,
         tag: str,
-        start_time: Optional[pd.Timestamp],
-        stop_time: Optional[pd.Timestamp],
-        ts: Optional[Union[int, pd.Timestamp]],
+        start_time: Optional[datetime],
+        stop_time: Optional[datetime],
+        ts: timedelta,
         read_type: ReaderType,
         get_status: bool,
         cache: Optional[Union[BucketCache, SmartCache]],
@@ -467,7 +471,7 @@ class IMSClient:
         for tag in tags:
             if self.cache is not None:
                 r = self.cache.get_metadata(key=tag, properties="unit")
-                if "unit" in r:
+                if r is not None and "unit" in r:
                     units[tag] = r["unit"]
             if tag not in units:
                 unit = self.handler._get_tag_unit(tag)
@@ -483,7 +487,7 @@ class IMSClient:
         for tag in tags:
             if self.cache is not None:
                 r = self.cache.get_metadata(key=tag, properties="description")
-                if "description" in r:
+                if r is not None and "description" in r:
                     descriptions[tag] = r["description"]
             if tag not in descriptions:
                 desc = self.handler._get_tag_description(tag)
@@ -519,9 +523,9 @@ class IMSClient:
     def read(
         self,
         tags: Union[str, List[str]],
-        start_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
-        end_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
-        ts: Optional[Union[timedelta, pd.Timedelta, int]] = 60,
+        start_time: Optional[Union[datetime, pd.Timestamp, str]],
+        end_time: Optional[Union[datetime, pd.Timestamp, str]],
+        ts: Union[timedelta, pd.Timedelta, int] = timedelta(seconds=60),
         read_type: ReaderType = ReaderType.INT,
         get_status: bool = False,
     ) -> pd.DataFrame:
@@ -540,20 +544,50 @@ class IMSClient:
         Values for ReaderType.* that should work for all handlers are:
             INT, RAW, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
         """
-
         if isinstance(tags, str):
             tags = [tags]
+        if isinstance(read_type, str):
+            try:
+                read_type = getattr(ReaderType, read_type)
+            except AttributeError:
+                ValueError(
+                    "readtype needs to be of type ReaderType.* or a legal value. Please refer to the docstring."
+                )
         if read_type in [ReaderType.RAW, ReaderType.SNAPSHOT] and len(tags) > 1:
             raise RuntimeError(
                 "Unable to read raw/sampled data for multiple tags since they don't "
                 "share time vector. Read one at a time."
             )
+
+        if isinstance(tags, str):
+            tags = [tags]
+
+        if start_time is None:
+            start_time = NONE_START_TIME
+        elif isinstance(start_time, (str, pd.Timestamp)):
+            try:
+                start_time = datetime.fromisoformat(str(start_time))
+            except ValueError:
+                start_time = datetime.fromisoformat(str(start_time))
+        if end_time is None:
+            end_time = datetime.utcnow()
+        elif isinstance(end_time, (str, pd.Timestamp)):
+            end_time = datetime.fromisoformat(str(end_time))
+
+        if isinstance(ts, pd.Timedelta):
+            ts = ts.to_pytimedelta()
+        elif isinstance(ts, int):
+            ts = timedelta(seconds=ts)
+        elif not isinstance(ts, timedelta):
+            raise ValueError(
+                "ts needs to be either a None, timedelta or and integer (number of seconds)."
+                f" Given type: {type(ts)}"
+            )
+
         if read_type != ReaderType.SNAPSHOT:
             start_time = ensure_datetime_with_tz(start_time, tz=self.tz)
         if end_time:
             end_time = ensure_datetime_with_tz(end_time, tz=self.tz)
-        if not isinstance(ts, pd.Timedelta):
-            ts = pd.Timedelta(ts, unit="s")
 
         oldtags = tags
         tags = list(dict.fromkeys(tags))

@@ -1,42 +1,47 @@
-import pandas as pd
+from datetime import timedelta
+
 import pytest
 
 from tagreader import utils
 from tagreader.utils import ReaderType
 from tagreader.web_handlers import AspenHandlerWeb
 
-START_TIME = "2018-05-01 10:00:00"
-STOP_TIME = "2018-05-01 11:00:00"
-SAMPLE_TIME = 60
+SAMPLE_TIME = timedelta(seconds=60)
 
 
-@pytest.fixture()
-def AspenHandler():
-    h = AspenHandlerWeb(datasource="sourcename")
+@pytest.fixture  # type: ignore[misc]
+def aspen_handler() -> AspenHandlerWeb:  # type: ignore[misc]
+    h = AspenHandlerWeb(
+        datasource="sourcename", auth=None, options={}, url=None, verifySSL=None
+    )
     yield h
 
 
-def test_generate_search_query():
+def test_generate_search_query() -> None:
     with pytest.raises(ValueError):
-        AspenHandlerWeb.generate_search_query("ATCAI")
-    assert AspenHandlerWeb.generate_search_query("ATCAI", datasource="sourcename") == {
+        AspenHandlerWeb.generate_search_query(tag="ATCAI", desc=None, datasource=None)
+    assert AspenHandlerWeb.generate_search_query(
+        tag="ATCAI", datasource="sourcename", desc=None
+    ) == {
         "datasource": "sourcename",
         "tag": "ATCAI",
         "max": 100,
         "getTrendable": 0,
     }
-    assert AspenHandlerWeb.generate_search_query("ATC*", datasource="sourcename") == {
+    assert AspenHandlerWeb.generate_search_query(
+        tag="ATC*", datasource="sourcename", desc=None
+    ) == {
         "datasource": "sourcename",
         "tag": "ATC*",
         "max": 100,
         "getTrendable": 0,
     }
     assert AspenHandlerWeb.generate_search_query(
-        tag="ATCAI", datasource="sourcename"
+        tag="ATCAI", datasource="sourcename", desc=None
     ) == {"datasource": "sourcename", "tag": "ATCAI", "max": 100, "getTrendable": 0}
 
 
-def test_split_tagmap():
+def test_split_tagmap() -> None:
     assert AspenHandlerWeb.split_tagmap("ATCAI") == ("ATCAI", None)
     assert AspenHandlerWeb.split_tagmap("ATCAI;IP_ANALOGMAP") == (
         "ATCAI",
@@ -44,30 +49,30 @@ def test_split_tagmap():
     )
 
 
-def test_generate_description_query(AspenHandler):
-    assert AspenHandler.generate_get_description_query("ATCAI") == (
+def test_generate_description_query(aspen_handler: AspenHandlerWeb) -> None:
+    assert aspen_handler.generate_get_description_query("ATCAI") == (
         '<Q allQuotes="1" attributeData="1"><Tag><N><![CDATA[ATCAI]]></N><T>0</T>'
         "<G><![CDATA[ATCAI]]></G><D><![CDATA[sourcename]]></D><AL><A>DSCR</A>"
         "<VS>0</VS></AL></Tag></Q>"
     )
 
 
-def test_generate_unit_query(AspenHandler):
-    assert AspenHandler.generate_get_unit_query("ATCAI") == (
+def test_generate_unit_query(aspen_handler: AspenHandlerWeb) -> None:
+    assert aspen_handler.generate_get_unit_query("ATCAI") == (
         '<Q allQuotes="1" attributeData="1"><Tag><N><![CDATA[ATCAI]]></N><T>0</T>'
         "<G><![CDATA[ATCAI]]></G><D><![CDATA[sourcename]]></D><AL><A>Units</A>"
         "<A>MAP_Units</A><VS>0</VS></AL></Tag></Q>"
     )
 
 
-def test_generate_map_query(AspenHandler):
-    assert AspenHandler.generate_get_map_query("ATCAI") == (
+def test_generate_map_query(aspen_handler: AspenHandlerWeb) -> None:
+    assert aspen_handler.generate_get_map_query("ATCAI") == (
         '<Q allQuotes="1" categoryInfo="1"><Tag><N><![CDATA[ATCAI]]></N><T>0</T>'
         "<G><![CDATA[ATCAI]]></G><D><![CDATA[sourcename]]></D></Tag></Q>"
     )
 
 
-@pytest.mark.parametrize(
+@pytest.mark.parametrize(  # type: ignore[misc]
     ("read_type"),
     [
         ("RAW"),
@@ -87,12 +92,20 @@ def test_generate_map_query(AspenHandler):
         "SNAPSHOT",
     ],
 )
-def test_generate_tag_read_query(AspenHandler, read_type):
-    start_time = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")
-    stop_time = utils.ensure_datetime_with_tz("2020-06-24 18:00:00")
-    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
-    res = AspenHandler.generate_read_query(
-        "ATCAI", None, start_time, stop_time, ts, getattr(ReaderType, read_type)
+def test_generate_tag_read_query(
+    aspen_handler: AspenHandlerWeb, read_type: str
+) -> None:
+    starttime = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")
+    endtime = utils.ensure_datetime_with_tz("2020-06-24 18:00:00")
+    ts = SAMPLE_TIME
+    res = aspen_handler.generate_read_query(
+        tagname="ATCAI",
+        mapname=None,
+        start_time=starttime,
+        stop_time=endtime,
+        sample_time=ts,
+        read_type=getattr(ReaderType, read_type),
+        metadata={},
     )
     expected = {
         "RAW": (
@@ -170,13 +183,19 @@ def test_generate_tag_read_query(AspenHandler, read_type):
     assert expected[read_type] == res
 
 
-def test_genreadquery_long_sampletime(AspenHandler):
-    start_time = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")
-    stop_time = utils.ensure_datetime_with_tz("2020-06-24 18:00:00")
-    ts = pd.Timedelta(86401, unit="s")
+def test_genreadquery_long_sampletime(aspen_handler: AspenHandlerWeb) -> None:
+    starttime = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")
+    endtime = utils.ensure_datetime_with_tz("2020-06-24 18:00:00")
+    ts = timedelta(seconds=86401)
 
-    res = AspenHandler.generate_read_query(
-        "ATCAI", None, start_time, stop_time, ts, ReaderType.INT
+    res = aspen_handler.generate_read_query(
+        tagname="ATCAI",
+        mapname=None,
+        start_time=starttime,
+        stop_time=endtime,
+        sample_time=ts,
+        read_type=ReaderType.INT,
+        metadata={},
     )
     expected = (
         '<Q f="d" allQuotes="1"><Tag><N><![CDATA[ATCAI]]></N>'
@@ -188,16 +207,22 @@ def test_genreadquery_long_sampletime(AspenHandler):
     assert expected == res
 
 
-def test_generate_sql_query(AspenHandler):
-    res = AspenHandler.generate_sql_query(
-        connection_string="myconnstring", query="myquery", max_rows=9999
+def test_generate_sql_query(aspen_handler: AspenHandlerWeb) -> None:
+    res = aspen_handler.generate_sql_query(
+        datasource=None,
+        connection_string="myconnstring",
+        query="myquery",
+        max_rows=9999,
     )
     expected = (
         '<SQL c="myconnstring" m="9999" to="30" s="1">' "<![CDATA[myquery]]></SQL>"
     )
     assert res == expected
-    res = AspenHandler.generate_sql_query(
-        datasource="mydatasource", query="myquery", max_rows=9999
+    res = aspen_handler.generate_sql_query(
+        datasource="mydatasource",
+        query="myquery",
+        max_rows=9999,
+        connection_string=None,
     )
     expected = (
         '<SQL t="SQLplus" ds="mydatasource" '
@@ -208,16 +233,16 @@ def test_generate_sql_query(AspenHandler):
     assert res == expected
 
 
-def test_initialize_connectionstring(AspenHandler):
-    AspenHandler.initialize_connectionstring(
+def test_initialize_connectionstring(aspen_handler: AspenHandlerWeb) -> None:
+    aspen_handler.initialize_connectionstring(
         host="myhost", port=999, connection_string="myconnstr"
     )
-    assert AspenHandler._connection_string == "myconnstr"
-    AspenHandler.initialize_connectionstring(
+    assert aspen_handler._connection_string == "myconnstr"
+    aspen_handler.initialize_connectionstring(
         host="myhost",
         port=999,
     )
-    assert AspenHandler._connection_string == (
+    assert aspen_handler._connection_string == (
         "DRIVER=AspenTech SQLPlus;HOST=myhost;PORT=999;"
         "CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N"
     )
