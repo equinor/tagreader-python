@@ -7,6 +7,9 @@ import pytest
 from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
 from tagreader.utils import ReaderType, is_windows
 
+if is_windows():
+    from tagreader.odbc_handlers import AspenHandlerODBC, PIHandlerODBC
+
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
 is_CI = is_GITHUBACTION or is_AZUREPIPELINE
@@ -50,6 +53,11 @@ def test_get_missing_intervals() -> None:
         datetime(2018, 1, 18, 6, 0, 0),
     )
 
+
+@pytest.mark.skipif(
+    is_GITHUBACTION or not is_windows(),
+    reason="ODBC drivers require Windows and are unavailable in GitHub Actions",
+)
 class TestODBC:
     def test_PI_init_odbc_client_with_host_port(self) -> None:
         host = "thehostname"
@@ -103,3 +111,6 @@ class TestODBC:
         with pytest.raises(ValueError):
             c = IMSClient(datasource="sna", imstype="pi")
         c = IMSClient(datasource="onO-iMs", imstype="pi")
+        assert isinstance(c.handler, PIHandlerODBC)
+        c = IMSClient(datasource="snA", imstype="aspen")
+        assert isinstance(c.handler, AspenHandlerODBC)
