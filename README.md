@@ -1,13 +1,12 @@
 # tagreader-python <!-- omit in toc -->
 
 ![GitHub Build Status](https://github.com/equinor/tagreader-python/workflows/Test/badge.svg)
-[![Devops Build Status](https://dev.azure.com/EIIDS/tagreader/_apis/build/status/equinor.tagreader-python?branchName=master)](https://dev.azure.com/EIIDS/tagreader/_build/latest?definitionId=5&branchName=master)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tagreader) 
-![PyPI](https://img.shields.io/pypi/v/tagreader) 
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tagreader)
+![PyPI](https://img.shields.io/pypi/v/tagreader)
 [![Downloads](https://pepy.tech/badge/tagreader)](https://pepy.tech/project/tagreader)
 
 Tagreader is a Python package for reading trend data from the OSIsoft
-PI and Aspen Infoplus.21 IMS systems. It is intended to be easy to use, 
+PI and Aspen Infoplus.21 IMS systems. It is intended to be easy to use,
 and present as similar interfaces as possible to the backend historians.
 
 While originally developed for Windows, Tagreader can since release 3.0.0
@@ -40,12 +39,12 @@ systems.
 
 To install and/or upgrade:
 
-``` 
+```
 pip install --upgrade tagreader
 ```
 
-If you wish to use ODBC connections to the IMS servers, you will also need 
-to install some proprietary drivers. There is more information in the 
+If you wish to use ODBC connections to the IMS servers, you will also need
+to install some proprietary drivers. There is more information in the
 [manual](docs/manual.md#odbc-drivers). Please note that the web APIs should
 normally be preferred.
 

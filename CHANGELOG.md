@@ -137,33 +137,33 @@ Last release under the name `pyIMS`.
 ### Changed
 - Major rewrite to accommodate for other types of connections than ODBC in the future.
 - **Breaking**: It is now necessary to specify imstype (`pi` or `aspen`) when initiating a client.
-- Update to new default DAS server address. 
+- Update to new default DAS server address.
 
 ### Fixed
 - Force keep_tz=False to suppress FutureWarning in Pandas >= 0.24.
-- Fix reading of digital states from PI. 
+- Fix reading of digital states from PI.
 
 ### Added
 - Add get_units() and get_descriptions() methods to fetch engineering units and description for
-specified tags. 
+specified tags.
 - Enable tag search by description.
 - Package version made available in `pyims.__version__`.
 
 ## [0.0.8] - 2019-01-17
 ### Changed
 - Improve documentation.
-- Add commonly requested documentation, including docstring, for specifying query method for 
+- Add commonly requested documentation, including docstring, for specifying query method for
 read_tags.
 
 ## [0.0.7] - 2018-06-18
 ### Fixed
 - Fix bug where timezone was locked to Europe/Oslo.
-- Discovered that Pandas >=0.23 is required. 0.22 causes a weird timezone bug during DST folds when 
+- Discovered that Pandas >=0.23 is required. 0.22 causes a weird timezone bug during DST folds when
 using cache.
 
 ## [0.0.6] - 2018-06-08
 ### Added
-- Aspen now supports avg, min, max, rng, std and var queries. These have timestamps in 
+- Aspen now supports avg, min, max, rng, std and var queries. These have timestamps in
 the middle of the period.
 
 ### Changed
@@ -175,9 +175,9 @@ the middle of the period.
 
 ## [0.0.5] - 2018-06-07
 ### Added
-- Introduce time zones. Start- and stop time for queries are always performed relative to server 
-time, so we have to know where the server is located. The default time zone is "Europe/Oslo", but 
-this can be changed for e.g. Peregrino by specifying `tz="America/Sao_Paulo"` upon initialization 
+- Introduce time zones. Start- and stop time for queries are always performed relative to server
+time, so we have to know where the server is located. The default time zone is "Europe/Oslo", but
+this can be changed for e.g. Peregrino by specifying `tz="America/Sao_Paulo"` upon initialization
 of the client.
 
 ### Changed
@@ -185,23 +185,23 @@ of the client.
 - Interpolated queries for IP.21 now return extrapolated values after last valid datapoint.
 
 ### Fixed
-- Properly handle transitions to and from DST (Daylight savings time). 
-- Queries should now always return data for exactly `start_time <= time <= stop_time`. Off-by-one data 
-(e.g. no data for `stop_time` or data for `stop_time+ts`) is a bug (except for PI queries with 
+- Properly handle transitions to and from DST (Daylight savings time).
+- Queries should now always return data for exactly `start_time <= time <= stop_time`. Off-by-one data
+(e.g. no data for `stop_time` or data for `stop_time+ts`) is a bug (except for PI queries with
 `stop_time` close to DST changes, in which case PI may act silly).
 
 ## [0.0.4] - 2018-06-01
 ### Fixed
-- Fix cache sorting issue when reading across two segments that were previously written in 
-nonchronological order. 
+- Fix cache sorting issue when reading across two segments that were previously written in
+nonchronological order.
 
 ## [0.0.3] - 2018-05-30
-### Added 
+### Added
 - Add support for tags with mappings (relevant for SNA and SNB) by specifying tags on the form `tag;map`
 - Fix NaturalNameWarning when using '.' in tagnames
 
 ## 0.0.2 - 2018-04-13
-Initial release. Supports the most common tag read queries for IP.21 and PI. 
+Initial release. Supports the most common tag read queries for IP.21 and PI.
 
 [1.1.0]: https://github.com/equinor/tagreader-python/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/equinor/tagreader-python/compare/v1.0.0...v1.0.1

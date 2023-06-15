@@ -36,33 +36,6 @@ jobs:
 
       - name: Install deps
         run: poetry install --no-interaction
+
       - name: Run tests
-        run: poetry run pytest tests --junit-xml pytest.xml
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: Test Results (Python ${{ matrix.os }} - ${{ matrix.python-version }})
-          path: pytest.xml
-
-  publish-test-results:
-    name: Publish test results
-    if: always()
-    needs: code-test
-    runs-on: ubuntu-latest
-    permissions:
-      checks: write
-      pull-requests: write
-
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: artifacts
-
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          files: "artifacts/**/*.xml"
+        run: poetry run pytest
