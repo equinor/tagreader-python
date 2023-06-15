@@ -1,0 +1,30 @@
+name: '🕵️‍♀️ Snyk vulnerability scan'
+on:
+  # Workflow dispatch is used for manual triggers
+  workflow_dispatch:
+  # Workflow call is used for called from another workflow
+  workflow_call:
+
+
+jobs:
+  snyk:
+    name: Snyk vulnerability scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3.3.0
+
+      - name: Setup Snyk
+        uses: snyk/actions/setup@master
+
+      - name: Scan third-party dependencies
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        working-directory: .
+        run: snyk test --file=poetry.lock --package-manager=poetry --severity-threshold=medium
+
+      - name: Scan code for vulnerabilities
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        working-directory: .
+        run: snyk code test

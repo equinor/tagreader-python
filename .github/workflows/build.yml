@@ -1,15 +1,11 @@
-# This is a simplified test workflow that does not include tests that require a connection to server.
-# If tests are successful and the push is a tag, then run a test-deploy to test.pypi.org.
-
-name: Test
+name: '🧪 Build & test code'
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  workflow_call:
 
 jobs:
-  test:
+  build:
     strategy:
       fail-fast: false
       matrix:

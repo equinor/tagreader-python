@@ -31,18 +31,15 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
 
-#   build:
-#     name: '🛠️ Build'
-#     if: ${{ needs.release_please.outputs.release_created }}
-#     needs: [release_please]
-#     uses: ./.github/workflows/build-workflow.yml
+  build:
+    name: '🛠️ Build'
+    if: ${{ needs.release_please.outputs.release_created }}
+    needs: [release_please]
+    uses: ./.github/workflows/build.yml
 
-#   deploy:
-#     name: "🚀 Publish"
-#     needs: [build, release_please]
-#     uses: ./.github/workflows/publish-workflow.yml
-#     with:
-#       artifact-name: ${{ needs.build.outputs.artifact-name }}
-#       artifact-name-exe: ${{ needs.build.outputs.artifact-name-exe }}
-#       tag_name: ${{ needs.release_please.outputs.tag_name }}
-#     secrets: inherit
+  deploy:
+    name: "🚀 Publish"
+    if: ${{ needs.release_please.outputs.release_created }}
+    needs: [build, release_please]
+    uses: ./.github/workflows/publish.yml
+    secrets: inherit

@@ -1,0 +1,23 @@
+name: '✨ On push to any branch'
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+
+jobs:
+  lint:
+    name: '💎 Code Quality'
+    uses: ./.github/workflows/lint.yml
+
+  snyk:
+    name: '️‍🕵️‍♀️ Snyk vulnerability scan'
+    uses: ./.github/workflows/snyk.yml
+
+  test:
+    name: '🧪 Build & test Code'
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
