@@ -16,6 +16,7 @@ jobs:
   snyk:
     name: '️‍🕵️‍♀️ Snyk vulnerability scan'
     uses: ./.github/workflows/snyk.yml
+    secrets: inherit
 
   test:
     name: '🧪 Build & test Code'
