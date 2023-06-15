@@ -38,7 +38,7 @@ jobs:
     uses: ./.github/workflows/build.yml
 
   deploy:
-    name: "🚀 Publish"
+    name: '🚀 Publish'
     if: ${{ needs.release_please.outputs.release_created }}
     needs: [build, release_please]
     uses: ./.github/workflows/publish.yml
