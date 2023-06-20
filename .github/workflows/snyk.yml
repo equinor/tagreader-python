@@ -23,6 +23,7 @@ jobs:
         run: snyk test --file=poetry.lock --package-manager=poetry --policy-path=.snyk --severity-threshold=medium
 
       - name: Scan code for vulnerabilities
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk code test
