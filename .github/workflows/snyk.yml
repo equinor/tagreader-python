@@ -16,13 +16,13 @@ jobs:
 
       - name: Setup Snyk
         uses: snyk/actions/setup@master
+
+      - name: Scan third-party dependencies
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk test --file=poetry.lock --package-manager=poetry --severity-threshold=medium
+        run: snyk test --file=poetry.lock --package-manager=poetry --policy-path=.snyk --severity-threshold=medium
 
       - name: Scan code for vulnerabilities
-        continue-on-error: true
-        uses: snyk/actions/setup@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk code test
