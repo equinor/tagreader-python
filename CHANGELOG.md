@@ -2,6 +2,37 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.1.3](https://github.com/equinor/tagreader-python/compare/v4.1.1...v4.1.3) (2023-06-21)
+
+
+### 👷 CI/CD
+
+* add workflow dispatch for publish ([a68d616](https://github.com/equinor/tagreader-python/commit/a68d61659c73fcbb2f021005b798f63aa8195880))
+* fix Snyk pipeline failure ([3025b50](https://github.com/equinor/tagreader-python/commit/3025b50de50736519041d6ed24acc1f28b830405))
+* fix Snyk pipeline failure ([4e3618e](https://github.com/equinor/tagreader-python/commit/4e3618e1782625379e5ae137e936d84831e1164d))
+* fix Snyk pipeline failure ([5f2b82c](https://github.com/equinor/tagreader-python/commit/5f2b82c92153809146b040ed4808774e1a6411e1))
+* fix typo in pipeline ([c5cf44f](https://github.com/equinor/tagreader-python/commit/c5cf44f7ed5fd65560599b9ee85e06394d1ca6bf))
+* Ignore failure on Snyk Code Test ([ab70063](https://github.com/equinor/tagreader-python/commit/ab700634269eb798c2c2a5fe07d1d858cb0d43d6))
+* inherit secrets when triggering Snyk vulnerability scan ([9ed927f](https://github.com/equinor/tagreader-python/commit/9ed927fa29a7a88a42b6af10fd002e9a424267fd))
+* make release-please publish automatically on approved release ([cc30519](https://github.com/equinor/tagreader-python/commit/cc305195845340b27915c3c57041e0f5d7f4e20c))
+* remove push to PyPi test ([28513bf](https://github.com/equinor/tagreader-python/commit/28513bf22e22f6cab2433a08fbde0c9f9f1dce36))
+* rename yaml to yml in pipelines ([ff30a81](https://github.com/equinor/tagreader-python/commit/ff30a81b40fedf2b5d43c9f09fbed448cda66279))
+* rename yaml to yml in pipelines ([a5c6a8c](https://github.com/equinor/tagreader-python/commit/a5c6a8c34f58b5259297dacf1fef856067298ad5))
+
+
+### 🧹 Chores
+
+* add .tmp/ to gitignore ([1731be7](https://github.com/equinor/tagreader-python/commit/1731be7de4d959a7682b48326e3ce1a5dd6d37b0))
+* add pre-commit hooks for cleaning up files and remove pytest junit export ([772c321](https://github.com/equinor/tagreader-python/commit/772c32163b43a85d664303c29db00c57d2324550))
+* clean up web handler json-response handling ([#222](https://github.com/equinor/tagreader-python/issues/222)) ([66c581f](https://github.com/equinor/tagreader-python/commit/66c581f8058440995df8413c2035ce669cbd6262))
+* release 4.1.3 ([aaf432a](https://github.com/equinor/tagreader-python/commit/aaf432a1ac6567fcbce29f277edd48cfe53681fd))
+* update links in notebook examples ([#223](https://github.com/equinor/tagreader-python/issues/223)) ([4c8df7a](https://github.com/equinor/tagreader-python/commit/4c8df7aeefce1d742d0c272c77a025793029c0b4)), closes [#220](https://github.com/equinor/tagreader-python/issues/220)
+
+
+### ✨ Features
+
+* increase reading performance by reading concurrently using threads ([#221](https://github.com/equinor/tagreader-python/issues/221)) ([f731c3a](https://github.com/equinor/tagreader-python/commit/f731c3aa96034a7666b351ef8d7e4d4e22a0ec96)), closes [#194](https://github.com/equinor/tagreader-python/issues/194)
+
 ## [4.1.1](https://github.com/equinor/tagreader-python/compare/v4.1.0...v4.1.1) (2023-06-14)
 
 
