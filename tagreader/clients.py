@@ -1,5 +1,6 @@
+import concurrent
 import os
-import warnings
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from itertools import groupby
 from operator import itemgetter
@@ -332,7 +333,7 @@ class IMSClient:
     def search_tag(
         self, tag: Optional[str] = None, desc: Optional[str] = None
     ) -> List[Tuple[str, str]]:
-        warnings.warn("This function is deprecated. Please call 'search()' instead")
+        logger.warning("This function is deprecated. Please call 'search()' instead")
         return self.search(tag=tag, desc=desc)
 
     def search(
@@ -602,20 +603,31 @@ class IMSClient:
             logger.warning(
                 f"Duplicate tags found, removed duplicates: {', '.join(duplicates)}"
             )
-        cols = []
-        for tag in tags:
-            cols.append(
-                self._read_single_tag(
-                    tag=tag,
-                    start_time=start_time,
-                    stop_time=end_time,
-                    ts=ts,
-                    read_type=read_type,
-                    get_status=get_status,
-                    cache=self.cache,
+
+        # Fixme: Temporary reading from IMS using Threads to improve performance. Need to use batch queries or at least
+        #     keep the same connection between queries.
+        results = []
+        with ThreadPoolExecutor(
+            max_workers=min(10, (os.cpu_count() or 1) + 4)
+        ) as executor:
+            for i, tag in enumerate(tags):
+                results.append(
+                    executor.submit(
+                        self._read_single_tag,
+                        tag=tag,
+                        start_time=start_time,
+                        stop_time=end_time,
+                        ts=ts,
+                        read_type=read_type,
+                        get_status=get_status,
+                        cache=self.cache,
+                    )
                 )
-            )
-        return pd.concat(cols, axis=1)
+
+        return pd.concat(
+            [result.result() for result in concurrent.futures.as_completed(results)],
+            axis=1,
+        )
 
     def query_sql(self, query: str, parse: bool = True):
         """[summary]
