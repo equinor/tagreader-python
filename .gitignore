@@ -161,3 +161,6 @@ tests/test_adhoc.py
 
 # Apple
 .DS_Store
+
+# Other
+.tmp/
