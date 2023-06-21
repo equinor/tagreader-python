@@ -1,7 +1,9 @@
+import json
 import re
 import urllib.parse
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
+from json.decoder import JSONDecodeError
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -10,18 +12,11 @@ import pandas as pd
 import pytz
 import requests
 import urllib3
-from requests import Response
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
 from tagreader.cache import BaseCache
 from tagreader.logger import logger
 from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
-
-# Requests will use simplejson if it has been installed, so handle both errors here
-try:
-    from simplejson.errors import JSONDecodeError
-except ImportError:
-    from json.decoder import JSONDecodeError
 
 
 def get_verifySSL() -> Union[bool, str]:
@@ -128,14 +123,31 @@ class BaseHandlerWeb(ABC):
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
 
-    def fetch(
-        self, url, params: Optional[Union[str, Dict[str, str]]] = None
-    ) -> Response:
-        if not self.session.verify:
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
+    def fetch(self, url, params: Optional[Union[str, Dict[str, str]]] = None) -> Dict:
         res = self.session.get(url, params=params)
-        return res
+        res.raise_for_status()
+
+        if len(res.text) == 0:
+            logger.warning(f"No data found for {url} {params}")
+            return {}
+
+        try:
+            return res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            return json.loads(txt)
+
+    def fetch_text(
+        self, url, params: Optional[Union[str, Dict[str, str]]] = None
+    ) -> str:
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+
+        return res.text
 
     def connect(self):
         try:
@@ -297,9 +309,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
         """
         url = urljoin(self.base_url, "Datasources")
         params = {"service": "ProcessData", "allQuotes": 1}
-        r = self.fetch(url=url, params=params)
-        j = r.json()
-        for item in j["data"]:
+        data = self.fetch(url=url, params=params)
+        for item in data["data"]:
             if item["n"] == datasource:
                 return True
         return False
@@ -344,14 +355,13 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_maps(self, tagname: str):
         params = self.generate_get_map_query(tagname)
         url = urljoin(self.base_url, "TagInfo")
-        res = self.fetch(url, params=params)
-        j = res.json()
+        data = self.fetch(url, params=params)
 
-        if "tags" not in j["data"]:
+        if "tags" not in data["data"]:
             return {}
 
         ret = {}
-        for item in j["data"]["tags"][0]["categories"][0]["ta"]:
+        for item in data["data"]["tags"][0]["categories"][0]["ta"]:
             ret[item["m"]] = True if item["d"] == "True" else False
         return ret
 
@@ -382,15 +392,13 @@ class AspenHandlerWeb(BaseHandlerWeb):
         )
         url = urljoin(self.base_url, "Browse?")
         url += encoded_params
-        res = self.fetch(url)
+        data = self.fetch(url)
 
-        j = res.json()
-
-        if "tags" not in j["data"]:
+        if "tags" not in data["data"]:
             return []
 
         ret = []
-        for item in j["data"]["tags"]:
+        for item in data["data"]["tags"]:
             tagname = item["t"]
             description = self._get_tag_description(tagname)
             ret.append((tagname, description))
@@ -408,12 +416,11 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_tag_unit(self, tag: str):
         query = self.generate_get_unit_query(tag)
         url = urljoin(self.base_url, "TagInfo")
-        res = self.fetch(url, params=query)
-        j = res.json()
+        data = self.fetch(url, params=query)
         try:
-            attrdata = j["data"]["tags"][0]["attrData"]
+            attrdata = data["data"]["tags"][0]["attrData"]
         except Exception:
-            print(f"Error. I got this: {j}")
+            print(f"Error. I got this: {data}")
             raise KeyError
         unit = ""
         for a in attrdata:
@@ -443,10 +450,9 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_tag_description(self, tag: str):
         query = self.generate_get_description_query(tag)
         url = urljoin(self.base_url, "TagInfo")
-        res = self.fetch(url, params=query)
-        j = res.json()
+        data = self.fetch(url, params=query)
         try:
-            desc = j["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
+            desc = data["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
         except Exception:
             desc = ""
         return desc
@@ -501,35 +507,24 @@ class AspenHandlerWeb(BaseHandlerWeb):
             metadata={},
         )
 
-        res = self.fetch(url, params=params)
+        data = self.fetch(url, params=params)
 
-        if len(res.text) == 0:  # res.text='' for timestamps in future
+        if len(data) == 0:  # Normally for timestamps in future
             return pd.DataFrame(columns=[tag])
 
-        try:
-            j = res.json()
-        except JSONDecodeError:
-            # AspenOne sometimes returns completely and utterly invalid -nan.
-            # Since json/simplejson has no mechanism to handle this, we need to
-            # pre-process
-            import json
-
-            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
-            j = json.loads(txt)
-
-        if "er" in j["data"][0]["samples"][0]:
-            logger.warning(j["data"][0]["samples"][0]["es"])
+        if "er" in data["data"][0]["samples"][0]:
+            logger.warning(data["data"][0]["samples"][0]["es"])
             return pd.DataFrame(columns=[tag])
         if get_status:
             # The "l" field maps 1:1 to ODBC status field values 0, 1, 2, 4, 5, 6
             df = (
-                pd.DataFrame.from_dict(j["data"][0]["samples"])
+                pd.DataFrame.from_dict(data["data"][0]["samples"])
                 .drop(labels=["s", "V"], axis="columns")
                 .rename(columns={"t": "Timestamp", "v": "Value", "l": "Status"})
             )
         else:
             df = (
-                pd.DataFrame.from_dict(j["data"][0]["samples"])
+                pd.DataFrame.from_dict(data["data"][0]["samples"])
                 .drop(labels=["l", "s", "V"], axis="columns")
                 .rename(columns={"t": "Timestamp", "v": "Value"})
             )
@@ -592,13 +587,13 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 max_rows=self._max_rows,
                 datasource=None,
             )
-        res = self.fetch(url, params=params)
+        res_text = self.fetch_text(url, params=params)
         # For now just return result as text regardless of value of parse
         if parse:
             raise NotImplementedError(
                 "Use parse=False to receive and handle text result instead"
             )
-        return res.text
+        return res_text
 
 
 class PIHandlerWeb(BaseHandlerWeb):
@@ -772,9 +767,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         :rtype: Bool
         """
         url = urljoin(self.base_url, "dataservers")
-        res = self.fetch(url)
-        j = res.json()
-        for item in j["Items"]:
+        data = self.fetch(url)
+        for item in data["Items"]:
             if item["Name"] == datasource:
                 return True
         return False
@@ -789,14 +783,13 @@ class PIHandlerWeb(BaseHandlerWeb):
         done = False
         ret = []
         while not done:
-            res = self.fetch(url, params=params)
+            data = self.fetch(url, params=params)
 
-            j = res.json()
-            for item in j["Items"]:
+            for item in data["Items"]:
                 description = item["Description"] if "Description" in item else ""
                 ret.append((item["Name"], description))
-            next_start = int(j["Links"]["Next"].split("=")[-1])
-            if int(j["Links"]["Last"].split("=")[-1]) >= next_start:
+            next_start = int(data["Links"]["Next"].split("=")[-1])
+            if int(data["Links"]["Last"].split("=")[-1]) >= next_start:
                 params["start"] = next_start
             else:
                 done = True
@@ -810,9 +803,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         if webid is None:
             return None
         url = urljoin(self.base_url, "points", webid)
-        res = self.fetch(url)
-        j = res.json()
-        unit = j["EngineeringUnits"]
+        data = self.fetch(url)
+        unit = data["EngineeringUnits"]
         return unit
 
     def _get_tag_description(self, tag: str) -> Optional[str]:
@@ -820,9 +812,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         if webid is None:
             return None
         url = urljoin(self.base_url, "points", webid)
-        res = self.fetch(url)
-        j = res.json()
-        description = j["Descriptor"]
+        data = self.fetch(url)
+        description = data["Descriptor"]
         return description
 
     def tag_to_webid(self, tag: str) -> Optional[str]:
@@ -840,26 +831,25 @@ class PIHandlerWeb(BaseHandlerWeb):
             )
             params["fields"] = "name;webid"
             url = urljoin(self.base_url, "search", "query")
-            res = self.fetch(url, params=params)
-            j = res.json()
+            data = self.fetch(url, params=params)
 
-            if len(j["Errors"]) > 0:
-                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"
+            if len(data["Errors"]) > 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {data['Errors']}"
                 raise ValueError(msg)
 
-            if len(j["Items"]) > 1:
+            if len(data["Items"]) > 1:
                 # Compare elements and if same, return the first
-                first = j["Items"][0]
-                for item in j["Items"][1:]:
+                first = data["Items"][0]
+                for item in data["Items"][1:]:
                     if item != first:
                         raise AssertionError(
-                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."
+                            f"Received {len(data['Items'])} results when trying to find unique WebId for {tag}."
                         )
-            elif len(j["Items"]) == 0:
+            elif len(data["Items"]) == 0:
                 logger.warning(f"Tag {tag} not found")
                 return None
 
-            webid = j["Items"][0]["WebId"]
+            webid = data["Items"][0]["WebId"]
             self.webidcache[tag] = webid
         return self.webidcache[tag]
 
@@ -900,14 +890,13 @@ class PIHandlerWeb(BaseHandlerWeb):
             get_status=get_status,
         )
         url = urljoin(self.base_url, url)
-        res = self.fetch(url, params=params)
+        data = self.fetch(url, params=params)
 
-        j = res.json()
         if read_type == ReaderType.SNAPSHOT:
-            df = pd.DataFrame.from_dict([j])  # noqa
+            df = pd.DataFrame.from_dict([data])  # noqa
         else:
             # Summary (aggregated) data and DigitalSets return Value as dict
-            df = pd.json_normalize(data=j, record_path="Items")
+            df = pd.json_normalize(data=data, record_path="Items")
 
         # Can happen for RAW reads w/o data in interval
         if df.empty:
