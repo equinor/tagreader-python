@@ -2,6 +2,25 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.1.3](https://github.com/equinor/tagreader-python/compare/v4.1.1...v4.1.3) (2023-06-21)
+
+
+### 👷 CI/CD
+
+* Add workflow dispatch for publish ([a68d616](https://github.com/equinor/tagreader-python/commit/a68d61659c73fcbb2f021005b798f63aa8195880))
+* Make release-please publish automatically on approved release ([cc30519](https://github.com/equinor/tagreader-python/commit/cc305195845340b27915c3c57041e0f5d7f4e20c))
+
+
+### 🧹 Chores
+
+* Update links in notebook examples ([#223](https://github.com/equinor/tagreader-python/issues/223)) ([4c8df7a](https://github.com/equinor/tagreader-python/commit/4c8df7aeefce1d742d0c272c77a025793029c0b4)), closes [#220](https://github.com/equinor/tagreader-python/issues/220)
+
+
+### ✨ Features
+
+* Increase reading performance by reading concurrently using threads ([#221](https://github.com/equinor/tagreader-python/issues/221)) ([f731c3a](https://github.com/equinor/tagreader-python/commit/f731c3aa96034a7666b351ef8d7e4d4e22a0ec96)), closes [#194](https://github.com/equinor/tagreader-python/issues/194)
+
+
 ## [4.1.1](https://github.com/equinor/tagreader-python/compare/v4.1.0...v4.1.1) (2023-06-14)
 
 
