@@ -2,6 +2,25 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.1.4](https://github.com/equinor/tagreader-python/compare/v4.1.3...v4.1.4) (2023-06-28)
+
+
+### 🔨 Refactor
+
+* added try catch around list_sources ([#224](https://github.com/equinor/tagreader-python/issues/224)) ([7be34c8](https://github.com/equinor/tagreader-python/commit/7be34c88bdf9bd22a29e4546ee7c648140c692de))
+
+
+### 🧹 Chores
+
+* clean up logging and code format ([ba82b18](https://github.com/equinor/tagreader-python/commit/ba82b186cd31d62f872d73987ab6a84d9a1c50ff))
+* improve logging for web service API error ([2b38479](https://github.com/equinor/tagreader-python/commit/2b38479cebe9f7d65588dd799ee22a7815ef8794))
+* pre-commit fix ([b639871](https://github.com/equinor/tagreader-python/commit/b6398715b0003fb7868f46b0bd1dc823db0a29a1))
+
+
+### 📦 Build system
+
+* **deps:** update poetry lock ([4addde1](https://github.com/equinor/tagreader-python/commit/4addde18174ed60cac65cf745a0119afd311c64f))
+
 ## [4.1.3](https://github.com/equinor/tagreader-python/compare/v4.1.1...v4.1.3) (2023-06-21)
 
 
