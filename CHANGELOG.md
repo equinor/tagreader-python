@@ -2,6 +2,18 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.2.0](https://github.com/equinor/tagreader-python/compare/v4.1.4...v4.2.0) (2023-06-28)
+
+
+### ✨ Features
+
+* let user specify cache when creating the client ([#227](https://github.com/equinor/tagreader-python/issues/227)) ([1ad859d](https://github.com/equinor/tagreader-python/commit/1ad859d0fddfa9e5529cc092472bc4b57ed45944))
+
+
+### ⏪️ Revert
+
+* revert threading due to non-tread-safe handling of cache ([#229](https://github.com/equinor/tagreader-python/issues/229)) ([6b379ef](https://github.com/equinor/tagreader-python/commit/6b379ef1e1748a69afa17ac86fdb78f55126c183))
+
 ## [4.1.4](https://github.com/equinor/tagreader-python/compare/v4.1.3...v4.1.4) (2023-06-28)
 
 
