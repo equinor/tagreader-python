@@ -62,17 +62,12 @@ def list_aspenone_sources(
     params = {"service": "ProcessData", "allQuotes": 1}
 
     res = requests.get(url_, params=params, auth=auth, verify=verifySSL)
-    if res.status_code == 200:
-        try:
-            source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
-            return source_list
-        except JSONDecodeError:
-            print("Did not return json")
-    elif res.status_code == 404:
-        print("Not found")
-    elif res.status_code == 401:
-        print("Not authorized")
     res.raise_for_status()
+    try:
+        source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
+        return source_list
+    except JSONDecodeError as e:
+        logger.error(f"Could not decode JSON response: {e}")
 
 
 def list_piwebapi_sources(
@@ -94,17 +89,12 @@ def list_piwebapi_sources(
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verifySSL)
 
-    if res.status_code == 200:
-        try:
-            source_list = [r["Name"] for r in res.json()["Items"]]
-            return source_list
-        except JSONDecodeError:
-            print("Did not return json")
-    elif res.status_code == 404:
-        print("Not found")
-    elif res.status_code == 401:
-        print("Not authorized")
     res.raise_for_status()
+    try:
+        source_list = [r["Name"] for r in res.json()["Items"]]
+        return source_list
+    except JSONDecodeError as e:
+        logger.error(f"Could not decode JSON response: {e}")
 
 
 class BaseHandlerWeb(ABC):

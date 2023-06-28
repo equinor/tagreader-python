@@ -6,25 +6,40 @@ from itertools import groupby
 from operator import itemgetter
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
+from urllib.error import HTTPError
 
 import pandas as pd
 import pytz
 
 from tagreader.cache import BucketCache, SmartCache
 from tagreader.logger import logger
-from tagreader.utils import (IMSType, ReaderType, convert_to_pydatetime,
-                             ensure_datetime_with_tz, find_registry_key,
-                             find_registry_key_from_name, is_windows)
-from tagreader.web_handlers import (AspenHandlerWeb, PIHandlerWeb,
-                                    get_auth_aspen, get_auth_pi,
-                                    list_aspenone_sources,
-                                    list_piwebapi_sources)
+from tagreader.utils import (
+    IMSType,
+    ReaderType,
+    convert_to_pydatetime,
+    ensure_datetime_with_tz,
+    find_registry_key,
+    find_registry_key_from_name,
+    is_windows,
+)
+from tagreader.web_handlers import (
+    AspenHandlerWeb,
+    PIHandlerWeb,
+    get_auth_aspen,
+    get_auth_pi,
+    list_aspenone_sources,
+    list_piwebapi_sources,
+)
 
 if is_windows():
     import pyodbc
 
-    from tagreader.odbc_handlers import (AspenHandlerODBC, PIHandlerODBC,
-                                         list_aspen_sources, list_pi_sources)
+    from tagreader.odbc_handlers import (
+        AspenHandlerODBC,
+        PIHandlerODBC,
+        list_aspen_sources,
+        list_pi_sources,
+    )
 
 NONE_START_TIME = datetime(1970, 1, 1, tzinfo=pytz.UTC)
 
@@ -133,8 +148,7 @@ def get_server_address_aspen(datasource: str) -> Optional[Tuple[str, int]]:
     regkey, _ = find_registry_key_from_name(
         regkey_clsid, "Aspen SQLplus service component"
     )
-    regkey_implemented_categories = winreg.OpenKeyEx(
-        regkey, "Implemented Categories")
+    regkey_implemented_categories = winreg.OpenKeyEx(regkey, "Implemented Categories")
 
     _, aspen_UUID = find_registry_key_from_name(
         regkey_implemented_categories, "Aspen SQLplus services"
@@ -201,16 +215,20 @@ def get_handler(
 ):
     if imstype is None:
         try:
-            if datasource in list_aspenone_sources(url=None, auth=None, verifySSL=verifySSL):
+            if datasource in list_aspenone_sources(
+                url=None, auth=None, verifySSL=verifySSL
+            ):
                 imstype = IMSType.ASPENONE
-        except:
-            pass
+        except HTTPError as e:
+            logger.debug(f"Could not list Aspenone sources: {e}")
     if imstype is None:
         try:
-            if datasource in list_piwebapi_sources(url=None, auth=None, verifySSL=verifySSL):
+            if datasource in list_piwebapi_sources(
+                url=None, auth=None, verifySSL=verifySSL
+            ):
                 imstype = IMSType.PIWEBAPI
-        except:
-            pass
+        except HTTPError as e:
+            logger.debug(f"Could not list PI sources: {e}")
     if imstype == IMSType.PI:
         if not is_windows():
             raise RuntimeError(
@@ -322,8 +340,7 @@ class IMSClient:
     def search_tag(
         self, tag: Optional[str] = None, desc: Optional[str] = None
     ) -> List[Tuple[str, str]]:
-        logger.warning(
-            "This function is deprecated. Please call 'search()' instead")
+        logger.warning("This function is deprecated. Please call 'search()' instead")
         return self.search(tag=tag, desc=desc)
 
     def search(
@@ -489,8 +506,7 @@ class IMSClient:
             if tag not in descriptions:
                 desc = self.handler._get_tag_description(tag)
                 if self.cache is not None and desc is not None:
-                    self.cache.put_metadata(
-                        key=tag, value={"description": desc})
+                    self.cache.put_metadata(key=tag, value={"description": desc})
                 descriptions[tag] = desc
         return descriptions
 
@@ -590,8 +606,7 @@ class IMSClient:
         oldtags = tags
         tags = list(dict.fromkeys(tags))
         if len(oldtags) > len(tags):
-            duplicates = set(
-                [x for n, x in enumerate(oldtags) if x in oldtags[:n]])
+            duplicates = set([x for n, x in enumerate(oldtags) if x in oldtags[:n]])
             logger.warning(
                 f"Duplicate tags found, removed duplicates: {', '.join(duplicates)}"
             )
@@ -617,8 +632,7 @@ class IMSClient:
                 )
 
         return pd.concat(
-            [result.result()
-             for result in concurrent.futures.as_completed(results)],
+            [result.result() for result in concurrent.futures.as_completed(results)],
             axis=1,
         )
 
