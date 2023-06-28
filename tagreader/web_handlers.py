@@ -513,7 +513,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
             return pd.DataFrame(columns=[tag])
 
         if "er" in data["data"][0]["samples"][0]:
-            logger.warning(data["data"][0]["samples"][0]["es"])
+            logger.warning(f"API error for {tag}: {data['data'][0]['samples'][0]['es']} params: {params}")
             return pd.DataFrame(columns=[tag])
         if get_status:
             # The "l" field maps 1:1 to ODBC status field values 0, 1, 2, 4, 5, 6
