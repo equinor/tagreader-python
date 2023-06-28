@@ -918,6 +918,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         df = df.filter(["Timestamp", "Value", "Good", "Questionable", "Substituted"])
 
         try:
+            # Could call this here, to support mixed format, but have not checked performance
+            # df["Timestamp"] = pd.to_datetime(df["Timestamp"], format='ISO8601', utc=True)
             if read_type == ReaderType.RAW or read_type == ReaderType.SNAPSHOT:
                 # Sub-second timestamps are common
                 df["Timestamp"] = pd.to_datetime(
@@ -929,7 +931,13 @@ class PIHandlerWeb(BaseHandlerWeb):
                     df["Timestamp"], format="%Y-%m-%dT%H:%M:%SZ", utc=True
                 )
         except ValueError:
-            df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True)
+            try:
+                df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True)
+            except ValueError:
+                #  Handle when both second and sub-second data is returned
+                df["Timestamp"] = pd.to_datetime(
+                    df["Timestamp"], format='ISO8601', utc=True)
+
 
         if read_type == ReaderType.VAR:
             df["Value"] = df["Value"] ** 2
