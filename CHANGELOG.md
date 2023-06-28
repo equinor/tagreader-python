@@ -14,7 +14,6 @@ This changelog is deprecated. All changes are documented under [releases](https:
 
 * clean up logging and code format ([ba82b18](https://github.com/equinor/tagreader-python/commit/ba82b186cd31d62f872d73987ab6a84d9a1c50ff))
 * improve logging for web service API error ([2b38479](https://github.com/equinor/tagreader-python/commit/2b38479cebe9f7d65588dd799ee22a7815ef8794))
-* pre-commit fix ([b639871](https://github.com/equinor/tagreader-python/commit/b6398715b0003fb7868f46b0bd1dc823db0a29a1))
 
 
 ### 📦 Build system
