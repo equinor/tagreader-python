@@ -84,8 +84,8 @@ def test_key_path_with_time(cache: BucketCache) -> None:
             ts=60,
             stepped=False,
             status=False,
-            starttime=STARTTIME_1,
-            endtime=ENDTIME_1,
+            start_time=STARTTIME_1,
+            end_time=ENDTIME_1,
         )
         == f"$tag1$INT$s60$_{STARTTIME_1_EPOCH}_{ENDTIME_1_EPOCH}"
     )
@@ -99,8 +99,8 @@ def test_key_path_stepped(cache: BucketCache) -> None:
             ts=60,
             stepped=True,
             status=False,
-            starttime=STARTTIME_1,
-            endtime=ENDTIME_1,
+            start_time=STARTTIME_1,
+            end_time=ENDTIME_1,
         )
         == f"$tag1$INT$s60$stepped$_{STARTTIME_1_EPOCH}_{ENDTIME_1_EPOCH}"
     )
@@ -140,8 +140,8 @@ def test_get_missing_intervals(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
 
     cache.store(
@@ -151,8 +151,8 @@ def test_get_missing_intervals(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_2,
-        endtime=ENDTIME_2,
+        start_time=STARTTIME_2,
+        end_time=ENDTIME_2,
     )
 
     # Perfect coverage, no missing intervals
@@ -162,8 +162,8 @@ def test_get_missing_intervals(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
 
     assert len(missing_intervals) == 0
@@ -175,8 +175,8 @@ def test_get_missing_intervals(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1 + pd.Timedelta("5m"),
-        endtime=ENDTIME_1 - pd.Timedelta("5m"),
+        start_time=STARTTIME_1 + pd.Timedelta("5m"),
+        end_time=ENDTIME_1 - pd.Timedelta("5m"),
     )
 
     assert len(missing_intervals) == 0
@@ -188,8 +188,8 @@ def test_get_missing_intervals(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1 - pd.Timedelta("15m"),
-        endtime=ENDTIME_1 + pd.Timedelta("15m"),
+        start_time=STARTTIME_1 - pd.Timedelta("15m"),
+        end_time=ENDTIME_1 + pd.Timedelta("15m"),
     )
 
     assert len(missing_intervals) == 2
@@ -204,8 +204,8 @@ def test_get_missing_intervals(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1 - pd.Timedelta("15m"),
-        endtime=ENDTIME_2 + pd.Timedelta("15m"),
+        start_time=STARTTIME_1 - pd.Timedelta("15m"),
+        end_time=ENDTIME_2 + pd.Timedelta("15m"),
     )
 
     assert len(missing_intervals) == 3
@@ -222,8 +222,8 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
 
     cache.store(
@@ -233,8 +233,8 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_2,
-        endtime=ENDTIME_2,
+        start_time=STARTTIME_2,
+        end_time=ENDTIME_2,
     )
 
     intersecting_datasets = cache.get_intersecting_datasets(
@@ -243,8 +243,8 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
 
     # Perfect coverage
@@ -254,8 +254,8 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
 
     assert len(intersecting_datasets) == 1
@@ -267,8 +267,8 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1 + pd.Timedelta("5m"),
-        endtime=ENDTIME_1 - pd.Timedelta("5m"),
+        start_time=STARTTIME_1 + pd.Timedelta("5m"),
+        end_time=ENDTIME_1 - pd.Timedelta("5m"),
     )
 
     assert len(intersecting_datasets) == 1
@@ -280,8 +280,8 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1 - pd.Timedelta("15m"),
-        endtime=ENDTIME_1 + pd.Timedelta("15m"),
+        start_time=STARTTIME_1 - pd.Timedelta("15m"),
+        end_time=ENDTIME_1 + pd.Timedelta("15m"),
     )
 
     assert len(intersecting_datasets) == 1
@@ -294,8 +294,8 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1 - pd.Timedelta("15m"),
-        endtime=ENDTIME_2 + pd.Timedelta("15m"),
+        start_time=STARTTIME_1 - pd.Timedelta("15m"),
+        end_time=ENDTIME_2 + pd.Timedelta("15m"),
     )
 
     assert len(intersecting_datasets) == 2
@@ -308,8 +308,8 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1 - pd.Timedelta("15m"),
-        endtime=ENDTIME_2 - pd.Timedelta("15m"),
+        start_time=STARTTIME_1 - pd.Timedelta("15m"),
+        end_time=ENDTIME_2 - pd.Timedelta("15m"),
     )
 
     assert len(intersecting_datasets) == 2
@@ -322,8 +322,8 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1 + pd.Timedelta("15m"),
-        endtime=ENDTIME_2 - pd.Timedelta("15m"),
+        start_time=STARTTIME_1 + pd.Timedelta("15m"),
+        end_time=ENDTIME_2 - pd.Timedelta("15m"),
     )
 
     assert len(intersecting_datasets) == 2
@@ -352,8 +352,8 @@ def test_store_empty_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )  # Specify ts to ensure correct key /if/ stored
     df_read = cache.fetch(
         tagname=TAGNAME,
@@ -361,8 +361,8 @@ def test_store_empty_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
     pd.testing.assert_frame_equal(df_read, pd.DataFrame())
 
@@ -373,8 +373,8 @@ def test_store_empty_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
     df_read = cache.fetch(
         tagname=TAGNAME,
@@ -382,8 +382,8 @@ def test_store_empty_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
     pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
 
@@ -394,8 +394,8 @@ def test_store_empty_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )  # Specify ts to ensure correct key /if/ stored
     df_read = cache.fetch(
         tagname=TAGNAME,
@@ -403,8 +403,8 @@ def test_store_empty_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
     pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
 
@@ -417,8 +417,8 @@ def test_store_single_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
     df_read = cache.fetch(
         tagname=TAGNAME,
@@ -426,8 +426,8 @@ def test_store_single_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
     pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
 
@@ -440,8 +440,8 @@ def test_fetch(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
     cache.store(
         df=DF2,
@@ -450,8 +450,8 @@ def test_fetch(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_2,
-        endtime=ENDTIME_2,
+        start_time=STARTTIME_2,
+        end_time=ENDTIME_2,
     )
 
     df_read = cache.fetch(
@@ -460,8 +460,8 @@ def test_fetch(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1 - pd.Timedelta("15m"),
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1 - pd.Timedelta("15m"),
     )
     pd.testing.assert_frame_equal(
         DF1.loc[STARTTIME_1 : ENDTIME_1 - pd.Timedelta("15m")],  # type: ignore[misc]
@@ -475,8 +475,8 @@ def test_fetch(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1 - pd.Timedelta("15m"),
-        endtime=ENDTIME_1 + pd.Timedelta("15m"),
+        start_time=STARTTIME_1 - pd.Timedelta("15m"),
+        end_time=ENDTIME_1 + pd.Timedelta("15m"),
     )
     pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
 
@@ -486,8 +486,8 @@ def test_fetch(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1 - pd.Timedelta("15m"),
-        endtime=ENDTIME_2 + pd.Timedelta("15m"),
+        start_time=STARTTIME_1 - pd.Timedelta("15m"),
+        end_time=ENDTIME_2 + pd.Timedelta("15m"),
     )
     pd.testing.assert_frame_equal(pd.concat([DF1, DF2]), df_read, check_freq=False)
 
@@ -500,8 +500,8 @@ def test_store_overlapping_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_1,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_1,
     )
     cache.store(
         df=DF2,
@@ -510,8 +510,8 @@ def test_store_overlapping_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_2,
-        endtime=ENDTIME_2,
+        start_time=STARTTIME_2,
+        end_time=ENDTIME_2,
     )
     cache.store(
         df=DF3,
@@ -520,8 +520,8 @@ def test_store_overlapping_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_3,
-        endtime=ENDTIME_3,
+        start_time=STARTTIME_3,
+        end_time=ENDTIME_3,
     )
     leaves = None
     for key in cache.iterkeys():
@@ -536,8 +536,8 @@ def test_store_overlapping_df(cache: BucketCache) -> None:
         ts=TS,
         stepped=False,
         status=False,
-        starttime=STARTTIME_1,
-        endtime=ENDTIME_2,
+        start_time=STARTTIME_1,
+        end_time=ENDTIME_2,
     )
     df_expected = pd.concat(
         [

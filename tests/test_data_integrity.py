@@ -252,7 +252,7 @@ def test_cache_proper_fill_up(PIClientWeb: IMSClient, tmp_path: Path) -> None:
     )
     assert len(df_int_1) == 16
     assert len(df_int_2) == 16
-    df_cached = PIClientWeb.cache.fetch(
+    df_cached = PIClientWeb.cache.fetch(  # type: ignore[call-arg]
         tagname=PI_TAG,
         readtype=ReaderType.INT,
         ts=TS,
