@@ -111,17 +111,17 @@ class BucketCache(BaseCache):
         ts: Union[int, timedelta],
         stepped: bool,
         status: bool,
-        starttime: Optional[datetime] = None,
-        endtime: Optional[datetime] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
     ) -> str:
         """Return a string on the form
-        $tagname$readtype[$sample_time][$stepped][$status]$_starttime_endtime
+        $tagname$readtype[$sample_time][$stepped][$status]$_start_time_end_time
         tagname: safe tagname
         sample_time: integer value. Empty for RAW.
         stepped: "stepped" if value was read as stepped. Empty if not.
         status: "status" if value contains status. Empty if not.
-        starttime: The starttime of the query that created the bucket.
-        endtime: The endtime of the query that created the bucket.
+        start_time: The start_time of the query that created the bucket.
+        end_time: The end_time of the query that created the bucket.
         """
         tagname = safe_tagname(tagname)
 
@@ -131,10 +131,10 @@ class BucketCache(BaseCache):
             else ts
         )
         timespan = ""
-        if starttime is not None:
-            starttime_epoch = timestamp_to_epoch(starttime)
-            endtime_epoch = timestamp_to_epoch(endtime) if endtime else endtime
-            timespan = f"$_{starttime_epoch}_{endtime_epoch}"
+        if start_time is not None:
+            start_time_epoch = timestamp_to_epoch(start_time)
+            end_time_epoch = timestamp_to_epoch(end_time) if end_time else end_time
+            timespan = f"$_{start_time_epoch}_{end_time_epoch}"
 
         keyval = (
             f"${tagname}"
@@ -154,8 +154,8 @@ class BucketCache(BaseCache):
         ts: timedelta,
         stepped: bool,
         status: bool,
-        starttime: datetime,
-        endtime: datetime,
+        start_time: datetime,
+        end_time: datetime,
     ) -> None:
         if df.empty:
             return
@@ -166,14 +166,14 @@ class BucketCache(BaseCache):
             ts=ts,
             stepped=stepped,
             status=status,
-            starttime=starttime,
-            endtime=endtime,
+            start_time=start_time,
+            end_time=end_time,
         )
         if len(intersecting) > 0:
             for dataset in intersecting:
                 this_start, this_end = self._get_intervals_from_dataset_name(dataset)
-                starttime = min(starttime, this_start if this_start else starttime)
-                endtime = max(endtime, this_end if this_end else endtime)
+                start_time = min(start_time, this_start if this_start else start_time)
+                end_time = max(end_time, this_end if this_end else end_time)
                 df2 = self.get(dataset)
                 if df2 is not None:
                     df = pd.concat([df, df2], axis=0)
@@ -184,8 +184,8 @@ class BucketCache(BaseCache):
             ts=ts,
             stepped=stepped,
             status=status,
-            starttime=starttime,
-            endtime=endtime,
+            start_time=start_time,
+            end_time=end_time,
         )
         self.put(key=key, value=clean_dataframe(df))
 
@@ -196,10 +196,10 @@ class BucketCache(BaseCache):
         name_with_times = name.split("$")[-1]
         if not name_with_times.count("_") == 2:
             return (None, None)  # type: ignore[return-value]
-        _, starttime_epoch, endtime_epoch = name_with_times.split("_")
-        starttime = pd.to_datetime(int(starttime_epoch), unit="s").tz_localize("UTC")
-        endtime = pd.to_datetime(int(endtime_epoch), unit="s").tz_localize("UTC")
-        return starttime, endtime
+        _, start_time_epoch, end_time_epoch = name_with_times.split("_")
+        start_time = pd.to_datetime(int(start_time_epoch), unit="s").tz_localize("UTC")
+        end_time = pd.to_datetime(int(end_time_epoch), unit="s").tz_localize("UTC")
+        return start_time, end_time
 
     def get_intersecting_datasets(
         self,
@@ -208,8 +208,8 @@ class BucketCache(BaseCache):
         ts: Union[int, timedelta],
         stepped: bool,
         status: bool,
-        starttime: datetime,
-        endtime: datetime,
+        start_time: datetime,
+        end_time: datetime,
     ) -> List[str]:
         if not len(self) > 0:
             return []
@@ -218,17 +218,17 @@ class BucketCache(BaseCache):
             target_key = self._key_path(
                 tagname=tagname,
                 readtype=readtype,
-                starttime=None,
-                endtime=None,
+                start_time=None,
+                end_time=None,
                 ts=ts,
                 stepped=stepped,
                 status=status,
             )
             if target_key in dataset:
-                starttime_ds, endtime_ds = self._get_intervals_from_dataset_name(
+                start_time_ds, end_time_ds = self._get_intervals_from_dataset_name(
                     dataset
                 )
-                if endtime_ds >= starttime and endtime >= starttime_ds:
+                if end_time_ds >= start_time and end_time >= start_time_ds:
                     intersecting_datasets.append(dataset)
         return intersecting_datasets
 
@@ -239,8 +239,8 @@ class BucketCache(BaseCache):
         ts: Union[int, timedelta],
         stepped: bool,
         status: bool,
-        starttime: datetime,
-        endtime: datetime,
+        start_time: datetime,
+        end_time: datetime,
     ) -> List[Tuple[datetime, datetime]]:
         datasets = self.get_intersecting_datasets(
             tagname=tagname,
@@ -248,10 +248,10 @@ class BucketCache(BaseCache):
             ts=ts,
             stepped=stepped,
             status=status,
-            starttime=starttime,
-            endtime=endtime,
+            start_time=start_time,
+            end_time=end_time,
         )
-        missing_intervals = [(starttime, endtime)]
+        missing_intervals = [(start_time, end_time)]
         for dataset in datasets:
             b = self._get_intervals_from_dataset_name(dataset)
             for _ in range(0, len(missing_intervals)):
@@ -281,8 +281,8 @@ class BucketCache(BaseCache):
         ts: Union[int, timedelta],
         stepped: bool,
         status: bool,
-        starttime: datetime,
-        endtime: datetime,
+        start_time: datetime,
+        end_time: datetime,
     ) -> pd.DataFrame:
         df = pd.DataFrame()
         if not len(self) > 0:
@@ -297,14 +297,14 @@ class BucketCache(BaseCache):
             ts=ts,
             stepped=stepped,
             status=status,
-            starttime=starttime,
-            endtime=endtime,
+            start_time=start_time,
+            end_time=end_time,
         )
 
         for dataset in datasets:
             df2 = self.get(dataset)
             if df2 is not None:
-                df = pd.concat([df, df2.loc[starttime:endtime]], axis=0)  # type: ignore[call-overload, misc]
+                df = pd.concat([df, df2.loc[start_time:end_time]], axis=0)  # type: ignore[call-overload, misc]
 
         return clean_dataframe(df)
 

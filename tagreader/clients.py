@@ -1,5 +1,6 @@
 import concurrent
 import os
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from itertools import groupby
@@ -311,6 +312,7 @@ class IMSClient:
         handler_options: Dict[str, Union[int, float, str]] = {},  # noqa:
         verifySSL: bool = True,
         auth: Optional[Any] = None,
+        cache: Optional[Union[SmartCache, BucketCache]] = None,
     ):
         if isinstance(imstype, str):
             try:
@@ -332,7 +334,16 @@ class IMSClient:
             verifySSL=verifySSL,
             auth=auth,
         )
-        self.cache = SmartCache(directory=Path(".") / ".cache" / datasource)
+        if cache:
+            self.cache = cache
+        else:
+            self.cache = SmartCache(directory=Path(".") / ".cache" / datasource)
+            warnings.warn(
+                "Caching will no longer be the default behavior in Tagreader version 5"
+                ". Please spe"
+                "sify chash argument to keep current behaviour.",
+                FutureWarning,
+            )
 
     def connect(self) -> None:
         self.handler.connect()
@@ -392,7 +403,7 @@ class IMSClient:
                     readtype=read_type,
                     ts=ts,
                     start_time=time_slice[0],
-                    stop_time=time_slice[1],
+                    end_time=time_slice[1],
                 )
                 missing_intervals = get_missing_intervals(
                     df=df,
@@ -419,8 +430,8 @@ class IMSClient:
                     ts=ts,
                     stepped=stepped,
                     status=get_status,
-                    starttime=start_time,
-                    endtime=stop_time,
+                    start_time=start_time,
+                    end_time=stop_time,
                 )
                 if not missing_intervals:
                     return df.tz_convert(self.tz).sort_index()
