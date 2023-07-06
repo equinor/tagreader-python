@@ -40,7 +40,7 @@ ASPEN_END_TIME = PI_END_TIME
 
 @pytest.fixture  # type: ignore[misc]
 def pi_client_odbc() -> Generator[IMSClient, None, None]:
-    c = IMSClient(datasource=PI_DS, imstype="pi")
+    c = IMSClient(datasource=PI_DS, imstype="pi", get_status=False)
     if os.path.exists(PI_DS + ".h5"):
         os.remove(PI_DS + ".h5")
     c.cache = None  # type: ignore[assignment]
@@ -52,7 +52,9 @@ def pi_client_odbc() -> Generator[IMSClient, None, None]:
 
 @pytest.fixture  # type: ignore[misc]
 def pi_client_web() -> Generator[IMSClient, None, None]:
-    c = IMSClient(datasource=PI_DS, imstype="piwebapi", verifySSL=verifySSL)
+    c = IMSClient(
+        datasource=PI_DS, imstype="piwebapi", verifySSL=verifySSL, get_status=False
+    )
     if os.path.exists(PI_DS + ".h5"):
         os.remove(PI_DS + ".h5")
     c.cache = None  # type: ignore[assignment]
@@ -64,7 +66,7 @@ def pi_client_web() -> Generator[IMSClient, None, None]:
 
 @pytest.fixture  # type: ignore[misc]
 def aspen_client_odbc() -> Generator[IMSClient, None, None]:
-    c = IMSClient(datasource=ASPEN_DS, imstype="ip21")
+    c = IMSClient(datasource=ASPEN_DS, imstype="ip21", get_status=False)
     if os.path.exists(ASPEN_DS + ".h5"):
         os.remove(ASPEN_DS + ".h5")
     c.cache = None  # type: ignore[assignment]
@@ -76,7 +78,12 @@ def aspen_client_odbc() -> Generator[IMSClient, None, None]:
 
 @pytest.fixture  # type: ignore[misc]
 def aspen_client_web() -> Generator[IMSClient, None, None]:
-    c = IMSClient(datasource=ASPEN_DS, imstype="aspenone", verifySSL=bool(verifySSL))
+    c = IMSClient(
+        datasource=ASPEN_DS,
+        imstype="aspenone",
+        verifySSL=bool(verifySSL),
+        get_status=False,
+    )
     if os.path.exists(ASPEN_DS + ".h5"):
         os.remove(ASPEN_DS + ".h5")
     c.cache = None  # type: ignore[assignment]
@@ -234,7 +241,9 @@ def test_concat_proper_fill_up(pi_client_web: IMSClient) -> None:
     pi_client_web.handler._max_rows = max_rows_backup
 
 
-def test_cache_proper_fill_up(pi_client_web: IMSClient, tmp_path: Path) -> None:
+def test_cache_proper_fill_up(
+    pi_client_web: IMSClient, tmp_path: Path, get_status: bool = False
+) -> None:
     pi_client_web.cache = SmartCache(directory=tmp_path)
     df_int_1 = pi_client_web.read(
         tags=PI_TAG,
@@ -258,5 +267,6 @@ def test_cache_proper_fill_up(pi_client_web: IMSClient, tmp_path: Path) -> None:
         ts=TS,
         start=ensure_datetime_with_tz(PI_START_TIME),
         end=ensure_datetime_with_tz(PI_END_TIME_2),
+        get_status=get_status,
     )
     assert len(df_cached) == 32

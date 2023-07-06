@@ -37,7 +37,7 @@ SAMPLE_TIME = timedelta(seconds=60)
 
 @pytest.fixture  # type: ignore[misc]
 def client() -> Generator[IMSClient, None, None]:
-    c = IMSClient(datasource=SOURCE, imstype="pi")
+    c = IMSClient(datasource=SOURCE, imstype="pi", get_status=False)
     c.cache = None  # type: ignore[assignment]
     c.connect()
     yield c

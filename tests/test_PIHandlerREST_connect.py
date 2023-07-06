@@ -32,7 +32,12 @@ SAMPLE_TIME = 60
 
 @pytest.fixture  # type: ignore[misc]
 def client() -> Generator[IMSClient, None, None]:
-    c = IMSClient(datasource=SOURCE, imstype="piwebapi", verifySSL=bool(verifySSL))
+    c = IMSClient(
+        datasource=SOURCE,
+        imstype="piwebapi",
+        verifySSL=bool(verifySSL),
+        get_status=False,
+    )
     c.cache = None  # type: ignore[assignment]
     c.connect()
     c.handler._max_rows = 1000  # For the long raw test

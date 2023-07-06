@@ -313,6 +313,7 @@ class SmartCache(BaseCache):
         df: Union[str, pd.DataFrame],
         read_type: ReaderType,
         ts: Optional[Union[int, timedelta]] = None,
+        get_status: bool = False,
     ) -> str:
         """Return a string on the form
         XXX$sYY$ZZZ where XXX is the ReadType, YY is the interval between samples
@@ -340,8 +341,9 @@ class SmartCache(BaseCache):
         df: pd.DataFrame,
         read_type: ReaderType,
         ts: Optional[Union[int, timedelta]] = None,
+        get_status: bool = False,
     ) -> None:
-        key = self.key_path(df=df, read_type=read_type, ts=ts)
+        key = self.key_path(df=df, read_type=read_type, ts=ts, get_status=get_status)
         if df.empty:
             return  # Weirdness ensues when using empty df in select statement below
         if key in self:
@@ -363,8 +365,11 @@ class SmartCache(BaseCache):
         ts: Optional[Union[int, timedelta]] = None,
         start: Optional[datetime] = None,
         end: Optional[datetime] = None,
+        get_status: bool = False,
     ) -> pd.DataFrame:
-        key = self.key_path(df=tagname, read_type=read_type, ts=ts)
+        key = self.key_path(
+            df=tagname, read_type=read_type, ts=ts, get_status=get_status
+        )
         df = cast(Optional[pd.DataFrame], self.get(key=key))
         if df is None:
             return pd.DataFrame()

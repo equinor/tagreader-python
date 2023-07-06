@@ -311,6 +311,7 @@ class IMSClient:
         verifySSL: bool = True,
         auth: Optional[Any] = None,
         cache: Optional[Union[SmartCache, BucketCache]] = None,
+        get_status: bool = False,
     ):
         if isinstance(imstype, str):
             try:
@@ -402,6 +403,7 @@ class IMSClient:
                     ts=ts,
                     start=time_slice[0],
                     end=time_slice[1],
+                    get_status=get_status,
                 )
                 missing_intervals = get_missing_intervals(
                     df=df,
