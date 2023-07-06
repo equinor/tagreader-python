@@ -2,6 +2,18 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.2.1](https://github.com/equinor/tagreader-python/compare/v4.2.0...v4.2.1) (2023-07-06)
+
+
+### 🧹 Chores
+
+* pre-commit fix ([bf7e1e4](https://github.com/equinor/tagreader-python/commit/bf7e1e46c6f7934552e90b4245cf299a0824a4ce))
+
+
+### 🐛 Bug Fixes
+
+* use correct arguments when reading single tag and code cleanup ([#234](https://github.com/equinor/tagreader-python/issues/234)) ([e0fafd4](https://github.com/equinor/tagreader-python/commit/e0fafd499fdb08391b51343145c1f50051fa0d99)), closes [#231](https://github.com/equinor/tagreader-python/issues/231)
+
 ## [4.2.0](https://github.com/equinor/tagreader-python/compare/v4.1.4...v4.2.0) (2023-06-28)
 
 
