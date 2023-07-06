@@ -16,18 +16,14 @@ is_CI = is_GITHUBACTION or is_AZUREPIPELINE
 
 
 def test_get_next_timeslice() -> None:
-    starttime = pd.to_datetime("2018-01-02 14:00:00")
-    endtime = pd.to_datetime("2018-01-02 14:15:00")
+    start = pd.to_datetime("2018-01-02 14:00:00")
+    end = pd.to_datetime("2018-01-02 14:15:00")
     # taglist = ['tag1', 'tag2', 'tag3']
     ts = timedelta(seconds=60)
-    res = get_next_timeslice(
-        start_time=starttime, stop_time=endtime, ts=ts, max_steps=20
-    )
-    assert starttime, starttime + timedelta(seconds=6) == res
-    res = get_next_timeslice(
-        start_time=starttime, stop_time=endtime, ts=ts, max_steps=100000
-    )
-    assert starttime, endtime == res
+    res = get_next_timeslice(start=start, end=end, ts=ts, max_steps=20)
+    assert start, start + timedelta(seconds=6) == res
+    res = get_next_timeslice(start=start, end=end, ts=ts, max_steps=100000)
+    assert start, end == res
 
 
 def test_get_missing_intervals() -> None:
@@ -41,8 +37,8 @@ def test_get_missing_intervals() -> None:
     df = pd.concat([df_total.iloc[0:2], df_total.iloc[3:4], df_total.iloc[8:]])
     missing = get_missing_intervals(
         df=df,
-        start_time=datetime(2018, 1, 18, 5, 0, 0),
-        stop_time=datetime(2018, 1, 18, 6, 0, 0),
+        start=datetime(2018, 1, 18, 5, 0, 0),
+        end=datetime(2018, 1, 18, 6, 0, 0),
         ts=timedelta(seconds=ts),
         read_type=ReaderType.INT,
     )
@@ -59,7 +55,7 @@ def test_get_missing_intervals() -> None:
     reason="ODBC drivers require Windows and are unavailable in GitHub Actions",
 )
 class TestODBC:
-    def test_PI_init_odbc_client_with_host_port(self) -> None:
+    def test_pi_init_odbc_client_with_host_port(self) -> None:
         host = "thehostname"
         port = 999
         c = IMSClient(datasource="whatever", imstype="pi", host=host)
@@ -69,7 +65,7 @@ class TestODBC:
         assert c.handler.host == host
         assert c.handler.port == port
 
-    def test_IP21_init_odbc_client_with_host_port(self) -> None:
+    def test_ip21_init_odbc_client_with_host_port(self) -> None:
         host = "thehostname"
         port = 999
         c = IMSClient(datasource="whatever", imstype="ip21", host=host)
@@ -79,7 +75,7 @@ class TestODBC:
         assert c.handler.host == host
         assert c.handler.port == port
 
-    def test_PI_connection_string_override(self) -> None:
+    def test_pi_connection_string_override(self) -> None:
         connstr = "someuserspecifiedconnectionstring"
         c = IMSClient(
             datasource="whatever",
@@ -89,7 +85,7 @@ class TestODBC:
         )
         assert c.handler.generate_connection_string() == connstr
 
-    def test_IP21_connection_string_override(self) -> None:
+    def test_ip21_connection_string_override(self) -> None:
         connstr = "someuserspecifiedconnectionstring"
         c = IMSClient(
             datasource="whatever",
@@ -101,15 +97,15 @@ class TestODBC:
 
     def test_init_odbc_clients(self) -> None:
         with pytest.raises(ValueError):
-            c = IMSClient(datasource="xyz")
+            _ = IMSClient(datasource="xyz")
         with pytest.raises(ValueError):
-            c = IMSClient(datasource="sNa", imstype="pi")
+            _ = IMSClient(datasource="sNa", imstype="pi")
         with pytest.raises(ValueError):
-            c = IMSClient(datasource="Ono-imS", imstype="aspen")
+            _ = IMSClient(datasource="Ono-imS", imstype="aspen")
         with pytest.raises(ValueError):
-            c = IMSClient(datasource="ono-ims", imstype="aspen")
+            _ = IMSClient(datasource="ono-ims", imstype="aspen")
         with pytest.raises(ValueError):
-            c = IMSClient(datasource="sna", imstype="pi")
+            _ = IMSClient(datasource="sna", imstype="pi")
         c = IMSClient(datasource="onO-iMs", imstype="pi")
         assert isinstance(c.handler, PIHandlerODBC)
         c = IMSClient(datasource="snA", imstype="aspen")

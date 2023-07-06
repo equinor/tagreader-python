@@ -19,7 +19,7 @@ from tagreader.logger import logger
 from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
 
 
-def get_verifySSL() -> Union[bool, str]:
+def get_verify_ssl() -> Union[bool, str]:
     if is_windows() or is_mac():
         return True
     return "/etc/ssl/certs/ca-bundle.trust.crt"
@@ -56,7 +56,7 @@ def list_aspenone_sources(
     if verifySSL is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     elif verifySSL is None:
-        verifySSL = get_verifySSL()
+        verifySSL = get_verify_ssl()
 
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
@@ -84,7 +84,7 @@ def list_piwebapi_sources(
     if verifySSL is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     elif verifySSL is None:
-        verifySSL = get_verifySSL()
+        verifySSL = get_verify_ssl()
 
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verifySSL)
@@ -111,7 +111,7 @@ class BaseHandlerWeb(ABC):
         self.session.auth = auth if auth is not None else get_auth_aspen()
         if verifySSL is False:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
+        self.session.verify = verifySSL if verifySSL is not None else get_verify_ssl()
 
     def fetch(self, url, params: Optional[Union[str, Dict[str, str]]] = None) -> Dict:
         res = self.session.get(url, params=params)
@@ -195,8 +195,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
         self,
         tagname: str,
         mapname: Optional[str],
-        start_time: datetime,
-        stop_time: datetime,
+        start: datetime,
+        end: datetime,
         sample_time: Optional[timedelta],
         read_type: ReaderType,
         metadata: Any,
@@ -226,14 +226,14 @@ class AspenHandlerWeb(BaseHandlerWeb):
         }.get(read_type, -1)
 
         if read_type == ReaderType.SNAPSHOT:
-            if stop_time is not None:
+            if end is not None:
                 use_current = 0
-                end_time = int(stop_time.timestamp()) * 1000
+                end = int(end.timestamp()) * 1000
             else:
                 use_current = 1
-                end_time = 0
+                end = 0
 
-            query = f'<Q f="d" allQuotes="1" rt="{end_time}" uc="{use_current}">'
+            query = f'<Q f="d" allQuotes="1" rt="{end}" uc="{use_current}">'
         else:
             query = '<Q f="d" allQuotes="1">'
 
@@ -249,8 +249,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
         else:
             query += (
                 "<HF>0</HF>"  # History format: 0=Raw, 1=RecordAsString
-                f"<St>{int(start_time.timestamp()) * 1000}</St>"
-                f"<Et>{int(stop_time.timestamp()) * 1000}</Et>"
+                f"<St>{int(start.timestamp()) * 1000}</St>"
+                f"<Et>{int(end.timestamp()) * 1000}</Et>"
                 f"<RT>{rt}</RT>"
             )
         if read_type in [ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
@@ -443,15 +443,15 @@ class AspenHandlerWeb(BaseHandlerWeb):
         data = self.fetch(url, params=query)
         try:
             desc = data["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
-        except Exception:
+        except KeyError:
             desc = ""
         return desc
 
     def read_tag(
         self,
         tag: str,
-        start_time: Optional[datetime],
-        stop_time: Optional[datetime],
+        start: Optional[datetime],
+        end: Optional[datetime],
         sample_time: Optional[timedelta],
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
@@ -478,20 +478,20 @@ class AspenHandlerWeb(BaseHandlerWeb):
         # Actual and bestfit read types allow specifying maxpoints.
         # Aggregate reads limit to 10 000 points and issue a moredata-token.
         # TODO: May need to look into using this later - most likely more
-        # efficient than creating new query starting at previous stoptime.
+        # efficient than creating new query starting at previous end time.
         # Interpolated reads return error message if more than 100 000 points,
         # so we need to limit the range. Note -1 because INT normally includes
         # both start and end time.
         if read_type == ReaderType.INT:
-            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+            end = min(end, start + sample_time * (self._max_rows - 1))
 
         tagname, mapname = self.split_tagmap(tag)
 
         params = self.generate_read_query(
             tagname=tagname,
             mapname=mapname,
-            start_time=start_time,
-            stop_time=stop_time,
+            start=start,
+            end=end,
             sample_time=sample_time,
             read_type=read_type,
             metadata={},
@@ -669,8 +669,8 @@ class PIHandlerWeb(BaseHandlerWeb):
     def generate_read_query(
         self,
         tag: str,
-        start_time: datetime,
-        stop_time: datetime,
+        start: datetime,
+        end: datetime,
         sample_time: timedelta,
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
@@ -703,11 +703,11 @@ class PIHandlerWeb(BaseHandlerWeb):
         params = {}
 
         if read_type != ReaderType.SNAPSHOT:
-            params["startTime"] = self._time_to_UTC_string(start_time)
-            params["endTime"] = self._time_to_UTC_string(stop_time)
+            params["startTime"] = self._time_to_UTC_string(start)
+            params["endTime"] = self._time_to_UTC_string(end)
             params["timeZone"] = "UTC"
-        elif read_type == ReaderType.SNAPSHOT and stop_time is not None:
-            params["time"] = self._time_to_UTC_string(stop_time)
+        elif read_type == ReaderType.SNAPSHOT and end is not None:
+            params["time"] = self._time_to_UTC_string(end)
             params["timeZone"] = "UTC"
 
         summary_type = {
@@ -782,7 +782,7 @@ class PIHandlerWeb(BaseHandlerWeb):
                 ret.append((item["Name"], description))
             next_start = int(data["Links"]["Next"].split("=")[-1])
             if int(data["Links"]["Last"].split("=")[-1]) >= next_start:
-                params["start"] = next_start
+                params["start"] = next_start  # noqa
             else:
                 done = True
         return ret
@@ -861,8 +861,8 @@ class PIHandlerWeb(BaseHandlerWeb):
     def read_tag(
         self,
         tag: str,
-        start_time: Optional[datetime],
-        stop_time: Optional[datetime],
+        start: Optional[datetime],
+        end: Optional[datetime],
         sample_time: timedelta,
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
@@ -874,8 +874,8 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         (url, params) = self.generate_read_query(
             tag=webid,
-            start_time=start_time,
-            stop_time=stop_time,
+            start=start,
+            end=end,
             sample_time=sample_time,
             read_type=read_type,
             metadata={},
@@ -949,7 +949,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         # Correct weird bug in PI Web API where MAX timestamps end of interval while
         # all the other summaries stamp start of interval by shifting all timestamps
         # one interval down.
-        if read_type == ReaderType.MAX and df.index[0] > start_time:
+        if read_type == ReaderType.MAX and df.index[0] > start:
             df.index = df.index - sample_time
 
         if get_status:

@@ -28,8 +28,8 @@ Tagreader is intended to be easy to use, and present the same interface to the u
   - [Caching results](#caching-results)
   - [Time zones](#time-zones)
 - [Fetching metadata](#fetching-metadata)
-  - [get_units()](#get_units)
-  - [get_description()](#get_description)
+  - [get_units()](#getunits)
+  - [get_description()](#getdescription)
 - [Performing raw queries](#performing-raw-queries)
 
 # Requirements

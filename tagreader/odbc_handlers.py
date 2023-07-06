@@ -88,8 +88,8 @@ class AspenHandlerODBC:
     def generate_read_query(
         tag: str,
         mapdef: Optional[Dict[str, str]],
-        start_time: datetime,
-        stop_time: datetime,
+        start: datetime,
+        end: datetime,
         sample_time: Optional[timedelta],
         read_type: ReaderType,
         get_status: bool = False,
@@ -112,8 +112,8 @@ class AspenHandlerODBC:
         if get_status and read_type == ReaderType.SNAPSHOT:
             raise NotImplementedError
 
-        if read_type == ReaderType.SNAPSHOT and stop_time is not None:
-            stop_time = None
+        if read_type == ReaderType.SNAPSHOT and end is not None:
+            end = None
             logger.warning(
                 "End time is not supported for Aspen ODBC connection using 'SNAPSHOT'."
                 "Try the web API 'piwebapi' instead."
@@ -121,16 +121,16 @@ class AspenHandlerODBC:
 
         seconds = 0
         if read_type != ReaderType.SNAPSHOT:
-            start_time = start_time.astimezone(pytz.UTC)
-            if stop_time:
-                stop_time = stop_time.astimezone(pytz.UTC)
+            start = start.astimezone(pytz.UTC)
+            if end:
+                end = end.astimezone(pytz.UTC)
             seconds = int(sample_time.total_seconds())
             if read_type == ReaderType.SAMPLED:
                 seconds = 0
             else:
                 if seconds <= 0:
                     raise NotImplementedError
-                    # sample_time = (stop_time-start_time).totalseconds
+                    # sample_time = (end-start).totalseconds
 
         timecast_format_query = "%Y-%m-%dT%H:%M:%SZ"  # 05-jan-18 14:00:00
 
@@ -154,7 +154,8 @@ class AspenHandlerODBC:
             ReaderType.SNAPSHOT: '"' + str(tag) + '"',
         }.get(read_type, "aggregates")
         # For RAW: historyevent?
-        # Ref https://help.sap.com/saphelp_pco151/helpdata/en/4c/72e34ee631469ee10000000a15822d/content.htm?no_cache=true
+        # Ref:
+        #  https://help.sap.com/saphelp_pco151/helpdata/en/4c/72e34ee631469ee10000000a15822d/content.htm?no_cache=true
 
         ts = "ts"
         if from_column == "aggregates":
@@ -187,8 +188,8 @@ class AspenHandlerODBC:
         query.extend([f"FROM {from_column}"])
 
         if ReaderType.SNAPSHOT != read_type:
-            start = start_time.strftime(timecast_format_query)
-            stop = stop_time.strftime(timecast_format_query)
+            start = start.strftime(timecast_format_query)
+            end = end.strftime(timecast_format_query)
             query.extend([f"WHERE name = {tag!r}"])
             if mapdef:
                 query.extend([f'AND FIELD_ID = FT({mapdef["MAP_HistoryValue"]!r})'])
@@ -197,7 +198,7 @@ class AspenHandlerODBC:
             query.extend(
                 [
                     f"AND (request = {request_num})",
-                    f"AND (ts BETWEEN {start!r} AND {stop!r})",
+                    f"AND (ts BETWEEN {start!r} AND {end!r})",
                     "ORDER BY ts",
                 ]
             )
@@ -357,8 +358,8 @@ class AspenHandlerODBC:
     def read_tag(
         self,
         tag: str,
-        start_time: datetime,
-        stop_time: datetime,
+        start: datetime,
+        end: datetime,
         sample_time: Optional[timedelta],
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
@@ -372,8 +373,8 @@ class AspenHandlerODBC:
         query = self.generate_read_query(
             tag=cleantag,
             mapdef=mapdef,
-            start_time=start_time,
-            stop_time=stop_time,
+            start=start,
+            end=end,
             sample_time=sample_time,
             read_type=read_type,
             get_status=get_status,
@@ -459,8 +460,8 @@ class PIHandlerODBC:
     def generate_read_query(
         self,
         tag: str,
-        start_time: datetime,
-        stop_time: datetime,
+        start: datetime,
+        end: datetime,
         sample_time: Optional[timedelta],
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
@@ -476,8 +477,8 @@ class PIHandlerODBC:
         ]:
             raise NotImplementedError
 
-        if read_type == ReaderType.SNAPSHOT and stop_time is not None:
-            stop_time = None
+        if read_type == ReaderType.SNAPSHOT and end is not None:
+            end = None
             logger.warning(
                 "End time is not supported for PI ODBC connection using 'SNAPSHOT'."
                 "Try the web API 'piwebapi' instead."
@@ -485,16 +486,16 @@ class PIHandlerODBC:
 
         seconds = 0
         if read_type != ReaderType.SNAPSHOT:
-            start_time = start_time.astimezone(pytz.UTC)
-            if stop_time:
-                stop_time = stop_time.astimezone(pytz.UTC)
+            start = start.astimezone(pytz.UTC)
+            if end:
+                end = end.astimezone(pytz.UTC)
             seconds = int(sample_time.total_seconds())
             if ReaderType.SAMPLED == read_type:
                 seconds = 0
             else:
                 if seconds <= 0:
                     pass  # Fixme: Not implemented
-                    # sample_time = (stop_time-start_time).totalseconds
+                    # sample_time = (end-start).totalseconds
 
         timecast_format_query = "%d-%b-%y %H:%M:%S"  # 05-jan-18 14:00:00
         # timecast_format_output = "yyyy-MM-dd HH:mm:ss"
@@ -527,7 +528,9 @@ class PIHandlerODBC:
         else:
             query = ["SELECT CAST(value as FLOAT32)"]
 
-        # query.extend([f"AS value, FORMAT(time, '{timecast_format_output}') AS timestamp FROM {source} WHERE tag='{tag}'"])
+        # query.extend(
+        #   [f"AS value, FORMAT(time, '{timecast_format_output}') AS timestamp FROM {source} WHERE tag='{tag}'"]
+        # )
         query.extend(["AS value,"])
 
         if get_status:
@@ -536,9 +539,9 @@ class PIHandlerODBC:
         query.extend([f"time FROM {source} WHERE tag='{tag}'"])  # __utctime also works
 
         if ReaderType.SNAPSHOT != read_type:
-            start = start_time.strftime(timecast_format_query)
-            stop = stop_time.strftime(timecast_format_query)
-            query.extend([f"AND (time BETWEEN '{start}' AND '{stop}')"])
+            start = start.strftime(timecast_format_query)
+            end = end.strftime(timecast_format_query)
+            query.extend([f"AND (time BETWEEN '{start}' AND '{end}')"])
 
         if ReaderType.GOOD == read_type:
             query.extend(["AND questionable = FALSE"])
@@ -547,7 +550,7 @@ class PIHandlerODBC:
         elif ReaderType.SHAPEPRESERVING == read_type:
             query.extend(
                 [
-                    f"AND (intervalcount = {int((stop_time - start_time).total_seconds() / seconds)})"
+                    f"AND (intervalcount = {int((end - start).total_seconds() / seconds)})"
                 ]
             )
         elif ReaderType.RAW == read_type:
@@ -615,8 +618,8 @@ class PIHandlerODBC:
     def read_tag(
         self,
         tag: str,
-        start_time: datetime,
-        stop_time: datetime,
+        start: datetime,
+        end: datetime,
         sample_time: Optional[timedelta],
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
@@ -629,8 +632,8 @@ class PIHandlerODBC:
 
         query = self.generate_read_query(
             tag=tag,
-            start_time=start_time,
-            stop_time=stop_time,
+            start=start,
+            end=end,
             sample_time=sample_time,
             read_type=read_type,
             get_status=get_status,

@@ -78,17 +78,17 @@ def list_sources(
 
 def get_missing_intervals(
     df: pd.DataFrame,
-    start_time: datetime,
-    stop_time: datetime,
+    start: datetime,
+    end: datetime,
     ts: Optional[timedelta],
     read_type: ReaderType,
 ):
     if (
         read_type == ReaderType.RAW
     ):  # Fixme: How to check for completeness for RAW data?
-        return [[start_time, stop_time]]
+        return [[start, end]]
     seconds = int(ts.total_seconds())
-    tvec = pd.date_range(start=start_time, end=stop_time, freq=f"{seconds}s")
+    tvec = pd.date_range(start=start, end=end, freq=f"{seconds}s")
     if len(df) == len(tvec):  # Short-circuit if dataset is complete
         return []
     values_in_df = tvec.isin(df.index)
@@ -103,29 +103,29 @@ def get_missing_intervals(
                 )
             )
             # Should be unnecessary to fetch overlapping points since get_next_timeslice
-            # ensures start <= t <= stop
+            # ensures start <= t <= end
             # missingintervals.append((pd.Timestamp(tvec[seq[0]]),
             #                          pd.Timestamp(tvec[min(seq[-1]+1, len(tvec)-1)])))
     return missing_intervals
 
 
 def get_next_timeslice(
-    start_time: datetime,
-    stop_time: datetime,
+    start: datetime,
+    end: datetime,
     ts: Optional[timedelta],
     max_steps: Optional[int],
 ) -> Tuple[datetime, datetime]:
     if max_steps is None:
-        calc_stop_time = stop_time
+        calc_end = end
     else:
-        calc_stop_time = start_time + ts * max_steps
-    calc_stop_time = min(stop_time, calc_stop_time)
+        calc_end = start + ts * max_steps
+    calc_end = min(end, calc_end)
     # Ensure we include the last data point.
     # Discrepancies between Aspen and Pi for +ts
     # Discrepancies between IMS and cache for e.g. ts.
-    # if calc_stop_time == stop_time:
-    #     calc_stop_time += ts / 2
-    return start_time, calc_stop_time
+    # if calc_end == end:
+    #     calc_end += ts / 2
+    return start, calc_end
 
 
 def get_server_address_aspen(datasource: str) -> Optional[Tuple[str, int]]:
@@ -149,7 +149,7 @@ def get_server_address_aspen(datasource: str) -> Optional[Tuple[str, int]]:
     )
     regkey_implemented_categories = winreg.OpenKeyEx(regkey, "Implemented Categories")
 
-    _, aspen_UUID = find_registry_key_from_name(
+    _, aspen_uuid = find_registry_key_from_name(
         regkey_implemented_categories, "Aspen SQLplus services"
     )
 
@@ -159,7 +159,7 @@ def get_server_address_aspen(datasource: str) -> Optional[Tuple[str, int]]:
     )
 
     try:
-        reg_site_key = winreg.OpenKey(reg_adsa, datasource + "\\" + aspen_UUID)
+        reg_site_key = winreg.OpenKey(reg_adsa, datasource + "\\" + aspen_uuid)
         host = winreg.QueryValueEx(reg_site_key, "Host")[0]
         port = int(winreg.QueryValueEx(reg_site_key, "Port")[0])
         return host, port
@@ -365,8 +365,8 @@ class IMSClient:
     def _read_single_tag(
         self,
         tag: str,
-        start_time: Optional[datetime],
-        stop_time: Optional[datetime],
+        start: Optional[datetime],
+        end: Optional[datetime],
         ts: timedelta,
         read_type: ReaderType,
         get_status: bool,
@@ -376,8 +376,8 @@ class IMSClient:
             metadata = self._get_metadata(tag)
             df = self.handler.read_tag(
                 tag=tag,
-                start_time=start_time,
-                stop_time=stop_time,
+                start=start,
+                end=end,
                 sample_time=ts,
                 read_type=read_type,
                 metadata=metadata,
@@ -385,7 +385,7 @@ class IMSClient:
             )
         else:
             stepped = False
-            missing_intervals = [(start_time, stop_time)]
+            missing_intervals = [(start, end)]
             df = pd.DataFrame()
 
             if (
@@ -394,19 +394,19 @@ class IMSClient:
                 and not get_status
             ):
                 time_slice = get_next_timeslice(
-                    start_time=start_time, stop_time=stop_time, ts=ts, max_steps=None
+                    start=start, end=end, ts=ts, max_steps=None
                 )
                 df = cache.fetch(
                     tagname=tag,
-                    readtype=read_type,
+                    read_type=read_type,
                     ts=ts,
-                    start_time=time_slice[0],
-                    end_time=time_slice[1],
+                    start=time_slice[0],
+                    end=time_slice[1],
                 )
                 missing_intervals = get_missing_intervals(
                     df=df,
-                    start_time=start_time,
-                    stop_time=stop_time,
+                    start=start,
+                    end=end,
                     ts=ts,
                     read_type=read_type,
                 )
@@ -415,33 +415,33 @@ class IMSClient:
             elif isinstance(cache, BucketCache):
                 df = cache.fetch(
                     tagname=tag,
-                    readtype=read_type,
+                    read_type=read_type,
                     ts=ts,
                     stepped=stepped,
-                    status=get_status,
-                    starttime=start_time,
-                    endtime=stop_time,
+                    get_status=get_status,
+                    start=start,
+                    end=end,
                 )
                 missing_intervals = cache.get_missing_intervals(
                     tagname=tag,
-                    readtype=read_type,
+                    read_type=read_type,
                     ts=ts,
                     stepped=stepped,
-                    status=get_status,
-                    start_time=start_time,
-                    end_time=stop_time,
+                    get_status=get_status,
+                    start=start,
+                    end=end,
                 )
                 if not missing_intervals:
                     return df.tz_convert(self.tz).sort_index()
 
             metadata = self._get_metadata(tag)
             frames = [df]
-            for start, stop in missing_intervals:
+            for start, end in missing_intervals:
                 while True:
                     df = self.handler.read_tag(
                         tag=tag,
-                        start_time=start,
-                        stop_time=stop,
+                        start=start,
+                        end=end,
                         sample_time=ts,
                         read_type=read_type,
                         metadata=metadata,
@@ -457,16 +457,16 @@ class IMSClient:
                             ]
                             and not get_status
                         ):
-                            cache.store(df=df, readtype=read_type, ts=ts)
+                            cache.store(df=df, read_type=read_type, ts=ts)
                     frames.append(df)
                     if len(df) < self.handler._max_rows:
                         break
                     start = df.index[-1]
                 # if read_type != ReaderType.RAW:
                 #     time_slice = [start, start]
-                #     while time_slice[1] < stop:
+                #     while time_slice[1] < end:
                 #         time_slice = get_next_timeslice(
-                #             time_slice[1], stop, ts, self.handler._max_rows
+                #             time_slice[1], end, ts, self.handler._max_rows
                 #         )
                 #         df = self.handler.read_tag(
                 #             tag, time_slice[0], time_slice[1], ts, read_type, metadata
@@ -528,6 +528,8 @@ class IMSClient:
         read_type: ReaderType = ReaderType.INT,
         get_status: bool = False,
     ):
+        start = start_time
+        end = stop_time
         logger.warn(
             (
                 "This function has been renamed to read() and is deprecated. "
@@ -536,8 +538,8 @@ class IMSClient:
         )
         return self.read(
             tags=tags,
-            start_time=start_time,
-            end_time=stop_time,
+            start_time=start,
+            end_time=end,
             ts=ts,
             read_type=read_type,
             get_status=get_status,
@@ -567,6 +569,8 @@ class IMSClient:
         Values for ReaderType.* that should work for all handlers are:
             INT, RAW, MIN, MAX, RNG, AVG, VAR, STD and SNAPSHOT
         """
+        start = start_time
+        end = end_time
         if isinstance(tags, str):
             tags = [tags]
         if isinstance(read_type, str):
@@ -574,7 +578,7 @@ class IMSClient:
                 read_type = getattr(ReaderType, read_type)
             except AttributeError:
                 ValueError(
-                    "readtype needs to be of type ReaderType.* or a legal value. Please refer to the docstring."
+                    "read_type needs to be of type ReaderType.* or a legal value. Please refer to the docstring."
                 )
         if read_type in [ReaderType.RAW, ReaderType.SNAPSHOT] and len(tags) > 1:
             raise RuntimeError(
@@ -585,17 +589,17 @@ class IMSClient:
         if isinstance(tags, str):
             tags = [tags]
 
-        if start_time is None:
-            start_time = NONE_START_TIME
-        elif isinstance(start_time, (str, pd.Timestamp)):
+        if start is None:
+            start = NONE_START_TIME
+        elif isinstance(start, (str, pd.Timestamp)):
             try:
-                start_time = convert_to_pydatetime(start_time)
+                start = convert_to_pydatetime(start)
             except ValueError:
-                start_time = convert_to_pydatetime(start_time)
-        if end_time is None:
-            end_time = datetime.utcnow()
-        elif isinstance(end_time, (str, pd.Timestamp)):
-            end_time = convert_to_pydatetime(end_time)
+                start = convert_to_pydatetime(start)
+        if end is None:
+            end = datetime.utcnow()
+        elif isinstance(end, (str, pd.Timestamp)):
+            end = convert_to_pydatetime(end)
 
         if isinstance(ts, pd.Timedelta):
             ts = ts.to_pytimedelta()
@@ -608,14 +612,14 @@ class IMSClient:
             )
 
         if read_type != ReaderType.SNAPSHOT:
-            start_time = ensure_datetime_with_tz(start_time, tz=self.tz)
-        if end_time:
-            end_time = ensure_datetime_with_tz(end_time, tz=self.tz)
+            start = ensure_datetime_with_tz(start, tz=self.tz)
+        if end:
+            end = ensure_datetime_with_tz(end, tz=self.tz)
 
-        oldtags = tags
+        old_tags = tags
         tags = list(dict.fromkeys(tags))
-        if len(oldtags) > len(tags):
-            duplicates = set([x for n, x in enumerate(oldtags) if x in oldtags[:n]])
+        if len(old_tags) > len(tags):
+            duplicates = set([x for n, x in enumerate(old_tags) if x in old_tags[:n]])
             logger.warning(
                 f"Duplicate tags found, removed duplicates: {', '.join(duplicates)}"
             )
@@ -625,8 +629,8 @@ class IMSClient:
             results.append(
                 self._read_single_tag(
                     tag=tag,
-                    start_time=start_time,
-                    stop_time=end_time,
+                    start=start,
+                    end=end,
                     ts=ts,
                     read_type=read_type,
                     get_status=get_status,
