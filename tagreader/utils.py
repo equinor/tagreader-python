@@ -91,11 +91,10 @@ def ensure_datetime_with_tz(
 
 
 def urljoin(*args) -> str:
-    """Joins components of URL. Ensures slashes are inserted or removed where
+    """
+    Joins components of URL. Ensures slashes are inserted or removed where
     needed, and does not strip trailing slash of last element.
 
-    Arguments:
-        str
     Returns:
         str -- Generated URL
     """

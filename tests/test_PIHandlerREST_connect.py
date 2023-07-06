@@ -6,7 +6,7 @@ import pytest
 
 from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
-from tagreader.web_handlers import PIHandlerWeb, get_verifySSL, list_piwebapi_sources
+from tagreader.web_handlers import PIHandlerWeb, get_verify_ssl, list_piwebapi_sources
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -16,7 +16,7 @@ if is_GITHUBACTION:
         "All tests in module require connection to PI server", allow_module_level=True
     )
 
-verifySSL = False if is_AZUREPIPELINE else get_verifySSL()
+verifySSL = False if is_AZUREPIPELINE else get_verify_ssl()
 
 SOURCE = "PIMAM"
 TAGS = {
@@ -42,7 +42,7 @@ def client() -> Generator[IMSClient, None, None]:
 
 
 @pytest.fixture  # type: ignore[misc]
-def PIHandler() -> Generator[PIHandlerWeb, None, None]:
+def pi_handler() -> Generator[PIHandlerWeb, None, None]:
     h = PIHandlerWeb(
         datasource=SOURCE, verifySSL=bool(verifySSL), auth=None, options={}, url=None
     )
@@ -68,9 +68,9 @@ def test_list_sources_piwebapi() -> None:
         assert 3 <= len(r)
 
 
-def test_verify_connection(PIHandler: IMSClient) -> None:
-    assert PIHandler.verify_connection("PIMAM") is True  # type: ignore[attr-defined]
-    assert PIHandler.verify_connection("somerandomstuffhere") is False  # type: ignore[attr-defined]
+def test_verify_connection(pi_handler: IMSClient) -> None:
+    assert pi_handler.verify_connection("PIMAM") is True  # type: ignore[attr-defined]
+    assert pi_handler.verify_connection("somerandomstuffhere") is False  # type: ignore[attr-defined]
 
 
 def test_search_tag(client: IMSClient) -> None:
@@ -87,13 +87,14 @@ def test_search_tag(client: IMSClient) -> None:
     assert 1 <= len(res)
 
 
-def test_tag_to_webid(PIHandler: PIHandlerWeb) -> None:
-    res = PIHandler.tag_to_webid("SINUSOID")
+def test_tag_to_web_id(pi_handler: PIHandlerWeb) -> None:
+    res = pi_handler.tag_to_webid("SINUSOID")
     assert isinstance(res, str)
     assert len(res) >= 20
     with pytest.raises(AssertionError):
-        res = PIHandler.tag_to_webid("SINUSOID*")
-    res = PIHandler.tag_to_webid("somerandomgarbage")
+        _ = pi_handler.tag_to_webid("SINUSOID*")
+    res = pi_handler.tag_to_webid("somerandomgarbage")
+    assert not res
 
 
 @pytest.mark.parametrize(  # type: ignore[misc]
@@ -224,7 +225,7 @@ def test_get_description(client: IMSClient) -> None:
     assert res[TAGS["Int32"]] == "Light Naphtha End Point"
 
 
-def test_from_DST_folds_time(client: IMSClient) -> None:
+def test_from_dst_folds_time(client: IMSClient) -> None:
     if os.path.exists(SOURCE + ".h5"):
         os.remove(SOURCE + ".h5")
     tag = TAGS["Float32"]
@@ -241,7 +242,7 @@ def test_from_DST_folds_time(client: IMSClient) -> None:
     )
 
 
-def test_to_DST_skips_time(client: IMSClient) -> None:
+def test_to_dst_skips_time(client: IMSClient) -> None:
     if os.path.exists(SOURCE + ".h5"):
         os.remove(SOURCE + ".h5")
     tag = TAGS["Float32"]

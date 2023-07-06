@@ -23,7 +23,7 @@ SAMPLE_TIME = timedelta(seconds=60)
 
 
 @pytest.fixture(scope="module")  # type: ignore[misc]
-def PIHandler() -> Generator[PIHandlerODBC, None, None]:
+def pi_handler() -> Generator[PIHandlerODBC, None, None]:
     yield PIHandlerODBC(
         host="thehostname.statoil.net",
         port=1234,
@@ -31,8 +31,8 @@ def PIHandler() -> Generator[PIHandlerODBC, None, None]:
     )
 
 
-def test_generate_connection_string(PIHandler: PIHandlerODBC) -> None:
-    res = PIHandler.generate_connection_string()
+def test_generate_connection_string(pi_handler: PIHandlerODBC) -> None:
+    res = pi_handler.generate_connection_string()
     expected = (
         "DRIVER={PI ODBC Driver};Server=the_das_server;Trusted_Connection=Yes;"
         "Command Timeout=1800;Provider Type=PIOLEDB;"
@@ -64,26 +64,26 @@ def test_generate_connection_string(PIHandler: PIHandlerODBC) -> None:
         "SNAPSHOT",
     ],
 )
-def test_generate_tag_read_query(PIHandler: PIHandlerODBC, read_type_str: str) -> None:
+def test_generate_tag_read_query(pi_handler: PIHandlerODBC, read_type_str: str) -> None:
     read_type = getattr(ReaderType, read_type_str)
-    starttime = utils.ensure_datetime_with_tz(START_TIME)
+    start = utils.ensure_datetime_with_tz(START_TIME)
     stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
     ts = SAMPLE_TIME
 
     if read_type == ReaderType.SNAPSHOT:
-        res = PIHandler.generate_read_query(
+        res = pi_handler.generate_read_query(
             tag="thetag",
-            start_time=None,  # type: ignore[arg-type]
-            stop_time=None,  # type: ignore[arg-type]
+            start=None,  # type: ignore[arg-type]
+            end=None,  # type: ignore[arg-type]
             sample_time=None,
             read_type=read_type,
             metadata={},
         )
     else:
-        res = PIHandler.generate_read_query(
+        res = pi_handler.generate_read_query(
             tag="thetag",
-            start_time=starttime,
-            stop_time=stoptime,
+            start=start,
+            end=stoptime,
             sample_time=ts,
             read_type=read_type,
             metadata={},
@@ -169,28 +169,28 @@ def test_generate_tag_read_query(PIHandler: PIHandlerODBC, read_type_str: str) -
     ],
 )
 def test_generate_tag_read_query_with_status(
-    PIHandler: PIHandlerODBC, read_type_str: str
+    pi_handler: PIHandlerODBC, read_type_str: str
 ) -> None:
     read_type = getattr(ReaderType, read_type_str)
-    starttime = utils.ensure_datetime_with_tz(START_TIME)
+    start = utils.ensure_datetime_with_tz(START_TIME)
     stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
     ts = SAMPLE_TIME
 
     if read_type == read_type.SNAPSHOT:
-        res = PIHandler.generate_read_query(
+        res = pi_handler.generate_read_query(
             tag="thetag",
-            start_time=None,  # type: ignore[arg-type]
-            stop_time=None,  # type: ignore[arg-type]
+            start=None,  # type: ignore[arg-type]
+            end=None,  # type: ignore[arg-type]
             sample_time=None,
             read_type=read_type,
             get_status=True,
             metadata={},
         )
     else:
-        res = PIHandler.generate_read_query(
+        res = pi_handler.generate_read_query(
             tag="thetag",
-            start_time=starttime,
-            stop_time=stoptime,
+            start=start,
+            end=stoptime,
             sample_time=ts,
             read_type=read_type,
             get_status=True,
@@ -263,15 +263,15 @@ def test_generate_tag_read_query_with_status(
     assert expected[read_type.name] == res
 
 
-def test_genreadquery_long_sampletime(PIHandler: PIHandlerODBC) -> None:
-    starttime = utils.ensure_datetime_with_tz(START_TIME)
+def test_genreadquery_long_sampletime(pi_handler: PIHandlerODBC) -> None:
+    start = utils.ensure_datetime_with_tz(START_TIME)
     stoptime = utils.ensure_datetime_with_tz(STOP_TIME)
     ts = timedelta(seconds=86401)
 
-    res = PIHandler.generate_read_query(
+    res = pi_handler.generate_read_query(
         tag="thetag",
-        start_time=starttime,
-        stop_time=stoptime,
+        start=start,
+        end=stoptime,
         sample_time=ts,
         read_type=ReaderType.INT,
         metadata={},
