@@ -7,20 +7,16 @@ This changelog is deprecated. All changes are documented under [releases](https:
 
 ### 👷 CI/CD
 
-* try to resolve automatic deploy to PyPI ([7c44190](https://github.com/equinor/tagreader-python/commit/7c441906a56b5e104dc5d5a0d4cb2ac36ef4ea88))
-* try to resolve automatic deploy to PyPI ([e21b451](https://github.com/equinor/tagreader-python/commit/e21b4510c92c912876d8fc20ed8d5578e6aeecc2))
-
+* Resolve automatic deploy to PyPI ([7c44190](https://github.com/equinor/tagreader-python/commit/7c441906a56b5e104dc5d5a0d4cb2ac36ef4ea88), [e21b451](https://github.com/equinor/tagreader-python/commit/e21b4510c92c912876d8fc20ed8d5578e6aeecc2))
 
 ### 🧹 Chores
 
-* general code cleanup and maintenance ([dff0d71](https://github.com/equinor/tagreader-python/commit/dff0d71f3cca0bf31bc4c508bb4200ff2780afee))
+* General code cleanup and maintenance ([dff0d71](https://github.com/equinor/tagreader-python/commit/dff0d71f3cca0bf31bc4c508bb4200ff2780afee))
 
 
 ### 📚 Documentation
 
-* update docs and example notebook ([550ac14](https://github.com/equinor/tagreader-python/commit/550ac147bd81a47d36b074f3bfc0cf77432da929))
-
-## [4.2.4](https://github.com/equinor/tagreader-python/compare/v4.2.3...v4.2.4) (2023-07-12)
+* Update docs and example notebook ([550ac14](https://github.com/equinor/tagreader-python/commit/550ac147bd81a47d36b074f3bfc0cf77432da929))
 
 
 ### 🐛 Bug Fixes
