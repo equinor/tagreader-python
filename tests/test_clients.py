@@ -1,18 +1,31 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 
 import pandas as pd
 import pytest
 
+from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
-from tagreader.utils import ReaderType, is_windows
+from tagreader.utils import IMSType, ReaderType, is_windows
+from tagreader.web_handlers import PIHandlerWeb
 
 if is_windows():
     from tagreader.odbc_handlers import AspenHandlerODBC, PIHandlerODBC
 
-is_GITHUBACTION = "GITHUB_ACTION" in os.environ
-is_AZUREPIPELINE = "TF_BUILD" in os.environ
-is_CI = is_GITHUBACTION or is_AZUREPIPELINE
+is_GITHUB_ACTION = "GITHUB_ACTION" in os.environ
+is_AZURE_PIPELINE = "TF_BUILD" in os.environ
+is_CI = is_GITHUB_ACTION or is_AZURE_PIPELINE
+
+
+def test_init_client_without_cache() -> None:
+    """
+    Currently we initialize SmartCache by default, and the user is not able to specify no-cache when creating the
+    client. This will change to no cache by default in version 5.
+    """
+    client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
+    assert isinstance(client.cache, SmartCache)
+    assert isinstance(client.tz, tzinfo)
+    assert isinstance(client.handler, PIHandlerWeb)  # Based on IMSType.PIWEBAPI
 
 
 def test_get_next_timeslice() -> None:
@@ -51,7 +64,7 @@ def test_get_missing_intervals() -> None:
 
 
 @pytest.mark.skipif(
-    is_GITHUBACTION or not is_windows(),
+    is_GITHUB_ACTION or not is_windows(),
     reason="ODBC drivers require Windows and are unavailable in GitHub Actions",
 )
 class TestODBC:
