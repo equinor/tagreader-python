@@ -45,7 +45,7 @@ def get_url_aspen() -> str:
 def list_aspenone_sources(
     url: Optional[str],
     auth: Optional[Any],
-    verifySSL: Optional[bool],
+    verify_ssl: Optional[bool],
 ) -> List[str]:
     if url is None:
         url = get_url_aspen()
@@ -53,15 +53,15 @@ def list_aspenone_sources(
     if auth is None:
         auth = get_auth_aspen()
 
-    if verifySSL is False:
+    if verify_ssl is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    elif verifySSL is None:
-        verifySSL = get_verify_ssl()
+    elif verify_ssl is None:
+        verify_ssl = get_verify_ssl()
 
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
 
-    res = requests.get(url_, params=params, auth=auth, verify=verifySSL)
+    res = requests.get(url_, params=params, auth=auth, verify=verify_ssl)
     res.raise_for_status()
     try:
         source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
@@ -73,7 +73,7 @@ def list_aspenone_sources(
 def list_piwebapi_sources(
     url: Optional[str],
     auth: Optional[Any],
-    verifySSL: Optional[bool],
+    verify_ssl: Optional[bool],
 ) -> List[str]:
     if url is None:
         url = get_url_pi()
@@ -81,13 +81,13 @@ def list_piwebapi_sources(
     if auth is None:
         auth = get_auth_pi()
 
-    if verifySSL is False:
+    if verify_ssl is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    elif verifySSL is None:
-        verifySSL = get_verify_ssl()
+    elif verify_ssl is None:
+        verify_ssl = get_verify_ssl()
 
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verifySSL)
+    res = requests.get(url_, auth=auth, verify=verify_ssl)
 
     res.raise_for_status()
     try:
@@ -103,15 +103,15 @@ class BaseHandlerWeb(ABC):
         datasource: Optional[str],
         url: Optional[str],
         auth: Optional[Any],
-        verifySSL: Optional[bool],
+        verify_ssl: Optional[bool],
     ):
         self.datasource = datasource
         self.base_url = url
         self.session = requests.Session()
         self.session.auth = auth if auth is not None else get_auth_aspen()
-        if verifySSL is False:
+        if verify_ssl is False:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        self.session.verify = verifySSL if verifySSL is not None else get_verify_ssl()
+        self.session.verify = verify_ssl if verify_ssl is not None else get_verify_ssl()
 
     def fetch(self, url, params: Optional[Union[str, Dict[str, str]]] = None) -> Dict:
         res = self.session.get(url, params=params)
@@ -158,7 +158,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         datasource: Optional[str],
         url: Optional[str],
         auth: Optional[Any],
-        verifySSL: Optional[bool],
+        verify_ssl: Optional[bool],
         options: Dict[str, Any],
     ):
         if url is None:
@@ -169,7 +169,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
             datasource=datasource,
             url=url,
             auth=auth,
-            verifySSL=verifySSL,
+            verify_ssl=verify_ssl,
         )
         self._max_rows = options.get("max_rows", 100000)
         self._connection_string = ""  # Used for raw SQL queries
@@ -203,7 +203,6 @@ class AspenHandlerWeb(BaseHandlerWeb):
     ):
         # Maxpoints is used for Actual (raw) and Bestfit (shapepreserving).
         # Probably need to handle this in another way at some point
-        maxpoints = self._max_rows
         stepped = 0
         outsiders = 0
 
@@ -254,7 +253,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 f"<RT>{rt}</RT>"
             )
         if read_type in [ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
-            query += f"<X>{maxpoints}</X>"
+            query += f"<X>{self._max_rows}</X>"
         if read_type not in [ReaderType.INT, ReaderType.SNAPSHOT]:
             query += f"<O>{outsiders}</O>"
         if read_type not in [ReaderType.RAW]:
@@ -306,8 +305,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
         return False
 
     @staticmethod
-    def split_tagmap(tagmap) -> Tuple[Optional[str], ...]:
-        return tuple(tagmap.split(";") if ";" in tagmap else (tagmap, None))
+    def split_tagmap(tag_map) -> Tuple[Optional[str], ...]:
+        return tuple(tag_map.split(";") if ";" in tag_map else (tag_map, None))
 
     def generate_get_unit_query(self, tag: str):
         tagname, _ = self.split_tagmap(tag)
@@ -357,8 +356,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
 
     def _get_default_mapname(self, tagname: str):
         (tagname, _) = self.split_tagmap(tagname)
-        allmaps = self._get_maps(tagname)
-        for k, v in allmaps.items():
+        all_maps = self._get_maps(tagname)
+        for k, v in all_maps.items():
             if v:
                 return k
 
@@ -375,7 +374,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
             tag=tag, desc=desc, datasource=self.datasource
         )
         # Ensure space is encoded as "%20" instead of default "+" and leave asterisks
-        # unencoded. Otherwise searches for tags containing spaces break, as do wildcard
+        # unencoded. Otherwise, searches for tags containing spaces break, as do wildcard
         # searches.
         encoded_params = urllib.parse.urlencode(
             params, safe="*", quote_via=urllib.parse.quote
@@ -408,12 +407,12 @@ class AspenHandlerWeb(BaseHandlerWeb):
         url = urljoin(self.base_url, "TagInfo")
         data = self.fetch(url, params=query)
         try:
-            attrdata = data["data"]["tags"][0]["attrData"]
-        except Exception:
-            print(f"Error. I got this: {data}")
-            raise KeyError
+            attr_data = data["data"]["tags"][0]["attrData"]
+        except KeyError as e:
+            logger.error(f"Error. I got this: {data}")
+            raise e
         unit = ""
-        for a in attrdata:
+        for a in attr_data:
             if a["g"] == "Units":
                 unit = a["samples"][0]["v"]
                 break
@@ -485,11 +484,11 @@ class AspenHandlerWeb(BaseHandlerWeb):
         if read_type == ReaderType.INT:
             end = min(end, start + sample_time * (self._max_rows - 1))
 
-        tagname, mapname = self.split_tagmap(tag)
+        tag_name, map_name = self.split_tagmap(tag)
 
         params = self.generate_read_query(
-            tagname=tagname,
-            mapname=mapname,
+            tagname=tag_name,
+            mapname=map_name,
             start=start,
             end=end,
             sample_time=sample_time,
@@ -521,7 +520,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 .rename(columns={"t": "Timestamp", "v": "Value"})
             )
 
-        # Ensure non-numericals like "1.#QNAN" are returned as NaN
+        # Ensure non-numerical like "1.#QNAN" are returned as NaN
         df["Value"] = pd.to_numeric(df.Value, errors="coerce")
 
         df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms", origin="unix")
@@ -537,18 +536,20 @@ class AspenHandlerWeb(BaseHandlerWeb):
         max_rows: int = 100000,
     ):
         if connection_string is not None:
-            connstr = f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">'
+            connection_string = (
+                f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">'
+            )
         else:
-            connstr = (
+            connection_string = (
                 f'<SQL t="SQLplus" ds="{datasource}" '
                 'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
                 f'm="{max_rows}" to="30" s="1">'
             )
 
-        connstr += f"<![CDATA[{query}]]></SQL>"
-        return connstr
+        connection_string += f"<![CDATA[{query}]]></SQL>"
+        return connection_string
 
-    def initialize_connectionstring(
+    def initialize_connection_string(
         self,
         host: Optional[str] = None,
         port: int = 10014,
@@ -594,7 +595,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         url: Optional[str],
         datasource: Optional[str],
         auth: Optional[Any],
-        verifySSL: bool,
+        verify_ssl: bool,
         options: Dict[str, Union[int, float, str]],
     ):
         self._max_rows = options.get("max_rows", 10000)
@@ -606,10 +607,10 @@ class PIHandlerWeb(BaseHandlerWeb):
             url=url,
             datasource=datasource,
             auth=auth,
-            verifySSL=verifySSL,
+            verify_ssl=verify_ssl,
         )
         self._max_rows = options.get("max_rows", 10000)
-        self.webidcache = BaseCache(directory=Path(".") / ".cache" / datasource)
+        self.web_id_cache = BaseCache(directory=Path(".") / ".cache" / datasource)
 
     @staticmethod
     def _time_to_UTC_string(time: datetime) -> str:
@@ -686,7 +687,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         ]:
             raise NotImplementedError
 
-        webid = tag
+        web_id = tag
 
         seconds = 0
         if read_type != ReaderType.SNAPSHOT:
@@ -699,7 +700,7 @@ class PIHandlerWeb(BaseHandlerWeb):
             ReaderType.SHAPEPRESERVING: "plot",
         }.get(read_type, "summary")
 
-        url = f"streams/{webid}/{get_action}"
+        url = f"streams/{web_id}/{get_action}"
         params = {}
 
         if read_type != ReaderType.SNAPSHOT:
@@ -791,24 +792,24 @@ class PIHandlerWeb(BaseHandlerWeb):
         return {}  # FIXME
 
     def _get_tag_unit(self, tag: str) -> Optional[str]:
-        webid = self.tag_to_webid(tag)
-        if webid is None:
+        web_id = self.tag_to_web_id(tag)
+        if web_id is None:
             return None
-        url = urljoin(self.base_url, "points", webid)
+        url = urljoin(self.base_url, "points", web_id)
         data = self.fetch(url)
         unit = data["EngineeringUnits"]
         return unit
 
     def _get_tag_description(self, tag: str) -> Optional[str]:
-        webid = self.tag_to_webid(tag)
-        if webid is None:
+        web_id = self.tag_to_web_id(tag)
+        if web_id is None:
             return None
-        url = urljoin(self.base_url, "points", webid)
+        url = urljoin(self.base_url, "points", web_id)
         data = self.fetch(url)
         description = data["Descriptor"]
         return description
 
-    def tag_to_webid(self, tag: str) -> Optional[str]:
+    def tag_to_web_id(self, tag: str) -> Optional[str]:
         """Given a tag, returns the WebId.
 
         :param tag: The tag
@@ -817,7 +818,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         :return: WebId
         :rtype: str
         """
-        if tag not in self.webidcache:
+        if tag not in self.web_id_cache:
             params = self.generate_search_query(
                 tag=tag, datasource=self.datasource, desc=None
             )
@@ -841,9 +842,9 @@ class PIHandlerWeb(BaseHandlerWeb):
                 logger.warning(f"Tag {tag} not found")
                 return None
 
-            webid = data["Items"][0]["WebId"]
-            self.webidcache[tag] = webid
-        return self.webidcache[tag]
+            web_id = data["Items"][0]["WebId"]
+            self.web_id_cache[tag] = web_id
+        return self.web_id_cache[tag]
 
     @staticmethod
     def _is_summary(read_type: ReaderType) -> bool:
@@ -868,12 +869,12 @@ class PIHandlerWeb(BaseHandlerWeb):
         metadata: Optional[Dict[str, str]],
         get_status: bool = False,
     ):
-        webid = self.tag_to_webid(tag)
-        if not webid:
+        web_id = self.tag_to_web_id(tag)
+        if not web_id:
             return pd.DataFrame()
 
         (url, params) = self.generate_read_query(
-            tag=webid,
+            tag=web_id,
             start=start,
             end=end,
             sample_time=sample_time,
@@ -894,16 +895,16 @@ class PIHandlerWeb(BaseHandlerWeb):
         if df.empty:
             return df
 
-        # Summary data, digitalset or invalid data
+        # Summary data, digital-set or invalid data
         if "Value" not in df.columns:
-            # Either digitalset or invalid data. Set invalid to NaN
+            # Either digital-set or invalid data. Set invalid to NaN
             if "Value.Name" in df.columns:
                 df.loc[df["Value.Name"] == "No Data", "Value.Value"] = np.nan
             # Replaced below replacement test with above when adding get_status
             # since we should avoid getting Good when get_status == False
-            # Value.Name can also be the name of the digitalset, e.g. "Active"
+            # Value.Name can also be the name of the digital-set, e.g. "Active"
             # Alternative: df["Value.IsSystem"] == True since it seems to be False
-            # for digitalsets?
+            # for digital-sets?
             #    df.loc[df.Good == False, "Value.Value"] = np.nan
             df = df.rename(
                 columns={

@@ -12,7 +12,7 @@ SAMPLE_TIME = timedelta(seconds=60)
 @pytest.fixture  # type: ignore[misc]
 def aspen_handler() -> AspenHandlerWeb:  # type: ignore[misc]
     h = AspenHandlerWeb(
-        datasource="source_name", auth=None, options={}, url=None, verifySSL=None
+        datasource="source_name", auth=None, options={}, url=None, verify_ssl=None
     )
     yield h
 
@@ -235,11 +235,11 @@ def test_generate_sql_query(aspen_handler: AspenHandlerWeb) -> None:
 
 
 def test_initialize_connection_string(aspen_handler: AspenHandlerWeb) -> None:
-    aspen_handler.initialize_connectionstring(
+    aspen_handler.initialize_connection_string(
         host="my_host", port=999, connection_string="my_connection_string"
     )
     assert aspen_handler._connection_string == "my_connection_string"
-    aspen_handler.initialize_connectionstring(
+    aspen_handler.initialize_connection_string(
         host="my_host",
         port=999,
     )

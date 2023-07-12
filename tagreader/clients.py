@@ -69,11 +69,11 @@ def list_sources(
     elif imstype == IMSType.PIWEBAPI:
         if auth is None:
             auth = get_auth_pi()
-        return list_piwebapi_sources(url=url, auth=auth, verifySSL=verifySSL)
+        return list_piwebapi_sources(url=url, auth=auth, verify_ssl=verifySSL)
     elif imstype == IMSType.ASPENONE:
         if auth is None:
             auth = get_auth_aspen()
-        return list_aspenone_sources(url=url, auth=auth, verifySSL=verifySSL)
+        return list_aspenone_sources(url=url, auth=auth, verify_ssl=verifySSL)
 
 
 def get_missing_intervals(
@@ -215,7 +215,7 @@ def get_handler(
     if imstype is None:
         try:
             if datasource in list_aspenone_sources(
-                url=None, auth=None, verifySSL=verifySSL
+                url=None, auth=None, verify_ssl=verifySSL
             ):
                 imstype = IMSType.ASPENONE
         except HTTPError as e:
@@ -223,7 +223,7 @@ def get_handler(
     if imstype is None:
         try:
             if datasource in list_piwebapi_sources(
-                url=None, auth=None, verifySSL=verifySSL
+                url=None, auth=None, verify_ssl=verifySSL
             ):
                 imstype = IMSType.PIWEBAPI
         except HTTPError as e:
@@ -279,7 +279,7 @@ def get_handler(
             url=url,
             datasource=datasource,
             options=options,
-            verifySSL=verifySSL,
+            verify_ssl=verifySSL,
             auth=auth,
         )
 
@@ -288,7 +288,7 @@ def get_handler(
             datasource=datasource,
             url=url,
             options=options,
-            verifySSL=verifySSL,
+            verify_ssl=verifySSL,
             auth=auth,
         )
 
@@ -337,9 +337,8 @@ class IMSClient:
         else:
             self.cache = SmartCache(directory=Path(".") / ".cache" / datasource)
             warnings.warn(
-                "Caching will no longer be the default behavior in Tagreader version 5"
-                ". Please spe"
-                "sify chash argument to keep current behaviour.",
+                "Caching will no longer be the default behavior in Tagreader version 5."
+                " Please specify cache argument to keep current behaviour.",
                 FutureWarning,
             )
 

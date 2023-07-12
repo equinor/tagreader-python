@@ -431,8 +431,6 @@ class PIHandlerODBC:
         self._das_server = options.get("das_server", "piwebapi.equinor.com")
         self._connection_string = options.get("connection_string", None)
 
-        # print(self._das_server)
-
     def generate_connection_string(self) -> str:
         if self._connection_string is None:
             return (

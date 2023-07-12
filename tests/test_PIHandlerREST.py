@@ -14,9 +14,9 @@ SAMPLE_TIME = 60
 @pytest.fixture  # type: ignore[misc]
 def pi_handler() -> Generator[PIHandlerWeb, None, None]:
     h = PIHandlerWeb(
-        datasource="sourcename", auth=None, options={}, url=None, verifySSL=True
+        datasource="sourcename", auth=None, options={}, url=None, verify_ssl=True
     )
-    h.webidcache["alreadyknowntag"] = "knownwebid"
+    h.web_id_cache["alreadyknowntag"] = "knownwebid"
     yield h
 
 
@@ -90,13 +90,13 @@ def test_is_summary(pi_handler: PIHandlerWeb) -> None:
 )
 def test_generate_read_query(pi_handler: PIHandlerWeb, read_type: str) -> None:
     start = ensure_datetime_with_tz(START_TIME)
-    stoptime = ensure_datetime_with_tz(STOP_TIME)
+    stop = ensure_datetime_with_tz(STOP_TIME)
     ts = timedelta(seconds=SAMPLE_TIME)
 
     (url, params) = pi_handler.generate_read_query(
-        tag=pi_handler.tag_to_webid(tag="alreadyknowntag"),  # type: ignore[arg-type]
+        tag=pi_handler.tag_to_web_id(tag="alreadyknowntag"),  # type: ignore[arg-type]
         start=start,
-        end=stoptime,
+        end=stop,
         sample_time=ts,
         read_type=getattr(ReaderType, read_type),
         metadata=None,
@@ -107,11 +107,13 @@ def test_generate_read_query(pi_handler: PIHandlerWeb, read_type: str) -> None:
         assert params["timeZone"] == "UTC"
 
     if read_type == "INT":
-        assert url == f"streams/{pi_handler.webidcache['alreadyknowntag']}/interpolated"
+        assert (
+            url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/interpolated"
+        )
         assert params["selectedFields"] == "Links;Items.Timestamp;Items.Value"
         assert params["interval"] == f"{SAMPLE_TIME}s"
     elif read_type in ["AVG", "MIN", "MAX", "RNG", "STD", "VAR"]:
-        assert url == f"streams/{pi_handler.webidcache['alreadyknowntag']}/summary"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/summary"
         assert (
             params["selectedFields"] == "Links;Items.Value.Timestamp;Items.Value.Value"
         )
@@ -125,11 +127,11 @@ def test_generate_read_query(pi_handler: PIHandlerWeb, read_type: str) -> None:
         }.get(read_type) == params["summaryType"]
         assert params["summaryDuration"] == f"{SAMPLE_TIME}s"
     elif read_type == "SNAPSHOT":
-        assert url == f"streams/{pi_handler.webidcache['alreadyknowntag']}/value"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/value"
         assert params["selectedFields"] == "Timestamp;Value"
         assert len(params) == 3
     elif read_type == "RAW":
-        assert url == f"streams/{pi_handler.webidcache['alreadyknowntag']}/recorded"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/recorded"
         assert params["selectedFields"] == "Links;Items.Timestamp;Items.Value"
         assert params["maxCount"] == 10000  # type: ignore[comparison-overlap]
 
@@ -160,13 +162,13 @@ def test_generate_read_query_with_status(
     pi_handler: PIHandlerWeb, read_type: str
 ) -> None:
     start = ensure_datetime_with_tz(START_TIME)
-    stoptime = ensure_datetime_with_tz(STOP_TIME)
+    stop = ensure_datetime_with_tz(STOP_TIME)
     ts = timedelta(seconds=SAMPLE_TIME)
 
     (url, params) = pi_handler.generate_read_query(
-        tag=pi_handler.tag_to_webid("alreadyknowntag"),  # type: ignore[arg-type]
+        tag=pi_handler.tag_to_web_id("alreadyknowntag"),  # type: ignore[arg-type]
         start=start,
-        end=stoptime,
+        end=stop,
         sample_time=ts,
         read_type=getattr(ReaderType, read_type),
         get_status=True,
@@ -178,14 +180,16 @@ def test_generate_read_query_with_status(
         assert params["timeZone"] == "UTC"
 
     if read_type == "INT":
-        assert url == f"streams/{pi_handler.webidcache['alreadyknowntag']}/interpolated"
+        assert (
+            url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/interpolated"
+        )
         assert params["selectedFields"] == (
             "Links;Items.Timestamp;Items.Value;"
             "Items.Good;Items.Questionable;Items.Substituted"
         )
         assert params["interval"] == f"{SAMPLE_TIME}s"
     elif read_type in ["AVG", "MIN", "MAX", "RNG", "STD", "VAR"]:
-        assert url == f"streams/{pi_handler.webidcache['alreadyknowntag']}/summary"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/summary"
         assert params["selectedFields"] == (
             "Links;Items.Value.Timestamp;Items.Value.Value;"
             "Items.Value.Good;Items.Value.Questionable;Items.Value.Substituted"
@@ -200,13 +204,13 @@ def test_generate_read_query_with_status(
         }.get(read_type) == params["summaryType"]
         assert params["summaryDuration"] == f"{SAMPLE_TIME}s"
     elif read_type == "SNAPSHOT":
-        assert url == f"streams/{pi_handler.webidcache['alreadyknowntag']}/value"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/value"
         assert (
             params["selectedFields"] == "Timestamp;Value;Good;Questionable;Substituted"
         )
         assert len(params) == 3
     elif read_type == "RAW":
-        assert url == f"streams/{pi_handler.webidcache['alreadyknowntag']}/recorded"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/recorded"
         assert params["selectedFields"] == (
             "Links;Items.Timestamp;Items.Value;"
             "Items.Good;Items.Questionable;Items.Substituted"
@@ -214,15 +218,15 @@ def test_generate_read_query_with_status(
         assert params["maxCount"] == 10000  # type: ignore[comparison-overlap]
 
 
-def test_genreadquery_long_sampletime(pi_handler: PIHandlerWeb) -> None:
+def test_generate_read_query_long_sample_time(pi_handler: PIHandlerWeb) -> None:
     start = ensure_datetime_with_tz(START_TIME)
-    stoptime = ensure_datetime_with_tz(STOP_TIME)
+    stop = ensure_datetime_with_tz(STOP_TIME)
     ts = timedelta(seconds=86410)
 
     (url, params) = pi_handler.generate_read_query(
-        tag=pi_handler.tag_to_webid("alreadyknowntag"),  # type: ignore[arg-type]
+        tag=pi_handler.tag_to_web_id("alreadyknowntag"),  # type: ignore[arg-type]
         start=start,
-        end=stoptime,
+        end=stop,
         sample_time=ts,
         read_type=ReaderType.INT,
         metadata=None,

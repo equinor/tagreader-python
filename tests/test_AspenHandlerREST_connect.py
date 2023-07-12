@@ -48,13 +48,13 @@ def client() -> Generator[IMSClient, None, None]:
 @pytest.fixture  # type: ignore[misc]
 def aspen_handler() -> Generator[AspenHandlerWeb, None, None]:
     h = AspenHandlerWeb(
-        datasource=SOURCE, verifySSL=bool(VERIFY_SSL), auth=None, url=None, options={}
+        datasource=SOURCE, verify_ssl=bool(VERIFY_SSL), auth=None, url=None, options={}
     )
     yield h
 
 
 def test_list_all_aspen_one_sources() -> None:
-    res = list_aspenone_sources(verifySSL=bool(VERIFY_SSL), auth=None, url=None)
+    res = list_aspenone_sources(verify_ssl=bool(VERIFY_SSL), auth=None, url=None)
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)
@@ -119,7 +119,7 @@ def test_query_sql(client: IMSClient) -> None:
     with raises(NotImplementedError):
         res = client.query_sql(query=query, parse=True)
         assert isinstance(res, str)
-    client.handler.initialize_connectionstring(host="SNA-IMS.statoil.net")
+    client.handler.initialize_connection_string(host="SNA-IMS.statoil.net")
     query = "Select name, ip_description from ip_analogdef where name = 'atcai'"
     res = client.query_sql(query=query, parse=False)
     print(res)

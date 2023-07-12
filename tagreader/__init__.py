@@ -12,6 +12,6 @@ if is_windows():
     from tagreader.odbc_handlers import list_aspen_servers, list_pi_servers
 
 if is_equinor():
-    add_statoil_root_certificate(noisy=False)
+    add_statoil_root_certificate()
 
 from tagreader.__version__ import version as __version__

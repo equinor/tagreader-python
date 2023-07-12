@@ -48,14 +48,14 @@ def client() -> Generator[IMSClient, None, None]:
 @pytest.fixture  # type: ignore[misc]
 def pi_handler() -> Generator[PIHandlerWeb, None, None]:
     h = PIHandlerWeb(
-        datasource=SOURCE, verifySSL=bool(verifySSL), auth=None, options={}, url=None
+        datasource=SOURCE, verify_ssl=bool(verifySSL), auth=None, options={}, url=None
     )
-    h.webidcache["alreadyknowntag"] = "knownwebid"
+    h.web_id_cache["alreadyknowntag"] = "knownwebid"
     yield h
 
 
 def test_list_all_piwebapi_sources() -> None:
-    res = list_piwebapi_sources(verifySSL=bool(verifySSL), auth=None, url=None)
+    res = list_piwebapi_sources(verify_ssl=bool(verifySSL), auth=None, url=None)
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:
@@ -92,12 +92,12 @@ def test_search_tag(client: IMSClient) -> None:
 
 
 def test_tag_to_web_id(pi_handler: PIHandlerWeb) -> None:
-    res = pi_handler.tag_to_webid("SINUSOID")
+    res = pi_handler.tag_to_web_id("SINUSOID")
     assert isinstance(res, str)
     assert len(res) >= 20
     with pytest.raises(AssertionError):
-        _ = pi_handler.tag_to_webid("SINUSOID*")
-    res = pi_handler.tag_to_webid("somerandomgarbage")
+        _ = pi_handler.tag_to_web_id("SINUSOID*")
+    res = pi_handler.tag_to_web_id("somerandomgarbage")
     assert not res
 
 
