@@ -299,11 +299,10 @@ In summary, here is the resulting status value from tagreader for different comb
 Please keep in mind when using `get_status`:
 * This is an experimental feature. It may work as intended, or it may result in erroneous status values in some cases. If that happens, please create an issue.
 * Both how fetching status is activated and how it is returned may be changed at a later time.
-* The cache will currently be silently bypassed whenever `get_status` is `True`.
 
 ## Caching results
 
-By default a cache-file using the HDF5 file format will be attached to the client upon client creation. Whenever `IMSClient.read()` is called, the cache is queried for existing data. Any data that is not already in the cache will be queried from the data source. The cache can significantly speed up queries, and it is therefore recommended to always keep it enabled. The cache file will be created on use.
+By default, a cache-file using the SQLite file format will be attached to the client upon client creation. Whenever `IMSClient.read()` is called, the cache is queried for existing data. Any data that is not already in the cache will be queried from the data source. The cache can significantly speed up queries, and it is therefore recommended to always keep it enabled. The cache file will be created on use.
 
 Data in the cache never expires. If the data for some reason becomes invalid, then the cache and data source will no longer produce the same data set. An existing cache file can safely be deleted at any time, at least as long as there is no ongoing query.
 
@@ -318,6 +317,7 @@ c.connect()
 Snapshots ( `read_type = ReaderType.SNAPSHOT` ) are of course never cached.
 
 **Note**: Raw `read_type = ReaderType.RAW` data values are currently not cached pending a rewrite of the caching mechanisms.
+**Note**: Cache will be default off from version 5.
 
 ## Time zones
 
@@ -334,7 +334,7 @@ The client-provided time zone can be specified with the optional `tz` argument (
 
 **Example (advanced usage)**
 
-An employee in Houston is contacted by her collague in Brazil about an event that she needs to investigate. The colleague identified the time of the event at July 20th 2020 at 15:05:00 Rio time. The Houston employee wishes to extract interpolated data with 60-second intervals and display the data in her local time zone. She also wishes to send the data to her Norwegian colleague with datestamps in Norwegian time. One way of doing this is :
+An employee in Houston is contacted by her colleague in Brazil about an event that she needs to investigate. The colleague identified the time of the event at July 20th 2020 at 15:05:00 Rio time. The Houston employee wishes to extract interpolated data with 60-second intervals and display the data in her local time zone. She also wishes to send the data to her Norwegian colleague with datestamps in Norwegian time. One way of doing this is :
 
 ``` python
 import tagreader
