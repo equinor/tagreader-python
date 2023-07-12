@@ -2,6 +2,18 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.2.3](https://github.com/equinor/tagreader-python/compare/v4.2.2...v4.2.3) (2023-07-12)
+
+
+### 🧪 Tests
+
+* assert that cache is not SmartCache when creating a client without specifying cache ([fa8d7d0](https://github.com/equinor/tagreader-python/commit/fa8d7d0abae6ce1a5fe8da20b5ebeb0ad960a411))
+
+
+### 🐛 Bug Fixes
+
+* correct caching when get_status=True ([#240](https://github.com/equinor/tagreader-python/issues/240)) ([ede82f5](https://github.com/equinor/tagreader-python/commit/ede82f57bce09b5965914d6027b419bef0fa8a9b)), closes [#239](https://github.com/equinor/tagreader-python/issues/239)
+
 ## [4.2.2](https://github.com/equinor/tagreader-python/compare/v4.2.1...v4.2.2) (2023-07-12)
 
 
