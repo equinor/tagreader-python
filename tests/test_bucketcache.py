@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 from typing import Generator
 
@@ -11,7 +12,8 @@ TAGNAME = "tag1"
 READE_TYPE = ReaderType.INT
 
 TZ = "UTC"
-TS = pd.Timedelta(seconds=300)
+TS = timedelta(seconds=300)
+MINUTE = timedelta(seconds=60)
 FREQ = f"{int(TS.total_seconds())}s"
 
 START_TIME_1 = pd.to_datetime("2020-01-01 12:00:00", utc=True)
@@ -85,7 +87,7 @@ def test_key_path_with_time(cache: BucketCache) -> None:
         cache._key_path(
             tagname=TAGNAME,
             read_type=READE_TYPE,
-            ts=60,
+            ts=MINUTE,
             stepped=False,
             get_status=False,
             start=START_TIME_1,
@@ -100,7 +102,7 @@ def test_key_path_stepped(cache: BucketCache) -> None:
         cache._key_path(
             tagname=TAGNAME,
             read_type=READE_TYPE,
-            ts=60,
+            ts=MINUTE,
             stepped=True,
             get_status=False,
             start=START_TIME_1,
@@ -115,11 +117,11 @@ def test_key_path_with_status(cache: BucketCache) -> None:
         cache._key_path(
             tagname=TAGNAME,
             read_type=READE_TYPE,
-            ts=60,
+            ts=MINUTE,
             stepped=False,
             get_status=True,
         )
-        == "$tag1$INT$s60$get_status"
+        == "$tag1$INT$s60$status"
     )
 
 
@@ -128,7 +130,7 @@ def test_key_path_raw(cache: BucketCache) -> None:
         cache._key_path(
             tagname=TAGNAME,
             read_type=ReaderType.RAW,
-            ts=60,
+            ts=MINUTE,
             stepped=False,
             get_status=False,
         )

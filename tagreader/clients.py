@@ -311,7 +311,6 @@ class IMSClient:
         verifySSL: bool = True,
         auth: Optional[Any] = None,
         cache: Optional[Union[SmartCache, BucketCache]] = None,
-        get_status: bool = False,
     ):
         if isinstance(imstype, str):
             try:
@@ -389,11 +388,7 @@ class IMSClient:
             missing_intervals = [(start, end)]
             df = pd.DataFrame()
 
-            if (
-                isinstance(cache, SmartCache)
-                and read_type != ReaderType.RAW
-                and not get_status
-            ):
+            if isinstance(cache, SmartCache):
                 time_slice = get_next_timeslice(
                     start=start, end=end, ts=ts, max_steps=None
                 )
@@ -449,36 +444,25 @@ class IMSClient:
                         metadata=metadata,
                         get_status=get_status,
                     )
-                    if len(df.index) > 0:
-                        if (
-                            cache is not None
-                            and read_type
-                            not in [
-                                ReaderType.SNAPSHOT,
-                                ReaderType.RAW,
-                            ]
-                            and not get_status
-                        ):
-                            cache.store(df=df, read_type=read_type, ts=ts)
+                    if not df.empty and read_type != ReaderType.RAW:
+                        if isinstance(cache, SmartCache):
+                            cache.store(df=df, tagname=tag, read_type=read_type, ts=ts)
+                        if isinstance(cache, BucketCache):
+                            cache.store(
+                                df=df,
+                                tagname=tag,
+                                read_type=read_type,
+                                ts=ts,
+                                stepped=stepped,
+                                get_status=get_status,
+                                start=start,
+                                end=end,
+                            )
                     frames.append(df)
                     if len(df) < self.handler._max_rows:
                         break
                     start = df.index[-1]
-                # if read_type != ReaderType.RAW:
-                #     time_slice = [start, start]
-                #     while time_slice[1] < end:
-                #         time_slice = get_next_timeslice(
-                #             time_slice[1], end, ts, self.handler._max_rows
-                #         )
-                #         df = self.handler.read_tag(
-                #             tag, time_slice[0], time_slice[1], ts, read_type, metadata
-                #         )
-                #         if len(df.index) > 0:
-                #             if cache is not None and read_type != ReaderType.RAW:
-                #                 cache.store(df, read_type, ts)
-                #             frames.append(df)
 
-            # df = pd.concat(frames, verify_integrity=True)
             df = pd.concat(frames)
             # read_type INT leads to overlapping values after concatenating
             # due to both start time and end time included.

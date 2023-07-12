@@ -71,10 +71,7 @@ class TestODBC:
     def test_pi_init_odbc_client_with_host_port(self) -> None:
         host = "thehostname"
         port = 999
-        get_status = False
-        c = IMSClient(
-            datasource="whatever", imstype="pi", host=host, get_status=get_status
-        )
+        c = IMSClient(datasource="whatever", imstype="pi", host=host)
         assert c.handler.host == host
         assert c.handler.port == 5450
         c = IMSClient(
@@ -82,7 +79,6 @@ class TestODBC:
             imstype="pi",
             host=host,
             port=port,
-            get_status=get_status,
         )
         assert c.handler.host == host
         assert c.handler.port == port
@@ -90,10 +86,7 @@ class TestODBC:
     def test_ip21_init_odbc_client_with_host_port(self) -> None:
         host = "thehostname"
         port = 999
-        get_status = False
-        c = IMSClient(
-            datasource="whatever", imstype="ip21", host=host, get_status=get_status
-        )
+        c = IMSClient(datasource="whatever", imstype="ip21", host=host)
         assert c.handler.host == host
         assert c.handler.port == 10014
         c = IMSClient(
@@ -101,48 +94,42 @@ class TestODBC:
             imstype="ip21",
             host=host,
             port=port,
-            get_status=get_status,
         )
         assert c.handler.host == host
         assert c.handler.port == port
 
     def test_pi_connection_string_override(self) -> None:
         connstr = "someuserspecifiedconnectionstring"
-        get_status = False
         c = IMSClient(
             datasource="whatever",
             imstype="pi",
             host="host",
             handler_options={"connection_string": connstr},
-            get_status=get_status,
         )
         assert c.handler.generate_connection_string() == connstr
 
     def test_ip21_connection_string_override(self) -> None:
         connstr = "someuserspecifiedconnectionstring"
-        get_status = False
         c = IMSClient(
             datasource="whatever",
             imstype="ip21",
             host="host",
             handler_options={"connection_string": connstr},
-            get_status=get_status,
         )
         assert c.handler.generate_connection_string() == connstr
 
     def test_init_odbc_clients(self) -> None:
-        get_status = False
         with pytest.raises(ValueError):
-            _ = IMSClient(datasource="xyz", get_status=get_status)
+            _ = IMSClient(datasource="xyz")
         with pytest.raises(ValueError):
-            _ = IMSClient(datasource="sNa", imstype="pi", get_status=get_status)
+            _ = IMSClient(datasource="sNa", imstype="pi")
         with pytest.raises(ValueError):
-            _ = IMSClient(datasource="Ono-imS", imstype="aspen", get_status=get_status)
+            _ = IMSClient(datasource="Ono-imS", imstype="aspen")
         with pytest.raises(ValueError):
-            _ = IMSClient(datasource="ono-ims", imstype="aspen", get_status=get_status)
+            _ = IMSClient(datasource="ono-ims", imstype="aspen")
         with pytest.raises(ValueError):
-            _ = IMSClient(datasource="sna", imstype="pi", get_status=get_status)
-        c = IMSClient(datasource="onO-iMs", imstype="pi", get_status=get_status)
+            _ = IMSClient(datasource="sna", imstype="pi")
+        c = IMSClient(datasource="onO-iMs", imstype="pi")
         assert isinstance(c.handler, PIHandlerODBC)
-        c = IMSClient(datasource="snA", imstype="aspen", get_status=get_status)
+        c = IMSClient(datasource="snA", imstype="aspen")
         assert isinstance(c.handler, AspenHandlerODBC)

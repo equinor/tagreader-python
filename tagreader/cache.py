@@ -108,7 +108,7 @@ class BucketCache(BaseCache):
     def _key_path(
         tagname: str,
         read_type: ReaderType,
-        ts: Union[int, timedelta],
+        ts: timedelta,
         stepped: bool,
         get_status: bool,
         start: Optional[datetime] = None,
@@ -124,12 +124,6 @@ class BucketCache(BaseCache):
         end: The end of the query that created the bucket.
         """
         tagname = safe_tagname(tagname)
-
-        ts = (
-            int(ts.total_seconds())
-            if read_type != ReaderType.RAW and isinstance(ts, timedelta)
-            else ts
-        )
         timespan = ""
         if start is not None:
             start_epoch = timestamp_to_epoch(start)
@@ -139,15 +133,16 @@ class BucketCache(BaseCache):
         keyval = (
             f"${tagname}"
             f"${read_type.name}"
-            f"{(ts is not None and read_type != ReaderType.RAW) * f'$s{ts}'}"
+            f"{(read_type != ReaderType.RAW) * f'$s{str(int(ts.total_seconds()))}'}"
             f"{stepped * '$stepped'}"
-            f"{get_status * '$get_status'}"
+            f"{get_status * '$status'}"
             f"{timespan}"
         )
         return keyval
 
     def store(
         self,
+        *,
         df: pd.DataFrame,
         tagname: str,
         read_type: ReaderType,
@@ -205,7 +200,7 @@ class BucketCache(BaseCache):
         self,
         tagname: str,
         read_type: ReaderType,
-        ts: Union[int, timedelta],
+        ts: timedelta,
         stepped: bool,
         get_status: bool,
         start: datetime,
@@ -234,7 +229,7 @@ class BucketCache(BaseCache):
         self,
         tagname: str,
         read_type: ReaderType,
-        ts: Union[int, timedelta],
+        ts: timedelta,
         stepped: bool,
         get_status: bool,
         start: datetime,
@@ -274,9 +269,10 @@ class BucketCache(BaseCache):
 
     def fetch(
         self,
+        *,
         tagname: str,
         read_type: ReaderType,
-        ts: Union[int, timedelta],
+        ts: timedelta,
         stepped: bool,
         get_status: bool,
         start: datetime,
@@ -285,9 +281,6 @@ class BucketCache(BaseCache):
         df = pd.DataFrame()
         if not len(self) > 0:
             return df
-
-        if isinstance(ts, timedelta):
-            ts = int(ts.total_seconds())
 
         datasets = self.get_intersecting_datasets(
             tagname=tagname,
@@ -309,41 +302,33 @@ class BucketCache(BaseCache):
 
 class SmartCache(BaseCache):
     @staticmethod
-    def key_path(
-        df: Union[str, pd.DataFrame],
+    def _key_path(
+        *,
+        tagname: str,
         read_type: ReaderType,
-        ts: Optional[Union[int, timedelta]] = None,
+        ts: timedelta,
         get_status: bool = False,
     ) -> str:
-        """Return a string on the form
-        XXX$sYY$ZZZ where XXX is the ReadType, YY is the interval between samples
-        (in seconds) and ZZZ is a safe tagname.
-        """
-        name = str(list(df)[0]) if isinstance(df, pd.DataFrame) else df
-        name = safe_tagname(name)
-        ts = int(ts.total_seconds()) if isinstance(ts, timedelta) else ts
+        name = safe_tagname(tagname)
+        status = get_status * "$status"
         if read_type != ReaderType.RAW:
-            if ts is None:
-                # Determine sample time by reading interval between first two
-                # samples of dataframe.
-                if isinstance(df, pd.DataFrame):
-                    interval = int(df[0:2].index.to_series().diff().mean().value / 1e9)  # type: ignore[attr-defined]
-                else:
-                    raise TypeError
-            else:
-                interval = int(ts)
-            return f"{read_type.name}$s{interval}${name}"
+            interval = int(ts.total_seconds())
+            return f"{read_type.name}$s{interval}${name}{status}"
         else:
-            return f"{read_type.name}${name}"
+            return f"{read_type.name}${name}{status}"
 
     def store(
         self,
+        *,
         df: pd.DataFrame,
+        tagname: str,
         read_type: ReaderType,
-        ts: Optional[Union[int, timedelta]] = None,
+        ts: timedelta,
         get_status: bool = False,
     ) -> None:
-        key = self.key_path(df=df, read_type=read_type, ts=ts, get_status=get_status)
+        key = self._key_path(
+            tagname=tagname, read_type=read_type, ts=ts, get_status=get_status
+        )
         if df.empty:
             return  # Weirdness ensues when using empty df in select statement below
         if key in self:
@@ -360,15 +345,16 @@ class SmartCache(BaseCache):
 
     def fetch(
         self,
+        *,
         tagname: str,
         read_type: ReaderType,
-        ts: Optional[Union[int, timedelta]] = None,
+        ts: timedelta,
         start: Optional[datetime] = None,
         end: Optional[datetime] = None,
         get_status: bool = False,
     ) -> pd.DataFrame:
-        key = self.key_path(
-            df=tagname, read_type=read_type, ts=ts, get_status=get_status
+        key = self._key_path(
+            tagname=tagname, read_type=read_type, ts=ts, get_status=get_status
         )
         df = cast(Optional[pd.DataFrame], self.get(key=key))
         if df is None:

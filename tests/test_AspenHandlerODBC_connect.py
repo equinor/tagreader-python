@@ -30,7 +30,7 @@ STOP_TIME = "2018-05-01 11:00:00"
 
 @pytest.fixture  # type: ignore[misc]
 def client() -> Generator[IMSClient, None, None]:
-    c = IMSClient(datasource=SOURCE, imstype="ip21", get_status=False)
+    c = IMSClient(datasource=SOURCE, imstype="ip21")
     c.cache = None  # type: ignore[assignment]
     c.connect()
     yield c
