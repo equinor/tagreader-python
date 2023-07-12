@@ -13,3 +13,5 @@ if is_windows():
 
 if is_equinor():
     add_statoil_root_certificate(noisy=False)
+
+from tagreader.__version__ import version as __version__
