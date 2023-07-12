@@ -37,7 +37,6 @@ def client() -> Generator[IMSClient, None, None]:
         datasource=SOURCE,
         imstype="aspenone",
         verifySSL=bool(VERIFY_SSL),
-        get_status=False,
     )
     c.cache = None  # type: ignore[assignment]
     c.connect()

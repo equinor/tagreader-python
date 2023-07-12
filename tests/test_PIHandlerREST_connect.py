@@ -36,7 +36,6 @@ def client() -> Generator[IMSClient, None, None]:
         datasource=SOURCE,
         imstype="piwebapi",
         verifySSL=bool(verifySSL),
-        get_status=False,
     )
     c.cache = None  # type: ignore[assignment]
     c.connect()
