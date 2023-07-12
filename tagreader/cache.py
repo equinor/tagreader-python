@@ -111,8 +111,8 @@ class BucketCache(BaseCache):
         ts: timedelta,
         stepped: bool,
         get_status: bool,
-        start: Optional[datetime] = None,
-        end: Optional[datetime] = None,
+        start: Optional[datetime],
+        end: Optional[datetime],
     ) -> str:
         """Return a string on the form
         $tagname$read_type[$sample_time][$stepped][$get_status]$_start_end
@@ -307,7 +307,7 @@ class SmartCache(BaseCache):
         tagname: str,
         read_type: ReaderType,
         ts: timedelta,
-        get_status: bool = False,
+        get_status: bool,
     ) -> str:
         name = safe_tagname(tagname)
         status = get_status * "$status"
@@ -324,7 +324,7 @@ class SmartCache(BaseCache):
         tagname: str,
         read_type: ReaderType,
         ts: timedelta,
-        get_status: bool = False,
+        get_status: bool,
     ) -> None:
         key = self._key_path(
             tagname=tagname, read_type=read_type, ts=ts, get_status=get_status
@@ -349,9 +349,9 @@ class SmartCache(BaseCache):
         tagname: str,
         read_type: ReaderType,
         ts: timedelta,
-        start: Optional[datetime] = None,
-        end: Optional[datetime] = None,
-        get_status: bool = False,
+        start: Optional[datetime],
+        end: Optional[datetime],
+        get_status: bool,
     ) -> pd.DataFrame:
         key = self._key_path(
             tagname=tagname, read_type=read_type, ts=ts, get_status=get_status

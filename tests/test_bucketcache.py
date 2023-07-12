@@ -120,6 +120,8 @@ def test_key_path_with_status(cache: BucketCache) -> None:
             ts=MINUTE,
             stepped=False,
             get_status=True,
+            start=None,
+            end=None,
         )
         == "$tag1$INT$s60$status"
     )
@@ -133,6 +135,8 @@ def test_key_path_raw(cache: BucketCache) -> None:
             ts=MINUTE,
             stepped=False,
             get_status=False,
+            start=None,
+            end=None,
         )
         == "$tag1$RAW"
     )

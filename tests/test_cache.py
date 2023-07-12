@@ -65,7 +65,12 @@ def test_cache_single_store_and_fetch(
         ts=MINUTE,
     )
     df_read = cache.fetch(
-        tagname="tag1", read_type=ReaderType.INT, ts=MINUTE, get_status=get_status
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        get_status=get_status,
+        start=None,
+        end=None,
     )
     pd.testing.assert_frame_equal(data, df_read)
 
@@ -75,9 +80,20 @@ def test_cache_multiple_store_single_fetch(
 ) -> None:
     df1 = data[0:3]
     df2 = data[2:10]
-    cache.store(df=df1, read_type=ReaderType.INT, tagname="tag1", ts=MINUTE)
-    cache.store(df=df2, read_type=ReaderType.INT, tagname="tag1", ts=MINUTE)
-    df_read = cache.fetch(tagname="tag1", read_type=ReaderType.INT, ts=MINUTE)
+    cache.store(
+        df=df1, read_type=ReaderType.INT, tagname="tag1", ts=MINUTE, get_status=False
+    )
+    cache.store(
+        df=df2, read_type=ReaderType.INT, tagname="tag1", ts=MINUTE, get_status=False
+    )
+    df_read = cache.fetch(
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        get_status=False,
+        start=None,
+        end=None,
+    )
     pd.testing.assert_frame_equal(df_read, data)
 
 
@@ -101,6 +117,7 @@ def test_interval_reads(
         read_type=ReaderType.INT,
         ts=MINUTE,
         start=start,
+        end=None,
         get_status=get_status,
     )
     pd.testing.assert_frame_equal(data[start:], df_read)  # type: ignore[misc]
@@ -108,6 +125,7 @@ def test_interval_reads(
         tagname="tag1",
         read_type=ReaderType.INT,
         ts=MINUTE,
+        start=None,
         end=end,
         get_status=get_status,
     )
@@ -117,6 +135,7 @@ def test_interval_reads(
         read_type=ReaderType.INT,
         ts=MINUTE,
         start=start_oob,
+        end=None,
         get_status=get_status,
     )
     pd.testing.assert_frame_equal(data, df_read)
@@ -124,6 +143,7 @@ def test_interval_reads(
         tagname="tag1",
         read_type=ReaderType.INT,
         ts=MINUTE,
+        start=None,
         end=end_oob,
         get_status=get_status,
     )
@@ -152,10 +172,15 @@ def test_store_empty_df(
     )
     df = pd.DataFrame({"tag1": []})
     cache.store(
-        df=df, read_type=ReaderType.INT, ts=MINUTE, tagname="tag1"
+        df=df, read_type=ReaderType.INT, ts=MINUTE, tagname="tag1", get_status=False
     )  # Specify ts to ensure correct key /if/ stored
     df_read = cache.fetch(
-        tagname="tag1", read_type=ReaderType.INT, get_status=get_status, ts=MINUTE
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        get_status=get_status,
+        ts=MINUTE,
+        start=None,
+        end=None,
     )
     pd.testing.assert_frame_equal(data, df_read)
 
@@ -194,7 +219,12 @@ def test_to_dst_skips_time(cache: SmartCache, get_status: bool = False) -> None:
         ts=MINUTE,
     )
     df_read = cache.fetch(
-        tagname="tag1", read_type=ReaderType.INT, ts=MINUTE, get_status=get_status
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        get_status=get_status,
+        start=None,
+        end=None,
     )
     pd.testing.assert_frame_equal(df_read, df)
 
@@ -227,6 +257,11 @@ def test_from_dst_folds_time(cache: SmartCache, get_status: bool = False) -> Non
         ts=MINUTE,
     )
     df_read = cache.fetch(
-        tagname="tag1", read_type=ReaderType.INT, ts=MINUTE, get_status=get_status
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        get_status=get_status,
+        start=None,
+        end=None,
     )
     pd.testing.assert_frame_equal(df_read, df)

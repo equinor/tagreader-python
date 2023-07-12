@@ -446,7 +446,13 @@ class IMSClient:
                     )
                     if not df.empty and read_type != ReaderType.RAW:
                         if isinstance(cache, SmartCache):
-                            cache.store(df=df, tagname=tag, read_type=read_type, ts=ts)
+                            cache.store(
+                                df=df,
+                                tagname=tag,
+                                read_type=read_type,
+                                ts=ts,
+                                get_status=get_status,
+                            )
                         if isinstance(cache, BucketCache):
                             cache.store(
                                 df=df,
