@@ -2,6 +2,13 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.2.4](https://github.com/equinor/tagreader-python/compare/v4.2.3...v4.2.4) (2023-07-12)
+
+
+### 🐛 Bug Fixes
+
+* remove default arguments from caching classes ([a48db69](https://github.com/equinor/tagreader-python/commit/a48db69c729d41f9f46c0ebb415f640b52ad241d))
+
 ## [4.2.3](https://github.com/equinor/tagreader-python/compare/v4.2.2...v4.2.3) (2023-07-12)
 
 
