@@ -2,6 +2,13 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.2.2](https://github.com/equinor/tagreader-python/compare/v4.2.1...v4.2.2) (2023-07-12)
+
+
+### 🧹 Chores
+
+* make tagreader.__version__ available for user ([#236](https://github.com/equinor/tagreader-python/issues/236)) ([8531d41](https://github.com/equinor/tagreader-python/commit/8531d4132feac526f558f3a60327973f68437620))
+
 ## [4.2.1](https://github.com/equinor/tagreader-python/compare/v4.2.0...v4.2.1) (2023-07-06)
 
 
