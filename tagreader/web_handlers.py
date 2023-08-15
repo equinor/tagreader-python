@@ -130,8 +130,7 @@ class BaseHandlerWeb(ABC):
             # Since json/simplejson has no mechanism to handle this, we need to
             # pre-process
 
-            txt = res.text.replace('"v":nan', '"v":NaN').replace(
-                '"v":-nan', '"v":NaN')
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
             return json.loads(txt)
 
     def fetch_text(
@@ -192,8 +191,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
             raise ValueError("Data source is required argument")
         # Aspen Web API expects single space instead of consecutive spaces.
         tag = " ".join(tag.split())
-        params = {"datasource": datasource,
-                  "tag": tag, "max": 100, "getTrendable": 0}
+        params = {"datasource": datasource, "tag": tag, "max": 100, "getTrendable": 0}
         return params
 
     def generate_read_query(
@@ -355,8 +353,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
             return {}
 
         ret = {}
-        for item in data["data"]["tags"][0]["categories"][0]["ta"]:
-            ret[item["m"]] = True if item["d"] == "True" else False
+        categories = data["data"]["tags"][0]["categories"]
+        if len(categories) > 0:  # Support null case
+            for item in categories[0]["ta"]:
+                ret[item["m"]] = True if item["d"] == "True" else False
         return ret
 
     def _get_default_mapname(self, tagname: str):
@@ -528,8 +528,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         # Ensure non-numerical like "1.#QNAN" are returned as NaN
         df["Value"] = pd.to_numeric(df.Value, errors="coerce")
 
-        df["Timestamp"] = pd.to_datetime(
-            df["Timestamp"], unit="ms", origin="unix")
+        df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms", origin="unix")
         df = df.set_index("Timestamp", drop=True).tz_localize("UTC")
         df.index.name = "time"
         return df.rename(columns={"Value": tag, "Status": tag + "::status"})
@@ -616,8 +615,7 @@ class PIHandlerWeb(BaseHandlerWeb):
             verify_ssl=verify_ssl,
         )
         self._max_rows = options.get("max_rows", 10000)
-        self.web_id_cache = BaseCache(
-            directory=Path(".") / ".cache" / datasource)
+        self.web_id_cache = BaseCache(directory=Path(".") / ".cache" / datasource)
 
     @staticmethod
     def _time_to_UTC_string(time: datetime) -> str:
@@ -923,8 +921,7 @@ class PIHandlerWeb(BaseHandlerWeb):
                 }
             )
 
-        df = df.filter(["Timestamp", "Value", "Good",
-                       "Questionable", "Substituted"])
+        df = df.filter(["Timestamp", "Value", "Good", "Questionable", "Substituted"])
 
         try:
             # Could call this here, to support mixed format, but have not checked performance
