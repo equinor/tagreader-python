@@ -2,6 +2,85 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.2.0](https://github.com/equinor/tagreader-python/compare/v4.1.4...v4.2.0) (2023-06-28)
+
+
+### ✨ Features
+
+* let user specify cache when creating the client ([#227](https://github.com/equinor/tagreader-python/issues/227)) ([1ad859d](https://github.com/equinor/tagreader-python/commit/1ad859d0fddfa9e5529cc092472bc4b57ed45944))
+
+
+### ⏪️ Revert
+
+* revert threading due to non-tread-safe handling of cache ([#229](https://github.com/equinor/tagreader-python/issues/229)) ([6b379ef](https://github.com/equinor/tagreader-python/commit/6b379ef1e1748a69afa17ac86fdb78f55126c183))
+
+## [4.1.4](https://github.com/equinor/tagreader-python/compare/v4.1.3...v4.1.4) (2023-06-28)
+
+
+### 🔨 Refactor
+
+* added try catch around list_sources ([#224](https://github.com/equinor/tagreader-python/issues/224)) ([7be34c8](https://github.com/equinor/tagreader-python/commit/7be34c88bdf9bd22a29e4546ee7c648140c692de))
+
+
+### 🧹 Chores
+
+* clean up logging and code format ([ba82b18](https://github.com/equinor/tagreader-python/commit/ba82b186cd31d62f872d73987ab6a84d9a1c50ff))
+* improve logging for web service API error ([2b38479](https://github.com/equinor/tagreader-python/commit/2b38479cebe9f7d65588dd799ee22a7815ef8794))
+
+
+### 📦 Build system
+
+* **deps:** update poetry lock ([4addde1](https://github.com/equinor/tagreader-python/commit/4addde18174ed60cac65cf745a0119afd311c64f))
+
+## [4.1.3](https://github.com/equinor/tagreader-python/compare/v4.1.1...v4.1.3) (2023-06-21)
+
+
+### 👷 CI/CD
+
+* Add workflow dispatch for publish ([a68d616](https://github.com/equinor/tagreader-python/commit/a68d61659c73fcbb2f021005b798f63aa8195880))
+* Make release-please publish automatically on approved release ([cc30519](https://github.com/equinor/tagreader-python/commit/cc305195845340b27915c3c57041e0f5d7f4e20c))
+
+
+### 🧹 Chores
+
+* Update links in notebook examples ([#223](https://github.com/equinor/tagreader-python/issues/223)) ([4c8df7a](https://github.com/equinor/tagreader-python/commit/4c8df7aeefce1d742d0c272c77a025793029c0b4)), closes [#220](https://github.com/equinor/tagreader-python/issues/220)
+
+
+### ✨ Features
+
+* Increase reading performance by reading concurrently using threads ([#221](https://github.com/equinor/tagreader-python/issues/221)) ([f731c3a](https://github.com/equinor/tagreader-python/commit/f731c3aa96034a7666b351ef8d7e4d4e22a0ec96)), closes [#194](https://github.com/equinor/tagreader-python/issues/194)
+
+
+## [4.1.1](https://github.com/equinor/tagreader-python/compare/v4.1.0...v4.1.1) (2023-06-14)
+
+
+### 📚 Documentation
+
+* add homepage and repo to pyproject.toml ([5e90bee](https://github.com/equinor/tagreader-python/commit/5e90beedead882948d0f0b6db189f23bbc71f814))
+
+## [4.1.0](https://github.com/equinor/tagreader-python/compare/v4.0.3...v4.1.0) (2023-06-14)
+
+
+### 🔨 Refactor
+
+* make code pass mypy and add strict type validation ([#190](https://github.com/equinor/tagreader-python/issues/190)) ([9efc942](https://github.com/equinor/tagreader-python/commit/9efc942eb6580e8c629e0a4bb5b2bb24af871f6f))
+
+
+### ✨ Features
+
+* add persistent web-id cache for PIWebAPI ([64eb76c](https://github.com/equinor/tagreader-python/commit/64eb76cd90e9e2d4091ebf97b716be53c9bde7ec))
+* use diskcache as caching backend ([f7f7a5f](https://github.com/equinor/tagreader-python/commit/f7f7a5ff0edefd21eeb60b41dbd94d6726cd0caf)), closes [#205](https://github.com/equinor/tagreader-python/issues/205)
+
+
+### 🐛 Bug Fixes
+
+* do not throw error when start and end time is submitted when using SNAPSHOT and ODBC connectors ([#213](https://github.com/equinor/tagreader-python/issues/213)) ([4e9a4c9](https://github.com/equinor/tagreader-python/commit/4e9a4c9011a05be3f73fa5719ef94ea30afe38e0))
+
+
+### 👷 CI/CD
+
+* correct PyPi test upload ([8217af6](https://github.com/equinor/tagreader-python/commit/8217af6bd6587c9ed6380f132b74abe297f143f6))
+
 ## [4.0.3](https://github.com/equinor/tagreader-python/compare/v4.0.2...v4.0.3) (2023-06-09)
 
 
@@ -107,33 +186,33 @@ Last release under the name `pyIMS`.
 ### Changed
 - Major rewrite to accommodate for other types of connections than ODBC in the future.
 - **Breaking**: It is now necessary to specify imstype (`pi` or `aspen`) when initiating a client.
-- Update to new default DAS server address. 
+- Update to new default DAS server address.
 
 ### Fixed
 - Force keep_tz=False to suppress FutureWarning in Pandas >= 0.24.
-- Fix reading of digital states from PI. 
+- Fix reading of digital states from PI.
 
 ### Added
 - Add get_units() and get_descriptions() methods to fetch engineering units and description for
-specified tags. 
+specified tags.
 - Enable tag search by description.
 - Package version made available in `pyims.__version__`.
 
 ## [0.0.8] - 2019-01-17
 ### Changed
 - Improve documentation.
-- Add commonly requested documentation, including docstring, for specifying query method for 
+- Add commonly requested documentation, including docstring, for specifying query method for
 read_tags.
 
 ## [0.0.7] - 2018-06-18
 ### Fixed
 - Fix bug where timezone was locked to Europe/Oslo.
-- Discovered that Pandas >=0.23 is required. 0.22 causes a weird timezone bug during DST folds when 
+- Discovered that Pandas >=0.23 is required. 0.22 causes a weird timezone bug during DST folds when
 using cache.
 
 ## [0.0.6] - 2018-06-08
 ### Added
-- Aspen now supports avg, min, max, rng, std and var queries. These have timestamps in 
+- Aspen now supports avg, min, max, rng, std and var queries. These have timestamps in
 the middle of the period.
 
 ### Changed
@@ -145,9 +224,9 @@ the middle of the period.
 
 ## [0.0.5] - 2018-06-07
 ### Added
-- Introduce time zones. Start- and stop time for queries are always performed relative to server 
-time, so we have to know where the server is located. The default time zone is "Europe/Oslo", but 
-this can be changed for e.g. Peregrino by specifying `tz="America/Sao_Paulo"` upon initialization 
+- Introduce time zones. Start- and stop time for queries are always performed relative to server
+time, so we have to know where the server is located. The default time zone is "Europe/Oslo", but
+this can be changed for e.g. Peregrino by specifying `tz="America/Sao_Paulo"` upon initialization
 of the client.
 
 ### Changed
@@ -155,23 +234,23 @@ of the client.
 - Interpolated queries for IP.21 now return extrapolated values after last valid datapoint.
 
 ### Fixed
-- Properly handle transitions to and from DST (Daylight savings time). 
-- Queries should now always return data for exactly `start_time <= time <= stop_time`. Off-by-one data 
-(e.g. no data for `stop_time` or data for `stop_time+ts`) is a bug (except for PI queries with 
+- Properly handle transitions to and from DST (Daylight savings time).
+- Queries should now always return data for exactly `start_time <= time <= stop_time`. Off-by-one data
+(e.g. no data for `stop_time` or data for `stop_time+ts`) is a bug (except for PI queries with
 `stop_time` close to DST changes, in which case PI may act silly).
 
 ## [0.0.4] - 2018-06-01
 ### Fixed
-- Fix cache sorting issue when reading across two segments that were previously written in 
-nonchronological order. 
+- Fix cache sorting issue when reading across two segments that were previously written in
+nonchronological order.
 
 ## [0.0.3] - 2018-05-30
-### Added 
+### Added
 - Add support for tags with mappings (relevant for SNA and SNB) by specifying tags on the form `tag;map`
 - Fix NaturalNameWarning when using '.' in tagnames
 
 ## 0.0.2 - 2018-04-13
-Initial release. Supports the most common tag read queries for IP.21 and PI. 
+Initial release. Supports the most common tag read queries for IP.21 and PI.
 
 [1.1.0]: https://github.com/equinor/tagreader-python/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/equinor/tagreader-python/compare/v1.0.0...v1.0.1

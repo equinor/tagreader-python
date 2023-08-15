@@ -1,5 +1,6 @@
 from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import (
+    IMSType,
     ReaderType,
     add_statoil_root_certificate,
     is_equinor,
@@ -8,7 +9,7 @@ from tagreader.utils import (
 )
 
 if is_windows():
-    from .odbc_handlers import list_aspen_servers, list_pi_servers
+    from tagreader.odbc_handlers import list_aspen_servers, list_pi_servers
 
 if is_equinor():
     add_statoil_root_certificate(noisy=False)

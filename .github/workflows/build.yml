@@ -1,15 +1,11 @@
-# This is a simplified test workflow that does not include tests that require a connection to server.
-# If tests are successful and the push is a tag, then run a test-deploy to test.pypi.org.
+name: '🧪 Build & test code'
 
-name: Test
-
-on: 
-  push:
-    branches:
-      - main
+on:
+  workflow_dispatch:
+  workflow_call:
 
 jobs:
-  test:
+  build:
     strategy:
       fail-fast: false
       matrix:
@@ -43,38 +39,3 @@ jobs:
 
       - name: Run tests
         run: poetry run pytest
-
-  testdeploy-if-tagged:
-    needs: test
-    runs-on: windows-latest
-    if: startsWith(github.ref, 'refs/tags')
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install Poetry
-        run: |
-          pipx install poetry
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{matrix.python-version}}
-          cache: 'poetry'
-
-      - name: Check pyproject.toml validity
-        run: poetry check --no-interaction
-
-      - name: Install deps
-        run: poetry install --no-interaction
-
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
-        run: |
-          poetry config pypi-token.pypi $TEST_PYPI_PASSWORD
-          poetry publish --build

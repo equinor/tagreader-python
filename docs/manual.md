@@ -37,7 +37,7 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 Python >= 3.8 with the following packages:
 
   + pandas >= 1.0.0
-  + pytables
+  + diskcache
   + requests
   + requests_kerberos
   + pyodbc (if using ODBC connections, Windows only)
@@ -52,7 +52,7 @@ It is highly recommended to go through the [quickstart](../examples/quickstart.i
 
 To install and/or upgrade:
 
-``` 
+```
 pip install --upgrade tagreader
 ```
 
@@ -60,10 +60,10 @@ pip install --upgrade tagreader
 
 To be able to connect to OSISoft PI or AspenTech InfoPlus.21 servers using ODBC, you need to obtain and install proprietary ODBC drivers. This is not required if you prefer to connect using REST APIs.
 
-If you work in Equinor, then you can find further information and links to download the drivers on our 
+If you work in Equinor, then you can find further information and links to download the drivers on our
 [wiki](https://wiki.equinor.com/wiki/index.php/tagreader-python).
 
-If you do not work in Equinor: ODBC queries may already work for you, although it is typically not sufficient to install the desktop applications from AspenTech or OSIsoft, since these normally don't come packaged with 64-bit ODBC drivers. If tagreader complains about missing drivers, check with your employer/organisation whether the ODBC drivers are available for you. If not, you may be able to obtain them directly from the vendors. 
+If you do not work in Equinor: ODBC queries may already work for you, although it is typically not sufficient to install the desktop applications from AspenTech or OSIsoft, since these normally don't come packaged with 64-bit ODBC drivers. If tagreader complains about missing drivers, check with your employer/organisation whether the ODBC drivers are available for you. If not, you may be able to obtain them directly from the vendors.
 
 ## Adding host certificates
 
@@ -98,7 +98,7 @@ Tagreader supports connecting to PI and IP.21 servers using both ODBC and Web AP
 
 * `pi` : For connecting to OSISoft PI via ODBC.
 * `piwebapi` : For connecting to OSISoft PI Web API
-* `ip21` : For connecting to AspenTech InfoPlus.21 via ODBC 
+* `ip21` : For connecting to AspenTech InfoPlus.21 via ODBC
 * `aspenone` : For connecting to AspenTech Process Data REST Web API
 
 # Listing available data sources
@@ -169,9 +169,9 @@ c.connect()
 Connecting to the Peregrino IP.21 data source using AspenTech Process Data REST Web API, specifying that all naive time stamps as well as the returned data shall use Rio local time, and using the local endpoint in Brazil:
 
 ``` python
-c = tagreader.IMSClient(datasource="PER", 
-                        imstype="aspenone", 
-                        tz="Brazil/East", 
+c = tagreader.IMSClient(datasource="PER",
+                        imstype="aspenone",
+                        tz="Brazil/East",
                         url="https://aspenone-per.equinor.com/ProcessExplorer/ProcessData/AtProcessDataREST.dll")
 c.connect()
 ```
@@ -184,26 +184,26 @@ from requests_ntlm import HttpNtlmAuth
 user = "mydomain\\" + getpass.getuser()
 pwd = getpass.getpass()
 auth = HttpNtlmAuth(user, pwd)
-c = tagreader.IMSClient(datasource="myplant", 
-                        url="https://api.mycompany.com/aspenone", 
-                        imstype="aspenone", 
-                        auth=auth, 
+c = tagreader.IMSClient(datasource="myplant",
+                        url="https://api.mycompany.com/aspenone",
+                        imstype="aspenone",
+                        auth=auth,
                         verifySSL=False)
 c.connect()
 ```
 
 # Searching for tags
 
-The client method `search()` can be used to search for tags using either tag name, tag description or both. 
+The client method `search()` can be used to search for tags using either tag name, tag description or both.
 
 Supply at least one of the following arguments:
 
 * `tag` : Name of tag
 * `desc` : Description of tag
 
-If both arguments are provided, the both must match. 
+If both arguments are provided, the both must match.
 
-`*` can be used as wildcard. 
+`*` can be used as wildcard.
 
 **Examples**
 
@@ -229,12 +229,12 @@ Data is read by calling the client method `read()` with the following input argu
   Both `start_time` and `end_time` can be either datetime object or string. Strings are interpreted by the [Timestamp](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.html) method from Pandas. Both timestamps can be left out when `read_type = ReaderType.SNAPSHOT` . However, when using either of the Web APIs, `end_time` provides the time at which the snapshot is taken.
 
 * `ts` : The interval between samples when querying interpolated or aggregated data. Ignored and can be left out when `read_type = ReaderType.SNAPSHOT` . **Default** 60 seconds.
-* `read_type` (optional): What kind of data to read. More info immediately below. **Default** Interpolated. 
+* `read_type` (optional): What kind of data to read. More info immediately below. **Default** Interpolated.
 * `get_status` (optonal): When set to `True` will fetch status information in addition to values. **Default** `False`.
 
 ## Selecting what to read
 
-By specifying the optional parameter `read_type` to `read()` , it is possible to specify what kind of data should be returned. The default query method is interpolated. All valid values for `read_type` are defined in the `utils.ReaderType` class (mirrored for convenience as `tagreader.ReaderType` ), although not all are currently implemented. Below is the list of implemented read types. 
+By specifying the optional parameter `read_type` to `read()` , it is possible to specify what kind of data should be returned. The default query method is interpolated. All valid values for `read_type` are defined in the `utils.ReaderType` class (mirrored for convenience as `tagreader.ReaderType` ), although not all are currently implemented. Below is the list of implemented read types.
 
 * `INT` : The raw data points are interpolated so that one new data point is generated at each step of length `ts` starting at `start_time` and ending at or less than `ts` seconds before `end_time` .
 * The following aggregated read types perform a weighted calculation of the raw data within each interval. Where relevant, time-weighted calculations are used. Returned time stamps are anchored at the beginning of each interval. So for the 60 seconds long interval between 08:11:00 and 08:12:00, the time stamp will be 08:11:00.
@@ -270,11 +270,11 @@ The optional parameter `get_status` was added to `IMSClient.read()` in release 2
 
 In an effort to unify the status value for all IMS types, the following schema based on AspenTech was selected:
 
-0: Good  
-1: Suspect  
-2: Bad  
-4: Good/Modified  
-5: Suspect/Modified  
+0: Good
+1: Suspect
+2: Bad
+4: Good/Modified
+5: Suspect/Modified
 6: Bad/Modified
 
 The status value is obtained differently for the four IMS types:
@@ -326,7 +326,7 @@ It is important to understand how Tagreader uses and interprets time zones. Quer
 There are two levels of determining which time zone input arguments should be interpreted as, and which time zone return data should be converted to:
 
 1. Time zone aware input arguments will use their corresponding time zone.
-2. Time zone naive input arguments are assumed to have time zone as provided by the client. 
+2. Time zone naive input arguments are assumed to have time zone as provided by the client.
 
 The client-provided time zone can be specified with the optional `tz` argument (string, e.g. "*US/Central*") during client creation. If it is not specified, then the default value *Europe/Oslo* is used. Note that for the most common use case where Equinor employees want to fetch data from Norwegian assets and display them with Norwegian time stamps, nothing needs to be done.
 
@@ -395,6 +395,6 @@ Queries are by default performed using ADSA, so there should be no need to speci
 * `port` (optional): The port. **Default**: 10014
 * `connection_string` (optional): A complete connection string that will override any value for `host` and `port`.
 
-If `connection_string` is not specified, a default connection string will be generated based on values for `host` and `port`. 
+If `connection_string` is not specified, a default connection string will be generated based on values for `host` and `port`.
 
 The initialization needs only be done once. The resulting connection string can be inspected with `c.handler._connection_string`

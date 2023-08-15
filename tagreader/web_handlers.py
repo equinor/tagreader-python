@@ -1,9 +1,11 @@
 import datetime
-import logging
+import json
 import re
 import urllib.parse
-import warnings
 from abc import ABC, abstractmethod
+from datetime import datetime, timedelta
+from json.decoder import JSONDecodeError
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -11,16 +13,11 @@ import pandas as pd
 import pytz
 import requests
 import urllib3
-from requests import Response
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
+from tagreader.cache import BaseCache
+from tagreader.logger import logger
 from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
-
-# Requests will use simplejson if it has been installed, so handle both errors here
-try:
-    from simplejson.errors import JSONDecodeError
-except ImportError:
-    from json.decoder import JSONDecodeError
 
 
 def get_verifySSL() -> Union[bool, str]:
@@ -58,9 +55,9 @@ def get_url_aspen(use_internal: bool = False) -> str:
 
 
 def list_aspenone_sources(
-    url: Optional[str] = None,
-    auth: Optional[Any] = None,
-    verifySSL: Optional[bool] = None,
+    url: Optional[str],
+    auth: Optional[Any],
+    verifySSL: Optional[bool],
 ) -> List[str]:
     if url is None:
         url = get_url_aspen()
@@ -77,23 +74,18 @@ def list_aspenone_sources(
     params = {"service": "ProcessData", "allQuotes": 1}
 
     res = requests.get(url_, params=params, auth=auth, verify=verifySSL)
-    if res.status_code == 200:
-        try:
-            source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
-            return source_list
-        except JSONDecodeError:
-            print("Did not return json")
-    elif res.status_code == 404:
-        print("Not found")
-    elif res.status_code == 401:
-        print("Not authorized")
     res.raise_for_status()
+    try:
+        source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
+        return source_list
+    except JSONDecodeError as e:
+        logger.error(f"Could not decode JSON response: {e}")
 
 
 def list_piwebapi_sources(
-    url: Optional[str] = None,
-    auth: Optional[Any] = None,
-    verifySSL: Optional[bool] = None,
+    url: Optional[str],
+    auth: Optional[Any],
+    verifySSL: Optional[bool],
 ) -> List[str]:
     if url is None:
         url = get_url_pi()
@@ -109,26 +101,21 @@ def list_piwebapi_sources(
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verifySSL)
 
-    if res.status_code == 200:
-        try:
-            source_list = [r["Name"] for r in res.json()["Items"]]
-            return source_list
-        except JSONDecodeError:
-            print("Did not return json")
-    elif res.status_code == 404:
-        print("Not found")
-    elif res.status_code == 401:
-        print("Not authorized")
     res.raise_for_status()
+    try:
+        source_list = [r["Name"] for r in res.json()["Items"]]
+        return source_list
+    except JSONDecodeError as e:
+        logger.error(f"Could not decode JSON response: {e}")
 
 
 class BaseHandlerWeb(ABC):
     def __init__(
         self,
-        datasource: Optional[str] = None,
-        url: Optional[str] = None,
-        auth: Optional[Any] = None,
-        verifySSL: Optional[bool] = None,
+        datasource: Optional[str],
+        url: Optional[str],
+        auth: Optional[Any],
+        verifySSL: Optional[bool],
     ):
         if url is None:
             url = get_url_aspen()
@@ -145,13 +132,31 @@ class BaseHandlerWeb(ABC):
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
 
-    def fetch(self, url, params=None) -> Response:
-        if not self.session.verify:
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
+    def fetch(self, url, params: Optional[Union[str, Dict[str, str]]] = None) -> Dict:
         res = self.session.get(url, params=params)
         res.raise_for_status()
-        return res
+
+        if len(res.text) == 0:
+            logger.warning(f"No data found for {url} {params}")
+            return {}
+
+        try:
+            return res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            return json.loads(txt)
+
+    def fetch_text(
+        self, url, params: Optional[Union[str, Dict[str, str]]] = None
+    ) -> str:
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+
+        return res.text
 
     def connect(self):
         try:
@@ -169,11 +174,11 @@ class BaseHandlerWeb(ABC):
 class AspenHandlerWeb(BaseHandlerWeb):
     def __init__(
         self,
-        datasource: Optional[str] = None,
-        url: Optional[str] = None,
-        auth: Optional[Any] = None,
-        verifySSL: Optional[bool] = None,
-        options: Dict[str, Any] = {},
+        datasource: Optional[str],
+        url: Optional[str],
+        auth: Optional[Any],
+        verifySSL: Optional[bool],
+        options: Dict[str, Any],
     ):
         if url is None:
             url = get_url_aspen()
@@ -194,9 +199,9 @@ class AspenHandlerWeb(BaseHandlerWeb):
 
     @staticmethod
     def generate_search_query(
-        tag: Optional[str] = None,
-        desc: Optional[str] = None,
-        datasource: Optional[str] = None,
+        tag: Optional[str],
+        desc: Optional[str],
+        datasource: Optional[str],
     ) -> Dict[str, Any]:
         if not datasource:
             raise ValueError("Data source is required argument")
@@ -209,11 +214,11 @@ class AspenHandlerWeb(BaseHandlerWeb):
         self,
         tagname: str,
         mapname: Optional[str],
-        start_time: pd.Timestamp,
-        stop_time: pd.Timestamp,
-        sample_time: Optional[Union[int, pd.Timestamp]],
+        start_time: datetime,
+        stop_time: datetime,
+        sample_time: Optional[timedelta],
         read_type: ReaderType,
-        metadata: Optional[Any] = None,
+        metadata: Any,
     ):
         # Maxpoints is used for Actual (raw) and Bestfit (shapepreserving).
         # Probably need to handle this in another way at some point
@@ -279,7 +284,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
             ReaderType.SNAPSHOT,
         ]:
             query += (
-                f"<P>{int(sample_time.total_seconds())}</P>"
+                f"<P>{int(sample_time.total_seconds()) if sample_time else 0}</P>"
                 "<PU>3</PU>"  # Period Unit: 0=day, 1=hour, 2=min, 3=sec
             )
         if read_type not in [
@@ -313,15 +318,14 @@ class AspenHandlerWeb(BaseHandlerWeb):
         """
         url = urljoin(self.base_url, "Datasources")
         params = {"service": "ProcessData", "allQuotes": 1}
-        r = self.fetch(url=url, params=params)
-        j = r.json()
-        for item in j["data"]:
+        data = self.fetch(url=url, params=params)
+        for item in data["data"]:
             if item["n"] == datasource:
                 return True
         return False
 
     @staticmethod
-    def split_tagmap(tagmap):
+    def split_tagmap(tagmap) -> Tuple[Optional[str], ...]:
         return tuple(tagmap.split(";") if ";" in tagmap else (tagmap, None))
 
     def generate_get_unit_query(self, tag: str):
@@ -360,14 +364,13 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_maps(self, tagname: str):
         params = self.generate_get_map_query(tagname)
         url = urljoin(self.base_url, "TagInfo")
-        res = self.fetch(url, params=params)
-        j = res.json()
+        data = self.fetch(url, params=params)
 
-        if "tags" not in j["data"]:
+        if "tags" not in data["data"]:
             return {}
 
         ret = {}
-        for item in j["data"]["tags"][0]["categories"][0]["ta"]:
+        for item in data["data"]["tags"][0]["categories"][0]["ta"]:
             ret[item["m"]] = True if item["d"] == "True" else False
         return ret
 
@@ -378,9 +381,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
             if v:
                 return k
 
-    def search(
-        self, tag: Optional[str] = None, desc: Optional[str] = None
-    ) -> List[Tuple[str, str]]:
+    def search(self, tag: Optional[str], desc: Optional[str]) -> List[Tuple[str, str]]:
         if tag is None:
             raise ValueError("Tag is a required argument")
 
@@ -400,15 +401,13 @@ class AspenHandlerWeb(BaseHandlerWeb):
         )
         url = urljoin(self.base_url, "Browse?")
         url += encoded_params
-        res = self.fetch(url)
+        data = self.fetch(url)
 
-        j = res.json()
-
-        if "tags" not in j["data"]:
+        if "tags" not in data["data"]:
             return []
 
         ret = []
-        for item in j["data"]["tags"]:
+        for item in data["data"]["tags"]:
             tagname = item["t"]
             description = self._get_tag_description(tagname)
             ret.append((tagname, description))
@@ -426,12 +425,11 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_tag_unit(self, tag: str):
         query = self.generate_get_unit_query(tag)
         url = urljoin(self.base_url, "TagInfo")
-        res = self.fetch(url, params=query)
-        j = res.json()
+        data = self.fetch(url, params=query)
         try:
-            attrdata = j["data"]["tags"][0]["attrData"]
+            attrdata = data["data"]["tags"][0]["attrData"]
         except Exception:
-            print(f"Error. I got this: {j}")
+            print(f"Error. I got this: {data}")
             raise KeyError
         unit = ""
         for a in attrdata:
@@ -461,10 +459,9 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_tag_description(self, tag: str):
         query = self.generate_get_description_query(tag)
         url = urljoin(self.base_url, "TagInfo")
-        res = self.fetch(url, params=query)
-        j = res.json()
+        data = self.fetch(url, params=query)
         try:
-            desc = j["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
+            desc = data["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
         except Exception:
             desc = ""
         return desc
@@ -472,11 +469,11 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def read_tag(
         self,
         tag: str,
-        start_time: Optional[pd.Timestamp],
-        stop_time: Optional[pd.Timestamp],
-        sample_time: Optional[Union[int, pd.Timestamp]],
+        start_time: Optional[datetime],
+        stop_time: Optional[datetime],
+        sample_time: Optional[timedelta],
         read_type: ReaderType,
-        metadata: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, str]],
         get_status: bool = False,
     ):
         if read_type not in [
@@ -519,35 +516,26 @@ class AspenHandlerWeb(BaseHandlerWeb):
             metadata={},
         )
 
-        res = self.fetch(url, params=params)
+        data = self.fetch(url, params=params)
 
-        if len(res.text) == 0:  # res.text='' for timestamps in future
+        if len(data) == 0:  # Normally for timestamps in future
             return pd.DataFrame(columns=[tag])
 
-        try:
-            j = res.json()
-        except JSONDecodeError:
-            # AspenOne sometimes returns completely and utterly invalid -nan.
-            # Since json/simplejson has no mechanism to handle this, we need to
-            # pre-process
-            import json
-
-            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
-            j = json.loads(txt)
-
-        if "er" in j["data"][0]["samples"][0]:
-            warnings.warn(j["data"][0]["samples"][0]["es"])
+        if "er" in data["data"][0]["samples"][0]:
+            logger.warning(
+                f"API error for {tag}: {data['data'][0]['samples'][0]['es']} params: {params}"
+            )
             return pd.DataFrame(columns=[tag])
         if get_status:
             # The "l" field maps 1:1 to ODBC status field values 0, 1, 2, 4, 5, 6
             df = (
-                pd.DataFrame.from_dict(j["data"][0]["samples"])
+                pd.DataFrame.from_dict(data["data"][0]["samples"])
                 .drop(labels=["s", "V"], axis="columns")
                 .rename(columns={"t": "Timestamp", "v": "Value", "l": "Status"})
             )
         else:
             df = (
-                pd.DataFrame.from_dict(j["data"][0]["samples"])
+                pd.DataFrame.from_dict(data["data"][0]["samples"])
                 .drop(labels=["l", "s", "V"], axis="columns")
                 .rename(columns={"t": "Timestamp", "v": "Value"})
             )
@@ -562,7 +550,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
 
     @staticmethod
     def generate_sql_query(
-        connection_string=None, datasource=None, query=None, max_rows=100000
+        connection_string: Optional[str],
+        datasource: Optional[str],
+        query: Optional[str],
+        max_rows: int = 100000,
     ):
         if connection_string is not None:
             connstr = f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">'
@@ -595,32 +586,37 @@ class AspenHandlerWeb(BaseHandlerWeb):
         url = urljoin(self.base_url, "SQL")
         if self._connection_string is None:
             params = self.generate_sql_query(
-                datasource=self.datasource, query=query, max_rows=self._max_rows
+                datasource=self.datasource,
+                query=query,
+                max_rows=self._max_rows,
+                connection_string=None,
             )
         else:
             params = self.generate_sql_query(
                 connection_string=self._connection_string,
                 query=query,
                 max_rows=self._max_rows,
+                datasource=None,
             )
-        res = self.fetch(url, params=params)
+        res_text = self.fetch_text(url, params=params)
         # For now just return result as text regardless of value of parse
         if parse:
             raise NotImplementedError(
                 "Use parse=False to receive and handle text result instead"
             )
-        return res.text
+        return res_text
 
 
 class PIHandlerWeb(BaseHandlerWeb):
     def __init__(
         self,
-        url: Optional[str] = None,
-        datasource: Optional[str] = None,
-        auth: Optional[Any] = None,
-        verifySSL: Optional[bool] = None,
-        options: Dict[str, Union[int, float, str]] = {},
+        url: Optional[str],
+        datasource: Optional[str],
+        auth: Optional[Any],
+        verifySSL: bool,
+        options: Dict[str, Union[int, float, str]],
     ):
+        self._max_rows = options.get("max_rows", 10000)
         if url is None:
             url = get_url_pi()
         if auth is None:
@@ -632,15 +628,11 @@ class PIHandlerWeb(BaseHandlerWeb):
             verifySSL=verifySSL,
         )
         self._max_rows = options.get("max_rows", 10000)
-        self.webidcache = {}
+        self.webidcache = BaseCache(directory=Path(".") / ".cache" / datasource)
 
     @staticmethod
-    def _time_to_UTC_string(time: pd.Timestamp) -> str:
-        timecast_format_query = "%d-%b-%y %H:%M:%S"
-        if isinstance(time, datetime.datetime):
-            return time.astimezone(pytz.UTC).strftime(timecast_format_query)
-        else:
-            return time.tz_convert("UTC").strftime(timecast_format_query)
+    def _time_to_UTC_string(time: datetime) -> str:
+        return time.astimezone(pytz.UTC).strftime("%d-%b-%y %H:%M:%S")
 
     @staticmethod
     def generate_connection_string(host, *_, **__):
@@ -676,9 +668,9 @@ class PIHandlerWeb(BaseHandlerWeb):
 
     @staticmethod
     def generate_search_query(
-        tag: Optional[str] = None,
-        desc: Optional[str] = None,
-        datasource: Optional[str] = None,
+        tag: Optional[str],
+        desc: Optional[str],
+        datasource: Optional[str],
     ) -> Dict[str, str]:
         q = []
         if tag is not None:
@@ -696,11 +688,11 @@ class PIHandlerWeb(BaseHandlerWeb):
     def generate_read_query(
         self,
         tag: str,
-        start_time: pd.Timestamp,
-        stop_time: pd.Timestamp,
-        sample_time: Optional[Union[int, pd.Timestamp]],
+        start_time: datetime,
+        stop_time: datetime,
+        sample_time: timedelta,
         read_type: ReaderType,
-        metadata: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, str]],
         get_status: bool = False,
     ) -> Tuple[str, Dict[str, str]]:
         if read_type in [
@@ -786,9 +778,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         :rtype: Bool
         """
         url = urljoin(self.base_url, "dataservers")
-        res = self.fetch(url)
-        j = res.json()
-        for item in j["Items"]:
+        data = self.fetch(url)
+        for item in data["Items"]:
             if item["Name"] == datasource:
                 return True
         return False
@@ -803,14 +794,13 @@ class PIHandlerWeb(BaseHandlerWeb):
         done = False
         ret = []
         while not done:
-            res = self.fetch(url, params=params)
+            data = self.fetch(url, params=params)
 
-            j = res.json()
-            for item in j["Items"]:
+            for item in data["Items"]:
                 description = item["Description"] if "Description" in item else ""
                 ret.append((item["Name"], description))
-            next_start = int(j["Links"]["Next"].split("=")[-1])
-            if int(j["Links"]["Last"].split("=")[-1]) >= next_start:
+            next_start = int(data["Links"]["Next"].split("=")[-1])
+            if int(data["Links"]["Last"].split("=")[-1]) >= next_start:
                 params["start"] = next_start
             else:
                 done = True
@@ -824,9 +814,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         if webid is None:
             return None
         url = urljoin(self.base_url, "points", webid)
-        res = self.fetch(url)
-        j = res.json()
-        unit = j["EngineeringUnits"]
+        data = self.fetch(url)
+        unit = data["EngineeringUnits"]
         return unit
 
     def _get_tag_description(self, tag: str) -> Optional[str]:
@@ -834,9 +823,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         if webid is None:
             return None
         url = urljoin(self.base_url, "points", webid)
-        res = self.fetch(url)
-        j = res.json()
-        description = j["Descriptor"]
+        data = self.fetch(url)
+        description = data["Descriptor"]
         return description
 
     def tag_to_webid(self, tag: str) -> Optional[str]:
@@ -854,26 +842,25 @@ class PIHandlerWeb(BaseHandlerWeb):
             )
             params["fields"] = "name;webid"
             url = urljoin(self.base_url, "search", "query")
-            res = self.fetch(url, params=params)
-            j = res.json()
+            data = self.fetch(url, params=params)
 
-            if len(j["Errors"]) > 0:
-                msg = f"Received error from server when searching for WebId for {tag}: {j['Errors']}"
+            if len(data["Errors"]) > 0:
+                msg = f"Received error from server when searching for WebId for {tag}: {data['Errors']}"
                 raise ValueError(msg)
 
-            if len(j["Items"]) > 1:
+            if len(data["Items"]) > 1:
                 # Compare elements and if same, return the first
-                first = j["Items"][0]
-                for item in j["Items"][1:]:
+                first = data["Items"][0]
+                for item in data["Items"][1:]:
                     if item != first:
                         raise AssertionError(
-                            f"Received {len(j['Items'])} results when trying to find unique WebId for {tag}."
+                            f"Received {len(data['Items'])} results when trying to find unique WebId for {tag}."
                         )
-            elif len(j["Items"]) == 0:
-                warnings.warn(f"Tag {tag} not found")
+            elif len(data["Items"]) == 0:
+                logger.warning(f"Tag {tag} not found")
                 return None
 
-            webid = j["Items"][0]["WebId"]
+            webid = data["Items"][0]["WebId"]
             self.webidcache[tag] = webid
         return self.webidcache[tag]
 
@@ -893,11 +880,11 @@ class PIHandlerWeb(BaseHandlerWeb):
     def read_tag(
         self,
         tag: str,
-        start_time: Optional[pd.Timestamp] = None,
-        stop_time: Optional[pd.Timestamp] = None,
-        sample_time: Optional[Union[int, pd.Timestamp]] = None,
-        read_type: ReaderType = ReaderType.INTERPOLATED,
-        metadata: Optional[Dict[str, str]] = None,
+        start_time: Optional[datetime],
+        stop_time: Optional[datetime],
+        sample_time: timedelta,
+        read_type: ReaderType,
+        metadata: Optional[Dict[str, str]],
         get_status: bool = False,
     ):
         webid = self.tag_to_webid(tag)
@@ -914,14 +901,13 @@ class PIHandlerWeb(BaseHandlerWeb):
             get_status=get_status,
         )
         url = urljoin(self.base_url, url)
-        res = self.fetch(url, params=params)
+        data = self.fetch(url, params=params)
 
-        j = res.json()
         if read_type == ReaderType.SNAPSHOT:
-            df = pd.DataFrame.from_dict([j])  # noqa
+            df = pd.DataFrame.from_dict([data])  # noqa
         else:
             # Summary (aggregated) data and DigitalSets return Value as dict
-            df = pd.json_normalize(data=j, record_path="Items")
+            df = pd.json_normalize(data=data, record_path="Items")
 
         # Can happen for RAW reads w/o data in interval
         if df.empty:

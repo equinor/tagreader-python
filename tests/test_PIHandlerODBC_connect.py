@@ -1,4 +1,6 @@
 import os
+from datetime import datetime, timedelta
+from typing import Generator
 
 import pandas as pd
 import pytest
@@ -28,22 +30,22 @@ TAGS = {
     "Int32": "CDEP158",
 }
 
-START_TIME = "2020-04-01 11:05:00"
-STOP_TIME = "2020-04-01 12:05:00"
-SAMPLE_TIME = 60
+START_TIME = datetime(2020, 4, 1, 11, 5, 0)
+STOP_TIME = datetime(2020, 4, 1, 12, 5, 0)
+SAMPLE_TIME = timedelta(seconds=60)
 
 
-@pytest.fixture()
-def Client():
-    c = IMSClient(SOURCE, "pi")
-    c.cache = None
+@pytest.fixture  # type: ignore[misc]
+def Client() -> Generator[IMSClient, None, None]:
+    c = IMSClient(datasource=SOURCE, imstype="pi")
+    c.cache = None  # type: ignore[assignment]
     c.connect()
     yield c
     if os.path.exists(SOURCE + ".h5"):
         os.remove(SOURCE + ".h5")
 
 
-def test_list_all_pi_sources():
+def test_list_all_pi_sources() -> None:
     res = list_pi_sources()
     assert isinstance(res, list)
     assert len(res) >= 1
@@ -52,8 +54,8 @@ def test_list_all_pi_sources():
         assert 3 <= len(r)
 
 
-def test_list_sources_pi():
-    res = list_sources("pi")
+def test_list_sources_pi() -> None:
+    res = list_sources(imstype="pi")
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)
@@ -61,21 +63,21 @@ def test_list_sources_pi():
         assert 3 <= len(r)
 
 
-def test_search_tag(Client):
-    res = Client.search("SINUSOID")
+def test_search_tag(Client: IMSClient) -> None:
+    res = Client.search(tag="SINUSOID")
     assert 1 == len(res)
-    res = Client.search("SIN*")
+    res = Client.search(tag="SIN*")
     assert 3 <= len(res)
     [taglist, desclist] = zip(*res)
     assert "SINUSOIDU" in taglist
     assert desclist[taglist.index("SINUSOID")] == "12 Hour Sine Wave"
-    res = Client.search(desc="12 Hour Sine Wave")
+    res = Client.search(tag=None, desc="12 Hour Sine Wave")
     assert 1 <= len(res)
     res = Client.search("SINUSOID", desc="*Sine*")
     assert 1 <= len(res)
 
 
-@pytest.mark.parametrize(
+@pytest.mark.parametrize(  # type: ignore[misc]
     ("read_type", "size"),
     [
         ("RAW", 10),
@@ -97,12 +99,17 @@ def test_search_tag(Client):
         ("SNAPSHOT", 1),
     ],
 )
-def test_read(Client, read_type, size):
+def test_read(Client: IMSClient, read_type: str, size: int) -> None:
     if read_type == "SNAPSHOT":
-        df = Client.read(TAGS["Float32"], read_type=getattr(ReaderType, read_type))
+        df = Client.read(
+            tags=TAGS["Float32"],
+            read_type=getattr(ReaderType, read_type),
+            start_time=None,
+            end_time=None,
+        )
     else:
         df = Client.read(
-            TAGS["Float32"],
+            tags=TAGS["Float32"],
             start_time=START_TIME,
             end_time=STOP_TIME,
             ts=SAMPLE_TIME,
@@ -111,17 +118,15 @@ def test_read(Client, read_type, size):
     assert df.shape == (size, 1)
     if read_type not in ["SNAPSHOT", "RAW"]:
         assert df.index[0] == ensure_datetime_with_tz(START_TIME)
-        assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(
-            SAMPLE_TIME, unit="s"
-        )
+        assert df.index[-1] == df.index[0] + (size - 1) * SAMPLE_TIME  # type: ignore[operator]
     elif read_type in "RAW":
-        assert df.index[0] >= ensure_datetime_with_tz(START_TIME)
-        assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
+        assert df.index[0] >= ensure_datetime_with_tz(START_TIME)  # type: ignore[operator]
+        assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)  # type: ignore[operator]
 
 
-def test_read_with_status(Client):
+def test_read_with_status(Client: IMSClient) -> None:
     df = Client.read(
-        TAGS["Float32"],
+        tags=TAGS["Float32"],
         start_time=START_TIME,
         end_time=STOP_TIME,
         ts=SAMPLE_TIME,
@@ -132,82 +137,78 @@ def test_read_with_status(Client):
     assert df[TAGS["Float32"] + "::status"].iloc[0] == 0
 
 
-def test_digitalread_yields_integers(Client):
+def test_digitalread_yields_integers(Client: IMSClient) -> None:
     tag = TAGS["Digital"]
     df = Client.read(
-        tag, start_time=START_TIME, end_time=STOP_TIME, ts=600, read_type=ReaderType.INT
+        tags=tag,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=600,
+        read_type=ReaderType.INT,
     )
     assert all(x.is_integer() for x in df[tag])
 
 
-def test_get_unit(Client):
+def test_get_unit(Client: IMSClient) -> None:
     res = Client.get_units(list(TAGS.values()))
     assert res[TAGS["Float32"]] == "DEG. C"
     assert res[TAGS["Digital"]] == "STATE"
     assert res[TAGS["Int32"]] == ""
 
 
-def test_get_description(Client):
+def test_get_description(Client: IMSClient) -> None:
     res = Client.get_descriptions(list(TAGS.values()))
     assert res[TAGS["Float32"]] == "Atmospheric Tower OH Vapor"
     assert res[TAGS["Digital"]] == "Light Naphtha End Point Control"
     assert res[TAGS["Int32"]] == "Light Naphtha End Point"
 
 
-def test_from_DST_folds_time(Client):
+def test_from_DST_folds_time(Client: IMSClient) -> None:
     if os.path.exists(SOURCE + ".h5"):
         os.remove(SOURCE + ".h5")
     tag = TAGS["Float32"]
     interval = ["2017-10-29 00:30:00", "2017-10-29 04:30:00"]
-    df = Client.read([tag], interval[0], interval[1], 600)
+    df = Client.read(tags=[tag], start_time=interval[0], end_time=interval[1], ts=600)
     assert len(df) == (4 + 1) * 6 + 1
     # Time exists inside fold:
     assert (
-        df[tag].loc["2017-10-29 01:10:00+02:00":"2017-10-29 01:50:00+02:00"].size == 5
+        df[tag].loc["2017-10-29 01:10:00+02:00":"2017-10-29 01:50:00+02:00"].size == 5  # type: ignore[misc]
     )
     # Time inside fold is always included:
     assert (
-        df.loc["2017-10-29 01:50:00":"2017-10-29 03:10:00"].size == 2 + (1 + 1) * 6 + 1
+        df.loc["2017-10-29 01:50:00":"2017-10-29 03:10:00"].size == 2 + (1 + 1) * 6 + 1  # type: ignore[misc]
     )
 
 
-def test_to_DST_skips_time(Client):
+def test_to_DST_skips_time(Client: IMSClient) -> None:
     if os.path.exists(SOURCE + ".h5"):
         os.remove(SOURCE + ".h5")
     tag = TAGS["Float32"]
     interval = ["2018-03-25 00:30:00", "2018-03-25 03:30:00"]
-    df = Client.read([tag], interval[0], interval[1], 600)
+    df = Client.read(tags=[tag], start_time=interval[0], end_time=interval[1], ts=600)
     # Lose one hour:
     assert (
-        df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6
+        df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6  # type: ignore[misc]
     )
 
 
-# def test_read_unknown_tag(Client):
-#     with pytest.warns(UserWarning):
-#         df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
-#     assert len(df.index) == 0
-#     with pytest.warns(UserWarning):
-#         df = Client.read(
-#             [TAGS["Float32"], "sorandomitcantexist"], START_TIME, STOP_TIME
-#         )
-#     assert len(df.index) > 0
-#     assert len(df.columns) == 1
-
-
-def test_tags_with_no_data_included_in_results(Client):
-    df = Client.read([TAGS["Float32"]], "2099-01-01 00:00:00", "2099-01-02 00:00:00")
+def test_tags_with_no_data_included_in_results(Client: IMSClient) -> None:
+    df = Client.read(
+        tags=[TAGS["Float32"]],
+        start_time="2099-01-01 00:00:00",
+        end_time="2099-01-02 00:00:00",
+    )
     assert len(df.columns) == 1
 
 
-def test_query_sql(Client):
+def test_query_sql(Client: IMSClient) -> None:
     tag = TAGS["Float32"]
     query = f"SELECT descriptor, engunits FROM pipoint.pipoint2 WHERE tag='{tag}'"
-    res = Client.query_sql(query, parse=True)
+    res = Client.query_sql(query=query, parse=True)
     assert isinstance(res, pd.DataFrame)
     assert res.shape[0] >= 1
     assert res.shape[1] == 2
-    res = Client.query_sql(query, parse=False)
+    res = Client.query_sql(query=query, parse=False)
     assert isinstance(res, pyodbc.Cursor)
     rows = res.fetchall()
     assert len(rows) >= 1

@@ -1,12 +1,14 @@
 [tool.poetry]
 name = "tagreader"
-version = "4.0.3"
+version = "4.2.0"
 description = "Tagreader is a Python package for reading trend data from the OSIsoft PI and Aspen Infoplus.21 IMS systems."
 authors = ["Einar S. Idsø <eiids@equinor.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "tagreader"}]
 keywords=["Aspen InfoPlus.21", "OSIsoft PI"]
+homepage = "https://github.com/equinor/tagreader-python"
+repository = "https://github.com/equinor/tagreader-python"
 classifiers=[
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -28,14 +30,14 @@ classifiers=[
 [tool.poetry.dependencies]
 python = "^3.8"
 pandas = ">=1"
-pyodbc = "^4.0.39"
-certifi = "^2023.5.7"
-requests = "^2.31.0"
-requests-kerberos = "^0.14.0"
+pyodbc = "^4"
+certifi = "^2023"
+requests = "^2"
+requests-kerberos = "^0"
 msal-extensions = "^1.0.0"
-tables = { version = "^3", markers = "platform_machine != 'arm64'" }
 jupyter = { version = "^1", optional = true }
 matplotlib = { version = "^3", optional = true }
+diskcache = "^5.6.1"
 
 
 [tool.poetry.group.dev.dependencies]

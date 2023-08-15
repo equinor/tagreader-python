@@ -28,7 +28,7 @@ steps:
     pip install -r requirements.txt
     pip install pytest pytest-azurepipelines pytest-cov
   displayName: 'Install dependencies'
-  env: 
+  env:
     HTTPS_PROXY: $(var_http_proxy)
 
 - script: |

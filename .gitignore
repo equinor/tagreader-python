@@ -44,6 +44,8 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+.cache*
+*cache*
 nosetests.xml
 coverage.xml
 *.cover
@@ -161,3 +163,9 @@ token_cache.bin
 
 # Merge files
 *.orig
+
+# Apple
+.DS_Store
+
+# Other
+.tmp/
