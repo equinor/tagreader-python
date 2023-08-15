@@ -43,9 +43,9 @@ def get_url_aspen() -> str:
 
 
 def list_aspenone_sources(
-    url: Optional[str],
-    auth: Optional[Any],
-    verify_ssl: Optional[bool],
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verify_ssl: Optional[bool] = True,
 ) -> List[str]:
     if url is None:
         url = get_url_aspen()
@@ -53,10 +53,11 @@ def list_aspenone_sources(
     if auth is None:
         auth = get_auth_aspen()
 
+    if verify_ssl is None:
+        verify_ssl = get_verify_ssl()
+
     if verify_ssl is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    elif verify_ssl is None:
-        verify_ssl = get_verify_ssl()
 
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
@@ -71,9 +72,9 @@ def list_aspenone_sources(
 
 
 def list_piwebapi_sources(
-    url: Optional[str],
-    auth: Optional[Any],
-    verify_ssl: Optional[bool],
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verify_ssl: Optional[bool] = True,
 ) -> List[str]:
     if url is None:
         url = get_url_pi()
@@ -81,10 +82,11 @@ def list_piwebapi_sources(
     if auth is None:
         auth = get_auth_pi()
 
+    if verify_ssl is None:
+        verify_ssl = get_verify_ssl()
+
     if verify_ssl is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    elif verify_ssl is None:
-        verify_ssl = get_verify_ssl()
 
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verify_ssl)
@@ -128,7 +130,8 @@ class BaseHandlerWeb(ABC):
             # Since json/simplejson has no mechanism to handle this, we need to
             # pre-process
 
-            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            txt = res.text.replace('"v":nan', '"v":NaN').replace(
+                '"v":-nan', '"v":NaN')
             return json.loads(txt)
 
     def fetch_text(
@@ -156,15 +159,16 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def __init__(
         self,
         datasource: Optional[str],
-        url: Optional[str],
-        auth: Optional[Any],
-        verify_ssl: Optional[bool],
-        options: Dict[str, Any],
+        url: Optional[str] = None,
+        auth: Optional[Any] = None,
+        verify_ssl: Optional[bool] = True,
+        options: Dict[str, Any] = dict(),
     ):
         if url is None:
             url = get_url_aspen()
         if auth is None:
             auth = get_auth_aspen()
+
         super().__init__(
             datasource=datasource,
             url=url,
@@ -188,7 +192,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
             raise ValueError("Data source is required argument")
         # Aspen Web API expects single space instead of consecutive spaces.
         tag = " ".join(tag.split())
-        params = {"datasource": datasource, "tag": tag, "max": 100, "getTrendable": 0}
+        params = {"datasource": datasource,
+                  "tag": tag, "max": 100, "getTrendable": 0}
         return params
 
     def generate_read_query(
@@ -523,7 +528,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
         # Ensure non-numerical like "1.#QNAN" are returned as NaN
         df["Value"] = pd.to_numeric(df.Value, errors="coerce")
 
-        df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms", origin="unix")
+        df["Timestamp"] = pd.to_datetime(
+            df["Timestamp"], unit="ms", origin="unix")
         df = df.set_index("Timestamp", drop=True).tz_localize("UTC")
         df.index.name = "time"
         return df.rename(columns={"Value": tag, "Status": tag + "::status"})
@@ -610,7 +616,8 @@ class PIHandlerWeb(BaseHandlerWeb):
             verify_ssl=verify_ssl,
         )
         self._max_rows = options.get("max_rows", 10000)
-        self.web_id_cache = BaseCache(directory=Path(".") / ".cache" / datasource)
+        self.web_id_cache = BaseCache(
+            directory=Path(".") / ".cache" / datasource)
 
     @staticmethod
     def _time_to_UTC_string(time: datetime) -> str:
@@ -916,7 +923,8 @@ class PIHandlerWeb(BaseHandlerWeb):
                 }
             )
 
-        df = df.filter(["Timestamp", "Value", "Good", "Questionable", "Substituted"])
+        df = df.filter(["Timestamp", "Value", "Good",
+                       "Questionable", "Substituted"])
 
         try:
             # Could call this here, to support mixed format, but have not checked performance
