@@ -43,9 +43,9 @@ def get_url_aspen() -> str:
 
 
 def list_aspenone_sources(
-    url: Optional[str],
-    auth: Optional[Any],
-    verify_ssl: Optional[bool],
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verify_ssl: Optional[bool] = True,
 ) -> List[str]:
     if url is None:
         url = get_url_aspen()
@@ -53,10 +53,11 @@ def list_aspenone_sources(
     if auth is None:
         auth = get_auth_aspen()
 
+    if verify_ssl is None:
+        verify_ssl = get_verify_ssl()
+
     if verify_ssl is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    elif verify_ssl is None:
-        verify_ssl = get_verify_ssl()
 
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
@@ -71,9 +72,9 @@ def list_aspenone_sources(
 
 
 def list_piwebapi_sources(
-    url: Optional[str],
-    auth: Optional[Any],
-    verify_ssl: Optional[bool],
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verify_ssl: Optional[bool] = True,
 ) -> List[str]:
     if url is None:
         url = get_url_pi()
@@ -81,10 +82,11 @@ def list_piwebapi_sources(
     if auth is None:
         auth = get_auth_pi()
 
+    if verify_ssl is None:
+        verify_ssl = get_verify_ssl()
+
     if verify_ssl is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    elif verify_ssl is None:
-        verify_ssl = get_verify_ssl()
 
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verify_ssl)
@@ -156,15 +158,16 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def __init__(
         self,
         datasource: Optional[str],
-        url: Optional[str],
-        auth: Optional[Any],
-        verify_ssl: Optional[bool],
-        options: Dict[str, Any],
+        url: Optional[str] = None,
+        auth: Optional[Any] = None,
+        verify_ssl: Optional[bool] = True,
+        options: Dict[str, Any] = dict(),
     ):
         if url is None:
             url = get_url_aspen()
         if auth is None:
             auth = get_auth_aspen()
+
         super().__init__(
             datasource=datasource,
             url=url,
@@ -350,8 +353,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
             return {}
 
         ret = {}
-        for item in data["data"]["tags"][0]["categories"][0]["ta"]:
-            ret[item["m"]] = True if item["d"] == "True" else False
+        categories = data["data"]["tags"][0]["categories"]
+        if len(categories) > 0:  # Support null case
+            for item in categories[0]["ta"]:
+                ret[item["m"]] = True if item["d"] == "True" else False
         return ret
 
     def _get_default_mapname(self, tagname: str):
