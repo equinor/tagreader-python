@@ -39,55 +39,6 @@ def test_get_next_timeslice() -> None:
     res = get_next_timeslice(start=start, end=end, ts=ts, max_steps=100000)
     assert start, end == res
 
-def test_connect_imsclient_tagreader() -> None:
-    """
-    A simple test to check if we can connect to the Aspen IP.21 SQLPlus
-    """
-    client = IMSClient("TRB", "aspenone")
-    client.connect()
-    tags = client.search("TRB-FI*")
-    df = client.read(
-        tags=[tag[0] for tag in tags],
-        start_time="05-Jan-2020 08:00:00",
-        end_time="05/01/20 11:30am",
-        ts=timedelta(seconds=180),
-        get_status=True,
-    )
-
-    assert len(tags)
-    assert not df.empty
-
-def test_get_data_with_timezone_test() -> None:
-    client = IMSClient("TRB", "aspenone", tz="US/Central") #IMSClient(servername="TRB", servertype="aspenone")
-    client.connect()
-    tags = client.search("TRB-FI*")
-    df = client.read(
-        tags=[tag[0] for tag in tags],
-        start_time="05-Jan-2020 08:00:00",
-        end_time="05/01/20 11:30am",
-        ts=timedelta(seconds=180),
-        get_status=True,
-    )
-
-    assert len(tags)
-    assert not df.empty
-
-def test_get_data_with_timezone_test_Eastern() -> None:
-    client = IMSClient("TRB", "aspenone", tz="US/Eastern") #IMSClient(servername="TRB", servertype="aspenone")
-    client.connect()
-    tags = client.search("TRB-FI*")
-    df = client.read(
-        tags=[tag[0] for tag in tags],
-        start_time="05-Jan-2020 08:00:00",
-        end_time="05/01/20 11:30am",
-        ts=timedelta(seconds=180),
-        get_status=True,
-    )
-
-    assert len(tags)
-    assert not df.empty
-
-
 def test_get_missing_intervals() -> None:
     length = 10
     ts = 60
