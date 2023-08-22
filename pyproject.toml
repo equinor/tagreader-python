@@ -31,6 +31,7 @@ classifiers=[
 python = "^3.8"
 pandas = ">=1"
 pyodbc = "^4"
+cryptography = "^41.0.1"
 certifi = "^2023.5.7"
 requests = "^2"
 requests-kerberos = "^0"
