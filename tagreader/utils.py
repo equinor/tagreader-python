@@ -75,7 +75,7 @@ def convert_to_pydatetime(date_stamp: Union[datetime, str, pd.Timestamp]) -> dat
         return date_stamp.to_pydatetime()
     else:
         try:
-            return pd.to_datetime(str(date_stamp), format="ISO8601").to_pydatetime()
+            return pd.to_datetime(date_stamp).to_pydatetime()
         except ValueError:
             return pd.to_datetime(str(date_stamp), dayfirst=True).to_pydatetime()
 
@@ -87,6 +87,7 @@ def ensure_datetime_with_tz(
     date_stamp = convert_to_pydatetime(date_stamp)
 
     if not date_stamp.tzinfo:
+        tz = pytz.timezone(tz)
         date_stamp = tz.localize(date_stamp)
 
     return date_stamp

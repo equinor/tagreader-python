@@ -13,7 +13,7 @@ is_AZUREPIPELINE = "TF_BUILD" in os.environ
 
 def test_ensure_is_datetime_string() -> None:
     assert ensure_datetime_with_tz("10. jan. 2018 13:45:15") == timezone(
-        "Europe/Oslo"
+        "US/Eastern"
     ).localize(datetime.datetime(2018, 1, 10, 13, 45, 15))
     assert ensure_datetime_with_tz("02.01.03 00:00:00") == timezone(
         "Europe/Oslo"
