@@ -39,6 +39,7 @@ def test_get_next_timeslice() -> None:
     res = get_next_timeslice(start=start, end=end, ts=ts, max_steps=100000)
     assert start, end == res
 
+
 def test_get_missing_intervals() -> None:
     length = 10
     ts = 60
