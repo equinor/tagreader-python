@@ -43,8 +43,7 @@ def test_init_client_with_tzinfo() -> None:
         datasource="mock",
         imstype=IMSType.PIWEBAPI,
         cache=None,
-        tz=pytz.timezone("US/Eastern"),
-    )  # IMSClient(servername="TRB", servertype="aspenone")
+        tz=pytz.timezone("US/Eastern"))
     print(client.tz)
     assert client.tz == pytz.timezone("US/Eastern")
 
