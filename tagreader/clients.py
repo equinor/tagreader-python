@@ -1,6 +1,6 @@
 import os
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 from itertools import groupby
 from operator import itemgetter
 from pathlib import Path
@@ -303,7 +303,7 @@ class IMSClient:
         self,
         datasource: str,
         imstype: Optional[Union[str, IMSType]] = None,
-        tz: pytz.timezone = pytz.timezone("Europe/Oslo"),
+        tz: Union[tzinfo, str] = pytz.timezone("Europe/Oslo"),
         url: Optional[str] = None,
         host: Optional[str] = None,
         port: Optional[int] = None,
@@ -321,7 +321,19 @@ class IMSClient:
                     f" We suggest to use the tagreader.IMSType enumerator when initiating a client."
                 )
 
-        self.tz = tz
+
+
+        if isinstance(tz, str):
+            if tz in pytz.all_timezones:
+                self.tz = pytz.timezone(tz)
+            else:
+                raise ValueError(f"Invalid timezone string  Given type was {type(tz)}")
+        elif isinstance(tz, tzinfo):
+            self.tz = tz
+        else:
+            raise ValueError(f"timezone argument 'tz' needs to be either a valid timezone string or a tzinfo-object. Given type was {type(tz)}")
+
+        ##self.tz = tz
         self.handler = get_handler(
             imstype=imstype,
             datasource=datasource,
