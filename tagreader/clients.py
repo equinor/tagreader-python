@@ -333,7 +333,6 @@ class IMSClient:
         else:
             raise ValueError(f"timezone argument 'tz' needs to be either a valid timezone string or a tzinfo-object. Given type was {type(tz)}")
 
-        ##self.tz = tz
         self.handler = get_handler(
             imstype=imstype,
             datasource=datasource,
