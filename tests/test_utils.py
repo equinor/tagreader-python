@@ -29,7 +29,8 @@ def test_ensure_is_datetime_string() -> None:
     ) == timezone("Brazil/East").localize(datetime.datetime(2003, 1, 2, 0, 0, 0))
     assert ensure_datetime_with_tz(
         timezone("Brazil/East").localize(datetime.datetime(2003, 1, 2, 0, 0, 0)),
-        pytz.timezone("Brazil/East")) == timezone("Brazil/East").localize(datetime.datetime(2003, 1, 2, 0, 0, 0))
+        pytz.timezone("Brazil/East"),
+    ) == timezone("Brazil/East").localize(datetime.datetime(2003, 1, 2, 0, 0, 0))
 
 
 def test_ensure_is_datetime_pd_timestamp() -> None:
