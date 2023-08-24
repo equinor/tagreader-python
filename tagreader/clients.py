@@ -321,8 +321,6 @@ class IMSClient:
                     f" We suggest to use the tagreader.IMSType enumerator when initiating a client."
                 )
 
-
-
         if isinstance(tz, str):
             if tz in pytz.all_timezones:
                 self.tz = pytz.timezone(tz)
@@ -331,7 +329,9 @@ class IMSClient:
         elif isinstance(tz, tzinfo):
             self.tz = tz
         else:
-            raise ValueError(f"timezone argument 'tz' needs to be either a valid timezone string or a tzinfo-object. Given type was {type(tz)}")
+            raise ValueError(
+                f"timezone argument 'tz' needs to be either a valid timezone string or a tzinfo-object. Given type was {type(tz)}"
+            )
 
         self.handler = get_handler(
             imstype=imstype,
