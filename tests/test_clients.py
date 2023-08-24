@@ -60,9 +60,7 @@ def test_init_client_with_tzinfo() -> None:
     print(client.tz)
     assert client.tz == pytz.timezone("US/Central")
 
-    client = IMSClient(
-        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None
-    )
+    client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
     print(client.tz)
     assert client.tz == pytz.timezone("Europe/Oslo")
 
