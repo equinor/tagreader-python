@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 from typing import Generator
 
@@ -8,40 +9,45 @@ from tagreader.cache import BucketCache, safe_tagname, timestamp_to_epoch
 from tagreader.utils import ReaderType
 
 TAGNAME = "tag1"
-READERTYPE = ReaderType.INT
+READE_TYPE = ReaderType.INT
 
 TZ = "UTC"
-TS = pd.Timedelta(seconds=300)
+TS = timedelta(seconds=300)
+MINUTE = timedelta(seconds=60)
 FREQ = f"{int(TS.total_seconds())}s"
 
-STARTTIME_1 = pd.to_datetime("2020-01-01 12:00:00", utc=True)
-ENDTIME_1 = pd.to_datetime("2020-01-01 13:00:00", utc=True)
-idx = pd.date_range(start=STARTTIME_1, end=ENDTIME_1, freq=FREQ, name="time")
-DF1 = pd.DataFrame({TAGNAME: range(0, len(idx))}, index=idx)
+START_TIME_1 = pd.to_datetime("2020-01-01 12:00:00", utc=True)
+END_TIME_1 = pd.to_datetime("2020-01-01 13:00:00", utc=True)
+index = pd.date_range(start=START_TIME_1, end=END_TIME_1, freq=FREQ, name="time")
+DF1 = pd.DataFrame({TAGNAME: range(0, len(index))}, index=index)
 
-STARTTIME_1_EPOCH = (
-    STARTTIME_1 - pd.to_datetime("1970-01-01", utc=True)
+START_TIME_1_EPOCH = (
+    START_TIME_1 - pd.to_datetime("1970-01-01", utc=True)
 ) // pd.Timedelta(
     "1s"
 )  # 1577880000
-ENDTIME_1_EPOCH = (ENDTIME_1 - pd.to_datetime("1970-01-01", utc=True)) // pd.Timedelta(
+END_TIME_1_EPOCH = (
+    END_TIME_1 - pd.to_datetime("1970-01-01", utc=True)
+) // pd.Timedelta(
     "1s"
 )  # 1577883600
 
-STARTTIME_2 = pd.to_datetime("2020-01-01 13:30:00", utc=True)
-ENDTIME_2 = pd.to_datetime("2020-01-01 14:00:00", utc=True)
-idx = pd.date_range(start=STARTTIME_2, end=ENDTIME_2, freq=FREQ, name="time")
-DF2 = pd.DataFrame({TAGNAME: range(0, len(idx))}, index=idx)
+START_TIME_2 = pd.to_datetime("2020-01-01 13:30:00", utc=True)
+END_TIME_2 = pd.to_datetime("2020-01-01 14:00:00", utc=True)
+index = pd.date_range(start=START_TIME_2, end=END_TIME_2, freq=FREQ, name="time")
+DF2 = pd.DataFrame({TAGNAME: range(0, len(index))}, index=index)
 
-ENDTIME_2_EPOCH = (ENDTIME_2 - pd.to_datetime("1970-01-01", utc=True)) // pd.Timedelta(
+END_TIME_2_EPOCH = (
+    END_TIME_2 - pd.to_datetime("1970-01-01", utc=True)
+) // pd.Timedelta(
     "1s"
 )  # 1577887200
 
 
-STARTTIME_3 = pd.to_datetime("2020-01-01 12:40:00", utc=True)
-ENDTIME_3 = pd.to_datetime("2020-01-01 13:40:00", utc=True)
-idx = pd.date_range(start=STARTTIME_3, end=ENDTIME_3, freq=FREQ, name="time")
-DF3 = pd.DataFrame({TAGNAME: range(0, len(idx))}, index=idx)
+START_TIME_3 = pd.to_datetime("2020-01-01 12:40:00", utc=True)
+END_TIME_3 = pd.to_datetime("2020-01-01 13:40:00", utc=True)
+index = pd.date_range(start=START_TIME_3, end=END_TIME_3, freq=FREQ, name="time")
+DF3 = pd.DataFrame({TAGNAME: range(0, len(index))}, index=index)
 
 
 @pytest.fixture(autouse=True)  # type: ignore[misc]
@@ -66,28 +72,28 @@ def test_safe_tagname() -> None:
 
 
 def test_get_intervals_from_dataset_name(cache: BucketCache) -> None:
-    badtag = f"/tag1/INT/{STARTTIME_1_EPOCH}_{ENDTIME_1_EPOCH}"
-    goodtag = f"/tag1/INT/_{STARTTIME_1_EPOCH}_{ENDTIME_1_EPOCH}"
-    starttime, endtime = cache._get_intervals_from_dataset_name(badtag)
-    assert starttime is None
-    assert endtime is None  # type: ignore[unreachable]
-    starttime, endtime = cache._get_intervals_from_dataset_name(goodtag)
-    assert starttime == STARTTIME_1
-    assert endtime == ENDTIME_1
+    bad_tag = f"/tag1/INT/{START_TIME_1_EPOCH}_{END_TIME_1_EPOCH}"
+    good_tag = f"/tag1/INT/_{START_TIME_1_EPOCH}_{END_TIME_1_EPOCH}"
+    start, end = cache._get_intervals_from_dataset_name(bad_tag)
+    assert start is None
+    assert end is None  # type: ignore[unreachable]
+    start, end = cache._get_intervals_from_dataset_name(good_tag)
+    assert start == START_TIME_1
+    assert end == END_TIME_1
 
 
 def test_key_path_with_time(cache: BucketCache) -> None:
     assert (
         cache._key_path(
             tagname=TAGNAME,
-            readtype=READERTYPE,
-            ts=60,
+            read_type=READE_TYPE,
+            ts=MINUTE,
             stepped=False,
-            status=False,
-            start_time=STARTTIME_1,
-            end_time=ENDTIME_1,
+            get_status=False,
+            start=START_TIME_1,
+            end=END_TIME_1,
         )
-        == f"$tag1$INT$s60$_{STARTTIME_1_EPOCH}_{ENDTIME_1_EPOCH}"
+        == f"$tag1$INT$s60$_{START_TIME_1_EPOCH}_{END_TIME_1_EPOCH}"
     )
 
 
@@ -95,14 +101,14 @@ def test_key_path_stepped(cache: BucketCache) -> None:
     assert (
         cache._key_path(
             tagname=TAGNAME,
-            readtype=READERTYPE,
-            ts=60,
+            read_type=READE_TYPE,
+            ts=MINUTE,
             stepped=True,
-            status=False,
-            start_time=STARTTIME_1,
-            end_time=ENDTIME_1,
+            get_status=False,
+            start=START_TIME_1,
+            end=END_TIME_1,
         )
-        == f"$tag1$INT$s60$stepped$_{STARTTIME_1_EPOCH}_{ENDTIME_1_EPOCH}"
+        == f"$tag1$INT$s60$stepped$_{START_TIME_1_EPOCH}_{END_TIME_1_EPOCH}"
     )
 
 
@@ -110,23 +116,27 @@ def test_key_path_with_status(cache: BucketCache) -> None:
     assert (
         cache._key_path(
             tagname=TAGNAME,
-            readtype=READERTYPE,
-            ts=60,
+            read_type=READE_TYPE,
+            ts=MINUTE,
             stepped=False,
-            status=True,
+            get_status=True,
+            start=None,
+            end=None,
         )
         == "$tag1$INT$s60$status"
     )
 
 
-def test_key_path_RAW(cache: BucketCache) -> None:
+def test_key_path_raw(cache: BucketCache) -> None:
     assert (
         cache._key_path(
             tagname=TAGNAME,
-            readtype=ReaderType.RAW,
-            ts=60,
+            read_type=ReaderType.RAW,
+            ts=MINUTE,
             stepped=False,
-            status=False,
+            get_status=False,
+            start=None,
+            end=None,
         )
         == "$tag1$RAW"
     )
@@ -136,34 +146,34 @@ def test_get_missing_intervals(cache: BucketCache) -> None:
     cache.store(
         df=DF1,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
 
     cache.store(
         df=DF2,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_2,
-        end_time=ENDTIME_2,
+        get_status=False,
+        start=START_TIME_2,
+        end=END_TIME_2,
     )
 
     # Perfect coverage, no missing intervals
     missing_intervals = cache.get_missing_intervals(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
 
     assert len(missing_intervals) == 0
@@ -171,12 +181,12 @@ def test_get_missing_intervals(cache: BucketCache) -> None:
     # Request subsection, no missing intervals
     missing_intervals = cache.get_missing_intervals(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1 + pd.Timedelta("5m"),
-        end_time=ENDTIME_1 - pd.Timedelta("5m"),
+        get_status=False,
+        start=START_TIME_1 + pd.Timedelta("5m"),
+        end=END_TIME_1 - pd.Timedelta("5m"),
     )
 
     assert len(missing_intervals) == 0
@@ -184,78 +194,68 @@ def test_get_missing_intervals(cache: BucketCache) -> None:
     # Request data from before to after, two missing intervals
     missing_intervals = cache.get_missing_intervals(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1 - pd.Timedelta("15m"),
-        end_time=ENDTIME_1 + pd.Timedelta("15m"),
+        get_status=False,
+        start=START_TIME_1 - pd.Timedelta("15m"),
+        end=END_TIME_1 + pd.Timedelta("15m"),
     )
 
     assert len(missing_intervals) == 2
-    assert missing_intervals[0] == (STARTTIME_1 - pd.Timedelta("15m"), STARTTIME_1)
-    assert missing_intervals[1] == (ENDTIME_1, ENDTIME_1 + pd.Timedelta("15m"))
+    assert missing_intervals[0] == (START_TIME_1 - pd.Timedelta("15m"), START_TIME_1)
+    assert missing_intervals[1] == (END_TIME_1, END_TIME_1 + pd.Timedelta("15m"))
 
     # Request data stretching from before first bucket, including
     # space between buckets, to after second bucket. Three missing intervals.
     missing_intervals = cache.get_missing_intervals(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1 - pd.Timedelta("15m"),
-        end_time=ENDTIME_2 + pd.Timedelta("15m"),
+        get_status=False,
+        start=START_TIME_1 - pd.Timedelta("15m"),
+        end=END_TIME_2 + pd.Timedelta("15m"),
     )
 
     assert len(missing_intervals) == 3
-    assert missing_intervals[0] == (STARTTIME_1 - pd.Timedelta("15m"), STARTTIME_1)
-    assert missing_intervals[1] == (ENDTIME_1, STARTTIME_2)
-    assert missing_intervals[2] == (ENDTIME_2, ENDTIME_2 + pd.Timedelta("15m"))
+    assert missing_intervals[0] == (START_TIME_1 - pd.Timedelta("15m"), START_TIME_1)
+    assert missing_intervals[1] == (END_TIME_1, START_TIME_2)
+    assert missing_intervals[2] == (END_TIME_2, END_TIME_2 + pd.Timedelta("15m"))
 
 
 def test_get_intersecting_datasets(cache: BucketCache) -> None:
     cache.store(
         df=DF1,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
 
     cache.store(
         df=DF2,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_2,
-        end_time=ENDTIME_2,
-    )
-
-    intersecting_datasets = cache.get_intersecting_datasets(
-        tagname=TAGNAME,
-        readtype=READERTYPE,
-        ts=TS,
-        stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_2,
+        end=END_TIME_2,
     )
 
     # Perfect coverage
     intersecting_datasets = cache.get_intersecting_datasets(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
 
     assert len(intersecting_datasets) == 1
@@ -263,12 +263,12 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
     # Request subsection
     intersecting_datasets = cache.get_intersecting_datasets(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1 + pd.Timedelta("5m"),
-        end_time=ENDTIME_1 - pd.Timedelta("5m"),
+        get_status=False,
+        start=START_TIME_1 + pd.Timedelta("5m"),
+        end=END_TIME_1 - pd.Timedelta("5m"),
     )
 
     assert len(intersecting_datasets) == 1
@@ -276,12 +276,12 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
     # Request data from before to after
     intersecting_datasets = cache.get_intersecting_datasets(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1 - pd.Timedelta("15m"),
-        end_time=ENDTIME_1 + pd.Timedelta("15m"),
+        get_status=False,
+        start=START_TIME_1 - pd.Timedelta("15m"),
+        end=END_TIME_1 + pd.Timedelta("15m"),
     )
 
     assert len(intersecting_datasets) == 1
@@ -290,12 +290,12 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
     # space between buckets, to after second bucket.
     intersecting_datasets = cache.get_intersecting_datasets(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1 - pd.Timedelta("15m"),
-        end_time=ENDTIME_2 + pd.Timedelta("15m"),
+        get_status=False,
+        start=START_TIME_1 - pd.Timedelta("15m"),
+        end=END_TIME_2 + pd.Timedelta("15m"),
     )
 
     assert len(intersecting_datasets) == 2
@@ -304,12 +304,12 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
     # inside second bucket.
     intersecting_datasets = cache.get_intersecting_datasets(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1 - pd.Timedelta("15m"),
-        end_time=ENDTIME_2 - pd.Timedelta("15m"),
+        get_status=False,
+        start=START_TIME_1 - pd.Timedelta("15m"),
+        end=END_TIME_2 - pd.Timedelta("15m"),
     )
 
     assert len(intersecting_datasets) == 2
@@ -318,12 +318,12 @@ def test_get_intersecting_datasets(cache: BucketCache) -> None:
     # inside second bucket.
     intersecting_datasets = cache.get_intersecting_datasets(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1 + pd.Timedelta("15m"),
-        end_time=ENDTIME_2 - pd.Timedelta("15m"),
+        get_status=False,
+        start=START_TIME_1 + pd.Timedelta("15m"),
+        end=END_TIME_2 - pd.Timedelta("15m"),
     )
 
     assert len(intersecting_datasets) == 2
@@ -348,63 +348,63 @@ def test_store_empty_df(cache: BucketCache) -> None:
     cache.store(
         df=df,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )  # Specify ts to ensure correct key /if/ stored
     df_read = cache.fetch(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
     pd.testing.assert_frame_equal(df_read, pd.DataFrame())
 
     cache.store(
         df=DF1,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
     df_read = cache.fetch(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
     pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
 
     cache.store(
         df=df,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )  # Specify ts to ensure correct key /if/ stored
     df_read = cache.fetch(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
     pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
 
@@ -413,21 +413,21 @@ def test_store_single_df(cache: BucketCache) -> None:
     cache.store(
         df=DF1,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
     df_read = cache.fetch(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
     pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
 
@@ -436,58 +436,58 @@ def test_fetch(cache: BucketCache) -> None:
     cache.store(
         df=DF1,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
     cache.store(
         df=DF2,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_2,
-        end_time=ENDTIME_2,
+        get_status=False,
+        start=START_TIME_2,
+        end=END_TIME_2,
     )
 
     df_read = cache.fetch(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1 - pd.Timedelta("15m"),
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1 - pd.Timedelta("15m"),
     )
     pd.testing.assert_frame_equal(
-        DF1.loc[STARTTIME_1 : ENDTIME_1 - pd.Timedelta("15m")],  # type: ignore[misc]
+        DF1.loc[START_TIME_1 : END_TIME_1 - pd.Timedelta("15m")],  # type: ignore[misc]
         df_read,
         check_freq=False,
     )
 
     df_read = cache.fetch(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1 - pd.Timedelta("15m"),
-        end_time=ENDTIME_1 + pd.Timedelta("15m"),
+        get_status=False,
+        start=START_TIME_1 - pd.Timedelta("15m"),
+        end=END_TIME_1 + pd.Timedelta("15m"),
     )
     pd.testing.assert_frame_equal(DF1, df_read, check_freq=False)
 
     df_read = cache.fetch(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1 - pd.Timedelta("15m"),
-        end_time=ENDTIME_2 + pd.Timedelta("15m"),
+        get_status=False,
+        start=START_TIME_1 - pd.Timedelta("15m"),
+        end=END_TIME_2 + pd.Timedelta("15m"),
     )
     pd.testing.assert_frame_equal(pd.concat([DF1, DF2]), df_read, check_freq=False)
 
@@ -496,54 +496,54 @@ def test_store_overlapping_df(cache: BucketCache) -> None:
     cache.store(
         df=DF1,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_1,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_1,
     )
     cache.store(
         df=DF2,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_2,
-        end_time=ENDTIME_2,
+        get_status=False,
+        start=START_TIME_2,
+        end=END_TIME_2,
     )
     cache.store(
         df=DF3,
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_3,
-        end_time=ENDTIME_3,
+        get_status=False,
+        start=START_TIME_3,
+        end=END_TIME_3,
     )
     leaves = None
     for key in cache.iterkeys():
         if len(key) > 0:
             leaves = key
-    _, starttime, endtime = leaves.split("_")  # type: ignore[union-attr]
-    assert int(starttime) == STARTTIME_1_EPOCH
-    assert int(endtime) == ENDTIME_2_EPOCH
+    _, start, end = leaves.split("_")  # type: ignore[union-attr]
+    assert int(start) == START_TIME_1_EPOCH
+    assert int(end) == END_TIME_2_EPOCH
     df_read = cache.fetch(
         tagname=TAGNAME,
-        readtype=READERTYPE,
+        read_type=READE_TYPE,
         ts=TS,
         stepped=False,
-        status=False,
-        start_time=STARTTIME_1,
-        end_time=ENDTIME_2,
+        get_status=False,
+        start=START_TIME_1,
+        end=END_TIME_2,
     )
     df_expected = pd.concat(
         [
-            DF1[STARTTIME_1 : STARTTIME_3 - pd.Timedelta(TS, unit="s")],  # type: ignore[misc]
-            DF3[STARTTIME_3:ENDTIME_3],  # type: ignore[misc]
-            DF2[ENDTIME_3 + pd.Timedelta(TS, unit="s") : ENDTIME_2],  # type: ignore[misc]
+            DF1[START_TIME_1 : START_TIME_3 - pd.Timedelta(TS, unit="s")],  # type: ignore[misc]
+            DF3[START_TIME_3:END_TIME_3],  # type: ignore[misc]
+            DF2[END_TIME_3 + pd.Timedelta(TS, unit="s") : END_TIME_2],  # type: ignore[misc]
         ]
     )
 

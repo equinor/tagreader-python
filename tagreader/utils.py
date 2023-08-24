@@ -9,6 +9,8 @@ from typing import Union
 import pandas as pd
 import pytz
 
+from tagreader.logger import logger
+
 
 def is_windows() -> bool:
     return platform.system() == "Windows"
@@ -91,11 +93,10 @@ def ensure_datetime_with_tz(
 
 
 def urljoin(*args) -> str:
-    """Joins components of URL. Ensures slashes are inserted or removed where
+    """
+    Joins components of URL. Ensures slashes are inserted or removed where
     needed, and does not strip trailing slash of last element.
 
-    Arguments:
-        str
     Returns:
         str -- Generated URL
     """
@@ -128,10 +129,11 @@ class ReaderType(enum.IntEnum):
     SNAPSHOT = FINAL = LAST = enum.auto()  # Last sampled value
 
 
-def add_statoil_root_certificate(noisy: bool = True) -> bool:
-    """This is a utility function for Equinor employees on Equinor managed machines.
+def add_statoil_root_certificate() -> bool:
+    """
+    This is a utility function for Equinor employees on Equinor managed machines.
 
-    The function searches for the Statoil Root certificate in the
+    The function searches for the Equinor Root certificate in the
     cert store and imports it to the cacert bundle. Does nothing if not
     running on Equinor host.
 
@@ -153,17 +155,13 @@ def add_statoil_root_certificate(noisy: bool = True) -> bool:
     if is_linux():
         return True
     elif is_windows():
-        if noisy:
-            print("Scanning CA certs in Windows cert store", end="")
+        logger.debug("Scanning CA certificate in Windows cert store", end="")
         for cert in ssl.enum_certificates("CA"):
-            if noisy:
-                print(".", end="")
             der = cert[0]
             # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
             if hashlib.sha1(der).hexdigest() == STATOIL_ROOT_PEM_HASH:
                 found = True
-                if noisy:
-                    print(" found it!")
+                logger.debug("CA certificate found!")
                 break
     elif is_mac():
         import subprocess
@@ -174,7 +172,7 @@ def add_statoil_root_certificate(noisy: bool = True) -> bool:
         ).stdout
 
         if STATOIL_ROOT_PEM_HASH.upper() in str(macos_ca_certs).upper():
-            c = get_macos_statoil_certificates()
+            c = get_macos_equinor_certificates()
             for cert in c:
                 # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
                 if hashlib.sha1(cert).hexdigest() == STATOIL_ROOT_PEM_HASH:
@@ -185,23 +183,22 @@ def add_statoil_root_certificate(noisy: bool = True) -> bool:
     if found and der:
         pem = ssl.DER_cert_to_PEM_cert(der)
         if pem in certifi.contents():
-            if noisy:
-                print("Certificate already exists in certifi store. Nothing to do.")
+            logger.debug(
+                "CA Certificate already exists in certifi store. Nothing to do."
+            )
         else:
-            if noisy:
-                print("Writing certificate to certifi store.")
-            cafile = certifi.where()
-            with open(cafile, "ab") as f:
+            logger.debug("Writing certificate to certifi store.")
+            ca_file = certifi.where()
+            with open(ca_file, "ab") as f:
                 f.write(bytes(pem, "ascii"))
-            if noisy:
-                print("Completed")
+            logger.debug("Completed")
     else:
         warnings.warn("Unable to locate root certificate on this host.")
 
     return found
 
 
-def get_macos_statoil_certificates():
+def get_macos_equinor_certificates():
     import ssl
     import tempfile
 

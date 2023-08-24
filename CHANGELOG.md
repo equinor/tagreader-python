@@ -2,6 +2,58 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.2.5](https://github.com/equinor/tagreader-python/compare/v4.2.4...v4.2.5) (2023-07-12)
+
+
+### 👷 CI/CD
+
+* Resolve automatic deploy to PyPI ([7c44190](https://github.com/equinor/tagreader-python/commit/7c441906a56b5e104dc5d5a0d4cb2ac36ef4ea88), [e21b451](https://github.com/equinor/tagreader-python/commit/e21b4510c92c912876d8fc20ed8d5578e6aeecc2))
+
+### 🧹 Chores
+
+* General code cleanup and maintenance ([dff0d71](https://github.com/equinor/tagreader-python/commit/dff0d71f3cca0bf31bc4c508bb4200ff2780afee))
+
+
+### 📚 Documentation
+
+* Update docs and example notebook ([550ac14](https://github.com/equinor/tagreader-python/commit/550ac147bd81a47d36b074f3bfc0cf77432da929))
+
+
+### 🐛 Bug Fixes
+
+* remove default arguments from caching classes ([a48db69](https://github.com/equinor/tagreader-python/commit/a48db69c729d41f9f46c0ebb415f640b52ad241d))
+
+## [4.2.3](https://github.com/equinor/tagreader-python/compare/v4.2.2...v4.2.3) (2023-07-12)
+
+
+### 🧪 Tests
+
+* assert that cache is not SmartCache when creating a client without specifying cache ([fa8d7d0](https://github.com/equinor/tagreader-python/commit/fa8d7d0abae6ce1a5fe8da20b5ebeb0ad960a411))
+
+
+### 🐛 Bug Fixes
+
+* correct caching when get_status=True ([#240](https://github.com/equinor/tagreader-python/issues/240)) ([ede82f5](https://github.com/equinor/tagreader-python/commit/ede82f57bce09b5965914d6027b419bef0fa8a9b)), closes [#239](https://github.com/equinor/tagreader-python/issues/239)
+
+## [4.2.2](https://github.com/equinor/tagreader-python/compare/v4.2.1...v4.2.2) (2023-07-12)
+
+
+### 🧹 Chores
+
+* make tagreader.__version__ available for user ([#236](https://github.com/equinor/tagreader-python/issues/236)) ([8531d41](https://github.com/equinor/tagreader-python/commit/8531d4132feac526f558f3a60327973f68437620))
+
+## [4.2.1](https://github.com/equinor/tagreader-python/compare/v4.2.0...v4.2.1) (2023-07-06)
+
+
+### 🧹 Chores
+
+* pre-commit fix ([bf7e1e4](https://github.com/equinor/tagreader-python/commit/bf7e1e46c6f7934552e90b4245cf299a0824a4ce))
+
+
+### 🐛 Bug Fixes
+
+* use correct arguments when reading single tag and code cleanup ([#234](https://github.com/equinor/tagreader-python/issues/234)) ([e0fafd4](https://github.com/equinor/tagreader-python/commit/e0fafd499fdb08391b51343145c1f50051fa0d99)), closes [#231](https://github.com/equinor/tagreader-python/issues/231)
+
 ## [4.2.0](https://github.com/equinor/tagreader-python/compare/v4.1.4...v4.2.0) (2023-06-28)
 
 

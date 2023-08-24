@@ -14,9 +14,9 @@ import pyodbc
 
 from tagreader.odbc_handlers import list_aspen_sources
 
-is_GITHUBACTION = "GITHUB_ACTION" in os.environ
+is_GITHUB_ACTIONS = "GITHUB_ACTION" in os.environ
 
-if is_GITHUBACTION:
+if is_GITHUB_ACTIONS:
     pytest.skip(
         "All tests in module require connection to Aspen server",
         allow_module_level=True,
@@ -29,7 +29,7 @@ STOP_TIME = "2018-05-01 11:00:00"
 
 
 @pytest.fixture  # type: ignore[misc]
-def Client() -> Generator[IMSClient, None, None]:
+def client() -> Generator[IMSClient, None, None]:
     c = IMSClient(datasource=SOURCE, imstype="ip21")
     c.cache = None  # type: ignore[assignment]
     c.connect()
@@ -56,24 +56,13 @@ def test_list_sources_aspen() -> None:
         assert 3 <= len(r) <= 20
 
 
-# def test_read_unknown_tag(Client):
-#     with pytest.warns(UserWarning):
-#         df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
-#     assert len(df.index) == 0
-#     assert len(df.columns) == 0
-#     with pytest.warns(UserWarning):
-#         df = Client.read(["ATCAI", "sorandomitcantexist"], START_TIME, STOP_TIME)
-#     assert len(df.index) > 0
-#     assert len(df.columns) == 1
-
-
-def test_query_sql(Client: IMSClient) -> None:
+def test_query_sql(client: IMSClient) -> None:
     query = "SELECT name, ip_description FROM ip_analogdef WHERE name LIKE 'ATC%'"
-    res = Client.query_sql(query=query, parse=True)
+    res = client.query_sql(query=query, parse=True)
     assert isinstance(res, pd.DataFrame)
     assert res.shape[0] >= 1
     assert res.shape[1] == 2
-    res = Client.query_sql(query=query, parse=False)
+    res = client.query_sql(query=query, parse=False)
     assert isinstance(res, pyodbc.Cursor)
     rows = res.fetchall()
     assert len(rows) >= 1

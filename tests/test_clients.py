@@ -1,33 +1,42 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 
 import pandas as pd
 import pytest
 
+from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
-from tagreader.utils import ReaderType, is_windows
+from tagreader.utils import IMSType, ReaderType, is_windows
+from tagreader.web_handlers import PIHandlerWeb
 
 if is_windows():
     from tagreader.odbc_handlers import AspenHandlerODBC, PIHandlerODBC
 
-is_GITHUBACTION = "GITHUB_ACTION" in os.environ
-is_AZUREPIPELINE = "TF_BUILD" in os.environ
-is_CI = is_GITHUBACTION or is_AZUREPIPELINE
+is_GITHUB_ACTION = "GITHUB_ACTION" in os.environ
+is_AZURE_PIPELINE = "TF_BUILD" in os.environ
+is_CI = is_GITHUB_ACTION or is_AZURE_PIPELINE
+
+
+def test_init_client_without_cache() -> None:
+    """
+    Currently we initialize SmartCache by default, and the user is not able to specify no-cache when creating the
+    client. This will change to no cache by default in version 5.
+    """
+    client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
+    assert isinstance(client.cache, SmartCache)
+    assert isinstance(client.tz, tzinfo)
+    assert isinstance(client.handler, PIHandlerWeb)  # Based on IMSType.PIWEBAPI
 
 
 def test_get_next_timeslice() -> None:
-    starttime = pd.to_datetime("2018-01-02 14:00:00")
-    endtime = pd.to_datetime("2018-01-02 14:15:00")
+    start = pd.to_datetime("2018-01-02 14:00:00")
+    end = pd.to_datetime("2018-01-02 14:15:00")
     # taglist = ['tag1', 'tag2', 'tag3']
     ts = timedelta(seconds=60)
-    res = get_next_timeslice(
-        start_time=starttime, stop_time=endtime, ts=ts, max_steps=20
-    )
-    assert starttime, starttime + timedelta(seconds=6) == res
-    res = get_next_timeslice(
-        start_time=starttime, stop_time=endtime, ts=ts, max_steps=100000
-    )
-    assert starttime, endtime == res
+    res = get_next_timeslice(start=start, end=end, ts=ts, max_steps=20)
+    assert start, start + timedelta(seconds=6) == res
+    res = get_next_timeslice(start=start, end=end, ts=ts, max_steps=100000)
+    assert start, end == res
 
 
 def test_get_missing_intervals() -> None:
@@ -41,8 +50,8 @@ def test_get_missing_intervals() -> None:
     df = pd.concat([df_total.iloc[0:2], df_total.iloc[3:4], df_total.iloc[8:]])
     missing = get_missing_intervals(
         df=df,
-        start_time=datetime(2018, 1, 18, 5, 0, 0),
-        stop_time=datetime(2018, 1, 18, 6, 0, 0),
+        start=datetime(2018, 1, 18, 5, 0, 0),
+        end=datetime(2018, 1, 18, 6, 0, 0),
         ts=timedelta(seconds=ts),
         read_type=ReaderType.INT,
     )
@@ -55,61 +64,71 @@ def test_get_missing_intervals() -> None:
 
 
 @pytest.mark.skipif(
-    is_GITHUBACTION or not is_windows(),
+    is_GITHUB_ACTION or not is_windows(),
     reason="ODBC drivers require Windows and are unavailable in GitHub Actions",
 )
 class TestODBC:
-    def test_PI_init_odbc_client_with_host_port(self) -> None:
+    def test_pi_init_odbc_client_with_host_port(self) -> None:
         host = "thehostname"
         port = 999
         c = IMSClient(datasource="whatever", imstype="pi", host=host)
         assert c.handler.host == host
         assert c.handler.port == 5450
-        c = IMSClient(datasource="whatever", imstype="pi", host=host, port=port)
+        c = IMSClient(
+            datasource="whatever",
+            imstype="pi",
+            host=host,
+            port=port,
+        )
         assert c.handler.host == host
         assert c.handler.port == port
 
-    def test_IP21_init_odbc_client_with_host_port(self) -> None:
+    def test_ip21_init_odbc_client_with_host_port(self) -> None:
         host = "thehostname"
         port = 999
         c = IMSClient(datasource="whatever", imstype="ip21", host=host)
         assert c.handler.host == host
         assert c.handler.port == 10014
-        c = IMSClient(datasource="whatever", imstype="ip21", host=host, port=port)
+        c = IMSClient(
+            datasource="whatever",
+            imstype="ip21",
+            host=host,
+            port=port,
+        )
         assert c.handler.host == host
         assert c.handler.port == port
 
-    def test_PI_connection_string_override(self) -> None:
+    def test_pi_connection_string_override(self) -> None:
         connstr = "someuserspecifiedconnectionstring"
         c = IMSClient(
             datasource="whatever",
-            host="host",
             imstype="pi",
+            host="host",
             handler_options={"connection_string": connstr},
         )
         assert c.handler.generate_connection_string() == connstr
 
-    def test_IP21_connection_string_override(self) -> None:
+    def test_ip21_connection_string_override(self) -> None:
         connstr = "someuserspecifiedconnectionstring"
         c = IMSClient(
             datasource="whatever",
-            host="host",
             imstype="ip21",
+            host="host",
             handler_options={"connection_string": connstr},
         )
         assert c.handler.generate_connection_string() == connstr
 
     def test_init_odbc_clients(self) -> None:
         with pytest.raises(ValueError):
-            c = IMSClient(datasource="xyz")
+            _ = IMSClient(datasource="xyz")
         with pytest.raises(ValueError):
-            c = IMSClient(datasource="sNa", imstype="pi")
+            _ = IMSClient(datasource="sNa", imstype="pi")
         with pytest.raises(ValueError):
-            c = IMSClient(datasource="Ono-imS", imstype="aspen")
+            _ = IMSClient(datasource="Ono-imS", imstype="aspen")
         with pytest.raises(ValueError):
-            c = IMSClient(datasource="ono-ims", imstype="aspen")
+            _ = IMSClient(datasource="ono-ims", imstype="aspen")
         with pytest.raises(ValueError):
-            c = IMSClient(datasource="sna", imstype="pi")
+            _ = IMSClient(datasource="sna", imstype="pi")
         c = IMSClient(datasource="onO-iMs", imstype="pi")
         assert isinstance(c.handler, PIHandlerODBC)
         c = IMSClient(datasource="snA", imstype="aspen")

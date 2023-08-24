@@ -1,4 +1,3 @@
-import datetime
 import json
 import re
 import urllib.parse
@@ -20,7 +19,7 @@ from tagreader.logger import logger
 from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
 
 
-def get_verifySSL() -> Union[bool, str]:
+def get_verify_ssl() -> Union[bool, str]:
     if is_windows() or is_mac():
         return True
     return "/etc/ssl/certs/ca-bundle.trust.crt"
@@ -40,10 +39,14 @@ def get_auth_aspen(use_internal: bool = False):
 
     from .BearerAuth import BearerAuth
 
-    tenantID = '3aa4a235-b6e2-48d5-9195-7fcf05b459b0'
-    clientID = '7adaaa99-897f-428c-8a5f-4053db565b32'
-    scopes = ["https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData//user_impersonation"]
-    return BearerAuth.get_bearer_token_auth(tenantID=tenantID, clientID=clientID, scopes=scopes, verbose=True)
+    tenantID = "3aa4a235-b6e2-48d5-9195-7fcf05b459b0"
+    clientID = "7adaaa99-897f-428c-8a5f-4053db565b32"
+    scopes = [
+        "https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData//user_impersonation"
+    ]
+    return BearerAuth.get_bearer_token_auth(
+        tenantID=tenantID, clientID=clientID, scopes=scopes, verbose=True
+    )
 
 
 def get_url_aspen(use_internal: bool = False) -> str:
@@ -55,9 +58,9 @@ def get_url_aspen(use_internal: bool = False) -> str:
 
 
 def list_aspenone_sources(
-    url: Optional[str],
-    auth: Optional[Any],
-    verifySSL: Optional[bool],
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verify_ssl: Optional[bool] = True,
 ) -> List[str]:
     if url is None:
         url = get_url_aspen()
@@ -65,15 +68,16 @@ def list_aspenone_sources(
     if auth is None:
         auth = get_auth_aspen()
 
-    if verifySSL is False:
+    if verify_ssl is None:
+        verify_ssl = get_verify_ssl()
+
+    if verify_ssl is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    elif verifySSL is None:
-        verifySSL = get_verifySSL()
 
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
 
-    res = requests.get(url_, params=params, auth=auth, verify=verifySSL)
+    res = requests.get(url_, params=params, auth=auth, verify=verify_ssl)
     res.raise_for_status()
     try:
         source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
@@ -83,9 +87,9 @@ def list_aspenone_sources(
 
 
 def list_piwebapi_sources(
-    url: Optional[str],
-    auth: Optional[Any],
-    verifySSL: Optional[bool],
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verify_ssl: Optional[bool] = True,
 ) -> List[str]:
     if url is None:
         url = get_url_pi()
@@ -93,13 +97,14 @@ def list_piwebapi_sources(
     if auth is None:
         auth = get_auth_pi()
 
-    if verifySSL is False:
+    if verify_ssl is None:
+        verify_ssl = get_verify_ssl()
+
+    if verify_ssl is False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    elif verifySSL is None:
-        verifySSL = get_verifySSL()
 
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verifySSL)
+    res = requests.get(url_, auth=auth, verify=verify_ssl)
 
     res.raise_for_status()
     try:
@@ -115,7 +120,7 @@ class BaseHandlerWeb(ABC):
         datasource: Optional[str],
         url: Optional[str],
         auth: Optional[Any],
-        verifySSL: Optional[bool],
+        verify_ssl: Optional[bool],
     ):
         if url is None:
             url = get_url_aspen()
@@ -127,10 +132,10 @@ class BaseHandlerWeb(ABC):
         self.base_url = url
 
         self.session = requests.Session()
-        self.session.auth = auth
-        if verifySSL is False:
+        self.session.auth = auth if auth is not None else get_auth_aspen()
+        if verify_ssl is False:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        self.session.verify = verifySSL if verifySSL is not None else get_verifySSL()
+        self.session.verify = verify_ssl if verify_ssl is not None else get_verify_ssl()
 
     def fetch(self, url, params: Optional[Union[str, Dict[str, str]]] = None) -> Dict:
         res = self.session.get(url, params=params)
@@ -175,20 +180,21 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def __init__(
         self,
         datasource: Optional[str],
-        url: Optional[str],
-        auth: Optional[Any],
-        verifySSL: Optional[bool],
-        options: Dict[str, Any],
+        url: Optional[str] = None,
+        auth: Optional[Any] = None,
+        verify_ssl: Optional[bool] = True,
+        options: Dict[str, Any] = dict(),
     ):
         if url is None:
             url = get_url_aspen()
         if auth is None:
             auth = get_auth_aspen()
+
         super().__init__(
             datasource=datasource,
             url=url,
             auth=auth,
-            verifySSL=verifySSL,
+            verify_ssl=verify_ssl,
         )
         self._max_rows = options.get("max_rows", 100000)
         self._connection_string = ""  # Used for raw SQL queries
@@ -214,15 +220,14 @@ class AspenHandlerWeb(BaseHandlerWeb):
         self,
         tagname: str,
         mapname: Optional[str],
-        start_time: datetime,
-        stop_time: datetime,
+        start: datetime,
+        end: datetime,
         sample_time: Optional[timedelta],
         read_type: ReaderType,
         metadata: Any,
     ):
         # Maxpoints is used for Actual (raw) and Bestfit (shapepreserving).
         # Probably need to handle this in another way at some point
-        maxpoints = self._max_rows
         stepped = 0
         outsiders = 0
 
@@ -245,14 +250,14 @@ class AspenHandlerWeb(BaseHandlerWeb):
         }.get(read_type, -1)
 
         if read_type == ReaderType.SNAPSHOT:
-            if stop_time is not None:
+            if end is not None:
                 use_current = 0
-                end_time = int(stop_time.timestamp()) * 1000
+                end = int(end.timestamp()) * 1000
             else:
                 use_current = 1
-                end_time = 0
+                end = 0
 
-            query = f'<Q f="d" allQuotes="1" rt="{end_time}" uc="{use_current}">'
+            query = f'<Q f="d" allQuotes="1" rt="{end}" uc="{use_current}">'
         else:
             query = '<Q f="d" allQuotes="1">'
 
@@ -268,12 +273,12 @@ class AspenHandlerWeb(BaseHandlerWeb):
         else:
             query += (
                 "<HF>0</HF>"  # History format: 0=Raw, 1=RecordAsString
-                f"<St>{int(start_time.timestamp()) * 1000}</St>"
-                f"<Et>{int(stop_time.timestamp()) * 1000}</Et>"
+                f"<St>{int(start.timestamp()) * 1000}</St>"
+                f"<Et>{int(end.timestamp()) * 1000}</Et>"
                 f"<RT>{rt}</RT>"
             )
         if read_type in [ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
-            query += f"<X>{maxpoints}</X>"
+            query += f"<X>{self._max_rows}</X>"
         if read_type not in [ReaderType.INT, ReaderType.SNAPSHOT]:
             query += f"<O>{outsiders}</O>"
         if read_type not in [ReaderType.RAW]:
@@ -325,8 +330,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
         return False
 
     @staticmethod
-    def split_tagmap(tagmap) -> Tuple[Optional[str], ...]:
-        return tuple(tagmap.split(";") if ";" in tagmap else (tagmap, None))
+    def split_tagmap(tag_map) -> Tuple[Optional[str], ...]:
+        return tuple(tag_map.split(";") if ";" in tag_map else (tag_map, None))
 
     def generate_get_unit_query(self, tag: str):
         tagname, _ = self.split_tagmap(tag)
@@ -370,14 +375,16 @@ class AspenHandlerWeb(BaseHandlerWeb):
             return {}
 
         ret = {}
-        for item in data["data"]["tags"][0]["categories"][0]["ta"]:
-            ret[item["m"]] = True if item["d"] == "True" else False
+        categories = data["data"]["tags"][0]["categories"]
+        if len(categories) > 0:  # Support null case
+            for item in categories[0]["ta"]:
+                ret[item["m"]] = True if item["d"] == "True" else False
         return ret
 
     def _get_default_mapname(self, tagname: str):
         (tagname, _) = self.split_tagmap(tagname)
-        allmaps = self._get_maps(tagname)
-        for k, v in allmaps.items():
+        all_maps = self._get_maps(tagname)
+        for k, v in all_maps.items():
             if v:
                 return k
 
@@ -394,7 +401,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
             tag=tag, desc=desc, datasource=self.datasource
         )
         # Ensure space is encoded as "%20" instead of default "+" and leave asterisks
-        # unencoded. Otherwise searches for tags containing spaces break, as do wildcard
+        # unencoded. Otherwise, searches for tags containing spaces break, as do wildcard
         # searches.
         encoded_params = urllib.parse.urlencode(
             params, safe="*", quote_via=urllib.parse.quote
@@ -427,12 +434,12 @@ class AspenHandlerWeb(BaseHandlerWeb):
         url = urljoin(self.base_url, "TagInfo")
         data = self.fetch(url, params=query)
         try:
-            attrdata = data["data"]["tags"][0]["attrData"]
-        except Exception:
-            print(f"Error. I got this: {data}")
-            raise KeyError
+            attr_data = data["data"]["tags"][0]["attrData"]
+        except KeyError as e:
+            logger.error(f"Error. I got this: {data}")
+            raise e
         unit = ""
-        for a in attrdata:
+        for a in attr_data:
             if a["g"] == "Units":
                 unit = a["samples"][0]["v"]
                 break
@@ -462,15 +469,15 @@ class AspenHandlerWeb(BaseHandlerWeb):
         data = self.fetch(url, params=query)
         try:
             desc = data["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
-        except Exception:
+        except KeyError:
             desc = ""
         return desc
 
     def read_tag(
         self,
         tag: str,
-        start_time: Optional[datetime],
-        stop_time: Optional[datetime],
+        start: Optional[datetime],
+        end: Optional[datetime],
         sample_time: Optional[timedelta],
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
@@ -497,20 +504,20 @@ class AspenHandlerWeb(BaseHandlerWeb):
         # Actual and bestfit read types allow specifying maxpoints.
         # Aggregate reads limit to 10 000 points and issue a moredata-token.
         # TODO: May need to look into using this later - most likely more
-        # efficient than creating new query starting at previous stoptime.
+        # efficient than creating new query starting at previous end time.
         # Interpolated reads return error message if more than 100 000 points,
         # so we need to limit the range. Note -1 because INT normally includes
         # both start and end time.
         if read_type == ReaderType.INT:
-            stop_time = min(stop_time, start_time + sample_time * (self._max_rows - 1))
+            end = min(end, start + sample_time * (self._max_rows - 1))
 
-        tagname, mapname = self.split_tagmap(tag)
+        tag_name, map_name = self.split_tagmap(tag)
 
         params = self.generate_read_query(
-            tagname=tagname,
-            mapname=mapname,
-            start_time=start_time,
-            stop_time=stop_time,
+            tagname=tag_name,
+            mapname=map_name,
+            start=start,
+            end=end,
             sample_time=sample_time,
             read_type=read_type,
             metadata={},
@@ -540,7 +547,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 .rename(columns={"t": "Timestamp", "v": "Value"})
             )
 
-        # Ensure non-numericals like "1.#QNAN" are returned as NaN
+        # Ensure non-numerical like "1.#QNAN" are returned as NaN
         df["Value"] = pd.to_numeric(df.Value, errors="coerce")
 
         df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms", origin="unix")
@@ -556,18 +563,20 @@ class AspenHandlerWeb(BaseHandlerWeb):
         max_rows: int = 100000,
     ):
         if connection_string is not None:
-            connstr = f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">'
+            connection_string = (
+                f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">'
+            )
         else:
-            connstr = (
+            connection_string = (
                 f'<SQL t="SQLplus" ds="{datasource}" '
                 'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
                 f'm="{max_rows}" to="30" s="1">'
             )
 
-        connstr += f"<![CDATA[{query}]]></SQL>"
-        return connstr
+        connection_string += f"<![CDATA[{query}]]></SQL>"
+        return connection_string
 
-    def initialize_connectionstring(
+    def initialize_connection_string(
         self,
         host: Optional[str] = None,
         port: int = 10014,
@@ -613,7 +622,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         url: Optional[str],
         datasource: Optional[str],
         auth: Optional[Any],
-        verifySSL: bool,
+        verify_ssl: bool,
         options: Dict[str, Union[int, float, str]],
     ):
         self._max_rows = options.get("max_rows", 10000)
@@ -625,10 +634,10 @@ class PIHandlerWeb(BaseHandlerWeb):
             url=url,
             datasource=datasource,
             auth=auth,
-            verifySSL=verifySSL,
+            verify_ssl=verify_ssl,
         )
         self._max_rows = options.get("max_rows", 10000)
-        self.webidcache = BaseCache(directory=Path(".") / ".cache" / datasource)
+        self.web_id_cache = BaseCache(directory=Path(".") / ".cache" / datasource)
 
     @staticmethod
     def _time_to_UTC_string(time: datetime) -> str:
@@ -688,8 +697,8 @@ class PIHandlerWeb(BaseHandlerWeb):
     def generate_read_query(
         self,
         tag: str,
-        start_time: datetime,
-        stop_time: datetime,
+        start: datetime,
+        end: datetime,
         sample_time: timedelta,
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
@@ -705,7 +714,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         ]:
             raise NotImplementedError
 
-        webid = tag
+        web_id = tag
 
         seconds = 0
         if read_type != ReaderType.SNAPSHOT:
@@ -718,15 +727,15 @@ class PIHandlerWeb(BaseHandlerWeb):
             ReaderType.SHAPEPRESERVING: "plot",
         }.get(read_type, "summary")
 
-        url = f"streams/{webid}/{get_action}"
+        url = f"streams/{web_id}/{get_action}"
         params = {}
 
         if read_type != ReaderType.SNAPSHOT:
-            params["startTime"] = self._time_to_UTC_string(start_time)
-            params["endTime"] = self._time_to_UTC_string(stop_time)
+            params["startTime"] = self._time_to_UTC_string(start)
+            params["endTime"] = self._time_to_UTC_string(end)
             params["timeZone"] = "UTC"
-        elif read_type == ReaderType.SNAPSHOT and stop_time is not None:
-            params["time"] = self._time_to_UTC_string(stop_time)
+        elif read_type == ReaderType.SNAPSHOT and end is not None:
+            params["time"] = self._time_to_UTC_string(end)
             params["timeZone"] = "UTC"
 
         summary_type = {
@@ -801,7 +810,7 @@ class PIHandlerWeb(BaseHandlerWeb):
                 ret.append((item["Name"], description))
             next_start = int(data["Links"]["Next"].split("=")[-1])
             if int(data["Links"]["Last"].split("=")[-1]) >= next_start:
-                params["start"] = next_start
+                params["start"] = next_start  # noqa
             else:
                 done = True
         return ret
@@ -810,24 +819,24 @@ class PIHandlerWeb(BaseHandlerWeb):
         return {}  # FIXME
 
     def _get_tag_unit(self, tag: str) -> Optional[str]:
-        webid = self.tag_to_webid(tag)
-        if webid is None:
+        web_id = self.tag_to_web_id(tag)
+        if web_id is None:
             return None
-        url = urljoin(self.base_url, "points", webid)
+        url = urljoin(self.base_url, "points", web_id)
         data = self.fetch(url)
         unit = data["EngineeringUnits"]
         return unit
 
     def _get_tag_description(self, tag: str) -> Optional[str]:
-        webid = self.tag_to_webid(tag)
-        if webid is None:
+        web_id = self.tag_to_web_id(tag)
+        if web_id is None:
             return None
-        url = urljoin(self.base_url, "points", webid)
+        url = urljoin(self.base_url, "points", web_id)
         data = self.fetch(url)
         description = data["Descriptor"]
         return description
 
-    def tag_to_webid(self, tag: str) -> Optional[str]:
+    def tag_to_web_id(self, tag: str) -> Optional[str]:
         """Given a tag, returns the WebId.
 
         :param tag: The tag
@@ -836,7 +845,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         :return: WebId
         :rtype: str
         """
-        if tag not in self.webidcache:
+        if tag not in self.web_id_cache:
             params = self.generate_search_query(
                 tag=tag, datasource=self.datasource, desc=None
             )
@@ -860,9 +869,9 @@ class PIHandlerWeb(BaseHandlerWeb):
                 logger.warning(f"Tag {tag} not found")
                 return None
 
-            webid = data["Items"][0]["WebId"]
-            self.webidcache[tag] = webid
-        return self.webidcache[tag]
+            web_id = data["Items"][0]["WebId"]
+            self.web_id_cache[tag] = web_id
+        return self.web_id_cache[tag]
 
     @staticmethod
     def _is_summary(read_type: ReaderType) -> bool:
@@ -880,21 +889,21 @@ class PIHandlerWeb(BaseHandlerWeb):
     def read_tag(
         self,
         tag: str,
-        start_time: Optional[datetime],
-        stop_time: Optional[datetime],
+        start: Optional[datetime],
+        end: Optional[datetime],
         sample_time: timedelta,
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
         get_status: bool = False,
     ):
-        webid = self.tag_to_webid(tag)
-        if not webid:
+        web_id = self.tag_to_web_id(tag)
+        if not web_id:
             return pd.DataFrame()
 
         (url, params) = self.generate_read_query(
-            tag=webid,
-            start_time=start_time,
-            stop_time=stop_time,
+            tag=web_id,
+            start=start,
+            end=end,
             sample_time=sample_time,
             read_type=read_type,
             metadata={},
@@ -913,16 +922,16 @@ class PIHandlerWeb(BaseHandlerWeb):
         if df.empty:
             return df
 
-        # Summary data, digitalset or invalid data
+        # Summary data, digital-set or invalid data
         if "Value" not in df.columns:
-            # Either digitalset or invalid data. Set invalid to NaN
+            # Either digital-set or invalid data. Set invalid to NaN
             if "Value.Name" in df.columns:
                 df.loc[df["Value.Name"] == "No Data", "Value.Value"] = np.nan
             # Replaced below replacement test with above when adding get_status
             # since we should avoid getting Good when get_status == False
-            # Value.Name can also be the name of the digitalset, e.g. "Active"
+            # Value.Name can also be the name of the digital-set, e.g. "Active"
             # Alternative: df["Value.IsSystem"] == True since it seems to be False
-            # for digitalsets?
+            # for digital-sets?
             #    df.loc[df.Good == False, "Value.Value"] = np.nan
             df = df.rename(
                 columns={
@@ -937,6 +946,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         df = df.filter(["Timestamp", "Value", "Good", "Questionable", "Substituted"])
 
         try:
+            # Could call this here, to support mixed format, but have not checked performance
+            # df["Timestamp"] = pd.to_datetime(df["Timestamp"], format='ISO8601', utc=True)
             if read_type == ReaderType.RAW or read_type == ReaderType.SNAPSHOT:
                 # Sub-second timestamps are common
                 df["Timestamp"] = pd.to_datetime(
@@ -948,7 +959,13 @@ class PIHandlerWeb(BaseHandlerWeb):
                     df["Timestamp"], format="%Y-%m-%dT%H:%M:%SZ", utc=True
                 )
         except ValueError:
-            df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True)
+            try:
+                df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True)
+            except ValueError:
+                #  Handle when both second and sub-second data is returned
+                df["Timestamp"] = pd.to_datetime(
+                    df["Timestamp"], format="ISO8601", utc=True
+                )
 
         if read_type == ReaderType.VAR:
             df["Value"] = df["Value"] ** 2
@@ -960,7 +977,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         # Correct weird bug in PI Web API where MAX timestamps end of interval while
         # all the other summaries stamp start of interval by shifting all timestamps
         # one interval down.
-        if read_type == ReaderType.MAX and df.index[0] > start_time:
+        if read_type == ReaderType.MAX and df.index[0] > start:
             df.index = df.index - sample_time
 
         if get_status:

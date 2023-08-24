@@ -39,7 +39,7 @@ ASPEN_END_TIME = PI_END_TIME
 
 
 @pytest.fixture  # type: ignore[misc]
-def PIClientOdbc() -> Generator[IMSClient, None, None]:
+def pi_client_odbc() -> Generator[IMSClient, None, None]:
     c = IMSClient(datasource=PI_DS, imstype="pi")
     if os.path.exists(PI_DS + ".h5"):
         os.remove(PI_DS + ".h5")
@@ -51,7 +51,7 @@ def PIClientOdbc() -> Generator[IMSClient, None, None]:
 
 
 @pytest.fixture  # type: ignore[misc]
-def PIClientWeb() -> Generator[IMSClient, None, None]:
+def pi_client_web() -> Generator[IMSClient, None, None]:
     c = IMSClient(datasource=PI_DS, imstype="piwebapi", verifySSL=verifySSL)
     if os.path.exists(PI_DS + ".h5"):
         os.remove(PI_DS + ".h5")
@@ -63,7 +63,7 @@ def PIClientWeb() -> Generator[IMSClient, None, None]:
 
 
 @pytest.fixture  # type: ignore[misc]
-def AspenClientOdbc() -> Generator[IMSClient, None, None]:
+def aspen_client_odbc() -> Generator[IMSClient, None, None]:
     c = IMSClient(datasource=ASPEN_DS, imstype="ip21")
     if os.path.exists(ASPEN_DS + ".h5"):
         os.remove(ASPEN_DS + ".h5")
@@ -75,8 +75,12 @@ def AspenClientOdbc() -> Generator[IMSClient, None, None]:
 
 
 @pytest.fixture  # type: ignore[misc]
-def AspenClientWeb() -> Generator[IMSClient, None, None]:
-    c = IMSClient(datasource=ASPEN_DS, imstype="aspenone", verifySSL=bool(verifySSL))
+def aspen_client_web() -> Generator[IMSClient, None, None]:
+    c = IMSClient(
+        datasource=ASPEN_DS,
+        imstype="aspenone",
+        verifySSL=bool(verifySSL),
+    )
     if os.path.exists(ASPEN_DS + ".h5"):
         os.remove(ASPEN_DS + ".h5")
     c.cache = None  # type: ignore[assignment]
@@ -87,16 +91,16 @@ def AspenClientWeb() -> Generator[IMSClient, None, None]:
 
 
 def test_pi_odbc_web_same_values_int(
-    PIClientOdbc: IMSClient, PIClientWeb: IMSClient
+    pi_client_odbc: IMSClient, pi_client_web: IMSClient
 ) -> None:
-    df_odbc = PIClientOdbc.read(
+    df_odbc = pi_client_odbc.read(
         tags=PI_TAG,
         start_time=PI_START_TIME,
         end_time=PI_END_TIME,
         ts=TS,
         read_type=ReaderType.INT,
     )
-    df_web = PIClientWeb.read(
+    df_web = pi_client_web.read(
         tags=PI_TAG,
         start_time=PI_START_TIME,
         end_time=PI_END_TIME,
@@ -110,16 +114,16 @@ def test_pi_odbc_web_same_values_int(
 
 
 def test_pi_odbc_web_same_values_aggregated(
-    PIClientOdbc: IMSClient, PIClientWeb: IMSClient
+    pi_client_odbc: IMSClient, pi_client_web: IMSClient
 ) -> None:
-    df_odbc = PIClientOdbc.read(
+    df_odbc = pi_client_odbc.read(
         tags=PI_TAG,
         start_time=PI_START_TIME,
         end_time=PI_END_TIME,
         ts=TS,
         read_type=ReaderType.AVG,
     )
-    df_web = PIClientWeb.read(
+    df_web = pi_client_web.read(
         tags=PI_TAG,
         start_time=PI_START_TIME,
         end_time=PI_END_TIME,
@@ -133,15 +137,15 @@ def test_pi_odbc_web_same_values_aggregated(
 
 
 def test_aspen_odbc_web_same_values_raw(
-    AspenClientOdbc: IMSClient, AspenClientWeb: IMSClient
+    aspen_client_odbc: IMSClient, aspen_client_web: IMSClient
 ) -> None:
-    df_odbc = AspenClientOdbc.read(
+    df_odbc = aspen_client_odbc.read(
         tags=ASPEN_TAG,
         start_time=ASPEN_START_TIME,
         end_time=ASPEN_END_TIME,
         read_type=ReaderType.RAW,
     )
-    df_web = AspenClientWeb.read(
+    df_web = aspen_client_web.read(
         tags=ASPEN_TAG,
         start_time=ASPEN_START_TIME,
         end_time=ASPEN_END_TIME,
@@ -152,16 +156,16 @@ def test_aspen_odbc_web_same_values_raw(
 
 
 def test_aspen_odbc_web_same_values_int(
-    AspenClientOdbc: IMSClient, AspenClientWeb: IMSClient
+    aspen_client_odbc: IMSClient, aspen_client_web: IMSClient
 ) -> None:
-    df_odbc = AspenClientOdbc.read(
+    df_odbc = aspen_client_odbc.read(
         tags=ASPEN_TAG,
         start_time=ASPEN_START_TIME,
         end_time=ASPEN_END_TIME,
         ts=TS,
         read_type=ReaderType.INT,
     )
-    df_web = AspenClientWeb.read(
+    df_web = aspen_client_web.read(
         tags=ASPEN_TAG,
         start_time=ASPEN_START_TIME,
         end_time=ASPEN_END_TIME,
@@ -173,16 +177,16 @@ def test_aspen_odbc_web_same_values_int(
 
 
 def test_aspen_odbc_web_same_values_aggregated(
-    AspenClientOdbc: IMSClient, AspenClientWeb: IMSClient
+    aspen_client_odbc: IMSClient, aspen_client_web: IMSClient
 ) -> None:
-    df_odbc = AspenClientOdbc.read(
+    df_odbc = aspen_client_odbc.read(
         tags=ASPEN_TAG,
         start_time=ASPEN_START_TIME,
         end_time=ASPEN_END_TIME,
         ts=TS,
         read_type=ReaderType.AVG,
     )
-    df_web = AspenClientWeb.read(
+    df_web = aspen_client_web.read(
         tags=ASPEN_TAG,
         start_time=ASPEN_START_TIME,
         end_time=ASPEN_END_TIME,
@@ -193,9 +197,9 @@ def test_aspen_odbc_web_same_values_aggregated(
     pd.testing.assert_frame_equal(df_odbc, df_web)
 
 
-def test_concat_proper_fill_up(PIClientWeb: IMSClient) -> None:
-    max_rows_backup = PIClientWeb.handler._max_rows
-    df_int = PIClientWeb.read(
+def test_concat_proper_fill_up(pi_client_web: IMSClient) -> None:
+    max_rows_backup = pi_client_web.handler._max_rows
+    df_int = pi_client_web.read(
         tags=PI_TAG,
         start_time=PI_START_TIME,
         end_time=PI_END_TIME,
@@ -203,7 +207,7 @@ def test_concat_proper_fill_up(PIClientWeb: IMSClient) -> None:
         read_type=ReaderType.INT,
     )
     assert len(df_int) == 16
-    df_avg = PIClientWeb.read(
+    df_avg = pi_client_web.read(
         tags=PI_TAG,
         start_time=PI_START_TIME,
         end_time=PI_END_TIME,
@@ -212,8 +216,8 @@ def test_concat_proper_fill_up(PIClientWeb: IMSClient) -> None:
     )
     assert len(df_avg) == 15
 
-    PIClientWeb.handler._max_rows = 5
-    df_int_concat = PIClientWeb.read(
+    pi_client_web.handler._max_rows = 5
+    df_int_concat = pi_client_web.read(
         tags=PI_TAG,
         start_time=PI_START_TIME,
         end_time=PI_END_TIME,
@@ -221,7 +225,7 @@ def test_concat_proper_fill_up(PIClientWeb: IMSClient) -> None:
         read_type=ReaderType.INT,
     )
     assert len(df_int_concat) == 16
-    df_avg_concat = PIClientWeb.read(
+    df_avg_concat = pi_client_web.read(
         tags=PI_TAG,
         start_time=PI_START_TIME,
         end_time=PI_END_TIME,
@@ -231,19 +235,21 @@ def test_concat_proper_fill_up(PIClientWeb: IMSClient) -> None:
     assert len(df_avg_concat) == 15
     pd.testing.assert_frame_equal(df_int, df_int_concat)
     pd.testing.assert_frame_equal(df_avg, df_avg_concat)
-    PIClientWeb.handler._max_rows = max_rows_backup
+    pi_client_web.handler._max_rows = max_rows_backup
 
 
-def test_cache_proper_fill_up(PIClientWeb: IMSClient, tmp_path: Path) -> None:
-    PIClientWeb.cache = SmartCache(directory=tmp_path)
-    df_int_1 = PIClientWeb.read(
+def test_cache_proper_fill_up(
+    pi_client_web: IMSClient, tmp_path: Path, get_status: bool = False
+) -> None:
+    pi_client_web.cache = SmartCache(directory=tmp_path)
+    df_int_1 = pi_client_web.read(
         tags=PI_TAG,
         start_time=PI_START_TIME,
         end_time=PI_END_TIME,
         ts=TS,
         read_type=ReaderType.INT,
     )
-    df_int_2 = PIClientWeb.read(
+    df_int_2 = pi_client_web.read(
         tags=PI_TAG,
         start_time=PI_START_TIME_2,
         end_time=PI_END_TIME_2,
@@ -252,11 +258,12 @@ def test_cache_proper_fill_up(PIClientWeb: IMSClient, tmp_path: Path) -> None:
     )
     assert len(df_int_1) == 16
     assert len(df_int_2) == 16
-    df_cached = PIClientWeb.cache.fetch(  # type: ignore[call-arg]
+    df_cached = pi_client_web.cache.fetch(  # type: ignore[call-arg]
         tagname=PI_TAG,
-        readtype=ReaderType.INT,
+        read_type=ReaderType.INT,
         ts=TS,
-        start_time=ensure_datetime_with_tz(PI_START_TIME),
-        stop_time=ensure_datetime_with_tz(PI_END_TIME_2),
+        start=ensure_datetime_with_tz(PI_START_TIME),
+        end=ensure_datetime_with_tz(PI_END_TIME_2),
+        get_status=get_status,
     )
     assert len(df_cached) == 32
