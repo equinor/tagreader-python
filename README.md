@@ -19,8 +19,6 @@ AspenTech and OSIsoft that are only available for Windows.
 Trend data is output as Pandas Dataframes. The HDF5 file format is used
 to cache results.
 
-You can view the full documentation at [https://equinor.github.io/tagreader-python/]
-
 ## Requirements
 
 Python >=3.8 with the following packages:
@@ -71,7 +69,7 @@ pip install tagreader[notebooks]
 ## Documentation
 
 There is a [quickstart](examples/quickstart.ipynb) example file that should get
-you going. Also check out the [manual](docs/manual.md) for more information.
+you going. Also check out the [full documentation](https://equinor.github.io/tagreader-python/) for more information.
 
 ## Contributing
 
