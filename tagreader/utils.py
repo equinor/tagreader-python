@@ -75,7 +75,7 @@ def convert_to_pydatetime(date_stamp: Union[datetime, str, pd.Timestamp]) -> dat
         return date_stamp.to_pydatetime()
     else:
         try:
-            return pd.to_datetime(date_stamp).to_pydatetime()
+            return pd.to_datetime(str(date_stamp), format="ISO8601").to_pydatetime()
         except ValueError:
             return pd.to_datetime(str(date_stamp), dayfirst=True).to_pydatetime()
 
