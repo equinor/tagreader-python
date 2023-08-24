@@ -78,34 +78,22 @@ def test_init_client_with_datasource() -> None:
     client. This will change to no cache by default in version 5.
     """
     client = IMSClient(
-        "TRB", "aspenone", tz="US/Eastern"
-    )  # IMSClient(servername="TRB", servertype="aspenone")
-
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Eastern"
+    )
     print(client.tz)
     assert client.tz == pytz.timezone("US/Eastern")
-
     client = IMSClient(
-        "TRB", "aspenone", tz="Europe/Oslo"
-    )  # IMSClient(servername="TRB", servertype="aspenone")
-    print(client.tz)
-    assert client.tz == pytz.timezone("Europe/Oslo")
-
-    client = IMSClient(
-        "TRB", "aspenone", tz="US/Central"
-    )  # IMSClient(servername="TRB", servertype="aspenone")
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Central"
+    )
     print(client.tz)
     assert client.tz == pytz.timezone("US/Central")
-
-    client = IMSClient(
-        "TRB", "aspenone"
-    )  # IMSClient(servername="TRB", servertype="aspenone")
+    client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
     print(client.tz)
     assert client.tz == pytz.timezone("Europe/Oslo")
-
     with pytest.raises(ValueError):
         _ = IMSClient(
-            "TRB", "aspenone", tz="WRONGVALUE"
-        )  # IMSClient(servername="TRB", servertype="aspenone")
+            datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="WRONGVALUE"
+        )
 
 
 def test_get_next_timeslice() -> None:
