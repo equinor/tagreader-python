@@ -13,7 +13,7 @@ async function createConfig() {
     title: 'Tagreader',
     tagline: 'Tagreader.',
     url: 'https://awt.app.radix.equinor.com/',
-    baseUrl: '/',
+    baseUrl: '/tagreader-python/',
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
     favicon: 'img/favicon.png',
