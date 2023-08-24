@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, tzinfo
 
 import pandas as pd
 import pytest
+import pytz
 
 from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
@@ -26,6 +27,71 @@ def test_init_client_without_cache() -> None:
     assert isinstance(client.cache, SmartCache)
     assert isinstance(client.tz, tzinfo)
     assert isinstance(client.handler, PIHandlerWeb)  # Based on IMSType.PIWEBAPI
+
+
+def test_init_client_with_tzinfo() -> None:
+    """
+    Currently testing valid timezone
+    """
+    client = IMSClient(
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Eastern"
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("US/Eastern")
+
+    client = IMSClient(
+        datasource="mock",
+        imstype=IMSType.PIWEBAPI,
+        cache=None,
+        tz=pytz.timezone("US/Eastern"),
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("US/Eastern")
+
+    client = IMSClient(
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="Europe/Oslo"
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("Europe/Oslo")
+
+    client = IMSClient(
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Central"
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("US/Central")
+
+    client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
+    print(client.tz)
+    assert client.tz == pytz.timezone("Europe/Oslo")
+
+    with pytest.raises(ValueError):
+        _ = IMSClient(
+            datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="WRONGVALUE"
+        )
+
+
+def test_init_client_with_datasource() -> None:
+    """
+    Currently we initialize SmartCache by default, and the user is not able to specify no-cache when creating the
+    client. This will change to no cache by default in version 5.
+    """
+    client = IMSClient(
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Eastern"
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("US/Eastern")
+    client = IMSClient(
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Central"
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("US/Central")
+    client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
+    print(client.tz)
+    assert client.tz == pytz.timezone("Europe/Oslo")
+    with pytest.raises(ValueError):
+        _ = IMSClient(
+            datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="WRONGVALUE"
+        )
 
 
 def test_get_next_timeslice() -> None:

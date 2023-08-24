@@ -2,7 +2,7 @@ import enum
 import logging
 import platform
 import warnings
-from datetime import datetime
+from datetime import datetime, tzinfo
 from enum import Enum
 from typing import Union
 
@@ -82,7 +82,7 @@ def convert_to_pydatetime(date_stamp: Union[datetime, str, pd.Timestamp]) -> dat
 
 def ensure_datetime_with_tz(
     date_stamp: Union[datetime, str, pd.Timestamp],
-    tz: pytz.timezone = pytz.timezone("Europe/Oslo"),
+    tz: tzinfo = pytz.timezone("Europe/Oslo"),
 ) -> datetime:
     date_stamp = convert_to_pydatetime(date_stamp)
 

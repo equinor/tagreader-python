@@ -31,7 +31,8 @@ classifiers=[
 python = "^3.8"
 pandas = ">=1"
 pyodbc = "^4"
-certifi = "^2023"
+cryptography = "^41.0.3"
+certifi = "^2023.7.22"
 requests = "^2"
 requests-kerberos = "^0"
 jupyter = { version = "^1", optional = true }
