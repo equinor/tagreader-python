@@ -44,7 +44,7 @@ async function createConfig() {
           docs: {
             sidebarPath: require.resolve('./sidebars.js'),
             editUrl:
-              'https://github.com/equinor/awt/tree/main/documentation/',
+              'https://github.com/equinor/tagreader-python/tree/main/documentation/',
               remarkPlugins: [mdxMermaid.default, simplePlantUML, math],
               rehypePlugins: [katex],
           },
@@ -78,15 +78,8 @@ async function createConfig() {
               position: 'left',
               label: 'Contribute',
             },
-              /*
             {
-              href: 'https://awt.app.radix.equinor.com',
-              label: 'Demo',
-              position: 'right',
-            },
-              */
-            {
-              href: 'https://github.com/equinor/awt',
+              href: 'https://github.com/equinor/tagreader-python',
               label: 'GitHub',
               position: 'right',
             },

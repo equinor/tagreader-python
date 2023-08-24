@@ -13,42 +13,42 @@ import tagreader
 
 ## The Client
 
-The client presents the interface for communicating with the data source to the user. The interface shall be as unified 
-as possible, regardless of the IMS type that is used. A handler object specifically designed for each IMS type is 
-attached to the client when the client is created. The handler is responsible for handling the communication and data 
+The client presents the interface for communicating with the data source to the user. The interface shall be as unified
+as possible, regardless of the IMS type that is used. A handler object specifically designed for each IMS type is
+attached to the client when the client is created. The handler is responsible for handling the communication and data
 interpretation between the server and the client object.
 
 ## Creating a client
 
-A connection to a data source is prepared by creating an instance of `tagreader.IMSClient` with the following input 
+A connection to a data source is prepared by creating an instance of `tagreader.IMSClient` with the following input
 arguments:
 
 * `datasource` : Name of data source
-* `imstype` : The name of the [IMS type](/docs/about/usage/data-source) to query. Indicates the type of data source 
-that is requested, and therefore determines which handler type to use. Valid values are 
+* `imstype` : The name of the [IMS type](/docs/about/usage/data-source) to query. Indicates the type of data source
+that is requested, and therefore determines which handler type to use. Valid values are
 `pi` , `ip21` , `piwebapi` and `aspenone`.
 
-  Note that ODBC connections require that [pyodbc](https://pypi.org/project/pyodbc/) is installed, while REST API 
+  Note that ODBC connections require that [pyodbc](https://pypi.org/project/pyodbc/) is installed, while REST API
 connections require the [requests](https://requests.readthedocs.io/en/master/) module.
 
-* `tz` (optional): Time zone naive time stamps will be interpreted as belonging to this time zone. Similarly, 
+* `tz` (optional): Time zone naive time stamps will be interpreted as belonging to this time zone. Similarly,
 the returned data points will be localized to this time zone. **Default**: _"Europe/Oslo"_.
 
-The following input arguments can be used when connecting to either `piwebapi` or to `aspenone`. None of these 
+The following input arguments can be used when connecting to either `piwebapi` or to `aspenone`. None of these
 should be necessary to supply when connecting to Equinor servers.
 
-* `url` (optional): Path to server root, e.g. _"https://aspenone/ProcessData/AtProcessDataREST.dll"_ 
+* `url` (optional): Path to server root, e.g. _"https://aspenone/ProcessData/AtProcessDataREST.dll"_
 or _"https://piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype`.
 * `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
-* `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object 
+* `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object
 that works with Equinor servers.
 
-If `imstype` is an ODBC type, i.e. `pi` or `ip21`, the host and port to connect to will by default be found by 
-performing a search in Windows registry. For some systems this may not work. In those cases the user can explicitly 
+If `imstype` is an ODBC type, i.e. `pi` or `ip21`, the host and port to connect to will by default be found by
+performing a search in Windows registry. For some systems this may not work. In those cases the user can explicitly
 specify the following optional parameters:
 
 * `host` (optional): Overrides mapping of datasource to hostname via Windows registry.
-* `port` (optional): Overrides mapping of datasource to port number via Windows registry. **Default**: 10014 for 
+* `port` (optional): Overrides mapping of datasource to port number via Windows registry. **Default**: 10014 for
 * `ip21` and 5450 for `pi`.
 
 ## Connecting to data source
@@ -64,7 +64,7 @@ c = tagreader.IMSClient("PINO", "pi")
 c.connect()
 ```
 
-Connecting to the Peregrino IP.21 data source using AspenTech Process Data REST Web API, specifying that all naive time 
+Connecting to the Peregrino IP.21 data source using AspenTech Process Data REST Web API, specifying that all naive time
 stamps as well as the returned data shall use Rio local time, and using the local endpoint in Brazil:
 
 ``` python
@@ -75,7 +75,7 @@ c = tagreader.IMSClient(datasource="PER",
 c.connect()
 ```
 
-Connecting to some other AspenTech Web API URL using NTLM authentication instead of default Kerberos and ignoring the 
+Connecting to some other AspenTech Web API URL using NTLM authentication instead of default Kerberos and ignoring the
 server's host certificate:
 
 ``` python
@@ -126,11 +126,11 @@ Data is read by calling the client method `read()` with the following input argu
 * `start_time` : Start of time period.
 * `end_time` : End of time period.
 
-  Both `start_time` and `end_time` can be either datetime object or string. Strings are interpreted by the 
-* [Timestamp](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.html) method from Pandas. 
+  Both `start_time` and `end_time` can be either datetime object or string. Strings are interpreted by the
+* [Timestamp](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.html) method from Pandas.
 Both timestamps can be left out when `read_type = ReaderType.SNAPSHOT` . However, when using either of the Web APIs, `end_time` provides the time at which the snapshot is taken.
 
-* `ts` : The interval between samples when querying interpolated or aggregated data. Ignored and can be left out when 
+* `ts` : The interval between samples when querying interpolated or aggregated data. Ignored and can be left out when
 `read_type = ReaderType.SNAPSHOT` . **Default** 60 seconds.
 * `read_type` (optional): What kind of data to read. More info immediately below. **Default** Interpolated.
 * `get_status` (optonal): When set to `True` will fetch status information in addition to values. **Default** `False`.
@@ -138,14 +138,14 @@ Both timestamps can be left out when `read_type = ReaderType.SNAPSHOT` . However
 ## Selecting what to read
 
 By specifying the optional parameter `read_type` to `read()` , it is possible to specify what kind of data should be
-returned. The default query method is interpolated. All valid values for `read_type` are defined in the 
-`utils.ReaderType` class (mirrored for convenience as `tagreader.ReaderType` ), although not all are currently 
+returned. The default query method is interpolated. All valid values for `read_type` are defined in the
+`utils.ReaderType` class (mirrored for convenience as `tagreader.ReaderType` ), although not all are currently
 implemented. Below is the list of implemented read types.
 
-* `INT` : The raw data points are interpolated so that one new data point is generated at each step of length `ts` 
+* `INT` : The raw data points are interpolated so that one new data point is generated at each step of length `ts`
 * starting at `start_time` and ending at or less than `ts` seconds before `end_time` .
-* The following aggregated read types perform a weighted calculation of the raw data within each interval. 
-Where relevant, time-weighted calculations are used. Returned time stamps are anchored at the beginning of each 
+* The following aggregated read types perform a weighted calculation of the raw data within each interval.
+Where relevant, time-weighted calculations are used. Returned time stamps are anchored at the beginning of each
 interval. So for the 60 seconds long interval between 08:11:00 and 08:12:00, the time stamp will be 08:11:00.
   + `MIN` : The minimum value.
   + `MAX` : The maximum value.
@@ -154,7 +154,7 @@ interval. So for the 60 seconds long interval between 08:11:00 and 08:12:00, the
   + `STD` : The standard deviation.
   + `RNG` : The range (max-min).
 * `RAW` : Returns actual data points stored in the database.
-* `SNAPSHOT` : Returns the last recorded value. Only one tag can be read at a time. When using either of the Web API 
+* `SNAPSHOT` : Returns the last recorded value. Only one tag can be read at a time. When using either of the Web API
 based handlers, providing `end_time` is possible in which case a snapshot at the specific time is returned.
 
 **Examples**
@@ -176,8 +176,8 @@ df = c.read(['BA:CONC.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180, read
 
 ## Status information
 
-The optional parameter `get_status` was added to `IMSClient.read()` in release 2.6.0. If set to `True`, the resulting 
-dataframe will be expanded with one additional column per tag. The column contains integer numbers that indicate the 
+The optional parameter `get_status` was added to `IMSClient.read()` in release 2.6.0. If set to `True`, the resulting
+dataframe will be expanded with one additional column per tag. The column contains integer numbers that indicate the
 status, or quality, of the returned values.
 
 In an effort to unify the status value for all IMS types, the following schema based on AspenTech was selected:
@@ -193,13 +193,13 @@ The status value is obtained differently for the four IMS types:
 * Aspen Web API: Read directly from the `l` ("Level") field in the json output.
 * Aspen ODBC: Read directly from the `status` field in the table.
 * PI Web API: Calculated as `Questionable` + 2 * (1 - `Good`) + 4 * `Substituted`.
-* PI ODBC: Calculated as `questionable` + 2 * (`status` != 0) + 4 * `substituted`. `status` is 0 for good, positive or 
+* PI ODBC: Calculated as `questionable` + 2 * (`status` != 0) + 4 * `substituted`. `status` is 0 for good, positive or
 negative for various reasons for being bad.
 
-For the two PI IMS types, it is assumed that `Questionable` is never `True` if `Good` is `False` or `status != 0`. 
+For the two PI IMS types, it is assumed that `Questionable` is never `True` if `Good` is `False` or `status != 0`.
 This may be an incorrect assumption with resulting erroneous status value.
 
-In summary, here is the resulting status value from tagreader for different combinations of status field values from 
+In summary, here is the resulting status value from tagreader for different combinations of status field values from
 the IMS types:
 
 | tagreader | Aspen Web API | Aspen ODBC | PI Web API                                                        | PI ODBC                                                          |
@@ -212,6 +212,6 @@ the IMS types:
 |     6     |     l = 6     | status = 6 | Good = False<br /> Questionable = False<br /> Substituted = True  | status != 0<br /> questionable = False<br /> substituted = True  |
 
 Please keep in mind when using `get_status`:
-* This is an experimental feature. It may work as intended, or it may result in erroneous status values in some cases. 
+* This is an experimental feature. It may work as intended, or it may result in erroneous status values in some cases.
 If that happens, please create an issue.
 * Both how fetching status is activated and how it is returned may be changed at a later time.

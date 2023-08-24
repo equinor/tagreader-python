@@ -19,7 +19,7 @@ Python >=3.8 with the following packages:
 * pyodbc (If using ODBC connection)
 
 :::info  ODBC Connection
-If using ODBC connections, you must also install proprietary drivers for PI ODBC and/or Aspen IP.21 SQLPlus. These 
+If using ODBC connections, you must also install proprietary drivers for PI ODBC and/or Aspen IP.21 SQLPlus. These
 drivers are only available for Microsoft Windows. Pyodbc will therefore not be installed for non-Windows systems.
 :::
 
