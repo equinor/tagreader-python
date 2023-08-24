@@ -35,7 +35,7 @@ def test_init_client_with_tzinfo() -> None:
     """
     client = IMSClient(
         datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Eastern"
-    )  # IMSClient(servername="TRB", servertype="aspenone")
+    )
     print(client.tz)
     assert client.tz == pytz.timezone("US/Eastern")
 
@@ -50,26 +50,26 @@ def test_init_client_with_tzinfo() -> None:
 
     client = IMSClient(
         datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="Europe/Oslo"
-    )  # IMSClient(servername="TRB", servertype="aspenone")
+    )
     print(client.tz)
     assert client.tz == pytz.timezone("Europe/Oslo")
 
     client = IMSClient(
         datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Central"
-    )  # IMSClient(servername="TRB", servertype="aspenone")
+    )
     print(client.tz)
     assert client.tz == pytz.timezone("US/Central")
 
     client = IMSClient(
         datasource="mock", imstype=IMSType.PIWEBAPI, cache=None
-    )  # IMSClient(servername="TRB", servertype="aspenone")
+    )
     print(client.tz)
     assert client.tz == pytz.timezone("Europe/Oslo")
 
     with pytest.raises(ValueError):
         _ = IMSClient(
             datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="WRONGVALUE"
-        )  # IMSClient(servername="TRB", servertype="aspenone")
+        )
 
 
 def test_init_client_with_datasource() -> None:
