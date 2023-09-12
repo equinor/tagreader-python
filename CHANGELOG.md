@@ -2,6 +2,40 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.3.0](https://github.com/equinor/tagreader-python/compare/v4.2.5...v4.3.0) (2023-09-12)
+
+
+### 📦 Build system
+
+* **deps:** bump poetry.lock ([2fc96ff](https://github.com/equinor/tagreader-python/commit/2fc96ff741cd182caf0c01ab3ebc974c473135c1))
+* **deps:** swap notebooks package and update deps ([#257](https://github.com/equinor/tagreader-python/issues/257)) ([5207763](https://github.com/equinor/tagreader-python/commit/52077633bbf324fa729fdcce384c33b5ee009f40))
+
+
+### 🧹 Chores
+
+* change baseURL in docs ([f9af801](https://github.com/equinor/tagreader-python/commit/f9af801f44634dc0d3a2e7e60616f7dec6c4b87c))
+* **deps:** bump actions/checkout from 3 to 4 ([#256](https://github.com/equinor/tagreader-python/issues/256)) ([1ea0c42](https://github.com/equinor/tagreader-python/commit/1ea0c426a6e5feec735fcb0810c0e5732572b221))
+* update pre-commit mypy ([cc4f584](https://github.com/equinor/tagreader-python/commit/cc4f584b411f80f5e3c4b98f003edc82d80cc696))
+
+
+### 📚 Documentation
+
+* add docusaurus documentation ([92cd4ce](https://github.com/equinor/tagreader-python/commit/92cd4ce6c59c6c2cc5ee382a150013fa2976d785))
+* fix broken links ([205bf21](https://github.com/equinor/tagreader-python/commit/205bf21cff2f1878e11a66153bb7e585c54d889f))
+* update example jupyter notebook ([#251](https://github.com/equinor/tagreader-python/issues/251)) ([e7035e0](https://github.com/equinor/tagreader-python/commit/e7035e01b19ad071b973fa8cd18f84530368be2e))
+
+
+### ✨ Features
+
+* allow passing settings to cache ([196719c](https://github.com/equinor/tagreader-python/commit/196719ca3cd4aab4c0d60591c98d921d5550b339))
+* allow timedelta passed as float ([#260](https://github.com/equinor/tagreader-python/issues/260)) ([96ff0a1](https://github.com/equinor/tagreader-python/commit/96ff0a1607d8d00f0f1eebd3f2218ef2507b39fb)), closes [#259](https://github.com/equinor/tagreader-python/issues/259)
+
+
+### 🐛 Bug Fixes
+
+* AttributeError: 'str' object has no attribute 'localize' with c.read() ([#250](https://github.com/equinor/tagreader-python/issues/250)) ([3cd2678](https://github.com/equinor/tagreader-python/commit/3cd267826c506a09112dd4845f6e25df08e988cf))
+* web_handlers add default optional parameters ([#248](https://github.com/equinor/tagreader-python/issues/248)) ([f40007a](https://github.com/equinor/tagreader-python/commit/f40007a2f4c9a8b759b82b70b3a3460fb294a97c))
+
 ## [4.2.5](https://github.com/equinor/tagreader-python/compare/v4.2.4...v4.2.5) (2023-07-12)
 
 
