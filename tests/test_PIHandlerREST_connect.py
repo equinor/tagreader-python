@@ -143,13 +143,13 @@ def test_read(client: IMSClient, read_type: str, size: int) -> None:
     if read_type not in ["SNAPSHOT", "RAW"]:
         assert df.shape == (size, 1)
         assert df.index[0] == ensure_datetime_with_tz(START_TIME)
-        assert df.index[-1] == df.index[0] + (size - 1) * timedelta(seconds=SAMPLE_TIME)
+        assert df.index[-1] == df.index[0] + (size - 1) * timedelta(seconds=SAMPLE_TIME)  # type: ignore[operator]
     elif read_type in "RAW":
         # Weirdness for test-tag which can have two different results,
         # apparently depending on the day of the week, mood, lunar cycle...
         assert df.shape == (size, 1) or df.shape == (size - 1, 1)
-        assert df.index[0] >= ensure_datetime_with_tz(START_TIME)
-        assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
+        assert df.index[0] >= ensure_datetime_with_tz(START_TIME)  # type: ignore[operator]
+        assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)  # type: ignore[operator]
 
 
 def test_read_with_status(client: IMSClient) -> None:

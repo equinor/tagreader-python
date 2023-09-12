@@ -118,10 +118,10 @@ def test_read(client: IMSClient, read_type: str, size: int) -> None:
     assert df.shape == (size, 1)
     if read_type not in ["SNAPSHOT", "RAW"]:
         assert df.index[0] == ensure_datetime_with_tz(START_TIME)
-        assert df.index[-1] == df.index[0] + (size - 1) * SAMPLE_TIME
+        assert df.index[-1] == df.index[0] + (size - 1) * SAMPLE_TIME  # type: ignore[operator]
     elif read_type in "RAW":
-        assert df.index[0] >= ensure_datetime_with_tz(START_TIME)
-        assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
+        assert df.index[0] >= ensure_datetime_with_tz(START_TIME)  # type: ignore[operator]
+        assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)  # type: ignore[operator]
 
 
 def test_read_with_status(client: IMSClient) -> None:
