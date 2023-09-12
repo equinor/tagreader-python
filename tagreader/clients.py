@@ -605,8 +605,8 @@ class IMSClient:
 
         if isinstance(ts, pd.Timedelta):
             ts = ts.to_pytimedelta()
-        elif isinstance(ts, int):
-            ts = timedelta(seconds=ts)
+        elif isinstance(ts, (int, float)):
+            ts = timedelta(seconds=int(ts))
         elif not isinstance(ts, timedelta):
             raise ValueError(
                 "ts needs to be either a None, timedelta or and integer (number of seconds)."
