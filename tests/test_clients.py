@@ -16,14 +16,8 @@ is_CI = is_GITHUB_ACTION or is_AZURE_PIPELINE
 
 
 def test_init_client_without_cache() -> None:
-    """
-    Currently we initialize SmartCache by default, and the user is not able to specify no-cache when creating the
-    client. This will change to no cache by default in version 5.
-    """
     client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
-    assert isinstance(client.cache, SmartCache)
-    assert isinstance(client.tz, tzinfo)
-    assert isinstance(client.handler, PIHandlerWeb)  # Based on IMSType.PIWEBAPI
+    assert not client.cache
 
 
 def test_init_client_with_tzinfo() -> None:

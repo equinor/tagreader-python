@@ -281,15 +281,7 @@ class IMSClient:
             verifySSL=verifySSL,
             auth=auth,
         )
-        if cache:
-            self.cache = cache
-        else:
-            self.cache = SmartCache(directory=Path(".") / ".cache" / datasource)
-            warnings.warn(
-                "Caching will no longer be the default behavior in Tagreader version 5."
-                " Please specify cache argument to keep current behaviour.",
-                FutureWarning,
-            )
+        self.cache = cache
 
     def connect(self) -> None:
         self.handler.connect()
