@@ -2,6 +2,13 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [4.3.1](https://github.com/equinor/tagreader-python/compare/v4.3.0...v4.3.1) (2023-09-13)
+
+
+### 🧹 Chores
+
+* add deprecation warning for ODBC based clients. Will be removed in next release ([0a6fd88](https://github.com/equinor/tagreader-python/commit/0a6fd8817d0a34febf078e5658858a1371c13bbe))
+
 ## [4.3.0](https://github.com/equinor/tagreader-python/compare/v4.2.5...v4.3.0) (2023-09-12)
 
 
