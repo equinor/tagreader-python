@@ -38,7 +38,7 @@ def client() -> Generator[IMSClient, None, None]:
         imstype="aspenone",
         verifySSL=bool(VERIFY_SSL),
     )
-    c.cache = None  # type: ignore[assignment]
+    c.cache = None
     c.connect()
     yield c
     if os.path.exists(SOURCE + ".h5"):

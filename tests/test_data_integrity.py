@@ -43,7 +43,7 @@ def pi_client_odbc() -> Generator[IMSClient, None, None]:
     c = IMSClient(datasource=PI_DS, imstype="pi")
     if os.path.exists(PI_DS + ".h5"):
         os.remove(PI_DS + ".h5")
-    c.cache = None  # type: ignore[assignment]
+    c.cache = None
     c.connect()
     yield c
     if os.path.exists(PI_DS + ".h5"):
@@ -55,7 +55,7 @@ def pi_client_web() -> Generator[IMSClient, None, None]:
     c = IMSClient(datasource=PI_DS, imstype="piwebapi", verifySSL=verifySSL)
     if os.path.exists(PI_DS + ".h5"):
         os.remove(PI_DS + ".h5")
-    c.cache = None  # type: ignore[assignment]
+    c.cache = None
     c.connect()
     yield c
     if os.path.exists(PI_DS + ".h5"):
@@ -67,7 +67,7 @@ def aspen_client_odbc() -> Generator[IMSClient, None, None]:
     c = IMSClient(datasource=ASPEN_DS, imstype="ip21")
     if os.path.exists(ASPEN_DS + ".h5"):
         os.remove(ASPEN_DS + ".h5")
-    c.cache = None  # type: ignore[assignment]
+    c.cache = None
     c.connect()
     yield c
     if os.path.exists(ASPEN_DS + ".h5"):
@@ -83,7 +83,7 @@ def aspen_client_web() -> Generator[IMSClient, None, None]:
     )
     if os.path.exists(ASPEN_DS + ".h5"):
         os.remove(ASPEN_DS + ".h5")
-    c.cache = None  # type: ignore[assignment]
+    c.cache = None
     c.connect()
     yield c
     if os.path.exists(ASPEN_DS + ".h5"):

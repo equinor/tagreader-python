@@ -37,7 +37,7 @@ def client() -> Generator[IMSClient, None, None]:
         imstype="piwebapi",
         verifySSL=bool(verifySSL),
     )
-    c.cache = None  # type: ignore[assignment]
+    c.cache = None
     c.connect()
     c.handler._max_rows = 1000  # For the long raw test
     yield c
