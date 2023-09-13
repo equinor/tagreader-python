@@ -257,6 +257,10 @@ def get_handler(
                 "ODBC drivers not available for non-Windows environments. "
                 "Try Web API ('aspenone') instead."
             )
+        warnings.warn(
+            "ODBC based clients for ASPEN i deprecated and will be removed in the next release",
+            DeprecationWarning,
+        )
         if "AspenTech SQLplus" not in pyodbc.drivers():
             raise RuntimeError(
                 "No Aspen SQLplus ODBC driver detected. "
