@@ -30,16 +30,6 @@ from tagreader.web_handlers import (
     list_piwebapi_sources,
 )
 
-if is_windows():
-    import pyodbc
-
-    from tagreader.odbc_handlers import (
-        AspenHandlerODBC,
-        PIHandlerODBC,
-        list_aspen_sources,
-        list_pi_sources,
-    )
-
 NONE_START_TIME = datetime(1970, 1, 1, tzinfo=pytz.UTC)
 
 
@@ -58,15 +48,8 @@ def list_sources(
                 f" We suggest to use the tagreader.IMSType enumerator when initiating a client."
             )
     accepted_values = [IMSType.PIWEBAPI, IMSType.ASPENONE]
-    win_accepted_values = [IMSType.PI, IMSType.ASPEN, IMSType.IP21]
-    if is_windows():
-        accepted_values.extend(win_accepted_values)
 
-    if imstype == IMSType.PI:
-        return list_pi_sources()
-    elif imstype in [IMSType.ASPEN, IMSType.IP21]:
-        return list_aspen_sources()
-    elif imstype == IMSType.PIWEBAPI:
+    if imstype == IMSType.PIWEBAPI:
         if auth is None:
             auth = get_auth_pi()
         return list_piwebapi_sources(url=url, auth=auth, verify_ssl=verifySSL)
@@ -74,6 +57,10 @@ def list_sources(
         if auth is None:
             auth = get_auth_aspen()
         return list_aspenone_sources(url=url, auth=auth, verify_ssl=verifySSL)
+    else:
+        raise NotImplementedError(
+            f"imstype: {imstype} has not been implemented. Accepted values are: {accepted_values}"
+        )
 
 
 def get_missing_intervals(
@@ -206,8 +193,6 @@ def get_handler(
     imstype: Optional[IMSType],
     datasource: str,
     url: Optional[str],
-    host: Optional[str],
-    port: Optional[int],
     options: Dict[str, Union[int, float, str]],
     verifySSL: Optional[bool],
     auth: Optional[Any],
@@ -228,55 +213,6 @@ def get_handler(
                 imstype = IMSType.PIWEBAPI
         except HTTPError as e:
             logger.debug(f"Could not list PI sources: {e}")
-    if imstype == IMSType.PI:
-        if not is_windows():
-            raise RuntimeError(
-                "ODBC drivers not available for non-Windows environments. "
-                "Try Web API ('piwebapi') instead."
-            )
-        if "PI ODBC Driver" not in pyodbc.drivers():
-            raise RuntimeError(
-                "No PI ODBC driver detected. "
-                "Either switch to Web API ('piwebapi') or install appropriate driver."
-            )
-        if host is None:
-            hostport = get_server_address_pi(datasource)
-            if not hostport:
-                raise ValueError(
-                    f"Unable to locate data source '{datasource}'."
-                    "Do you have correct permissions?"
-                )
-            host, port = hostport
-        if port is None:
-            port = 5450
-        return PIHandlerODBC(host=host, port=port, options=options)
-
-    if imstype in [IMSType.ASPEN, IMSType.IP21]:
-        if not is_windows():
-            raise RuntimeError(
-                "ODBC drivers not available for non-Windows environments. "
-                "Try Web API ('aspenone') instead."
-            )
-        warnings.warn(
-            "ODBC based clients for ASPEN i deprecated and will be removed in the next release",
-            DeprecationWarning,
-        )
-        if "AspenTech SQLplus" not in pyodbc.drivers():
-            raise RuntimeError(
-                "No Aspen SQLplus ODBC driver detected. "
-                "Either switch to Web API ('aspenone') or install appropriate driver."
-            )
-        if host is None:
-            hostport = get_server_address_aspen(datasource)
-            if not hostport:
-                raise ValueError(
-                    f"Unable to locate data source '{datasource}'."
-                    "Do you have correct permissions?"
-                )
-            host, port = hostport
-        if port is None:
-            port = 10014
-        return AspenHandlerODBC(host=host, port=port, options=options)
 
     if imstype == IMSType.PIWEBAPI:
         return PIHandlerWeb(
@@ -341,8 +277,6 @@ class IMSClient:
             imstype=imstype,
             datasource=datasource,
             url=url,
-            host=host,
-            port=port,
             options=handler_options,
             verifySSL=verifySSL,
             auth=auth,

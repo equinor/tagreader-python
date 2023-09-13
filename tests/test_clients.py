@@ -10,9 +10,6 @@ from tagreader.clients import IMSClient, get_missing_intervals, get_next_timesli
 from tagreader.utils import IMSType, ReaderType, is_windows
 from tagreader.web_handlers import PIHandlerWeb
 
-if is_windows():
-    from tagreader.odbc_handlers import AspenHandlerODBC, PIHandlerODBC
-
 is_GITHUB_ACTION = "GITHUB_ACTION" in os.environ
 is_AZURE_PIPELINE = "TF_BUILD" in os.environ
 is_CI = is_GITHUB_ACTION or is_AZURE_PIPELINE
@@ -183,19 +180,3 @@ class TestODBC:
             handler_options={"connection_string": connstr},
         )
         assert c.handler.generate_connection_string() == connstr
-
-    def test_init_odbc_clients(self) -> None:
-        with pytest.raises(ValueError):
-            _ = IMSClient(datasource="xyz")
-        with pytest.raises(ValueError):
-            _ = IMSClient(datasource="sNa", imstype="pi")
-        with pytest.raises(ValueError):
-            _ = IMSClient(datasource="Ono-imS", imstype="aspen")
-        with pytest.raises(ValueError):
-            _ = IMSClient(datasource="ono-ims", imstype="aspen")
-        with pytest.raises(ValueError):
-            _ = IMSClient(datasource="sna", imstype="pi")
-        c = IMSClient(datasource="onO-iMs", imstype="pi")
-        assert isinstance(c.handler, PIHandlerODBC)
-        c = IMSClient(datasource="snA", imstype="aspen")
-        assert isinstance(c.handler, AspenHandlerODBC)

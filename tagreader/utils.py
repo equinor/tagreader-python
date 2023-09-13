@@ -259,6 +259,3 @@ def is_equinor() -> bool:
 class IMSType(str, Enum):
     PIWEBAPI = "piwebapi"
     ASPENONE = "aspenone"
-    PI = "pi"
-    ASPEN = "aspen"
-    IP21 = "ip21"
