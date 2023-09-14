@@ -1,9 +1,7 @@
 import os
-import warnings
 from datetime import datetime, timedelta, tzinfo
 from itertools import groupby
 from operator import itemgetter
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.error import HTTPError
 
@@ -44,7 +42,7 @@ def list_sources(
             imstype = getattr(IMSType, imstype.upper())
         except AttributeError:
             raise ValueError(
-                f"imstype needs to be one of {', '.join([v for v in IMSType.__members__.values()])}."
+                f"imstype needs to be one of {', '.join([v for v in IMSType.__members__.values() if v not in [IMSType.PI, IMSType.ASPEN, IMSType.IP21]])}."  # noqa
                 f" We suggest to use the tagreader.IMSType enumerator when initiating a client."
             )
     accepted_values = [IMSType.PIWEBAPI, IMSType.ASPENONE]
@@ -57,6 +55,11 @@ def list_sources(
         if auth is None:
             auth = get_auth_aspen()
         return list_aspenone_sources(url=url, auth=auth, verify_ssl=verifySSL)
+    elif imstype in [IMSType.PI, IMSType.ASPEN, IMSType.IP21]:
+        raise ValueError(
+            f"ODBC clients are no longer supported. Given ims client type: {imstype}."
+            " Please use tagreader version <= 4 for deprecated ODBC clients."
+        )
     else:
         raise NotImplementedError(
             f"imstype: {imstype} has not been implemented. Accepted values are: {accepted_values}"
@@ -231,7 +234,11 @@ def get_handler(
             verify_ssl=verifySSL,
             auth=auth,
         )
-
+    elif imstype in [IMSType.PI, IMSType.ASPEN, IMSType.IP21]:
+        raise ValueError(
+            f"ODBC clients are no longer supported. Given ims client type: {imstype}."
+            " Please use tagreader version <= 4 for deprecated ODBC clients."
+        )
     raise ValueError(
         f"Could not infer IMSType for datasource: {datasource}. "
         f"Please specify correct datasource, imstype or host, or refer to the user docs."
@@ -245,8 +252,6 @@ class IMSClient:
         imstype: Optional[Union[str, IMSType]] = None,
         tz: Union[tzinfo, str] = pytz.timezone("Europe/Oslo"),
         url: Optional[str] = None,
-        host: Optional[str] = None,
-        port: Optional[int] = None,
         handler_options: Dict[str, Union[int, float, str]] = {},  # noqa:
         verifySSL: bool = True,
         auth: Optional[Any] = None,

@@ -1,18 +1,11 @@
-import os
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, timedelta
 
 import pandas as pd
 import pytest
 import pytz
 
-from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
 from tagreader.utils import IMSType, ReaderType, is_windows
-from tagreader.web_handlers import PIHandlerWeb
-
-is_GITHUB_ACTION = "GITHUB_ACTION" in os.environ
-is_AZURE_PIPELINE = "TF_BUILD" in os.environ
-is_CI = is_GITHUB_ACTION or is_AZURE_PIPELINE
 
 
 def test_init_client_without_cache() -> None:
@@ -118,59 +111,3 @@ def test_get_missing_intervals() -> None:
         datetime(2018, 1, 18, 5, 10, 0),
         datetime(2018, 1, 18, 6, 0, 0),
     )
-
-
-@pytest.mark.skipif(
-    is_GITHUB_ACTION or not is_windows(),
-    reason="ODBC drivers require Windows and are unavailable in GitHub Actions",
-)
-class TestODBC:
-    def test_pi_init_odbc_client_with_host_port(self) -> None:
-        host = "thehostname"
-        port = 999
-        c = IMSClient(datasource="whatever", imstype="pi", host=host)
-        assert c.handler.host == host
-        assert c.handler.port == 5450
-        c = IMSClient(
-            datasource="whatever",
-            imstype="pi",
-            host=host,
-            port=port,
-        )
-        assert c.handler.host == host
-        assert c.handler.port == port
-
-    def test_ip21_init_odbc_client_with_host_port(self) -> None:
-        host = "thehostname"
-        port = 999
-        c = IMSClient(datasource="whatever", imstype="ip21", host=host)
-        assert c.handler.host == host
-        assert c.handler.port == 10014
-        c = IMSClient(
-            datasource="whatever",
-            imstype="ip21",
-            host=host,
-            port=port,
-        )
-        assert c.handler.host == host
-        assert c.handler.port == port
-
-    def test_pi_connection_string_override(self) -> None:
-        connstr = "someuserspecifiedconnectionstring"
-        c = IMSClient(
-            datasource="whatever",
-            imstype="pi",
-            host="host",
-            handler_options={"connection_string": connstr},
-        )
-        assert c.handler.generate_connection_string() == connstr
-
-    def test_ip21_connection_string_override(self) -> None:
-        connstr = "someuserspecifiedconnectionstring"
-        c = IMSClient(
-            datasource="whatever",
-            imstype="ip21",
-            host="host",
-            handler_options={"connection_string": connstr},
-        )
-        assert c.handler.generate_connection_string() == connstr
