@@ -49,6 +49,11 @@ def list_sources(
     auth: Optional[Any] = None,
     verifySSL: bool = True,
 ) -> List[str]:
+    if imstype in [IMSType.ASPEN, IMSType.IP21]:
+        warnings.warn(
+            "ODBC based clients for ASPEN i deprecated and will be removed in the next release",
+            DeprecationWarning,
+        )
     if isinstance(imstype, str):
         try:
             imstype = getattr(IMSType, imstype.upper())
@@ -212,6 +217,11 @@ def get_handler(
     verifySSL: Optional[bool],
     auth: Optional[Any],
 ):
+    if imstype in [IMSType.ASPEN, IMSType.IP21]:
+        warnings.warn(
+            "ODBC based clients for ASPEN i deprecated and will be removed in the next release",
+            DeprecationWarning,
+        )
     if imstype is None:
         try:
             if datasource in list_aspenone_sources(
@@ -257,10 +267,6 @@ def get_handler(
                 "ODBC drivers not available for non-Windows environments. "
                 "Try Web API ('aspenone') instead."
             )
-        warnings.warn(
-            "ODBC based clients for ASPEN i deprecated and will be removed in the next release",
-            DeprecationWarning,
-        )
         if "AspenTech SQLplus" not in pyodbc.drivers():
             raise RuntimeError(
                 "No Aspen SQLplus ODBC driver detected. "
