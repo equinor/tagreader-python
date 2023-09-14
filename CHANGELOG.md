@@ -2,6 +2,29 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [5.0.0](https://github.com/equinor/tagreader-python/compare/v4.3.1...v5.0.0) (2023-09-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* Client cache is no longer forced on when cache is set to None
+* ODBC based clients are no longer supported due to available REST services
+
+### 🧹 Chores
+
+* Add information about deprecated ODBC clients and improve UX ([5176de2](https://github.com/equinor/tagreader-python/commit/5176de22f04b565134ce180830a3c69aecf6c9a7))
+
+
+### 📚 Documentation
+
+* Update Docs and examples to reflect changes in v5 ([1667b9d](https://github.com/equinor/tagreader-python/commit/1667b9d4c48200307a5e93aa4e3bf5bfc8eedac1))
+
+
+### ✨ Features
+
+* Remove forced caching ([#266](https://github.com/equinor/tagreader-python/issues/266)) ([4504fa3](https://github.com/equinor/tagreader-python/commit/4504fa3eb563d888dfb6b61a55ceef218afe0fa1)), closes [#265](https://github.com/equinor/tagreader-python/issues/265)
+* Remove ODBC support ([a7c7485](https://github.com/equinor/tagreader-python/commit/a7c74857cf13fd579f8e36d4b8d5d0ff7d2b91ac)), closes [#263](https://github.com/equinor/tagreader-python/issues/263)
+
 ## [4.3.1](https://github.com/equinor/tagreader-python/compare/v4.3.0...v4.3.1) (2023-09-13)
 
 
