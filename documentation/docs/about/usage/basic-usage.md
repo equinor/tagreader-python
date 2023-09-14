@@ -3,8 +3,6 @@ sidebar_position: 1
 ---
 # Basic usage
 
-## Importing the module
-
 The module is imported with
 
 ``` python
@@ -18,6 +16,22 @@ as possible, regardless of the IMS type that is used. A handler object specifica
 attached to the client when the client is created. The handler is responsible for handling the communication and data
 interpretation between the server and the client object.
 
+:::info SSL verification
+
+Equinor root certificates are automatically added when using an Equinor Managed computer, which allow SSL verification.
+
+For non-Equinor users: If you run info SSL verification errors and prefer to not set `verifySSL=False` ,
+you can try the procedure outlined [here](https://incognitjoe.github.io/adding-certs-to-requests.html).
+:::
+
+:::info ODBC support
+Tagreader as of version 5 does no longer support ODBC clients, which has been deprecated in favor of REST services.
+To use ODBC, please refer to [Tagreader v4 on PyPI](https://pypi.org/project/tagreader/#history).
+Versioned documentation is available in the source code on [GitHub Releases](https://github.com/equinor/tagreader-python/releases).
+
+Use at your own discretion.
+:::
+
 ## Creating a client
 
 A connection to a data source is prepared by creating an instance of `tagreader.IMSClient` with the following input
@@ -26,10 +40,7 @@ arguments:
 * `datasource` : Name of data source
 * `imstype` : The name of the [IMS type](/docs/about/usage/data-source) to query. Indicates the type of data source
 that is requested, and therefore determines which handler type to use. Valid values are
-`pi` , `ip21` , `piwebapi` and `aspenone`.
-
-  Note that ODBC connections require that [pyodbc](https://pypi.org/project/pyodbc/) is installed, while REST API
-connections require the [requests](https://requests.readthedocs.io/en/master/) module.
+`piwebapi` and `aspenone`.
 
 * `tz` (optional): Time zone naive time stamps will be interpreted as belonging to this time zone. Similarly,
 the returned data points will be localized to this time zone. **Default**: _"Europe/Oslo"_.
@@ -42,14 +53,7 @@ or _"https://piwebapi/piwebapi"_. **Default**: Path to Equinor server correspond
 * `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object
 that works with Equinor servers.
-
-If `imstype` is an ODBC type, i.e. `pi` or `ip21`, the host and port to connect to will by default be found by
-performing a search in Windows registry. For some systems this may not work. In those cases the user can explicitly
-specify the following optional parameters:
-
-* `host` (optional): Overrides mapping of datasource to hostname via Windows registry.
-* `port` (optional): Overrides mapping of datasource to port number via Windows registry. **Default**: 10014 for
-* `ip21` and 5450 for `pi`.
+* `cache` (optional): [Cache](caching.md) data locally in order to avoid re-reading the same data multiple times.
 
 ## Connecting to data source
 
@@ -57,10 +61,10 @@ After creating the client as described above, connect to the server with the `co
 
 **Example**
 
-Connecting to the PINO PI data source using ODBC:
+Connecting to the PINO PI data source using REST Web API:
 
 ``` python
-c = tagreader.IMSClient("PINO", "pi")
+c = tagreader.IMSClient("PINO", "piwebapi")
 c.connect()
 ```
 
@@ -108,7 +112,7 @@ If both arguments are provided, the both must match.
 **Examples**
 
 ``` python
-c = tagreader.IMSClient("PINO", "pi")
+c = tagreader.IMSClient("PINO", "piwebapi")
 c.connect()
 c.search("cd*158")
 c.search(desc="*reactor*")
@@ -162,7 +166,7 @@ based handlers, providing `end_time` is possible in which case a snapshot at the
 Read interpolated data for the provided tag with 3-minute intervals between the two time stamps:
 
 ``` python
-c = tagreader.IMSClient("PINO", "pi")
+c = tagreader.IMSClient("PINO", "piwebapi")
 c.connect()
 df = c.read(['BA:ACTIVE.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180)
 
@@ -191,9 +195,7 @@ In an effort to unify the status value for all IMS types, the following schema b
 
 The status value is obtained differently for the four IMS types:
 * Aspen Web API: Read directly from the `l` ("Level") field in the json output.
-* Aspen ODBC: Read directly from the `status` field in the table.
 * PI Web API: Calculated as `Questionable` + 2 * (1 - `Good`) + 4 * `Substituted`.
-* PI ODBC: Calculated as `questionable` + 2 * (`status` != 0) + 4 * `substituted`. `status` is 0 for good, positive or
 negative for various reasons for being bad.
 
 For the two PI IMS types, it is assumed that `Questionable` is never `True` if `Good` is `False` or `status != 0`.
@@ -202,14 +204,14 @@ This may be an incorrect assumption with resulting erroneous status value.
 In summary, here is the resulting status value from tagreader for different combinations of status field values from
 the IMS types:
 
-| tagreader | Aspen Web API | Aspen ODBC | PI Web API                                                        | PI ODBC                                                          |
-|:---------:|:-------------:|:----------:|-------------------------------------------------------------------|------------------------------------------------------------------|
-|     0     |     l = 0     | status = 0 | Good = True<br /> Questionable = False<br /> Substituted = False  | status = 0<br /> questionable = False<br /> substituted = False  |
-|     1     |     l = 1     | status = 1 | Good = True<br /> Questionable = True<br /> Substituted = False   | status = 0<br /> questionable = True<br /> substituted = False   |
-|     2     |     l = 2     | status = 2 | Good = False<br /> Questionable = False<br /> Substituted = False | status != 0<br /> questionable = False<br /> substituted = False |
-|     4     |     l = 4     | status = 4 | Good = True<br /> Questionable = False<br /> Substituted = True   | status = 0<br /> questionable = False<br /> substituted = True   |
-|     5     |     l = 5     | status = 5 | Good = True<br /> Questionable = True<br /> Substituted = True    | status = 0<br /> questionable = True<br /> substituted = True    |
-|     6     |     l = 6     | status = 6 | Good = False<br /> Questionable = False<br /> Substituted = True  | status != 0<br /> questionable = False<br /> substituted = True  |
+| tagreader | Aspen Web API | PI Web API                                                         |
+|:---------:|:-------------:|:-------------------------------------------------------------------|
+|     0     |     l = 0     | Good = True<br /> Questionable = False<br /> Substituted = False   |
+|     1     |     l = 1     | Good = True<br /> Questionable = True<br /> Substituted = False    |
+|     2     |     l = 2     | Good = False<br /> Questionable = False<br /> Substituted = False  |
+|     4     |     l = 4     | Good = True<br /> Questionable = False<br /> Substituted = True    |
+|     5     |     l = 5     | Good = True<br /> Questionable = True<br /> Substituted = True     |
+|     6     |     l = 6     | Good = False<br /> Questionable = False<br /> Substituted = True   |
 
 Please keep in mind when using `get_status`:
 * This is an experimental feature. It may work as intended, or it may result in erroneous status values in some cases.

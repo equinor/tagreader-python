@@ -4,21 +4,18 @@ sidebar_position: 2
 
 # Data sources
 
-Tagreader supports connecting to PI and IP.21 servers using both ODBC and Web API interfaces. When calling certain
+Tagreader supports connecting to PI and IP.21 servers using a Web API interfaces. When calling certain
 methods, the user will need to tell tagreader which system and which connection method to use. This input argument is
 called `imstype` , and can be one of the following case-insensitive strings:
 
-* `pi` : For connecting to OSISoft PI via ODBC.
 * `piwebapi` : For connecting to OSISoft PI Web API
-* `ip21` : For connecting to AspenTech InfoPlus.21 via ODBC
 * `aspenone` : For connecting to AspenTech Process Data REST Web API
 
 ## Listing available data sources
 
-The method `tagreader.list_sources()` can query for available PI and IP.21 servers available through both ODBC and Web
-API. Input arguments:
+The method `tagreader.list_sources()` can query for available PI and IP.21 servers available. Input arguments:
 
-* `imstype` : The name of the IMS type to query. Valid values: `pi` , `ip21` , `piwebapi` and `aspenone`.
+* `imstype` : The name of the IMS type to query. Valid values: `piwebapi` and `aspenone`.
 
 The following input arguments are only relevant when calling `list_sources()` with a Web API `imstype` ( `piwebapi` or
 `aspenone` ):

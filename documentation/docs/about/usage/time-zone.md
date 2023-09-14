@@ -21,7 +21,7 @@ use case where Equinor employees want to fetch data from Norwegian assets and di
 nothing needs to be done.
 
 *Note:* It is a good idea to update the `pytz` package rather frequently (at least twice per year) to ensure that time
-zone information is up to date. `pip install --upgrade pytz` .
+zone information is up-to-date. `pip install --upgrade pytz` .
 
 **Example (advanced usage)**
 
