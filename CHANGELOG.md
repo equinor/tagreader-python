@@ -2,6 +2,28 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [5.1.0](https://github.com/equinor/tagreader-python/compare/v5.0.0...v5.1.0) (2023-09-28)
+
+
+### 📦 Build system
+
+* **deps:** upgrade build dependencies ([9e38faa](https://github.com/equinor/tagreader-python/commit/9e38faacb7755b7af84bb0a4126276f072621556))
+
+
+### 🧹 Chores
+
+* update pyproject.toml ([24e15e2](https://github.com/equinor/tagreader-python/commit/24e15e217ad9a4861788eee52607a57340c79c06))
+
+
+### ✨ Features
+
+* support new Equinor certificates ([#271](https://github.com/equinor/tagreader-python/issues/271)) ([604b6fb](https://github.com/equinor/tagreader-python/commit/604b6fbba47f4b027d9a3fc2ce2b6fbce8f188c3))
+
+
+### 🐛 Bug Fixes
+
+* correctly add root certificate for macos ([ac6a884](https://github.com/equinor/tagreader-python/commit/ac6a8848e9289b2d05c9e4244803cc61f97e3730))
+
 ## [5.0.0](https://github.com/equinor/tagreader-python/compare/v4.3.1...v5.0.0) (2023-09-14)
 
 
