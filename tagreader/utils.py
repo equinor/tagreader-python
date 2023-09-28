@@ -223,9 +223,10 @@ def get_macos_equinor_certificates(get_equinor: bool = True):
         ["security", "find-certificate", "-a", "-c", ca_search, "-p"],
         stdout=subprocess.PIPE,
     ).stdout
-    with tempfile.NamedTemporaryFile("w+b") as tmp_file:
+    with tempfile.NamedTemporaryFile("w+b", delete=False) as tmp_file:
         tmp_file.write(macos_ca_certs)
-        ctx.load_verify_locations(tmp_file.name)
+
+    ctx.load_verify_locations(tmp_file.name)
 
     return ctx.get_ca_certs(binary_form=True)
 
