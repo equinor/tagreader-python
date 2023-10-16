@@ -38,7 +38,7 @@ requests-kerberos = "^0"
 notebook = { version = "^7.0.3", optional = true }
 matplotlib = { version = "^3", optional = true }
 diskcache = "^5.6.1"
-pillow = "10.0.1"  # Fix dependency to avoid vulnerability
+pillow = "10.1.0"  # Fix dependency to avoid vulnerability
 
 
 [tool.poetry.group.dev.dependencies]
