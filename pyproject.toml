@@ -30,7 +30,6 @@ classifiers=[
 [tool.poetry.dependencies]
 python = "^3.8"
 pandas = ">=1"
-pyodbc = "^4"
 cryptography = "^41.0.3"
 certifi = "^2023.7.22"
 requests = "^2"
