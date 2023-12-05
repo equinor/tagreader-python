@@ -2,6 +2,16 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [5.1.1](https://github.com/equinor/tagreader-python/compare/v5.1.0...v5.1.1) (2023-12-05)
+
+
+### 📦 Build system
+
+* ignore cryptography vulnearbility. No patch available ([eecaf1a](https://github.com/equinor/tagreader-python/commit/eecaf1a301e9c2b6957d2c5f133136fceba89a97))
+* remove pyodbc ([719f09a](https://github.com/equinor/tagreader-python/commit/719f09a00d2ac80a09a1a693f112563bb70a6e39))
+* remove unused dependencies ([0288207](https://github.com/equinor/tagreader-python/commit/028820772356adff58859fdfc6fc9a87f0750be6))
+* upgrade Docusaurus ([261c573](https://github.com/equinor/tagreader-python/commit/261c5735d4a80e467d093b0494ba1e22059d7c85))
+
 ## [5.1.0](https://github.com/equinor/tagreader-python/compare/v5.0.0...v5.1.0) (2023-09-28)
 
 
