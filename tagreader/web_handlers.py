@@ -115,8 +115,8 @@ class BaseHandlerWeb(ABC):
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.session.verify = verify_ssl if verify_ssl is not None else get_verify_ssl()
 
-    def fetch(self, url, params: Optional[Union[str, Dict[str, str]]] = None) -> Dict:
-        res = self.session.get(url, params=params)
+    def fetch(self, url, params: Optional[Union[str, Dict[str, str]]] = None, timeout: Optional[int] = None) -> Dict:
+        res = self.session.get(url, params=params, timeout=(None, timeout, ))  # Noqa. Read timeout, No connect timeout.
         res.raise_for_status()
 
         if len(res.text) == 0:
@@ -773,7 +773,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         return False
 
     def search(
-        self, tag: Optional[str] = None, desc: Optional[str] = None
+        self, tag: Optional[str] = None, desc: Optional[str] = None, timeout: Optional[int] = None
     ) -> List[Tuple]:
         params = self.generate_search_query(
             tag=tag, desc=desc, datasource=self.datasource
@@ -782,7 +782,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         done = False
         ret = []
         while not done:
-            data = self.fetch(url, params=params)
+            data = self.fetch(url, params=params, timeout=timeout)
 
             for item in data["Items"]:
                 description = item["Description"] if "Description" in item else ""

@@ -5,6 +5,7 @@ from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.error import HTTPError
 
+import numpy as np
 import pandas as pd
 import pytz
 
@@ -301,9 +302,9 @@ class IMSClient:
         return self.search(tag=tag, desc=desc)
 
     def search(
-        self, tag: Optional[str] = None, desc: Optional[str] = None
+        self, tag: Optional[str] = None, desc: Optional[str] = None, timeout: Optional[int] = None
     ) -> List[Tuple[str, str]]:
-        return self.handler.search(tag=tag, desc=desc)
+        return self.handler.search(tag=tag, desc=desc, timeout=timeout)
 
     def _get_metadata(self, tag: str):
         return self.handler._get_tag_metadata(
@@ -490,7 +491,7 @@ class IMSClient:
         tags: Union[str, List[str]],
         start_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
         end_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
-        ts: Union[timedelta, pd.Timedelta, int] = timedelta(seconds=60),
+        ts: Optional[Union[timedelta, pd.Timedelta, int]] = timedelta(seconds=60),
         read_type: ReaderType = ReaderType.INT,
         get_status: bool = False,
     ) -> pd.DataFrame:
@@ -543,7 +544,7 @@ class IMSClient:
 
         if isinstance(ts, pd.Timedelta):
             ts = ts.to_pytimedelta()
-        elif isinstance(ts, (int, float)):
+        elif isinstance(ts, (int, float, np.int32, np.int64, np.float32, np.float64, np.number, np.integer)):
             ts = timedelta(seconds=int(ts))
         elif not isinstance(ts, timedelta):
             raise ValueError(
