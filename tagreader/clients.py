@@ -199,6 +199,7 @@ def get_handler(
     options: Dict[str, Union[int, float, str]],
     verifySSL: Optional[bool],
     auth: Optional[Any],
+    cache: Optional[Union[SmartCache, BucketCache]] = None,
 ):
     if imstype is None:
         try:
@@ -224,6 +225,7 @@ def get_handler(
             options=options,
             verify_ssl=verifySSL,
             auth=auth,
+            cache=cache,
         )
 
     if imstype == IMSType.ASPENONE:
@@ -278,6 +280,7 @@ class IMSClient:
                 f"timezone argument 'tz' needs to be either a valid timezone string or a tzinfo-object. Given type was {type(tz)}"
             )
 
+        self.cache = cache
         self.handler = get_handler(
             imstype=imstype,
             datasource=datasource,
@@ -285,8 +288,8 @@ class IMSClient:
             options=handler_options,
             verifySSL=verifySSL,
             auth=auth,
+            cache=self.cache,
         )
-        self.cache = cache
 
     def connect(self) -> None:
         self.handler.connect()

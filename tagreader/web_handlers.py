@@ -14,7 +14,7 @@ import requests
 import urllib3
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
-from tagreader.cache import BaseCache
+from tagreader.cache import BaseCache, BucketCache, SmartCache
 from tagreader.logger import logger
 from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
 
@@ -602,6 +602,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         auth: Optional[Any],
         verify_ssl: bool,
         options: Dict[str, Union[int, float, str]],
+        cache: Optional[Union[SmartCache, BucketCache]],
     ):
         self._max_rows = options.get("max_rows", 10000)
         if url is None:
@@ -615,7 +616,7 @@ class PIHandlerWeb(BaseHandlerWeb):
             verify_ssl=verify_ssl,
         )
         self._max_rows = options.get("max_rows", 10000)
-        self.web_id_cache = BaseCache(directory=Path(".") / ".cache" / datasource)
+        self.web_id_cache = cache
 
     @staticmethod
     def _time_to_UTC_string(time: datetime) -> str:
@@ -823,33 +824,37 @@ class PIHandlerWeb(BaseHandlerWeb):
         :return: WebId
         :rtype: str
         """
-        if tag not in self.web_id_cache:
-            params = self.generate_search_query(
-                tag=tag, datasource=self.datasource, desc=None
-            )
-            params["fields"] = "name;webid"
-            url = urljoin(self.base_url, "search", "query")
-            data = self.fetch(url, params=params)
+        if self.web_id_cache and tag in self.web_id_cache:
+            return self.web_id_cache[tag]
 
-            if len(data["Errors"]) > 0:
-                msg = f"Received error from server when searching for WebId for {tag}: {data['Errors']}"
-                raise ValueError(msg)
+        params = self.generate_search_query(
+            tag=tag, datasource=self.datasource, desc=None
+        )
+        params["fields"] = "name;webid"
+        url = urljoin(self.base_url, "search", "query")
+        data = self.fetch(url, params=params)
 
-            if len(data["Items"]) > 1:
-                # Compare elements and if same, return the first
-                first = data["Items"][0]
-                for item in data["Items"][1:]:
-                    if item != first:
-                        raise AssertionError(
-                            f"Received {len(data['Items'])} results when trying to find unique WebId for {tag}."
-                        )
-            elif len(data["Items"]) == 0:
-                logger.warning(f"Tag {tag} not found")
-                return None
+        if len(data["Errors"]) > 0:
+            msg = f"Received error from server when searching for WebId for {tag}: {data['Errors']}"
+            raise ValueError(msg)
 
-            web_id = data["Items"][0]["WebId"]
+        if len(data["Items"]) > 1:
+            # Compare elements and if same, return the first
+            first = data["Items"][0]
+            for item in data["Items"][1:]:
+                if item != first:
+                    raise AssertionError(
+                        f"Received {len(data['Items'])} results when trying to find unique WebId for {tag}."
+                    )
+        elif len(data["Items"]) == 0:
+            logger.warning(f"Tag {tag} not found")
+            return None
+
+        web_id = data["Items"][0]["WebId"]
+
+        if self.web_id_cache:
             self.web_id_cache[tag] = web_id
-        return self.web_id_cache[tag]
+        return web_id
 
     @staticmethod
     def _is_summary(read_type: ReaderType) -> bool:
