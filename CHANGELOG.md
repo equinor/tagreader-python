@@ -4,10 +4,15 @@ This changelog is deprecated. All changes are documented under [releases](https:
 
 ## [5.1.2](https://github.com/equinor/tagreader-python/compare/v5.1.1...v5.1.2) (2023-12-05)
 
-
 ### 🧹 Chores
 
 * ensure that the repo is in accordance with Equinor guidelines for open-source projects ([9469c22](https://github.com/equinor/tagreader-python/commit/9469c22abcc88d5ba72af406ab45cff99b548276))
+* chore: avoid trying to add Statoil certificate if Equinor Root CA is already found
+* chore: avoid default caching web ids in PiHandlerWeb
+* chore: allow numpy integers and floats as timedelta arguments and add timeout to search method
+
+### 🐛 Bug Fixes
+* fix: allow None-timedelta when reading Snapshots or Raw data
 
 ## [5.1.1](https://github.com/equinor/tagreader-python/compare/v5.1.0...v5.1.1) (2023-12-05)
 
