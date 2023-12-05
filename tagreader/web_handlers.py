@@ -115,8 +115,20 @@ class BaseHandlerWeb(ABC):
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.session.verify = verify_ssl if verify_ssl is not None else get_verify_ssl()
 
-    def fetch(self, url, params: Optional[Union[str, Dict[str, str]]] = None, timeout: Optional[int] = None) -> Dict:
-        res = self.session.get(url, params=params, timeout=(None, timeout, ))  # Noqa. Read timeout, No connect timeout.
+    def fetch(
+        self,
+        url,
+        params: Optional[Union[str, Dict[str, str]]] = None,
+        timeout: Optional[int] = None,
+    ) -> Dict:
+        res = self.session.get(
+            url,
+            params=params,
+            timeout=(
+                None,
+                timeout,
+            ),
+        )  # Noqa. Read timeout, No connect timeout.
         res.raise_for_status()
 
         if len(res.text) == 0:
@@ -366,7 +378,9 @@ class AspenHandlerWeb(BaseHandlerWeb):
             if v:
                 return k
 
-    def search(self, tag: Optional[str], desc: Optional[str]) -> List[Tuple[str, str]]:
+    def search(
+        self, tag: Optional[str], desc: Optional[str], timeout: Optional[int] = None
+    ) -> List[Tuple[str, str]]:
         if tag is None:
             raise ValueError("Tag is a required argument")
 
@@ -386,7 +400,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         )
         url = urljoin(self.base_url, "Browse?")
         url += encoded_params
-        data = self.fetch(url)
+        data = self.fetch(url, timeout=timeout)
 
         if "tags" not in data["data"]:
             return []
@@ -773,7 +787,10 @@ class PIHandlerWeb(BaseHandlerWeb):
         return False
 
     def search(
-        self, tag: Optional[str] = None, desc: Optional[str] = None, timeout: Optional[int] = None
+        self,
+        tag: Optional[str] = None,
+        desc: Optional[str] = None,
+        timeout: Optional[int] = None,
     ) -> List[Tuple]:
         params = self.generate_search_query(
             tag=tag, desc=desc, datasource=self.datasource

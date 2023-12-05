@@ -296,13 +296,19 @@ class IMSClient:
         self.handler.connect()
 
     def search_tag(
-        self, tag: Optional[str] = None, desc: Optional[str] = None
+        self,
+        tag: Optional[str] = None,
+        desc: Optional[str] = None,
+        timeout: Optional[int] = None,
     ) -> List[Tuple[str, str]]:
         logger.warning("This function is deprecated. Please call 'search()' instead")
-        return self.search(tag=tag, desc=desc)
+        return self.search(tag=tag, desc=desc, timeout=timeout)
 
     def search(
-        self, tag: Optional[str] = None, desc: Optional[str] = None, timeout: Optional[int] = None
+        self,
+        tag: Optional[str] = None,
+        desc: Optional[str] = None,
+        timeout: Optional[int] = None,
     ) -> List[Tuple[str, str]]:
         return self.handler.search(tag=tag, desc=desc, timeout=timeout)
 
@@ -544,8 +550,26 @@ class IMSClient:
 
         if isinstance(ts, pd.Timedelta):
             ts = ts.to_pytimedelta()
-        elif isinstance(ts, (int, float, np.int32, np.int64, np.float32, np.float64, np.number, np.integer)):
+        elif isinstance(
+            ts,
+            (
+                int,
+                float,
+                np.int32,
+                np.int64,
+                np.float32,
+                np.float64,
+                np.number,
+                np.integer,
+            ),
+        ):
             ts = timedelta(seconds=int(ts))
+        elif not ts and read_type not in [ReaderType.SNAPSHOT, ReaderType.RAW]:
+            raise ValueError(
+                "ts needs to be a timedelta or an integer (number of seconds)"
+                " unless you are reading raw or snapshot data."
+                f" Given type: {type(ts)}"
+            )
         elif not isinstance(ts, timedelta):
             raise ValueError(
                 "ts needs to be either a None, timedelta or and integer (number of seconds)."
