@@ -1,8 +1,9 @@
 from datetime import timedelta
-from typing import Generator
+from typing import Generator, cast
 
 import pytest
 
+from tagreader.cache import SmartCache
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.web_handlers import PIHandlerWeb
 
@@ -12,11 +13,18 @@ SAMPLE_TIME = 60
 
 
 @pytest.fixture  # type: ignore[misc]
-def pi_handler() -> Generator[PIHandlerWeb, None, None]:
+def pi_handler(cache: SmartCache) -> Generator[PIHandlerWeb, None, None]:
     h = PIHandlerWeb(
-        datasource="sourcename", auth=None, options={}, url=None, verify_ssl=True
+        datasource="sourcename",
+        auth=None,
+        options={},
+        url=None,
+        verify_ssl=True,
+        cache=cache,
     )
-    h.web_id_cache["alreadyknowntag"] = "knownwebid"
+    if not isinstance(h.web_id_cache, SmartCache):
+        raise ValueError("Expected SmartCache in the web client.")
+    h.web_id_cache.add(key="alreadyknowntag", value="knownwebid")
     yield h
 
 
@@ -89,6 +97,8 @@ def test_is_summary(pi_handler: PIHandlerWeb) -> None:
     ],
 )
 def test_generate_read_query(pi_handler: PIHandlerWeb, read_type: str) -> None:
+    if not isinstance(pi_handler.web_id_cache, SmartCache):
+        raise ValueError("Expected SmartCache in the fixture.")
     start = ensure_datetime_with_tz(START_TIME)
     stop = ensure_datetime_with_tz(STOP_TIME)
     ts = timedelta(seconds=SAMPLE_TIME)
@@ -161,6 +171,8 @@ def test_generate_read_query(pi_handler: PIHandlerWeb, read_type: str) -> None:
 def test_generate_read_query_with_status(
     pi_handler: PIHandlerWeb, read_type: str
 ) -> None:
+    if not isinstance(pi_handler.web_id_cache, SmartCache):
+        raise ValueError("Expected SmartCache in the fixture.")
     start = ensure_datetime_with_tz(START_TIME)
     stop = ensure_datetime_with_tz(STOP_TIME)
     ts = timedelta(seconds=SAMPLE_TIME)

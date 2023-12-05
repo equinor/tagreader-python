@@ -38,6 +38,8 @@ print(c.search("tag*"))
 df = c.read_tags(["tag1", "tag2"], "18.06.2020 08:00:00", "18.06.2020 09:00:00", 60)
 ```
 
+Note, you can add a timeout argument to the search method in order to avoid long-running search queries.
+
 ### Jupyter Notebook Quickstart
 Jupyter Notebook examples can be found in /examples. In order to run these examples, you need to install the
 optional dependencies.
