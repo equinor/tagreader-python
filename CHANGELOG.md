@@ -2,6 +2,13 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [5.1.3](https://github.com/equinor/tagreader-python/compare/v5.1.2...v5.1.3) (2023-12-06)
+
+
+### 🐛 Bug Fixes
+
+* add both certificates until AspenOne supports the new Equinor Root CA ([e6a2c2b](https://github.com/equinor/tagreader-python/commit/e6a2c2b6089f27f9edc286e33aa93d077849c81e))
+
 ## [5.1.2](https://github.com/equinor/tagreader-python/compare/v5.1.1...v5.1.2) (2023-12-05)
 
 ### 🧹 Chores
