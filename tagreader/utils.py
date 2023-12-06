@@ -130,7 +130,7 @@ class ReaderType(enum.IntEnum):
 
 
 def add_statoil_root_certificate() -> bool:
-    return add_equinor_root_certificate(True) or add_equinor_root_certificate(False)
+    return add_equinor_root_certificate(True) and add_equinor_root_certificate(False)
 
 
 def add_equinor_root_certificate(get_equinor: bool = True) -> bool:
