@@ -162,8 +162,7 @@ class BaseHandlerWeb(ABC):
             ) from None
 
     @abstractmethod
-    def verify_connection(self, datasource: str):
-        ...
+    def verify_connection(self, datasource: str): ...
 
 
 class AspenHandlerWeb(BaseHandlerWeb):
@@ -383,8 +382,20 @@ class AspenHandlerWeb(BaseHandlerWeb):
         tag: Optional[str],
         desc: Optional[str],
         timeout: Optional[int] = None,
-        return_desc=True,
-    ) -> List[Tuple[str, str]]:
+        return_desc: bool = True,
+    ) -> Union[List[Tuple[str, str]], List[str]]:
+        ret = []
+
+        if tag is None and desc is None:
+            raise ValueError("Tag is a required argument")
+            # return ret
+        elif tag is None and len(desc) == 0:
+            raise ValueError("Tag is a required argument")
+            # return ret
+        elif desc is None and len(tag) == 0:
+            raise ValueError("Tag is a required argument")
+            # return ret
+
         if tag is None:
             raise ValueError("Tag is a required argument")
 
@@ -407,9 +418,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
         data = self.fetch(url, timeout=timeout)
 
         if "tags" not in data["data"]:
-            return []
+            return ret
 
-        ret = []
         for item in data["data"]["tags"]:
             tagname = item["t"]
             if not desc and not return_desc:
@@ -802,7 +812,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         desc: Optional[str] = None,
         timeout: Optional[int] = None,
         return_desc: bool = True,
-    ) -> List[Tuple]:
+    ) -> Union[List[Tuple[str, str]], List[str]]:
         params = self.generate_search_query(
             tag=tag, desc=desc, datasource=self.datasource
         )
