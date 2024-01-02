@@ -4,6 +4,7 @@ from typing import Generator
 
 import pytest
 
+from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.web_handlers import PIHandlerWeb, get_verify_ssl, list_piwebapi_sources
@@ -37,7 +38,7 @@ def client() -> Generator[IMSClient, None, None]:
         imstype="piwebapi",
         verifySSL=bool(verifySSL),
     )
-    c.cache = None  # type: ignore[assignment]
+    c.cache = None
     c.connect()
     c.handler._max_rows = 1000  # For the long raw test
     yield c
@@ -46,10 +47,17 @@ def client() -> Generator[IMSClient, None, None]:
 
 
 @pytest.fixture  # type: ignore[misc]
-def pi_handler() -> Generator[PIHandlerWeb, None, None]:
+def pi_handler(cache: SmartCache) -> Generator[PIHandlerWeb, None, None]:
     h = PIHandlerWeb(
-        datasource=SOURCE, verify_ssl=bool(verifySSL), auth=None, options={}, url=None
+        datasource=SOURCE,
+        verify_ssl=bool(verifySSL),
+        auth=None,
+        options={},
+        url=None,
+        cache=cache,
     )
+    if not isinstance(h.web_id_cache, SmartCache):
+        raise ValueError("Expected SmartCache in the web client.")
     h.web_id_cache["alreadyknowntag"] = "knownwebid"
     yield h
 

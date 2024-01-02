@@ -1,31 +1,81 @@
-import os
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, timedelta
 
 import pandas as pd
 import pytest
+import pytz
 
-from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
 from tagreader.utils import IMSType, ReaderType, is_windows
-from tagreader.web_handlers import PIHandlerWeb
-
-if is_windows():
-    from tagreader.odbc_handlers import AspenHandlerODBC, PIHandlerODBC
-
-is_GITHUB_ACTION = "GITHUB_ACTION" in os.environ
-is_AZURE_PIPELINE = "TF_BUILD" in os.environ
-is_CI = is_GITHUB_ACTION or is_AZURE_PIPELINE
 
 
 def test_init_client_without_cache() -> None:
+    client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
+    assert not client.cache
+
+
+def test_init_client_with_tzinfo() -> None:
+    """
+    Currently testing valid timezone
+    """
+    client = IMSClient(
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Eastern"
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("US/Eastern")
+
+    client = IMSClient(
+        datasource="mock",
+        imstype=IMSType.PIWEBAPI,
+        cache=None,
+        tz=pytz.timezone("US/Eastern"),
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("US/Eastern")
+
+    client = IMSClient(
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="Europe/Oslo"
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("Europe/Oslo")
+
+    client = IMSClient(
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Central"
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("US/Central")
+
+    client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
+    print(client.tz)
+    assert client.tz == pytz.timezone("Europe/Oslo")
+
+    with pytest.raises(ValueError):
+        _ = IMSClient(
+            datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="WRONGVALUE"
+        )
+
+
+def test_init_client_with_datasource() -> None:
     """
     Currently we initialize SmartCache by default, and the user is not able to specify no-cache when creating the
     client. This will change to no cache by default in version 5.
     """
+    client = IMSClient(
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Eastern"
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("US/Eastern")
+    client = IMSClient(
+        datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Central"
+    )
+    print(client.tz)
+    assert client.tz == pytz.timezone("US/Central")
     client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
-    assert isinstance(client.cache, SmartCache)
-    assert isinstance(client.tz, tzinfo)
-    assert isinstance(client.handler, PIHandlerWeb)  # Based on IMSType.PIWEBAPI
+    print(client.tz)
+    assert client.tz == pytz.timezone("Europe/Oslo")
+    with pytest.raises(ValueError):
+        _ = IMSClient(
+            datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="WRONGVALUE"
+        )
 
 
 def test_get_next_timeslice() -> None:
@@ -61,75 +111,3 @@ def test_get_missing_intervals() -> None:
         datetime(2018, 1, 18, 5, 10, 0),
         datetime(2018, 1, 18, 6, 0, 0),
     )
-
-
-@pytest.mark.skipif(
-    is_GITHUB_ACTION or not is_windows(),
-    reason="ODBC drivers require Windows and are unavailable in GitHub Actions",
-)
-class TestODBC:
-    def test_pi_init_odbc_client_with_host_port(self) -> None:
-        host = "thehostname"
-        port = 999
-        c = IMSClient(datasource="whatever", imstype="pi", host=host)
-        assert c.handler.host == host
-        assert c.handler.port == 5450
-        c = IMSClient(
-            datasource="whatever",
-            imstype="pi",
-            host=host,
-            port=port,
-        )
-        assert c.handler.host == host
-        assert c.handler.port == port
-
-    def test_ip21_init_odbc_client_with_host_port(self) -> None:
-        host = "thehostname"
-        port = 999
-        c = IMSClient(datasource="whatever", imstype="ip21", host=host)
-        assert c.handler.host == host
-        assert c.handler.port == 10014
-        c = IMSClient(
-            datasource="whatever",
-            imstype="ip21",
-            host=host,
-            port=port,
-        )
-        assert c.handler.host == host
-        assert c.handler.port == port
-
-    def test_pi_connection_string_override(self) -> None:
-        connstr = "someuserspecifiedconnectionstring"
-        c = IMSClient(
-            datasource="whatever",
-            imstype="pi",
-            host="host",
-            handler_options={"connection_string": connstr},
-        )
-        assert c.handler.generate_connection_string() == connstr
-
-    def test_ip21_connection_string_override(self) -> None:
-        connstr = "someuserspecifiedconnectionstring"
-        c = IMSClient(
-            datasource="whatever",
-            imstype="ip21",
-            host="host",
-            handler_options={"connection_string": connstr},
-        )
-        assert c.handler.generate_connection_string() == connstr
-
-    def test_init_odbc_clients(self) -> None:
-        with pytest.raises(ValueError):
-            _ = IMSClient(datasource="xyz")
-        with pytest.raises(ValueError):
-            _ = IMSClient(datasource="sNa", imstype="pi")
-        with pytest.raises(ValueError):
-            _ = IMSClient(datasource="Ono-imS", imstype="aspen")
-        with pytest.raises(ValueError):
-            _ = IMSClient(datasource="ono-ims", imstype="aspen")
-        with pytest.raises(ValueError):
-            _ = IMSClient(datasource="sna", imstype="pi")
-        c = IMSClient(datasource="onO-iMs", imstype="pi")
-        assert isinstance(c.handler, PIHandlerODBC)
-        c = IMSClient(datasource="snA", imstype="aspen")
-        assert isinstance(c.handler, AspenHandlerODBC)

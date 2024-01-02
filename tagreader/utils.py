@@ -2,7 +2,7 @@ import enum
 import logging
 import platform
 import warnings
-from datetime import datetime
+from datetime import datetime, tzinfo
 from enum import Enum
 from typing import Union
 
@@ -82,7 +82,7 @@ def convert_to_pydatetime(date_stamp: Union[datetime, str, pd.Timestamp]) -> dat
 
 def ensure_datetime_with_tz(
     date_stamp: Union[datetime, str, pd.Timestamp],
-    tz: pytz.timezone = pytz.timezone("Europe/Oslo"),
+    tz: tzinfo = pytz.timezone("Europe/Oslo"),
 ) -> datetime:
     date_stamp = convert_to_pydatetime(date_stamp)
 
@@ -130,6 +130,10 @@ class ReaderType(enum.IntEnum):
 
 
 def add_statoil_root_certificate() -> bool:
+    return add_equinor_root_certificate(True) and add_equinor_root_certificate(False)
+
+
+def add_equinor_root_certificate(get_equinor: bool = True) -> bool:
     """
     This is a utility function for Equinor employees on Equinor managed machines.
 
@@ -137,7 +141,8 @@ def add_statoil_root_certificate() -> bool:
     cert store and imports it to the cacert bundle. Does nothing if not
     running on Equinor host.
 
-    This needs to be repeated after updating the cacert module.
+    NB! This needs to be repeated after updating the cacert module.
+    NB! Will not download certificates.
 
     Returns:
         bool: True if function completes successfully
@@ -148,6 +153,14 @@ def add_statoil_root_certificate() -> bool:
     import certifi
 
     STATOIL_ROOT_PEM_HASH = "ce7bb185ab908d2fea28c7d097841d9d5bbf2c76"
+    EQUINOR_root_PEM_HASH = "5A206332CE73CED1D44C8A99C4C43B7CEE03DF5F"
+
+    if get_equinor:
+        used_hash = EQUINOR_root_PEM_HASH.upper()
+        ca_search = "Equinor Root CA"
+    else:
+        used_hash = STATOIL_ROOT_PEM_HASH.upper()
+        ca_search = "Statoil Root CA"
 
     found = False
     der = None
@@ -159,7 +172,7 @@ def add_statoil_root_certificate() -> bool:
         for cert in ssl.enum_certificates("CA"):
             der = cert[0]
             # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
-            if hashlib.sha1(der).hexdigest() == STATOIL_ROOT_PEM_HASH:
+            if hashlib.sha1(der).hexdigest().upper() == used_hash:
                 found = True
                 logger.debug("CA certificate found!")
                 break
@@ -167,15 +180,15 @@ def add_statoil_root_certificate() -> bool:
         import subprocess
 
         macos_ca_certs = subprocess.run(
-            ["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-Z"],
+            ["security", "find-certificate", "-a", "-c", ca_search, "-Z"],
             stdout=subprocess.PIPE,
         ).stdout
 
-        if STATOIL_ROOT_PEM_HASH.upper() in str(macos_ca_certs).upper():
+        if used_hash in str(macos_ca_certs).upper():
             c = get_macos_equinor_certificates()
             for cert in c:
                 # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
-                if hashlib.sha1(cert).hexdigest() == STATOIL_ROOT_PEM_HASH:
+                if hashlib.sha1(cert).hexdigest().upper() == used_hash:
                     der = cert
                     found = True
                     break
@@ -198,18 +211,24 @@ def add_statoil_root_certificate() -> bool:
     return found
 
 
-def get_macos_equinor_certificates():
+def get_macos_equinor_certificates(get_equinor: bool = True):
     import ssl
     import tempfile
 
+    if get_equinor:
+        ca_search = "Equinor Root CA"
+    else:
+        ca_search = "Statoil Root CA"
+
     ctx = ssl.create_default_context()
     macos_ca_certs = subprocess.run(
-        ["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-p"],
+        ["security", "find-certificate", "-a", "-c", ca_search, "-p"],
         stdout=subprocess.PIPE,
     ).stdout
-    with tempfile.NamedTemporaryFile("w+b") as tmp_file:
+    with tempfile.NamedTemporaryFile("w+b", delete=False) as tmp_file:
         tmp_file.write(macos_ca_certs)
-        ctx.load_verify_locations(tmp_file.name)
+
+    ctx.load_verify_locations(tmp_file.name)
 
     return ctx.get_ca_certs(binary_form=True)
 

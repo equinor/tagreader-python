@@ -48,12 +48,14 @@ class BaseCache(Cache):  # type: ignore[misc]
     the cache. The default directory is <current path>/.cache/
     """
 
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         directory: Path = Path(".") / ".cache",
         enable_stats: bool = False,
+        *args,
+        **kwargs,
     ) -> None:
-        super().__init__(directory=directory.as_posix())
+        super().__init__(directory=directory.as_posix(), *args, **kwargs)
 
         if enable_stats:
             self.enable_cache_statistics()

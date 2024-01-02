@@ -1,12 +1,11 @@
 import os
-import warnings
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 from itertools import groupby
 from operator import itemgetter
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.error import HTTPError
 
+import numpy as np
 import pandas as pd
 import pytz
 
@@ -30,16 +29,6 @@ from tagreader.web_handlers import (
     list_piwebapi_sources,
 )
 
-if is_windows():
-    import pyodbc
-
-    from tagreader.odbc_handlers import (
-        AspenHandlerODBC,
-        PIHandlerODBC,
-        list_aspen_sources,
-        list_pi_sources,
-    )
-
 NONE_START_TIME = datetime(1970, 1, 1, tzinfo=pytz.UTC)
 
 
@@ -54,19 +43,12 @@ def list_sources(
             imstype = getattr(IMSType, imstype.upper())
         except AttributeError:
             raise ValueError(
-                f"imstype needs to be one of {', '.join([v for v in IMSType.__members__.values()])}."
+                f"imstype needs to be one of {', '.join([v for v in IMSType.__members__.values() if v not in [IMSType.PI, IMSType.ASPEN, IMSType.IP21]])}."  # noqa
                 f" We suggest to use the tagreader.IMSType enumerator when initiating a client."
             )
     accepted_values = [IMSType.PIWEBAPI, IMSType.ASPENONE]
-    win_accepted_values = [IMSType.PI, IMSType.ASPEN, IMSType.IP21]
-    if is_windows():
-        accepted_values.extend(win_accepted_values)
 
-    if imstype == IMSType.PI:
-        return list_pi_sources()
-    elif imstype in [IMSType.ASPEN, IMSType.IP21]:
-        return list_aspen_sources()
-    elif imstype == IMSType.PIWEBAPI:
+    if imstype == IMSType.PIWEBAPI:
         if auth is None:
             auth = get_auth_pi()
         return list_piwebapi_sources(url=url, auth=auth, verify_ssl=verifySSL)
@@ -74,6 +56,15 @@ def list_sources(
         if auth is None:
             auth = get_auth_aspen()
         return list_aspenone_sources(url=url, auth=auth, verify_ssl=verifySSL)
+    elif imstype in [IMSType.PI, IMSType.ASPEN, IMSType.IP21]:
+        raise ValueError(
+            f"ODBC clients are no longer supported. Given ims client type: {imstype}."
+            " Please use tagreader version <= 4 for deprecated ODBC clients."
+        )
+    else:
+        raise NotImplementedError(
+            f"imstype: {imstype} has not been implemented. Accepted values are: {accepted_values}"
+        )
 
 
 def get_missing_intervals(
@@ -206,11 +197,10 @@ def get_handler(
     imstype: Optional[IMSType],
     datasource: str,
     url: Optional[str],
-    host: Optional[str],
-    port: Optional[int],
     options: Dict[str, Union[int, float, str]],
     verifySSL: Optional[bool],
     auth: Optional[Any],
+    cache: Optional[Union[SmartCache, BucketCache]] = None,
 ):
     if imstype is None:
         try:
@@ -228,51 +218,6 @@ def get_handler(
                 imstype = IMSType.PIWEBAPI
         except HTTPError as e:
             logger.debug(f"Could not list PI sources: {e}")
-    if imstype == IMSType.PI:
-        if not is_windows():
-            raise RuntimeError(
-                "ODBC drivers not available for non-Windows environments. "
-                "Try Web API ('piwebapi') instead."
-            )
-        if "PI ODBC Driver" not in pyodbc.drivers():
-            raise RuntimeError(
-                "No PI ODBC driver detected. "
-                "Either switch to Web API ('piwebapi') or install appropriate driver."
-            )
-        if host is None:
-            hostport = get_server_address_pi(datasource)
-            if not hostport:
-                raise ValueError(
-                    f"Unable to locate data source '{datasource}'."
-                    "Do you have correct permissions?"
-                )
-            host, port = hostport
-        if port is None:
-            port = 5450
-        return PIHandlerODBC(host=host, port=port, options=options)
-
-    if imstype in [IMSType.ASPEN, IMSType.IP21]:
-        if not is_windows():
-            raise RuntimeError(
-                "ODBC drivers not available for non-Windows environments. "
-                "Try Web API ('aspenone') instead."
-            )
-        if "AspenTech SQLplus" not in pyodbc.drivers():
-            raise RuntimeError(
-                "No Aspen SQLplus ODBC driver detected. "
-                "Either switch to Web API ('aspenone') or install appropriate driver."
-            )
-        if host is None:
-            hostport = get_server_address_aspen(datasource)
-            if not hostport:
-                raise ValueError(
-                    f"Unable to locate data source '{datasource}'."
-                    "Do you have correct permissions?"
-                )
-            host, port = hostport
-        if port is None:
-            port = 10014
-        return AspenHandlerODBC(host=host, port=port, options=options)
 
     if imstype == IMSType.PIWEBAPI:
         return PIHandlerWeb(
@@ -281,6 +226,7 @@ def get_handler(
             options=options,
             verify_ssl=verifySSL,
             auth=auth,
+            cache=cache,
         )
 
     if imstype == IMSType.ASPENONE:
@@ -291,7 +237,11 @@ def get_handler(
             verify_ssl=verifySSL,
             auth=auth,
         )
-
+    elif imstype in [IMSType.PI, IMSType.ASPEN, IMSType.IP21]:
+        raise ValueError(
+            f"ODBC clients are no longer supported. Given ims client type: {imstype}."
+            " Please use tagreader version <= 4 for deprecated ODBC clients."
+        )
     raise ValueError(
         f"Could not infer IMSType for datasource: {datasource}. "
         f"Please specify correct datasource, imstype or host, or refer to the user docs."
@@ -303,10 +253,8 @@ class IMSClient:
         self,
         datasource: str,
         imstype: Optional[Union[str, IMSType]] = None,
-        tz: pytz.timezone = pytz.timezone("Europe/Oslo"),
+        tz: Union[tzinfo, str] = pytz.timezone("Europe/Oslo"),
         url: Optional[str] = None,
-        host: Optional[str] = None,
-        port: Optional[int] = None,
         handler_options: Dict[str, Union[int, float, str]] = {},  # noqa:
         verifySSL: bool = True,
         auth: Optional[Any] = None,
@@ -321,40 +269,48 @@ class IMSClient:
                     f" We suggest to use the tagreader.IMSType enumerator when initiating a client."
                 )
 
-        self.tz = tz
+        if isinstance(tz, str):
+            if tz in pytz.all_timezones:
+                self.tz = pytz.timezone(tz)
+            else:
+                raise ValueError(f"Invalid timezone string  Given type was {type(tz)}")
+        elif isinstance(tz, tzinfo):
+            self.tz = tz
+        else:
+            raise ValueError(
+                f"timezone argument 'tz' needs to be either a valid timezone string or a tzinfo-object. Given type was {type(tz)}"
+            )
+
+        self.cache = cache
         self.handler = get_handler(
             imstype=imstype,
             datasource=datasource,
             url=url,
-            host=host,
-            port=port,
             options=handler_options,
             verifySSL=verifySSL,
             auth=auth,
+            cache=self.cache,
         )
-        if cache:
-            self.cache = cache
-        else:
-            self.cache = SmartCache(directory=Path(".") / ".cache" / datasource)
-            warnings.warn(
-                "Caching will no longer be the default behavior in Tagreader version 5."
-                " Please specify cache argument to keep current behaviour.",
-                FutureWarning,
-            )
 
     def connect(self) -> None:
         self.handler.connect()
 
     def search_tag(
-        self, tag: Optional[str] = None, desc: Optional[str] = None
+        self,
+        tag: Optional[str] = None,
+        desc: Optional[str] = None,
+        timeout: Optional[int] = None,
     ) -> List[Tuple[str, str]]:
         logger.warning("This function is deprecated. Please call 'search()' instead")
-        return self.search(tag=tag, desc=desc)
+        return self.search(tag=tag, desc=desc, timeout=timeout)
 
     def search(
-        self, tag: Optional[str] = None, desc: Optional[str] = None
+        self,
+        tag: Optional[str] = None,
+        desc: Optional[str] = None,
+        timeout: Optional[int] = None,
     ) -> List[Tuple[str, str]]:
-        return self.handler.search(tag=tag, desc=desc)
+        return self.handler.search(tag=tag, desc=desc, timeout=timeout)
 
     def _get_metadata(self, tag: str):
         return self.handler._get_tag_metadata(
@@ -541,7 +497,7 @@ class IMSClient:
         tags: Union[str, List[str]],
         start_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
         end_time: Optional[Union[datetime, pd.Timestamp, str]] = None,
-        ts: Union[timedelta, pd.Timedelta, int] = timedelta(seconds=60),
+        ts: Optional[Union[timedelta, pd.Timedelta, int]] = timedelta(seconds=60),
         read_type: ReaderType = ReaderType.INT,
         get_status: bool = False,
     ) -> pd.DataFrame:
@@ -594,8 +550,26 @@ class IMSClient:
 
         if isinstance(ts, pd.Timedelta):
             ts = ts.to_pytimedelta()
-        elif isinstance(ts, int):
-            ts = timedelta(seconds=ts)
+        elif isinstance(
+            ts,
+            (
+                int,
+                float,
+                np.int32,
+                np.int64,
+                np.float32,
+                np.float64,
+                np.number,
+                np.integer,
+            ),
+        ):
+            ts = timedelta(seconds=int(ts))
+        elif not ts and read_type not in [ReaderType.SNAPSHOT, ReaderType.RAW]:
+            raise ValueError(
+                "ts needs to be a timedelta or an integer (number of seconds)"
+                " unless you are reading raw or snapshot data."
+                f" Given type: {type(ts)}"
+            )
         elif not isinstance(ts, timedelta):
             raise ValueError(
                 "ts needs to be either a None, timedelta or and integer (number of seconds)."

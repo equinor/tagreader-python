@@ -25,12 +25,6 @@ def data() -> Generator[pd.DataFrame, None, None]:
     yield df_total
 
 
-@pytest.fixture  # type: ignore[misc]
-def cache(tmp_path: Path) -> Generator[SmartCache, None, None]:
-    cache = SmartCache(directory=tmp_path)
-    yield cache
-
-
 def test_base_cache(tmp_path: Path) -> None:
     webidcache = BaseCache(directory=tmp_path)
 
@@ -51,7 +45,7 @@ def test_safe_tagname() -> None:
 
 
 def test_key_path(cache: SmartCache) -> None:
-    pass
+    assert cache.size_limit == int(4e9)
 
 
 def test_cache_single_store_and_fetch(
