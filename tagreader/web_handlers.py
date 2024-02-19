@@ -33,7 +33,7 @@ def get_url_pi() -> str:
     return r"https://piwebapi.equinor.com/piwebapi"
 
 
-def get_auth_aspen(use_internal: bool = False):
+def get_auth_aspen(use_internal: bool = True):
     if use_internal:
         return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
@@ -122,15 +122,8 @@ class BaseHandlerWeb(ABC):
         auth: Optional[Any],
         verify_ssl: Optional[bool],
     ):
-        if url is None:
-            url = get_url_aspen()
-
-        if auth is None:
-            auth = get_auth_aspen()
-
         self.datasource = datasource
         self.base_url = url
-
         self.session = requests.Session()
         self.session.auth = auth if auth is not None else get_auth_aspen()
         if verify_ssl is False:
