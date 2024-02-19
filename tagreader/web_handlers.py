@@ -37,14 +37,14 @@ def get_auth_aspen(use_internal: bool = False):
     if use_internal:
         return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
-    from .BearerAuth import BearerAuth
+    from msal_bearer.BearerAuth import BearerAuth
 
     tenantID = "3aa4a235-b6e2-48d5-9195-7fcf05b459b0"
     clientID = "7adaaa99-897f-428c-8a5f-4053db565b32"
     scopes = [
         "https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData//user_impersonation"
     ]
-    return BearerAuth.get_bearer_token_auth(
+    return BearerAuth.get_auth(
         tenantID=tenantID, clientID=clientID, scopes=scopes, verbose=True
     )
 

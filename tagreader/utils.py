@@ -177,8 +177,6 @@ def add_equinor_root_certificate(get_equinor: bool = True) -> bool:
                 logger.debug("CA certificate found!")
                 break
     elif is_mac():
-        import subprocess
-
         macos_ca_certs = subprocess.run(
             ["security", "find-certificate", "-a", "-c", ca_search, "-Z"],
             stdout=subprocess.PIPE,
