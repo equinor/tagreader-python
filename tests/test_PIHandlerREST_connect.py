@@ -1,12 +1,13 @@
 import os
+from datetime import timedelta
+from typing import Generator
 
-import pandas as pd
 import pytest
 
+from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
-from tagreader.web_handlers import (PIHandlerWeb, get_verifySSL,
-                                    list_piwebapi_sources)
+from tagreader.web_handlers import PIHandlerWeb, get_verify_ssl, list_piwebapi_sources
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -16,7 +17,7 @@ if is_GITHUBACTION:
         "All tests in module require connection to PI server", allow_module_level=True
     )
 
-verifySSL = False if is_AZUREPIPELINE else get_verifySSL()
+verifySSL = False if is_AZUREPIPELINE else get_verify_ssl()
 
 SOURCE = "PIMAM"
 TAGS = {
@@ -30,9 +31,13 @@ STOP_TIME = "2020-04-01 12:05:00"
 SAMPLE_TIME = 60
 
 
-@pytest.fixture()
-def Client():
-    c = IMSClient(SOURCE, imstype="piwebapi", verifySSL=verifySSL)
+@pytest.fixture  # type: ignore[misc]
+def client() -> Generator[IMSClient, None, None]:
+    c = IMSClient(
+        datasource=SOURCE,
+        imstype="piwebapi",
+        verifySSL=bool(verifySSL),
+    )
     c.cache = None
     c.connect()
     c.handler._max_rows = 1000  # For the long raw test
@@ -41,15 +46,24 @@ def Client():
         os.remove(SOURCE + ".h5")
 
 
-@pytest.fixture()
-def PIHandler():
-    h = PIHandlerWeb(datasource=SOURCE, verifySSL=verifySSL)
-    h.webidcache["alreadyknowntag"] = "knownwebid"
+@pytest.fixture  # type: ignore[misc]
+def pi_handler(cache: SmartCache) -> Generator[PIHandlerWeb, None, None]:
+    h = PIHandlerWeb(
+        datasource=SOURCE,
+        verify_ssl=bool(verifySSL),
+        auth=None,
+        options={},
+        url=None,
+        cache=cache,
+    )
+    if not isinstance(h.web_id_cache, SmartCache):
+        raise ValueError("Expected SmartCache in the web client.")
+    h.web_id_cache["alreadyknowntag"] = "knownwebid"
     yield h
 
 
-def test_list_all_piwebapi_sources():
-    res = list_piwebapi_sources(verifySSL=verifySSL)
+def test_list_all_piwebapi_sources() -> None:
+    res = list_piwebapi_sources(verify_ssl=bool(verifySSL), auth=None, url=None)
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:
@@ -57,8 +71,8 @@ def test_list_all_piwebapi_sources():
         assert 3 <= len(r)
 
 
-def test_list_sources_piwebapi():
-    res = list_sources("piwebapi", verifySSL=verifySSL)
+def test_list_sources_piwebapi() -> None:
+    res = list_sources(imstype="piwebapi", verifySSL=bool(verifySSL))
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:
@@ -66,36 +80,36 @@ def test_list_sources_piwebapi():
         assert 3 <= len(r)
 
 
-def test_verify_connection(PIHandler):
-    assert PIHandler.verify_connection("PIMAM") is True
-    assert PIHandler.verify_connection("somerandomstuffhere") is False
+def test_verify_connection(pi_handler: IMSClient) -> None:
+    assert pi_handler.verify_connection("PIMAM") is True  # type: ignore[attr-defined]
+    assert pi_handler.verify_connection("somerandomstuffhere") is False  # type: ignore[attr-defined]
 
 
-def test_search_tag(Client):
-    res = Client.search("SINUSOID")
+def test_search_tag(client: IMSClient) -> None:
+    res = client.search("SINUSOID")
     assert 1 == len(res)
-    res = Client.search("SIN*")
+    res = client.search("SIN*")
     assert 3 <= len(res)
     [taglist, desclist] = zip(*res)
     assert "SINUSOIDU" in taglist
     assert desclist[taglist.index("SINUSOID")] == "12 Hour Sine Wave"
-    res = Client.search(desc="12 Hour Sine Wave")
+    res = client.search(tag=None, desc="12 Hour Sine Wave")
     assert 1 <= len(res)
-    res = Client.search("SINUSOID", desc="*Sine*")
+    res = client.search(tag="SINUSOID", desc="*Sine*")
     assert 1 <= len(res)
 
 
-def test_tag_to_webid(PIHandler):
-    res = PIHandler.tag_to_webid("SINUSOID")
+def test_tag_to_web_id(pi_handler: PIHandlerWeb) -> None:
+    res = pi_handler.tag_to_web_id("SINUSOID")
     assert isinstance(res, str)
     assert len(res) >= 20
     with pytest.raises(AssertionError):
-        res = PIHandler.tag_to_webid("SINUSOID*")
-    with pytest.warns():
-        res = PIHandler.tag_to_webid("somerandomgarbage")
+        _ = pi_handler.tag_to_web_id("SINUSOID*")
+    res = pi_handler.tag_to_web_id("somerandomgarbage")
+    assert not res
 
 
-@pytest.mark.parametrize(
+@pytest.mark.parametrize(  # type: ignore[misc]
     ("read_type", "size"),
     [
         ("RAW", 10),
@@ -117,15 +131,17 @@ def test_tag_to_webid(PIHandler):
         ("SNAPSHOT", 1),
     ],
 )
-def test_read(Client, read_type, size):
+def test_read(client: IMSClient, read_type: str, size: int) -> None:
     if read_type == "SNAPSHOT":
-        df = Client.read(
-            TAGS["Float32"],
+        df = client.read(
+            tags=TAGS["Float32"],
             read_type=getattr(ReaderType, read_type),
+            start_time=None,
+            end_time=None,
         )
     else:
-        df = Client.read(
-            TAGS["Float32"],
+        df = client.read(
+            tags=TAGS["Float32"],
             start_time=START_TIME,
             end_time=STOP_TIME,
             ts=SAMPLE_TIME,
@@ -135,9 +151,7 @@ def test_read(Client, read_type, size):
     if read_type not in ["SNAPSHOT", "RAW"]:
         assert df.shape == (size, 1)
         assert df.index[0] == ensure_datetime_with_tz(START_TIME)
-        assert df.index[-1] == df.index[0] + (size - 1) * pd.Timedelta(
-            SAMPLE_TIME, unit="s"
-        )
+        assert df.index[-1] == df.index[0] + (size - 1) * timedelta(seconds=SAMPLE_TIME)
     elif read_type in "RAW":
         # Weirdness for test-tag which can have two different results,
         # apparently depending on the day of the week, mood, lunar cycle...
@@ -146,9 +160,9 @@ def test_read(Client, read_type, size):
         assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
 
 
-def test_read_with_status(Client):
-    df = Client.read(
-        TAGS["Float32"],
+def test_read_with_status(client: IMSClient) -> None:
+    df = client.read(
+        tags=TAGS["Float32"],
         start_time=START_TIME,
         end_time=STOP_TIME,
         ts=SAMPLE_TIME,
@@ -159,9 +173,9 @@ def test_read_with_status(Client):
     assert df[TAGS["Float32"] + "::status"].iloc[0] == 0
 
 
-def test_read_raw_long(Client):
-    df = Client.read(
-        TAGS["Float32"],
+def test_read_raw_long(client: IMSClient) -> None:
+    df = client.read(
+        tags=TAGS["Float32"],
         start_time=START_TIME,
         end_time="2020-04-11 20:00:00",
         read_type=ReaderType.RAW,
@@ -169,101 +183,105 @@ def test_read_raw_long(Client):
     assert len(df) > 1000
 
 
-def test_read_only_invalid_data_yields_nan_for_invalid(Client):
+def test_read_only_invalid_data_yields_nan_for_invalid(client: IMSClient) -> None:
     tag = TAGS["Float32"]
-    df = Client.read(tag, "2012-10-09 10:30:00", "2012-10-09 11:00:00", 600)
+    df = client.read(
+        tags=tag,
+        start_time="2012-10-09 10:30:00",
+        end_time="2012-10-09 11:00:00",
+        ts=600,
+    )
     assert df.shape == (4, 1)
     assert df[tag].isna().all()
 
 
-def test_read_invalid_data_mixed_with_valid_yields_nan_for_invalid(Client):
+def test_read_invalid_data_mixed_with_valid_yields_nan_for_invalid(
+    client: IMSClient,
+) -> None:
     # Hint, found first valid datapoint for tag
     tag = TAGS["Float32"]
-    df = Client.read(tag, "2018-04-23 15:20:00", "2018-04-23 15:50:00", 600)
+    df = client.read(
+        tags=tag,
+        start_time="2018-04-23 15:20:00",
+        end_time="2018-04-23 15:50:00",
+        ts=600,
+    )
     assert df.shape == (4, 1)
-    assert df[tag].iloc[[0, 1]].isna().all()
-    assert df[tag].iloc[[2, 3]].notnull().all()
+    assert df[tag].iloc[[0, 1]].isna().all()  # type: ignore[call-overload]
+    assert df[tag].iloc[[2, 3]].notnull().all()  # type: ignore[call-overload]
 
 
-def test_digitalread_yields_integers(Client):
+def test_digitalread_yields_integers(client: IMSClient) -> None:
     tag = TAGS["Digital"]
-    df = Client.read(
-        tag, start_time=START_TIME, end_time=STOP_TIME, ts=600, read_type=ReaderType.INT
+    df = client.read(
+        tags=tag,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=600,
+        read_type=ReaderType.INT,
     )
     assert all(x.is_integer() for x in df[tag])
 
 
-def test_get_unit(Client):
-    res = Client.get_units(list(TAGS.values()))
+def test_get_unit(client: IMSClient) -> None:
+    res = client.get_units(list(TAGS.values()))
     assert res[TAGS["Float32"]] == "DEG. C"
     assert res[TAGS["Digital"]] == "STATE"
     assert res[TAGS["Int32"]] == ""
 
 
-def test_get_description(Client):
-    res = Client.get_descriptions(list(TAGS.values()))
+def test_get_description(client: IMSClient) -> None:
+    res = client.get_descriptions(list(TAGS.values()))
     assert res[TAGS["Float32"]] == "Atmospheric Tower OH Vapor"
     assert res[TAGS["Digital"]] == "Light Naphtha End Point Control"
     assert res[TAGS["Int32"]] == "Light Naphtha End Point"
 
 
-def test_from_DST_folds_time(Client):
+def test_from_dst_folds_time(client: IMSClient) -> None:
     if os.path.exists(SOURCE + ".h5"):
         os.remove(SOURCE + ".h5")
     tag = TAGS["Float32"]
     interval = ["2017-10-29 00:30:00", "2017-10-29 04:30:00"]
-    df = Client.read([tag], interval[0], interval[1], 600)
+    df = client.read(tags=[tag], start_time=interval[0], end_time=interval[1], ts=600)
     assert len(df) == (4 + 1) * 6 + 1
     # Time exists inside fold:
     assert (
-        df[tag].loc["2017-10-29 01:10:00+02:00":"2017-10-29 01:50:00+02:00"].size == 5
+        df[tag].loc["2017-10-29 01:10:00+02:00":"2017-10-29 01:50:00+02:00"].size == 5  # type: ignore[misc]
     )
     # Time inside fold is always included:
     assert (
-        df.loc["2017-10-29 01:50:00":"2017-10-29 03:10:00"].size == 2 + (1 + 1) * 6 + 1
+        df.loc["2017-10-29 01:50:00":"2017-10-29 03:10:00"].size == 2 + (1 + 1) * 6 + 1  # type: ignore[misc]
     )
 
 
-def test_to_DST_skips_time(Client):
+def test_to_dst_skips_time(client: IMSClient) -> None:
     if os.path.exists(SOURCE + ".h5"):
         os.remove(SOURCE + ".h5")
     tag = TAGS["Float32"]
     interval = ["2018-03-25 00:30:00", "2018-03-25 03:30:00"]
-    df = Client.read([tag], interval[0], interval[1], 600)
+    df = client.read(tags=[tag], start_time=interval[0], end_time=interval[1], ts=600)
     # Lose one hour:
     assert (
-        df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6
+        df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6  # type: ignore[misc]
     )
 
 
-# def test_read_unknown_tag(Client):
-#     with pytest.warns(UserWarning):
-#         df = Client.read(["sorandomitcantexist"], START_TIME, STOP_TIME)
-#     assert len(df.index) == 0
-#     with pytest.warns(UserWarning):
-#         df = Client.read(
-#             [TAGS["Float32"], "sorandomitcantexist"], START_TIME, STOP_TIME
-#         )
-#     assert len(df.index) > 0
-#     assert len(df.columns == 1)
-
-
-def test_tags_with_no_data_included_in_results(Client):
-    df = Client.read([TAGS["Float32"]], "2099-01-01 00:00:00", "2099-01-02 00:00:00")
+def test_tags_with_no_data_included_in_results(client: IMSClient) -> None:
+    df = client.read(
+        tags=[TAGS["Float32"]],
+        start_time="2099-01-01 00:00:00",
+        end_time="2099-01-02 00:00:00",
+        ts=timedelta(seconds=60),
+    )
     assert len(df.columns) == 1
 
 
-def test_tags_raw_with_no_data_included_in_results(Client):
-    df = Client.read(
-        [TAGS["Float32"]],
-        "2099-01-01 00:00:00",
-        "2099-01-02 00:00:00",
+def test_tags_raw_with_no_data_included_in_results(client: IMSClient) -> None:
+    df = client.read(
+        tags=[TAGS["Float32"]],
+        start_time="2099-01-01 00:00:00",
+        end_time="2099-01-02 00:00:00",
         read_type=ReaderType.RAW,
+        ts=timedelta(seconds=60),
     )
     assert df.empty
-
-
-# def test_connect_no_pytables():
-#     with pytest.warns(UserWarning):
-#         c = IMSClient(datasource="whatever", host="host", imstype="piwebapi")
-#         c.connect()

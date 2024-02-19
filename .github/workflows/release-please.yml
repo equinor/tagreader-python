@@ -1,0 +1,45 @@
+name: 🎉 Release Please
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release_please:
+    name: 🔖 Release Please
+    runs-on: ubuntu-latest
+    steps:
+      - name: PyPI Release
+        id: release
+        uses: google-github-actions/release-please-action@v3
+        with:
+          release-type: python
+          bump-minor-pre-major: true
+          changelog-types: >
+            [{"type":"build", "section":"📦 Build system","hidden":false},
+            {"type":"chore", "section":"🧹 Chores","hidden":false},
+            {"type":"ci", "section":"👷 CI/CD","hidden":false},
+            {"type":"docs","section":"📚 Documentation","hidden":false},
+            {"type":"feat","section":"✨ Features","hidden":false},
+            {"type":"fix","section":"🐛 Bug Fixes","hidden":false},
+            {"type":"perf", "section":"🏎️ Performance","hidden":false},
+            {"type":"refactor", "section":"🔨 Refactor","hidden":false},
+            {"type":"revert", "section":"⏪️ Revert","hidden":false},
+            {"type":"style","section":"💎 Style","hidden":false},
+            {"type":"test", "section":"🧪 Tests","hidden":false}]
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+
+  build:
+    name: '🛠️ Build'
+    if: ${{ needs.release_please.outputs.release_created }}
+    needs: [release_please]
+    uses: ./.github/workflows/build.yml
+
+  deploy:
+    name: '🚀 Publish'
+    if: ${{ needs.release_please.outputs.release_created }}
+    needs: [build, release_please]
+    uses: ./.github/workflows/publish.yml
+    secrets: inherit

@@ -1,6 +1,10 @@
+from datetime import timedelta
+from typing import Generator, cast
+
 import pytest
-import pandas as pd
-from tagreader.utils import ensure_datetime_with_tz, ReaderType
+
+from tagreader.cache import SmartCache
+from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.web_handlers import PIHandlerWeb
 
 START_TIME = "2020-04-01 11:05:00"
@@ -8,52 +12,69 @@ STOP_TIME = "2020-04-01 12:05:00"
 SAMPLE_TIME = 60
 
 
-@pytest.fixture()
-def PIHandler():
-    h = PIHandlerWeb(datasource="sourcename")
-    h.webidcache["alreadyknowntag"] = "knownwebid"
+@pytest.fixture  # type: ignore[misc]
+def pi_handler(cache: SmartCache) -> Generator[PIHandlerWeb, None, None]:
+    h = PIHandlerWeb(
+        datasource="sourcename",
+        auth=None,
+        options={},
+        url=None,
+        verify_ssl=True,
+        cache=cache,
+    )
+    if not isinstance(h.web_id_cache, SmartCache):
+        raise ValueError("Expected SmartCache in the web client.")
+    h.web_id_cache.add(key="alreadyknowntag", value="knownwebid")
     yield h
 
 
-def test_escape_chars():
+def test_escape_chars() -> None:
     assert (
         PIHandlerWeb.escape('+-&|(){}[]^"~*:\\') == r"\+\-\&\|\(\)\{\}\[\]\^\"\~*\:\\"
     )
 
 
-def test_generate_search_query():
-    assert PIHandlerWeb.generate_search_query("SINUSOID") == {"q": "name:SINUSOID"}
-    assert PIHandlerWeb.generate_search_query(r"BA:*.1", datasource="sourcename") == {
+def test_generate_search_query() -> None:
+    assert PIHandlerWeb.generate_search_query(
+        tag="SINUSOID", desc=None, datasource=None
+    ) == {"q": "name:SINUSOID"}
+    assert PIHandlerWeb.generate_search_query(
+        tag=r"BA:*.1", desc=None, datasource="sourcename"
+    ) == {
         "q": r"name:BA\:*.1",
         "scope": "pi:sourcename",
     }
-    assert PIHandlerWeb.generate_search_query(tag="BA:*.1") == {
+    assert PIHandlerWeb.generate_search_query(
+        tag="BA:*.1", datasource=None, desc=None
+    ) == {
         "q": r"name:BA\:*.1",
     }
-    assert PIHandlerWeb.generate_search_query(desc="Concentration Reactor 1") == {
+    assert PIHandlerWeb.generate_search_query(
+        desc="Concentration Reactor 1", datasource=None, tag=None
+    ) == {
         "q": r"description:Concentration\ Reactor\ 1",
     }
     assert PIHandlerWeb.generate_search_query(
-        tag="BA:*.1", desc="Concentration Reactor 1"
+        tag="BA:*.1", desc="Concentration Reactor 1", datasource=None
     ) == {"q": r"name:BA\:*.1 AND description:Concentration\ Reactor\ 1"}
 
 
-def test_is_summary(PIHandler):
-    assert PIHandler._is_summary(ReaderType.AVG)
-    assert PIHandler._is_summary(ReaderType.MIN)
-    assert PIHandler._is_summary(ReaderType.MAX)
-    assert PIHandler._is_summary(ReaderType.RNG)
-    assert PIHandler._is_summary(ReaderType.STD)
-    assert PIHandler._is_summary(ReaderType.VAR)
-    assert not PIHandler._is_summary(ReaderType.RAW)
-    assert not PIHandler._is_summary(ReaderType.SHAPEPRESERVING)
-    assert not PIHandler._is_summary(ReaderType.INT)
-    assert not PIHandler._is_summary(ReaderType.GOOD)
-    assert not PIHandler._is_summary(ReaderType.BAD)
-    assert not PIHandler._is_summary(ReaderType.SNAPSHOT)
+def test_is_summary(pi_handler: PIHandlerWeb) -> None:
+    assert pi_handler._is_summary(ReaderType.AVG)
+    assert pi_handler._is_summary(ReaderType.MIN)
+    assert pi_handler._is_summary(ReaderType.MAX)
+    assert pi_handler._is_summary(ReaderType.RNG)
+    assert pi_handler._is_summary(ReaderType.STD)
+    assert pi_handler._is_summary(ReaderType.VAR)
+    assert not pi_handler._is_summary(ReaderType.RAW)
+    assert not pi_handler._is_summary(ReaderType.SHAPEPRESERVING)
+    assert not pi_handler._is_summary(ReaderType.INT)
+    assert not pi_handler._is_summary(ReaderType.GOOD)
+    assert not pi_handler._is_summary(ReaderType.BAD)
+    assert not pi_handler._is_summary(ReaderType.SNAPSHOT)
 
 
-@pytest.mark.parametrize(
+@pytest.mark.parametrize(  # type: ignore[misc]
     "read_type",
     [
         "RAW",
@@ -75,17 +96,20 @@ def test_is_summary(PIHandler):
         "SNAPSHOT",
     ],
 )
-def test_generate_read_query(PIHandler, read_type):
-    starttime = ensure_datetime_with_tz(START_TIME)
-    stoptime = ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
+def test_generate_read_query(pi_handler: PIHandlerWeb, read_type: str) -> None:
+    if not isinstance(pi_handler.web_id_cache, SmartCache):
+        raise ValueError("Expected SmartCache in the fixture.")
+    start = ensure_datetime_with_tz(START_TIME)
+    stop = ensure_datetime_with_tz(STOP_TIME)
+    ts = timedelta(seconds=SAMPLE_TIME)
 
-    (url, params) = PIHandler.generate_read_query(
-        PIHandler.tag_to_webid("alreadyknowntag"),
-        starttime,
-        stoptime,
-        ts,
-        getattr(ReaderType, read_type),
+    (url, params) = pi_handler.generate_read_query(
+        tag=pi_handler.tag_to_web_id(tag="alreadyknowntag"),  # type: ignore[arg-type]
+        start=start,
+        end=stop,
+        sample_time=ts,
+        read_type=getattr(ReaderType, read_type),
+        metadata=None,
     )
     if read_type != "SNAPSHOT":
         assert params["startTime"] == "01-Apr-20 09:05:00"
@@ -93,11 +117,13 @@ def test_generate_read_query(PIHandler, read_type):
         assert params["timeZone"] == "UTC"
 
     if read_type == "INT":
-        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/interpolated"
+        assert (
+            url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/interpolated"
+        )
         assert params["selectedFields"] == "Links;Items.Timestamp;Items.Value"
         assert params["interval"] == f"{SAMPLE_TIME}s"
     elif read_type in ["AVG", "MIN", "MAX", "RNG", "STD", "VAR"]:
-        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/summary"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/summary"
         assert (
             params["selectedFields"] == "Links;Items.Value.Timestamp;Items.Value.Value"
         )
@@ -111,16 +137,16 @@ def test_generate_read_query(PIHandler, read_type):
         }.get(read_type) == params["summaryType"]
         assert params["summaryDuration"] == f"{SAMPLE_TIME}s"
     elif read_type == "SNAPSHOT":
-        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/value"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/value"
         assert params["selectedFields"] == "Timestamp;Value"
         assert len(params) == 3
     elif read_type == "RAW":
-        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/recorded"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/recorded"
         assert params["selectedFields"] == "Links;Items.Timestamp;Items.Value"
-        assert params["maxCount"] == 10000
+        assert params["maxCount"] == 10000  # type: ignore[comparison-overlap]
 
 
-@pytest.mark.parametrize(
+@pytest.mark.parametrize(  # type: ignore[misc]
     "read_type",
     [
         "RAW",
@@ -142,18 +168,23 @@ def test_generate_read_query(PIHandler, read_type):
         "SNAPSHOT",
     ],
 )
-def test_generate_read_query_with_status(PIHandler, read_type):
-    starttime = ensure_datetime_with_tz(START_TIME)
-    stoptime = ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(SAMPLE_TIME, unit="s")
+def test_generate_read_query_with_status(
+    pi_handler: PIHandlerWeb, read_type: str
+) -> None:
+    if not isinstance(pi_handler.web_id_cache, SmartCache):
+        raise ValueError("Expected SmartCache in the fixture.")
+    start = ensure_datetime_with_tz(START_TIME)
+    stop = ensure_datetime_with_tz(STOP_TIME)
+    ts = timedelta(seconds=SAMPLE_TIME)
 
-    (url, params) = PIHandler.generate_read_query(
-        PIHandler.tag_to_webid("alreadyknowntag"),
-        starttime,
-        stoptime,
-        ts,
-        getattr(ReaderType, read_type),
+    (url, params) = pi_handler.generate_read_query(
+        tag=pi_handler.tag_to_web_id("alreadyknowntag"),  # type: ignore[arg-type]
+        start=start,
+        end=stop,
+        sample_time=ts,
+        read_type=getattr(ReaderType, read_type),
         get_status=True,
+        metadata=None,
     )
     if read_type != "SNAPSHOT":
         assert params["startTime"] == "01-Apr-20 09:05:00"
@@ -161,14 +192,16 @@ def test_generate_read_query_with_status(PIHandler, read_type):
         assert params["timeZone"] == "UTC"
 
     if read_type == "INT":
-        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/interpolated"
+        assert (
+            url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/interpolated"
+        )
         assert params["selectedFields"] == (
             "Links;Items.Timestamp;Items.Value;"
             "Items.Good;Items.Questionable;Items.Substituted"
         )
         assert params["interval"] == f"{SAMPLE_TIME}s"
     elif read_type in ["AVG", "MIN", "MAX", "RNG", "STD", "VAR"]:
-        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/summary"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/summary"
         assert params["selectedFields"] == (
             "Links;Items.Value.Timestamp;Items.Value.Value;"
             "Items.Value.Good;Items.Value.Questionable;Items.Value.Substituted"
@@ -183,30 +216,31 @@ def test_generate_read_query_with_status(PIHandler, read_type):
         }.get(read_type) == params["summaryType"]
         assert params["summaryDuration"] == f"{SAMPLE_TIME}s"
     elif read_type == "SNAPSHOT":
-        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/value"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/value"
         assert (
             params["selectedFields"] == "Timestamp;Value;Good;Questionable;Substituted"
         )
         assert len(params) == 3
     elif read_type == "RAW":
-        assert url == f"streams/{PIHandler.webidcache['alreadyknowntag']}/recorded"
+        assert url == f"streams/{pi_handler.web_id_cache['alreadyknowntag']}/recorded"
         assert params["selectedFields"] == (
             "Links;Items.Timestamp;Items.Value;"
             "Items.Good;Items.Questionable;Items.Substituted"
         )
-        assert params["maxCount"] == 10000
+        assert params["maxCount"] == 10000  # type: ignore[comparison-overlap]
 
 
-def test_genreadquery_long_sampletime(PIHandler):
-    starttime = ensure_datetime_with_tz(START_TIME)
-    stoptime = ensure_datetime_with_tz(STOP_TIME)
-    ts = pd.Timedelta(86410, unit="s")
+def test_generate_read_query_long_sample_time(pi_handler: PIHandlerWeb) -> None:
+    start = ensure_datetime_with_tz(START_TIME)
+    stop = ensure_datetime_with_tz(STOP_TIME)
+    ts = timedelta(seconds=86410)
 
-    (url, params) = PIHandler.generate_read_query(
-        PIHandler.tag_to_webid("alreadyknowntag"),
-        starttime,
-        stoptime,
-        ts,
-        ReaderType.INT,
+    (url, params) = pi_handler.generate_read_query(
+        tag=pi_handler.tag_to_web_id("alreadyknowntag"),  # type: ignore[arg-type]
+        start=start,
+        end=stop,
+        sample_time=ts,
+        read_type=ReaderType.INT,
+        metadata=None,
     )
     assert params["interval"] == f"{86410}s"
