@@ -30,7 +30,7 @@ classifiers=[
 [tool.poetry.dependencies]
 python = "^3.8"
 pandas = ">=1"
-certifi = "^2023.7.22"
+certifi = ">=2023.7.22,<2025.0.0"
 requests = "^2"
 requests-kerberos = "^0"
 notebook = { version = "^7.0.3", optional = true }
