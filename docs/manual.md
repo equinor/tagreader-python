@@ -1,8 +1,6 @@
 # Tagreader-python <!-- omit in toc -->
 
-Tagreader is a Python package for reading trend data from the OSIsoft PI and AspenTech InfoPlus.21 IMS systems. It can communicate with PI using ODBC or PI Web API, and with IP.21 using ODBC or Process Data REST Web API.
-
-The ODBC connections require proprietary drivers that are unfortunately only available for Windows. The handlers for Web APIs use the Python requests library, and should therefore also work for other platforms.
+Tagreader is a Python package for reading trend data from the OSIsoft PI and AspenTech InfoPlus.21 IMS systems. It can communicate with PI Web API, and with IP.21 using Process Data REST Web API.
 
 Tagreader is intended to be easy to use, and present the same interface to the user regardless of IMS system and connection method.
 
@@ -11,7 +9,6 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 - [Requirements](#requirements)
 - [Before getting started](#before-getting-started)
 - [Installation](#installation)
-  - [ODBC Drivers](#odbc-drivers)
   - [Adding host certificates](#adding-host-certificates)
     - [For Equinor users](#for-equinor-users)
     - [For non-Equinor users](#for-non-equinor-users)
@@ -40,9 +37,6 @@ Python >= 3.8 with the following packages:
   + diskcache
   + requests
   + requests_kerberos
-  + pyodbc (if using ODBC connections, Windows only)
-
-If using ODBC connections, you must also install proprietary drivers for PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for Microsoft Windows.
 
 # Before getting started
 
@@ -55,15 +49,6 @@ To install and/or upgrade:
 ```
 pip install --upgrade tagreader
 ```
-
-## ODBC Drivers
-
-To be able to connect to OSISoft PI or AspenTech InfoPlus.21 servers using ODBC, you need to obtain and install proprietary ODBC drivers. This is not required if you prefer to connect using REST APIs.
-
-If you work in Equinor, then you can find further information and links to download the drivers on our
-[wiki](https://wiki.equinor.com/wiki/index.php/tagreader-python).
-
-If you do not work in Equinor: ODBC queries may already work for you, although it is typically not sufficient to install the desktop applications from AspenTech or OSIsoft, since these normally don't come packaged with 64-bit ODBC drivers. If tagreader complains about missing drivers, check with your employer/organisation whether the ODBC drivers are available for you. If not, you may be able to obtain them directly from the vendors.
 
 ## Adding host certificates
 
@@ -136,7 +121,7 @@ The client presents the interface for communicating with the data source to the 
 A connection to a data source is prepared by creating an instance of `tagreader.IMSClient` with the following input arguments:
 
 * `datasource` : Name of data source
-* `imstype` : The name of the [IMS type](#ims-types) to query. Indicates the type of data source that is requested, and therefore determines which handler type to use. Valid values are `pi` , `ip21` , `piwebapi` and `aspenone` .
+* `imstype` (optional): The name of the [IMS type](#ims-types) to query. Indicates the type of data source that is requested, and therefore determines which handler type to use. Valid values are `piwebapi` and `aspenone` .
 * `tz` (optional): Time zone naive time stamps will be interpreted as belonging to this time zone. Similarly, the returned data points will be localized to this time zone. **Default**: _"Europe/Oslo"_.
 
 The following input arguments can be used when connecting to either `piwebapi` or to `aspenone` . None of these should be necessary to supply when connecting to Equinor servers.
@@ -144,8 +129,6 @@ The following input arguments can be used when connecting to either `piwebapi` o
 * `url` (optional): Path to server root, e.g. _"https:<span>//aspenone/ProcessData/AtProcessDataREST.dll"_ or _"https:<span>//piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` .
 * `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object that works with Equinor servers.
-
-If `imstype` is an ODBC type, i.e. `pi` or `ip21`, the host and port to connect to will by default be found by performing a search in Windows registry. For some systems this may not work. In those cases the user can explicitly specify the following optional parameters:
 
 * `host` (optional): Overrides mapping of datasource to hostname via Windows registry.
 * `port` (optional): Overrides mapping of datasource to port number via Windows registry. **Default**: 10014 for `ip21` and 5450 for `pi`.
