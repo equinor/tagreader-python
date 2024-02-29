@@ -1,8 +1,6 @@
 # Tagreader-python <!-- omit in toc -->
 
-Tagreader is a Python package for reading trend data from the OSIsoft PI and AspenTech InfoPlus.21 IMS systems. It can communicate with PI using ODBC or PI Web API, and with IP.21 using ODBC or Process Data REST Web API.
-
-The ODBC connections require proprietary drivers that are unfortunately only available for Windows. The handlers for Web APIs use the Python requests library, and should therefore also work for other platforms.
+Tagreader is a Python package for reading trend data from the OSIsoft PI and AspenTech InfoPlus.21 IMS systems. It can communicate with PI Web API, and with IP.21 using Process Data REST Web API.
 
 Tagreader is intended to be easy to use, and present the same interface to the user regardless of IMS system and connection method.
 
@@ -11,7 +9,6 @@ Tagreader is intended to be easy to use, and present the same interface to the u
 - [Requirements](#requirements)
 - [Before getting started](#before-getting-started)
 - [Installation](#installation)
-  - [ODBC Drivers](#odbc-drivers)
   - [Adding host certificates](#adding-host-certificates)
     - [For Equinor users](#for-equinor-users)
     - [For non-Equinor users](#for-non-equinor-users)
@@ -40,9 +37,6 @@ Python >= 3.8 with the following packages:
   + diskcache
   + requests
   + requests_kerberos
-  + pyodbc (if using ODBC connections, Windows only)
-
-If using ODBC connections, you must also install proprietary drivers for PI ODBC and/or Aspen IP.21 SQLPlus. These drivers are only available for Microsoft Windows.
 
 # Before getting started
 
@@ -55,15 +49,6 @@ To install and/or upgrade:
 ```
 pip install --upgrade tagreader
 ```
-
-## ODBC Drivers
-
-To be able to connect to OSISoft PI or AspenTech InfoPlus.21 servers using ODBC, you need to obtain and install proprietary ODBC drivers. This is not required if you prefer to connect using REST APIs.
-
-If you work in Equinor, then you can find further information and links to download the drivers on our
-[wiki](https://wiki.equinor.com/wiki/index.php/tagreader-python).
-
-If you do not work in Equinor: ODBC queries may already work for you, although it is typically not sufficient to install the desktop applications from AspenTech or OSIsoft, since these normally don't come packaged with 64-bit ODBC drivers. If tagreader complains about missing drivers, check with your employer/organisation whether the ODBC drivers are available for you. If not, you may be able to obtain them directly from the vendors.
 
 ## Adding host certificates
 
@@ -94,18 +79,16 @@ import tagreader
 
 # IMS types
 
-Tagreader supports connecting to PI and IP.21 servers using both ODBC and Web API interfaces. When calling certain methods, the user will need to tell tagreader which system and which connection method to use. This input argument is called `imstype` , and can be one of the following case-insensitive strings:
+Tagreader supports connecting to PI and IP.21 servers using Web API interfaces. When calling certain methods, the user will need to tell tagreader which system and which connection method to use. This input argument is called `imstype` , and can be one of the following case-insensitive strings:
 
-* `pi` : For connecting to OSISoft PI via ODBC.
 * `piwebapi` : For connecting to OSISoft PI Web API
-* `ip21` : For connecting to AspenTech InfoPlus.21 via ODBC
 * `aspenone` : For connecting to AspenTech Process Data REST Web API
 
 # Listing available data sources
 
-The method `tagreader.list_sources()` can query for available PI and IP.21 servers available through both ODBC and Web API. Input arguments:
+The method `tagreader.list_sources()` can query for available PI and IP.21 servers available through Web API. Input arguments:
 
-* `imstype` : The name of the [IMS type](#ims-types) to query. Valid values: `pi` , `ip21` , `piwebapi` and `aspenone` .
+* `imstype` (optional) : The name of the [IMS type](#ims-types) to query. Valid values: `piwebapi` and `aspenone`.
 
 The following input arguments are only relevant when calling `list_sources()` with a Web API `imstype` ( `piwebapi` or `aspenone` ):
 
@@ -113,17 +96,15 @@ The following input arguments are only relevant when calling `list_sources()` wi
 * `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth objects that work with Equinor servers. If not connecting to an Equinor server, you may have to create your own auth.
 
-When called with `imstype` set to `pi` , `list_sources()` will search the registry at *HKEY_CURRENT_USER\Software\AspenTech\ADSA\Caches\AspenADSA\{username}* for available PI servers. Similarly, if called with `imstype` set to `ip21` , *HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PISystem\PI-SDK* will be searched for available IP.21 servers. Servers found through the registry are normally servers to which the user is authorized, and does not necessarily include all available data sources in the organization.
-
 **Example:**
 
 ``` python
 from tagreader import list_sources
-list_sources("ip21")
+list_sources("aspenone")
 list_sources("piwebapi")
 ```
 
-When called with `imstype` set to `piwebapi` or `aspenone` , `list_sources()` will connect to the web server URL and query for the available list of data sources. This list is normally the complete set of data sources available on the server, and does not indicate whether the user is authorized to query the source or not.
+When called with `imstype` set to `piwebapi` or `aspenone`, `list_sources()` will connect to the web server URL and query for the available list of data sources. This list is normally the complete set of data sources available on the server, and does not indicate whether the user is authorized to query the source or not.
 
 When querying Equinor Web API for data sources, `list_sources()` should require no input argument except `imstype="piwebapi"` or `imstype="aspenone"`. For non-Equinor servers, `url` will need to be specified, as may `auth` and `verifySSL` .
 
@@ -136,19 +117,14 @@ The client presents the interface for communicating with the data source to the 
 A connection to a data source is prepared by creating an instance of `tagreader.IMSClient` with the following input arguments:
 
 * `datasource` : Name of data source
-* `imstype` : The name of the [IMS type](#ims-types) to query. Indicates the type of data source that is requested, and therefore determines which handler type to use. Valid values are `pi` , `ip21` , `piwebapi` and `aspenone` .
+* `imstype` (optional): The name of the [IMS type](#ims-types) to query. Indicates the type of data source that is requested, and therefore determines which handler type to use. Valid values are `piwebapi` and `aspenone`. If not provided it will search the availble sources and find the type.
 * `tz` (optional): Time zone naive time stamps will be interpreted as belonging to this time zone. Similarly, the returned data points will be localized to this time zone. **Default**: _"Europe/Oslo"_.
 
-The following input arguments can be used when connecting to either `piwebapi` or to `aspenone` . None of these should be necessary to supply when connecting to Equinor servers.
+The following input arguments can be used when connecting to either `piwebapi` or to `aspenone`. None of these should be necessary to supply when connecting to Equinor servers.
 
 * `url` (optional): Path to server root, e.g. _"https:<span>//aspenone/ProcessData/AtProcessDataREST.dll"_ or _"https:<span>//piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` .
 * `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object that works with Equinor servers.
-
-If `imstype` is an ODBC type, i.e. `pi` or `ip21`, the host and port to connect to will by default be found by performing a search in Windows registry. For some systems this may not work. In those cases the user can explicitly specify the following optional parameters:
-
-* `host` (optional): Overrides mapping of datasource to hostname via Windows registry.
-* `port` (optional): Overrides mapping of datasource to port number via Windows registry. **Default**: 10014 for `ip21` and 5450 for `pi`.
 
 ## Connecting to data source
 
@@ -156,11 +132,10 @@ After creating the client as described above, connect to the server with the `co
 
 **Example**
 
-Connecting to the PINO PI data source using ODBC:
+Connecting to the PINO PI data source using PI webapi:
 
 ``` python
-c = tagreader.IMSClient("PINO", "pi")
-c.connect()
+c = tagreader.IMSClient("PINO")
 ```
 
 Connecting to the Peregrino IP.21 data source using AspenTech Process Data REST Web API, specifying that all naive time stamps as well as the returned data shall use Rio local time, and using the local endpoint in Brazil:
@@ -205,7 +180,7 @@ If both arguments are provided, the both must match.
 **Examples**
 
 ``` python
-c = tagreader.IMSClient("PINO", "pi")
+c = tagreader.IMSClient("PINO")
 c.connect()
 c.search("cd*158")
 c.search(desc="*reactor*")
@@ -249,7 +224,8 @@ By specifying the optional parameter `read_type` to `read()` , it is possible to
 Read interpolated data for the provided tag with 3-minute intervals between the two time stamps:
 
 ``` python
-c = tagreader.IMSClient("PINO", "pi")
+import tagreader
+c = tagreader.IMSClient("PINO")
 c.connect()
 df = c.read(['BA:ACTIVE.1'], '05-Jan-2020 08:00:00', '05/01/20 11:30am', 180)
 
@@ -306,7 +282,7 @@ Data in the cache never expires. If the data for some reason becomes invalid, th
 If, for any reason, you want to disable the cache, simply set it to `None` . This can be done at any time, but is normally done before connecting to the server, like this:
 
 ``` python
-c = tagreader.IMSClient("PINO", "pi")
+c = tagreader.IMSClient("PINO")
 c.cache = None
 c.connect()
 ```
