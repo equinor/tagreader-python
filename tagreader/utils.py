@@ -171,13 +171,12 @@ def add_equinor_root_certificate(get_equinor: bool = True) -> bool:
         logger.debug("Scanning CA certificate in Windows cert store", end="")
         for cert in ssl.enum_certificates("CA"):
             der = cert[0]
+            # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
             if hashlib.sha1(der).hexdigest().upper() == used_hash:
                 found = True
                 logger.debug("CA certificate found!")
                 break
     elif is_mac():
-        import subprocess
-
         macos_ca_certs = subprocess.run(
             ["security", "find-certificate", "-a", "-c", ca_search, "-Z"],
             stdout=subprocess.PIPE,
@@ -186,6 +185,7 @@ def add_equinor_root_certificate(get_equinor: bool = True) -> bool:
         if used_hash in str(macos_ca_certs).upper():
             c = get_macos_equinor_certificates()
             for cert in c:
+                # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
                 if hashlib.sha1(cert).hexdigest().upper() == used_hash:
                     der = cert
                     found = True
@@ -260,6 +260,7 @@ def is_equinor() -> bool:
 
         host = socket.gethostname()
 
+        # deepcode ignore IdenticalBranches: Not an error. First test is just more precise.
         if host + ".client.statoil.net" in str(s):
             return True
         elif "client.statoil.net" in host and host in str(s):

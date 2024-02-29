@@ -33,13 +33,28 @@ def get_url_pi() -> str:
     return r"https://piwebapi.equinor.com/piwebapi"
 
 
-def get_auth_aspen() -> HTTPKerberosAuth:
-    return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+def get_auth_aspen(use_internal: bool = True):
+    if use_internal:
+        return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+
+    from msal_bearer.BearerAuth import BearerAuth
+
+    tenantID = "3aa4a235-b6e2-48d5-9195-7fcf05b459b0"
+    clientID = "7adaaa99-897f-428c-8a5f-4053db565b32"
+    scopes = [
+        "https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData//user_impersonation"
+    ]
+    return BearerAuth.get_auth(
+        tenantID=tenantID, clientID=clientID, scopes=scopes, verbose=True
+    )
 
 
-def get_url_aspen() -> str:
-    # internal url (redirects to dll)
-    return r"https://aspenone.api.equinor.com"
+def get_url_aspen(use_internal: bool = False) -> str:
+    if use_internal:
+        # internal url (redirects to url including AtProcessDataREST.dll)
+        return r"https://aspenone.api.equinor.com"
+
+    return r"https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData/AtProcessDataREST.dll"
 
 
 def list_aspenone_sources(

@@ -33,6 +33,7 @@ pandas = ">=1"
 certifi = "^2023.7.22"
 requests = "^2"
 requests-kerberos = "^0"
+msal-bearer = "^0.1.0"
 notebook = { version = "^7.0.3", optional = true }
 matplotlib = { version = "^3", optional = true }
 diskcache = "^5.6.1"
