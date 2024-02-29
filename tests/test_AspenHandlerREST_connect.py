@@ -148,7 +148,7 @@ def test_query_sql(client: IMSClient) -> None:
     with raises(NotImplementedError):
         res = client.query_sql(query=query, parse=True)
         assert isinstance(res, str)
-    client.handler.initialize_connection_string(host="SNA-IMS.statoil.net")
+    client.handler.initialize_connection_string()
     query = "Select name, ip_description from ip_analogdef where name = 'atcai'"
     res = client.query_sql(query=query, parse=False)
     print(res)

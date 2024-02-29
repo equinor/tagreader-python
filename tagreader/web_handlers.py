@@ -642,6 +642,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
         if connection_string:
             self._connection_string = connection_string
         else:
+            if host is None:
+                from tagreader.clients import get_server_address_aspen
+
+                host = get_server_address_aspen(self.datasource)
             self._connection_string = (
                 f"DRIVER=AspenTech SQLPlus;HOST={host};"
                 f"PORT={port};CHARINT=N;CHARFLOAT=N;"
