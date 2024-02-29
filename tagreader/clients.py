@@ -300,7 +300,7 @@ class IMSClient:
         tag: Optional[str] = None,
         desc: Optional[str] = None,
         timeout: Optional[int] = None,
-    ) -> List[Tuple[str, str]]:
+    ) -> Union[List[Tuple[str, str]], List[str]]:
         logger.warning("This function is deprecated. Please call 'search()' instead")
         return self.search(tag=tag, desc=desc, timeout=timeout)
 
@@ -309,8 +309,11 @@ class IMSClient:
         tag: Optional[str] = None,
         desc: Optional[str] = None,
         timeout: Optional[int] = None,
-    ) -> List[Tuple[str, str]]:
-        return self.handler.search(tag=tag, desc=desc, timeout=timeout)
+        return_desc: bool = True,
+    ) -> Union[List[Tuple[str, str]], List[str]]:
+        return self.handler.search(
+            tag=tag, desc=desc, timeout=timeout, return_desc=return_desc
+        )
 
     def _get_metadata(self, tag: str):
         return self.handler._get_tag_metadata(

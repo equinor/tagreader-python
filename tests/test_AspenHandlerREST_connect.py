@@ -26,8 +26,8 @@ VERIFY_SSL = False if is_AZURE_PIPELINE else get_verify_ssl()
 
 SOURCE = "SNA"
 TAG = "ATCAI"
-START_TIME = datetime(2018, 5, 1, 10, 0, 0)
-STOP_TIME = datetime(2018, 5, 1, 11, 0, 0)
+START_TIME = datetime(2023, 5, 1, 10, 0, 0)
+STOP_TIME = datetime(2023, 5, 1, 11, 0, 0)
 SAMPLE_TIME = timedelta(seconds=60)
 
 
@@ -79,21 +79,50 @@ def test_verify_connection(aspen_handler: AspenHandlerWeb) -> None:
 def test_search_tag(client: IMSClient) -> None:
     res = client.search(tag="so_specific_it_cannot_possibly_exist", desc=None)
     assert 0 == len(res)
+
     res = client.search(tag="ATCAI", desc=None)
     assert res == [("ATCAI", "Sine Input")]
+
     res = client.search(tag="ATCM*", desc=None)
     assert 5 <= len(res)
+
     [taglist, desclist] = zip(*res)
     assert "ATCMIXTIME1" in taglist
     assert desclist[taglist.index("ATCMIXTIME1")] == "MIX TANK 1 TIMER"
+
     res = client.search(tag="ATCM*", desc=None)
     assert 5 <= len(res)
+    assert isinstance(res, list)
+    assert isinstance(res[0], tuple)
+
     res = client.search("AspenCalcTrigger1", desc=None)
     assert res == [("AspenCalcTrigger1", "")]
+
     res = client.search("ATC*", "Sine*")
     assert res == [("ATCAI", "Sine Input")]
     with pytest.raises(ValueError):
         _ = client.search(desc="Sine Input")  # noqa
+
+    res = client.search(tag="ATCM*", return_desc=False)
+    assert 5 <= len(res)
+    assert isinstance(res, list)
+    assert isinstance(res[0], str)
+
+    res = client.search("AspenCalcTrigger1")
+    assert res == [("AspenCalcTrigger1", "")]
+    res = client.search("AspenCalcTrigger1", desc=None)
+    assert res == [("AspenCalcTrigger1", "")]
+
+    res = client.search("ATC*", "Sine*")
+    assert res == [("ATCAI", "Sine Input")]
+
+    with pytest.raises(ValueError):
+        res = client.search("")
+
+    with pytest.raises(ValueError):
+        _ = client.search(
+            desc="Sine Input"
+        )  # noqa    res = client.search(tag="ATCM*", return_desc=False)´
 
 
 def test_read_unknown_tag(client: IMSClient) -> None:

@@ -162,8 +162,7 @@ class BaseHandlerWeb(ABC):
             ) from None
 
     @abstractmethod
-    def verify_connection(self, datasource: str):
-        ...
+    def verify_connection(self, datasource: str): ...
 
 
 class AspenHandlerWeb(BaseHandlerWeb):
@@ -379,8 +378,24 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 return k
 
     def search(
-        self, tag: Optional[str], desc: Optional[str], timeout: Optional[int] = None
-    ) -> List[Tuple[str, str]]:
+        self,
+        tag: Optional[str],
+        desc: Optional[str],
+        timeout: Optional[int] = None,
+        return_desc: bool = True,
+    ) -> Union[List[Tuple[str, str]], List[str]]:
+        ret = []
+
+        if tag is None and desc is None:
+            raise ValueError("Tag is a required argument")
+            # return ret
+        elif tag is None and len(desc) == 0:
+            raise ValueError("Tag is a required argument")
+            # return ret
+        elif desc is None and len(tag) == 0:
+            raise ValueError("Tag is a required argument")
+            # return ret
+
         if tag is None:
             raise ValueError("Tag is a required argument")
 
@@ -403,19 +418,24 @@ class AspenHandlerWeb(BaseHandlerWeb):
         data = self.fetch(url, timeout=timeout)
 
         if "tags" not in data["data"]:
-            return []
-
-        ret = []
-        for item in data["data"]["tags"]:
-            tagname = item["t"]
-            description = self._get_tag_description(tagname)
-            ret.append((tagname, description))
-
-        if not desc:
             return ret
 
-        r = re.compile(desc)
-        ret = [x for x in ret if r.search(x[1])]
+        for item in data["data"]["tags"]:
+            tagname = item["t"]
+            if not desc and not return_desc:
+                ret.append(tagname)
+            else:
+                description = self._get_tag_description(tagname)
+                ret.append((tagname, description))
+
+        if not desc:
+            pass
+        else:
+            r = re.compile(desc)
+            ret = [x for x in ret if r.search(x[1])]
+            if not return_desc:
+                ret = [x[0] for x in ret]
+
         return ret
 
     def _get_tag_metadata(self, tag: str):
@@ -791,7 +811,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         tag: Optional[str] = None,
         desc: Optional[str] = None,
         timeout: Optional[int] = None,
-    ) -> List[Tuple]:
+        return_desc: bool = True,
+    ) -> Union[List[Tuple[str, str]], List[str]]:
         params = self.generate_search_query(
             tag=tag, desc=desc, datasource=self.datasource
         )
@@ -809,6 +830,10 @@ class PIHandlerWeb(BaseHandlerWeb):
                 params["start"] = next_start  # noqa
             else:
                 done = True
+
+        if not return_desc:
+            ret = [x[0] for x in ret]
+
         return ret
 
     def _get_tag_metadata(self, tag: str) -> Dict[str, str]:
