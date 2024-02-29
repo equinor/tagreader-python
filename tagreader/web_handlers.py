@@ -15,6 +15,7 @@ import urllib3
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 
 from tagreader.cache import BaseCache, BucketCache, SmartCache
+from tagreader.clients import get_server_address_aspen
 from tagreader.logger import logger
 from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
 
@@ -577,6 +578,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
         if connection_string:
             self._connection_string = connection_string
         else:
+            if host is None:
+                host = get_server_address_aspen(self.datasource)
             self._connection_string = (
                 f"DRIVER=AspenTech SQLPlus;HOST={host};"
                 f"PORT={port};CHARINT=N;CHARFLOAT=N;"
