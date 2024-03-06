@@ -1,0 +1,9 @@
+{
+  "label": "Usage",
+  "position": 4,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "description": "Examples of tagreader usage."
+  }
+}

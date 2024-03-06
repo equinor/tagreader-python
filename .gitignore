@@ -44,6 +44,8 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+.cache*
+*cache*
 nosetests.xml
 coverage.xml
 *.cover
@@ -153,3 +155,12 @@ test_scripts/*
 adhoc/
 
 tests/test_adhoc.py
+
+# SNYK
+.dccache
+
+# Apple
+.DS_Store
+
+# Other
+.tmp/
