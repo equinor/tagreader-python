@@ -2,6 +2,30 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [5.2.0](https://github.com/equinor/tagreader-python/compare/v5.1.3...v5.2.0) (2024-03-18)
+
+
+### 🧹 Chores
+
+* update snyk ignore ([9428ffd](https://github.com/equinor/tagreader-python/commit/9428ffd3ea44913746465144a5eea8e2490ec228))
+
+
+### 👷 CI/CD
+
+* update tagreader dependencies ([ec16d46](https://github.com/equinor/tagreader-python/commit/ec16d4610cfd2ab1f39c66ea14b96175b32360c5))
+
+
+### ✨ Features
+
+* add legacy support for MD4 in Python patch versions greater than 4. Used in NTLM auth ([f9ac0c1](https://github.com/equinor/tagreader-python/commit/f9ac0c107ab51493fb1997ba6cc8aa448e795c9e))
+* authenticate to aspen api using bearer token ([#154](https://github.com/equinor/tagreader-python/issues/154)) ([5e40b27](https://github.com/equinor/tagreader-python/commit/5e40b27806a84ecf8166430e0bcdc8d47f5f230c))
+* optionally exclude descriptions from tag search results ([#118](https://github.com/equinor/tagreader-python/issues/118)) ([857a594](https://github.com/equinor/tagreader-python/commit/857a594b16064bb4824c33e8941b546ab0c38e9e))
+
+
+### 🐛 Bug Fixes
+
+* correct signature for MD4 monkeypatch ([6bd7e5c](https://github.com/equinor/tagreader-python/commit/6bd7e5cefd31326475349a30052ceba5db01acb8))
+
 ## [5.1.3](https://github.com/equinor/tagreader-python/compare/v5.1.2...v5.1.3) (2023-12-06)
 
 
