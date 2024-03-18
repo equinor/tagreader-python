@@ -2,6 +2,13 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [5.2.1](https://github.com/equinor/tagreader-python/compare/v5.2.0...v5.2.1) (2024-03-18)
+
+
+### 📦 Build system
+
+* **deps:** relax requests-ntlm version requirement ([61f3cd2](https://github.com/equinor/tagreader-python/commit/61f3cd2c883c57fcec627ca989f95df167a64600))
+
 ## [5.2.0](https://github.com/equinor/tagreader-python/compare/v5.1.3...v5.2.0) (2024-03-18)
 
 
