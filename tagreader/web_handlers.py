@@ -1,10 +1,11 @@
+import hashlib
 import json
 import re
 import urllib.parse
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
+from hashlib import new as hashlib_new_method
 from json.decoder import JSONDecodeError
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -12,11 +13,40 @@ import pandas as pd
 import pytz
 import requests
 import urllib3
+from Crypto.Hash import MD4 as _MD4
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
+from urllib3.exceptions import InsecureRequestWarning
 
-from tagreader.cache import BaseCache, BucketCache, SmartCache
+from tagreader.cache import BucketCache, SmartCache
 from tagreader.logger import logger
 from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
+
+
+class MD4(_MD4):
+    def __init__(self, data=None):
+        self._hash_obj = _MD4.new()
+        if data is not None:
+            self._hash_obj.update(data)
+
+    def update(self, data):
+        self._hash_obj.update(data)
+
+    def digest(self):
+        return self._hash_obj.digest()
+
+    def hexdigest(self):
+        return self._hash_obj.hexdigest()
+
+
+def patched_hashlib_new(name, data=b""):
+    if name.lower() == "md4":
+        return MD4(data)
+    else:
+        return hashlib_new_method(name, data)
+
+
+# Monkey-patch md4 in hashlib.new due to missing support for md4 in later releases of Python:
+hashlib.new = patched_hashlib_new
 
 
 def get_verify_ssl() -> Union[bool, str]:
@@ -72,7 +102,7 @@ def list_aspenone_sources(
         verify_ssl = get_verify_ssl()
 
     if verify_ssl is False:
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
@@ -101,7 +131,7 @@ def list_piwebapi_sources(
         verify_ssl = get_verify_ssl()
 
     if verify_ssl is False:
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verify_ssl)
@@ -127,7 +157,7 @@ class BaseHandlerWeb(ABC):
         self.session = requests.Session()
         self.session.auth = auth if auth is not None else get_auth_aspen()
         if verify_ssl is False:
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            urllib3.disable_warnings(InsecureRequestWarning)
         self.session.verify = verify_ssl if verify_ssl is not None else get_verify_ssl()
 
     def fetch(
