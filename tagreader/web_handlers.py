@@ -22,7 +22,7 @@ from tagreader.logger import logger
 from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
 
 
-class MD4(_MD4):
+class MD4:
     def __init__(self, data=None):
         self._hash_obj = _MD4.new()
         if data is not None:
