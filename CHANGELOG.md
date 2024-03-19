@@ -2,6 +2,18 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [5.3.0](https://github.com/equinor/tagreader-python/compare/v5.2.1...v5.3.0) (2024-03-19)
+
+
+### ✨ Features
+
+* aspen query_sql get host from source name ([#323](https://github.com/equinor/tagreader-python/issues/323)) ([bb6eced](https://github.com/equinor/tagreader-python/commit/bb6ecedad9c42ff346b492fd3111bcf6cea9b66f))
+
+
+### 🐛 Bug Fixes
+
+* remove circular import ([bb6eced](https://github.com/equinor/tagreader-python/commit/bb6ecedad9c42ff346b492fd3111bcf6cea9b66f))
+
 ## [5.2.1](https://github.com/equinor/tagreader-python/compare/v5.2.0...v5.2.1) (2024-03-18)
 
 
