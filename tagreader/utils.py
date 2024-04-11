@@ -129,11 +129,7 @@ class ReaderType(enum.IntEnum):
     SNAPSHOT = FINAL = LAST = enum.auto()  # Last sampled value
 
 
-def add_statoil_root_certificate() -> bool:
-    return add_equinor_root_certificate(True) and add_equinor_root_certificate(False)
-
-
-def add_equinor_root_certificate(get_equinor: bool = True) -> bool:
+def add_equinor_root_certificate() -> bool:
     """
     This is a utility function for Equinor employees on Equinor managed machines.
 
@@ -152,15 +148,8 @@ def add_equinor_root_certificate(get_equinor: bool = True) -> bool:
 
     import certifi
 
-    STATOIL_ROOT_PEM_HASH = "ce7bb185ab908d2fea28c7d097841d9d5bbf2c76"
     EQUINOR_root_PEM_HASH = "5A206332CE73CED1D44C8A99C4C43B7CEE03DF5F"
-
-    if get_equinor:
-        used_hash = EQUINOR_root_PEM_HASH.upper()
-        ca_search = "Equinor Root CA"
-    else:
-        used_hash = STATOIL_ROOT_PEM_HASH.upper()
-        ca_search = "Statoil Root CA"
+    ca_search = "Equinor Root CA"
 
     found = False
     der = None
@@ -172,7 +161,7 @@ def add_equinor_root_certificate(get_equinor: bool = True) -> bool:
         for cert in ssl.enum_certificates("CA"):
             der = cert[0]
             # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
-            if hashlib.sha1(der).hexdigest().upper() == used_hash:
+            if hashlib.sha1(der).hexdigest().upper() == EQUINOR_root_PEM_HASH:
                 found = True
                 logger.debug("CA certificate found!")
                 break
@@ -182,11 +171,11 @@ def add_equinor_root_certificate(get_equinor: bool = True) -> bool:
             stdout=subprocess.PIPE,
         ).stdout
 
-        if used_hash in str(macos_ca_certs).upper():
+        if EQUINOR_root_PEM_HASH in str(macos_ca_certs).upper():
             c = get_macos_equinor_certificates()
             for cert in c:
                 # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
-                if hashlib.sha1(cert).hexdigest().upper() == used_hash:
+                if hashlib.sha1(cert).hexdigest().upper() == EQUINOR_root_PEM_HASH:
                     der = cert
                     found = True
                     break
@@ -209,14 +198,11 @@ def add_equinor_root_certificate(get_equinor: bool = True) -> bool:
     return found
 
 
-def get_macos_equinor_certificates(get_equinor: bool = True):
+def get_macos_equinor_certificates():
     import ssl
     import tempfile
 
-    if get_equinor:
-        ca_search = "Equinor Root CA"
-    else:
-        ca_search = "Statoil Root CA"
+    ca_search = "Equinor Root CA"
 
     ctx = ssl.create_default_context()
     macos_ca_certs = subprocess.run(
