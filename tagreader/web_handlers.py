@@ -79,7 +79,7 @@ def get_auth_aspen(use_internal: bool = True):
     )
 
 
-def get_url_aspen(use_internal: bool = False) -> str:
+def get_url_aspen(use_internal: bool = True) -> str:
     if use_internal:
         # internal url (redirects to url including AtProcessDataREST.dll)
         return r"https://aspenone.api.equinor.com"
