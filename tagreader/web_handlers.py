@@ -207,7 +207,8 @@ class BaseHandlerWeb(ABC):
             ) from None
 
     @abstractmethod
-    def verify_connection(self, datasource: str): ...
+    def verify_connection(self, datasource: str):
+        ...
 
 
 class AspenHandlerWeb(BaseHandlerWeb):
@@ -523,10 +524,12 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_tag_description(self, tag: str):
         query = self.generate_get_description_query(tag)
         url = urljoin(self.base_url, "TagInfo")
-        data = self.fetch(url, params=query)
         try:
+            data = self.fetch(url, params=query)
             desc = data["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
         except KeyError:
+            desc = ""
+        except JSONDecodeError:
             desc = ""
         return desc
 
