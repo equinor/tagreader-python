@@ -207,8 +207,7 @@ class BaseHandlerWeb(ABC):
             ) from None
 
     @abstractmethod
-    def verify_connection(self, datasource: str):
-        ...
+    def verify_connection(self, datasource: str): ...
 
 
 class AspenHandlerWeb(BaseHandlerWeb):
