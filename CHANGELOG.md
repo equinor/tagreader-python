@@ -2,6 +2,27 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [5.4.0](https://github.com/equinor/tagreader-python/compare/v5.3.0...v5.4.0) (2024-06-03)
+
+
+### 🧹 Chores
+
+* **deps:** bump jinja2 from 3.1.3 to 3.1.4 ([#343](https://github.com/equinor/tagreader-python/issues/343)) ([3503905](https://github.com/equinor/tagreader-python/commit/350390522f51aeb470f9a36d47f732cb0470cb73))
+* **deps:** bump msal-bearer from 0.2.1 to 1.0.0 ([#348](https://github.com/equinor/tagreader-python/issues/348)) ([f93e38f](https://github.com/equinor/tagreader-python/commit/f93e38f56242bf83407f31aa9c2c2bc9b14a2edc))
+* **deps:** bump pytest from 7.4.4 to 8.2.1 ([#345](https://github.com/equinor/tagreader-python/issues/345)) ([716b084](https://github.com/equinor/tagreader-python/commit/716b0845329af0a951d87081dd23162f642e5f3b))
+* **deps:** bump requests from 2.31.0 to 2.32.3 ([#350](https://github.com/equinor/tagreader-python/issues/350)) ([0e79987](https://github.com/equinor/tagreader-python/commit/0e799876c099181b1e94e0c0d2300dea6c38effc))
+* update manual.md ([5f3bc1a](https://github.com/equinor/tagreader-python/commit/5f3bc1afd5398c1677fa7f4fa71bc482b8239c4e))
+
+
+### ✨ Features
+
+* cleanup remove unused statoil certificate ([#337](https://github.com/equinor/tagreader-python/issues/337)) ([5f3bc1a](https://github.com/equinor/tagreader-python/commit/5f3bc1afd5398c1677fa7f4fa71bc482b8239c4e))
+
+
+### 🐛 Bug Fixes
+
+* handle invalid description search from aspen ([#340](https://github.com/equinor/tagreader-python/issues/340)) ([39a9364](https://github.com/equinor/tagreader-python/commit/39a93640160735d44e2c4f4dcb5678b2a6e467cc))
+
 ## [5.3.0](https://github.com/equinor/tagreader-python/compare/v5.2.1...v5.3.0) (2024-04-19)
 
 
