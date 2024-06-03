@@ -43,7 +43,7 @@ requests-ntlm = ">=1.1,<=2.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3"
-pytest = "^7"
+pytest = ">=7,<9"
 
 [tool.poetry.extras]
 notebooks = ["notebook", "matplotlib"]
