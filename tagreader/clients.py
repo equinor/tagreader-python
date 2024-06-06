@@ -450,7 +450,7 @@ class IMSClient:
                 if tag not in units:
                     unit = self.handler._get_tag_unit(tag)
                     if self.cache is not None and unit is not None:
-                        self.cache.store_tag_metadata(tag, {"unit": unit})
+                        self.cache.put_metadata(key=tag, value={"unit": unit})
                     units[tag] = unit
             except Exception:
                 if self.search(tag) == []:  # check for nonexisting string
