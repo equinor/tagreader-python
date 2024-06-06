@@ -1,10 +1,11 @@
+import hashlib
 import json
 import re
 import urllib.parse
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
+from hashlib import new as hashlib_new_method
 from json.decoder import JSONDecodeError
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -12,11 +13,40 @@ import pandas as pd
 import pytz
 import requests
 import urllib3
+from Crypto.Hash import MD4 as _MD4
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
+from urllib3.exceptions import InsecureRequestWarning
 
-from tagreader.cache import BaseCache, BucketCache, SmartCache
+from tagreader.cache import BucketCache, SmartCache
 from tagreader.logger import logger
 from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
+
+
+class MD4:
+    def __init__(self, data=None):
+        self._hash_obj = _MD4.new()
+        if data is not None:
+            self._hash_obj.update(data)
+
+    def update(self, data):
+        self._hash_obj.update(data)
+
+    def digest(self):
+        return self._hash_obj.digest()
+
+    def hexdigest(self):
+        return self._hash_obj.hexdigest()
+
+
+def patched_hashlib_new(name, data=b""):
+    if name.lower() == "md4":
+        return MD4(data)
+    else:
+        return hashlib_new_method(name, data)
+
+
+# Monkey-patch md4 in hashlib.new due to missing support for md4 in later releases of Python:
+hashlib.new = patched_hashlib_new
 
 
 def get_verify_ssl() -> Union[bool, str]:
@@ -33,13 +63,28 @@ def get_url_pi() -> str:
     return r"https://piwebapi.equinor.com/piwebapi"
 
 
-def get_auth_aspen() -> HTTPKerberosAuth:
-    return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+def get_auth_aspen(use_internal: bool = True):
+    if use_internal:
+        return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+
+    from msal_bearer.BearerAuth import BearerAuth
+
+    tenantID = "3aa4a235-b6e2-48d5-9195-7fcf05b459b0"
+    clientID = "7adaaa99-897f-428c-8a5f-4053db565b32"
+    scopes = [
+        "https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData//user_impersonation"
+    ]
+    return BearerAuth.get_auth(
+        tenantID=tenantID, clientID=clientID, scopes=scopes, verbose=True
+    )
 
 
-def get_url_aspen() -> str:
-    # internal url (redirects to dll)
-    return r"https://aspenone.api.equinor.com"
+def get_url_aspen(use_internal: bool = True) -> str:
+    if use_internal:
+        # internal url (redirects to url including AtProcessDataREST.dll)
+        return r"https://aspenone.api.equinor.com"
+
+    return r"https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData/AtProcessDataREST.dll"
 
 
 def list_aspenone_sources(
@@ -57,7 +102,7 @@ def list_aspenone_sources(
         verify_ssl = get_verify_ssl()
 
     if verify_ssl is False:
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
@@ -86,7 +131,7 @@ def list_piwebapi_sources(
         verify_ssl = get_verify_ssl()
 
     if verify_ssl is False:
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verify_ssl)
@@ -112,7 +157,7 @@ class BaseHandlerWeb(ABC):
         self.session = requests.Session()
         self.session.auth = auth if auth is not None else get_auth_aspen()
         if verify_ssl is False:
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            urllib3.disable_warnings(InsecureRequestWarning)
         self.session.verify = verify_ssl if verify_ssl is not None else get_verify_ssl()
 
     def fetch(
@@ -162,8 +207,7 @@ class BaseHandlerWeb(ABC):
             ) from None
 
     @abstractmethod
-    def verify_connection(self, datasource: str):
-        ...
+    def verify_connection(self, datasource: str): ...
 
 
 class AspenHandlerWeb(BaseHandlerWeb):
@@ -379,8 +423,24 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 return k
 
     def search(
-        self, tag: Optional[str], desc: Optional[str], timeout: Optional[int] = None
-    ) -> List[Tuple[str, str]]:
+        self,
+        tag: Optional[str],
+        desc: Optional[str],
+        timeout: Optional[int] = None,
+        return_desc: bool = True,
+    ) -> Union[List[Tuple[str, str]], List[str]]:
+        ret = []
+
+        if tag is None and desc is None:
+            raise ValueError("Tag is a required argument")
+            # return ret
+        elif tag is None and len(desc) == 0:
+            raise ValueError("Tag is a required argument")
+            # return ret
+        elif desc is None and len(tag) == 0:
+            raise ValueError("Tag is a required argument")
+            # return ret
+
         if tag is None:
             raise ValueError("Tag is a required argument")
 
@@ -403,19 +463,24 @@ class AspenHandlerWeb(BaseHandlerWeb):
         data = self.fetch(url, timeout=timeout)
 
         if "tags" not in data["data"]:
-            return []
-
-        ret = []
-        for item in data["data"]["tags"]:
-            tagname = item["t"]
-            description = self._get_tag_description(tagname)
-            ret.append((tagname, description))
-
-        if not desc:
             return ret
 
-        r = re.compile(desc)
-        ret = [x for x in ret if r.search(x[1])]
+        for item in data["data"]["tags"]:
+            tagname = item["t"]
+            if not desc and not return_desc:
+                ret.append(tagname)
+            else:
+                description = self._get_tag_description(tagname)
+                ret.append((tagname, description))
+
+        if not desc:
+            pass
+        else:
+            r = re.compile(desc)
+            ret = [x for x in ret if r.search(x[1])]
+            if not return_desc:
+                ret = [x[0] for x in ret]
+
         return ret
 
     def _get_tag_metadata(self, tag: str):
@@ -458,10 +523,12 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_tag_description(self, tag: str):
         query = self.generate_get_description_query(tag)
         url = urljoin(self.base_url, "TagInfo")
-        data = self.fetch(url, params=query)
         try:
+            data = self.fetch(url, params=query)
             desc = data["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
         except KeyError:
+            desc = ""
+        except JSONDecodeError:
             desc = ""
         return desc
 
@@ -577,6 +644,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
         if connection_string:
             self._connection_string = connection_string
         else:
+            if host is None:
+                from tagreader.clients import get_server_address_aspen
+
+                host = get_server_address_aspen(self.datasource)
             self._connection_string = (
                 f"DRIVER=AspenTech SQLPlus;HOST={host};"
                 f"PORT={port};CHARINT=N;CHARFLOAT=N;"
@@ -791,7 +862,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         tag: Optional[str] = None,
         desc: Optional[str] = None,
         timeout: Optional[int] = None,
-    ) -> List[Tuple]:
+        return_desc: bool = True,
+    ) -> Union[List[Tuple[str, str]], List[str]]:
         params = self.generate_search_query(
             tag=tag, desc=desc, datasource=self.datasource
         )
@@ -809,6 +881,10 @@ class PIHandlerWeb(BaseHandlerWeb):
                 params["start"] = next_start  # noqa
             else:
                 done = True
+
+        if not return_desc:
+            ret = [x[0] for x in ret]
+
         return ret
 
     def _get_tag_metadata(self, tag: str) -> Dict[str, str]:
