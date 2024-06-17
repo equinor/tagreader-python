@@ -21,7 +21,7 @@ def test_generate_search_query() -> None:
     with pytest.raises(ValueError):
         AspenHandlerWeb.generate_search_query(tag="ATCAI", desc=None, datasource=None)
     assert AspenHandlerWeb.generate_search_query(
-        tag="ATCAI", datasource="source_name", desc=None
+        tag="ATCAI", datasource="source_name", desc=None, max=100
     ) == {
         "datasource": "source_name",
         "tag": "ATCAI",
@@ -29,7 +29,7 @@ def test_generate_search_query() -> None:
         "getTrendable": 0,
     }
     assert AspenHandlerWeb.generate_search_query(
-        tag="ATC*", datasource="source_name", desc=None
+        tag="ATC*", datasource="source_name", desc=None, max=100
     ) == {
         "datasource": "source_name",
         "tag": "ATC*",
@@ -38,7 +38,7 @@ def test_generate_search_query() -> None:
     }
     assert AspenHandlerWeb.generate_search_query(
         tag="ATCAI", datasource="source_name", desc=None
-    ) == {"datasource": "source_name", "tag": "ATCAI", "max": 100, "getTrendable": 0}
+    ) == {"datasource": "source_name", "tag": "ATCAI", "max": 100000, "getTrendable": 0}
 
 
 def test_split_tagmap() -> None:

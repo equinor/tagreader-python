@@ -242,12 +242,13 @@ class AspenHandlerWeb(BaseHandlerWeb):
         tag: Optional[str],
         desc: Optional[str],
         datasource: Optional[str],
+        max: Optional[int] = 100000,
     ) -> Dict[str, Any]:
         if not datasource:
             raise ValueError("Data source is required argument")
         # Aspen Web API expects single space instead of consecutive spaces.
         tag = " ".join(tag.split())
-        params = {"datasource": datasource, "tag": tag, "max": 100, "getTrendable": 0}
+        params = {"datasource": datasource, "tag": tag, "max": max, "getTrendable": 0}
         return params
 
     def generate_read_query(
@@ -450,7 +451,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         desc = desc.replace("*", ".*") if isinstance(desc, str) else None
 
         params = self.generate_search_query(
-            tag=tag, desc=desc, datasource=self.datasource
+            tag=tag, desc=desc, datasource=self.datasource, max=100000
         )
         # Ensure space is encoded as "%20" instead of default "+" and leave asterisks
         # unencoded. Otherwise, searches for tags containing spaces break, as do wildcard
@@ -744,6 +745,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         tag: Optional[str],
         desc: Optional[str],
         datasource: Optional[str],
+        max: Optional[int] = 100,
     ) -> Dict[str, str]:
         q = []
         if tag is not None:
