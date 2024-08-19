@@ -2,6 +2,19 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [5.5.0](https://github.com/equinor/tagreader-python/compare/v5.4.0...v5.5.0) (2024-08-19)
+
+
+### 📦 Build system
+
+* **deps:** Update dependencies and snyk ignore ([0db35a4](https://github.com/equinor/tagreader-python/commit/0db35a4b017d666a3d6ec8b8a717af3c0f1fcafa))
+
+
+### ✨ Features
+
+* return more aspen tag search results ([#357](https://github.com/equinor/tagreader-python/issues/357)) ([89f7961](https://github.com/equinor/tagreader-python/commit/89f7961f148861e543696e8edc3b161fd4335566))
+* return more search tag search results ([89f7961](https://github.com/equinor/tagreader-python/commit/89f7961f148861e543696e8edc3b161fd4335566))
+
 ## [5.4.0](https://github.com/equinor/tagreader-python/compare/v5.3.0...v5.4.0) (2024-06-03)
 
 
