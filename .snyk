@@ -1,32 +1,10 @@
 # Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
-  SNYK-PYTHON-CRYPTOGRAPHY-6050294:
-    - '*':
-        reason: 'No patch available, false positive'
-        expires: 2024-07-01T00:00:00.000Z
-        created: 2023-11-15T11:05:00.000Z
-
-  SNYK-PYTHON-CRYPTOGRAPHY-6126975:
-    - '*':
-        reason: 'No patch available, false positive'
-        expires: 2024-07-01T00:00:00.000Z
-        created: 2023-12-15T11:05:00.000Z
-  SNYK-PYTHON-PILLOW-6514866:
-    - '*':
-        reason: 'Will be fixed later'
-        expires: 2024-07-01T00:00:00.000Z
-        created: 2024-04-02T11:00:00.000Z
   SNYK-JS-INFLIGHT-6095116:
     - '*':
-        reason: 'No patch available, false positive'
-        expires: 2024-07-01T00:00:00.000Z
+        reason: 'No patch available'
+        expires: 2024-11-01T00:00:00.000Z
         created: 2023-12-04T09:05:00.000Z
-
-  SNYK-JS-FOLLOWREDIRECTS-6141137:
-    - '*':
-        reason: 'No patch available, false positive'
-        expires: 2024-07-01T00:00:00.000Z
-        created: 2024-01-02T11:05:00.000Z
 patch: {}
 version: v1.25.0

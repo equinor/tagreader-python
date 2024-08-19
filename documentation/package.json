@@ -16,9 +16,9 @@
   },
   "dependencies": {
     "@akebifiky/remark-simple-plantuml": "^1.0.2",
-    "@docusaurus/core": "^3.2.0",
-    "@docusaurus/preset-classic": "^3.2.0",
-    "@docusaurus/theme-mermaid": "^3.2.0",
+    "@docusaurus/core": "^3.5.1",
+    "@docusaurus/preset-classic": "^3.5.1",
+    "@docusaurus/theme-mermaid": "^3.5.1",
     "@mdx-js/react": "^3.0.1",
     "prism-react-renderer": "^2.3.1",
     "react": "^18.2.0",
@@ -29,6 +29,15 @@
   "devDependencies": {
     "@tsconfig/docusaurus": "^2.0.3",
     "typescript": "^5.4.3"
+  },
+  "resolutions": {
+    "braces": "3.0.3",
+    "katex": "0.16.11",
+    "micromatch": "4.0.7",
+    "webpack-dev-middleware": "5.3.4",
+    "ws": "7.5.10",
+    "dompurify": "3.0.11",
+    "express": "4.19.2"
   },
   "browserslist": {
     "production": [
@@ -44,5 +53,6 @@
   },
   "engines": {
     "node": ">=20.0"
-  }
+  },
+  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
 }
