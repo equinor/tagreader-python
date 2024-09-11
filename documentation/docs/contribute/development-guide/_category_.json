@@ -1,0 +1,8 @@
+{
+  "label": "Developer guide",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "This section of the documentation lists instructions and guidelines on how to start developing"
+  }
+}

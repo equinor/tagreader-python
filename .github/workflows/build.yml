@@ -1,66 +1,41 @@
-# This is a simplified test workflow that does not include tests that require a connection to server.
-# If tests are successful and the push is a tag, then run a test-deploy to test.pypi.org.
+name: "🧪 Build & test code"
 
-name: Test
-
-on: 
-  push:
-    branches:
-      - main
+on:
+  workflow_dispatch:
+  workflow_call:
 
 jobs:
-  test:
+  build:
     strategy:
       fail-fast: false
       matrix:
-        python: [3.7, 3.8, 3.9, '3.10']
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
         os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python }}
-    - name: Install required Linux library for pykerberos
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get install libkrb5-dev
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.in
-    - name: Lint with flake8
-      run: |
-        pip install flake8
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings.
-        flake8 . --count --exit-zero --max-complexity=10 --statistics
-    - name: Test with pytest
-      run: |
-        pip install pytest
-        pytest
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  testdeploy-if-tagged:
-    needs: test
-    runs-on: windows-latest
-    if: startsWith(github.ref, 'refs/tags')
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
+      - name: Install required Linux library for pykerberos
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get install libkrb5-dev
+
+      - name: Install Poetry
+        run: |
+          pipx install poetry
+
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.in
-          pip install setuptools wheel twine
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
-        run: |
-          python setup.py sdist bdist_wheel
-          twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+          python-version: ${{matrix.python-version}}
+          cache: "poetry"
+
+      - name: Check pyproject.toml validity
+        run: poetry check --no-interaction
+
+      - name: Install deps
+        run: poetry install --no-interaction
+
+      - name: Run tests
+        run: poetry run pytest

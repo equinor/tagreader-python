@@ -1,9 +1,0 @@
--c requirements.txt 
-black
-flake8
-isort
-jupyter
-mypy
-pip-tools
-pytest
-setuptools-scm

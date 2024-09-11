@@ -2,9 +2,14 @@ import enum
 import logging
 import platform
 import warnings
+from datetime import datetime, tzinfo
+from enum import Enum
+from typing import Union
 
 import pandas as pd
 import pytz
+
+from tagreader.logger import logger
 
 
 def is_windows() -> bool:
@@ -28,7 +33,7 @@ if is_mac():
     import subprocess
 
 
-def find_registry_key(base_key, search_key_name):
+def find_registry_key(base_key, search_key_name: str):
     search_key_name = search_key_name.lower()
     if base_key is not None:
         num_keys, _, _ = winreg.QueryInfoKey(base_key)
@@ -45,7 +50,7 @@ def find_registry_key(base_key, search_key_name):
     return None
 
 
-def find_registry_key_from_name(base_key, search_key_name):
+def find_registry_key_from_name(base_key, search_key_name: str):
     search_key_name = search_key_name.lower()
     num_keys, _, _ = winreg.QueryInfoKey(base_key)
     key = key_string = None
@@ -63,25 +68,35 @@ def find_registry_key_from_name(base_key, search_key_name):
     return key, key_string
 
 
-def ensure_datetime_with_tz(date_stamp, tz="Europe/Oslo"):
-    if isinstance(date_stamp, str):
+def convert_to_pydatetime(date_stamp: Union[datetime, str, pd.Timestamp]) -> datetime:
+    if isinstance(date_stamp, datetime):
+        return date_stamp
+    elif isinstance(date_stamp, pd.Timestamp):
+        return date_stamp.to_pydatetime()
+    else:
         try:
-            date_stamp = pd.to_datetime(date_stamp, format="ISO8601")
+            return pd.to_datetime(str(date_stamp), format="ISO8601").to_pydatetime()
         except ValueError:
-            date_stamp = pd.to_datetime(date_stamp, dayfirst=True)
+            return pd.to_datetime(str(date_stamp), dayfirst=True).to_pydatetime()
+
+
+def ensure_datetime_with_tz(
+    date_stamp: Union[datetime, str, pd.Timestamp],
+    tz: tzinfo = pytz.timezone("Europe/Oslo"),
+) -> datetime:
+    date_stamp = convert_to_pydatetime(date_stamp)
 
     if not date_stamp.tzinfo:
-        date_stamp = pytz.timezone(tz).localize(date_stamp)
+        date_stamp = tz.localize(date_stamp)
 
     return date_stamp
 
 
-def urljoin(*args):
-    """Joins components of URL. Ensures slashes are inserted or removed where
+def urljoin(*args) -> str:
+    """
+    Joins components of URL. Ensures slashes are inserted or removed where
     needed, and does not strip trailing slash of last element.
 
-    Arguments:
-        str
     Returns:
         str -- Generated URL
     """
@@ -114,14 +129,16 @@ class ReaderType(enum.IntEnum):
     SNAPSHOT = FINAL = LAST = enum.auto()  # Last sampled value
 
 
-def add_statoil_root_certificate(noisy=True):
-    """This is a utility function for Equinor employees on Equinor managed machines.
+def add_equinor_root_certificate() -> bool:
+    """
+    This is a utility function for Equinor employees on Equinor managed machines.
 
-    The function searches for the Statoil Root certificate in the
+    The function searches for the Equinor Root certificate in the
     cert store and imports it to the cacert bundle. Does nothing if not
     running on Equinor host.
 
-    This needs to be repeated after updating the cacert module.
+    NB! This needs to be repeated after updating the cacert module.
+    NB! Will not download certificates.
 
     Returns:
         bool: True if function completes successfully
@@ -131,71 +148,71 @@ def add_statoil_root_certificate(noisy=True):
 
     import certifi
 
-    STATOIL_ROOT_PEM_HASH = "ce7bb185ab908d2fea28c7d097841d9d5bbf2c76"
+    EQUINOR_root_PEM_HASH = "5A206332CE73CED1D44C8A99C4C43B7CEE03DF5F"
+    ca_search = "Equinor Root CA"
 
     found = False
+    der = None
 
     if is_linux():
         return True
     elif is_windows():
-        if noisy:
-            print("Scanning CA certs in Windows cert store", end="")
+        logger.debug("Scanning CA certificate in Windows cert store", end="")
         for cert in ssl.enum_certificates("CA"):
-            if noisy:
-                print(".", end="")
             der = cert[0]
-            if hashlib.sha1(der).hexdigest() == STATOIL_ROOT_PEM_HASH:
+            # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
+            if hashlib.sha1(der).hexdigest().upper() == EQUINOR_root_PEM_HASH:
                 found = True
-                if noisy:
-                    print(" found it!")
+                logger.debug("CA certificate found!")
                 break
     elif is_mac():
-        import subprocess
-
         macos_ca_certs = subprocess.run(
-            ["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-Z"],
+            ["security", "find-certificate", "-a", "-c", ca_search, "-Z"],
             stdout=subprocess.PIPE,
         ).stdout
 
-        if STATOIL_ROOT_PEM_HASH.upper() in str(macos_ca_certs).upper():
-            c = get_macos_statoil_certificates()
+        if EQUINOR_root_PEM_HASH in str(macos_ca_certs).upper():
+            c = get_macos_equinor_certificates()
             for cert in c:
-                if hashlib.sha1(cert).hexdigest() == STATOIL_ROOT_PEM_HASH:
+                # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
+                if hashlib.sha1(cert).hexdigest().upper() == EQUINOR_root_PEM_HASH:
                     der = cert
                     found = True
                     break
 
-    if found:
+    if found and der:
         pem = ssl.DER_cert_to_PEM_cert(der)
         if pem in certifi.contents():
-            if noisy:
-                print("Certificate already exists in certifi store. Nothing to do.")
+            logger.debug(
+                "CA Certificate already exists in certifi store. Nothing to do."
+            )
         else:
-            if noisy:
-                print("Writing certificate to certifi store.")
-            cafile = certifi.where()
-            with open(cafile, "ab") as f:
+            logger.debug("Writing certificate to certifi store.")
+            ca_file = certifi.where()
+            with open(ca_file, "ab") as f:
                 f.write(bytes(pem, "ascii"))
-            if noisy:
-                print("Completed")
+            logger.debug("Completed")
     else:
         warnings.warn("Unable to locate root certificate on this host.")
 
     return found
 
 
-def get_macos_statoil_certificates():
+def get_macos_equinor_certificates():
     import ssl
     import tempfile
 
+    ca_search = "Equinor Root CA"
+
     ctx = ssl.create_default_context()
     macos_ca_certs = subprocess.run(
-        ["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-p"],
+        ["security", "find-certificate", "-a", "-c", ca_search, "-p"],
         stdout=subprocess.PIPE,
     ).stdout
-    with tempfile.NamedTemporaryFile("w+b") as tmp_file:
+    with tempfile.NamedTemporaryFile("w+b", delete=False) as tmp_file:
         tmp_file.write(macos_ca_certs)
-        ctx.load_verify_locations(tmp_file.name)
+
+    ctx.load_verify_locations(tmp_file.name)
 
     return ctx.get_ca_certs(binary_form=True)
 
@@ -229,6 +246,7 @@ def is_equinor() -> bool:
 
         host = socket.gethostname()
 
+        # deepcode ignore IdenticalBranches: Not an error. First test is just more precise.
         if host + ".client.statoil.net" in str(s):
             return True
         elif "client.statoil.net" in host and host in str(s):
@@ -242,3 +260,11 @@ def is_equinor() -> bool:
             f"Unsupported system: {platform.system()}. Please report this as an issue."
         )
     return False
+
+
+class IMSType(str, Enum):
+    PIWEBAPI = "piwebapi"
+    ASPENONE = "aspenone"
+    PI = "pi"
+    ASPEN = "aspen"
+    IP21 = "ip21"
