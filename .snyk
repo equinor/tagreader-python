@@ -6,5 +6,20 @@ ignore:
         reason: 'No patch available'
         expires: 2024-11-01T00:00:00.000Z
         created: 2023-12-04T09:05:00.000Z
+  SNYK-PYTHON-NOTEBOOK-7850171:
+    - '*':
+        reason: 'No patch available'
+        expires: 2024-11-01T00:00:00.000Z
+        created: 2024-09-11T12:17:00.000Z
+  SNYK-PYTHON-CRYPTOGRAPHY-7886970:
+    - '*':
+        reason: 'No patch available'
+        expires: 2024-11-01T00:00:00.000Z
+        created: 2024-09-11T12:17:00.000Z
+  SNYK-PYTHON-JUPYTERLAB-7850170:
+    - '*':
+        reason: 'No patch available'
+        expires: 2024-11-01T00:00:00.000Z
+        created: 2024-09-11T12:17:00.000Z
 patch: {}
 version: v1.25.0
