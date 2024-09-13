@@ -2,6 +2,27 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.0.0](https://github.com/equinor/tagreader-python/compare/v5.5.0...v6.0.0) (2024-09-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* update code to work with updated pi backend ([#372](https://github.com/equinor/tagreader-python/issues/372))
+
+### 🧹 Chores
+
+* bump allowed msal-bearer ([#375](https://github.com/equinor/tagreader-python/issues/375)) ([bd1e332](https://github.com/equinor/tagreader-python/commit/bd1e332636e6c07bc1ade0f4482711e14e9b54f9))
+
+
+### ✨ Features
+
+* update code to work with updated pi backend ([#372](https://github.com/equinor/tagreader-python/issues/372)) ([9da2963](https://github.com/equinor/tagreader-python/commit/9da296357364545f4e66a119551cc0af67587c88))
+
+
+### 🐛 Bug Fixes
+
+* fix bug with wrong url for pi ([b283859](https://github.com/equinor/tagreader-python/commit/b2838599471340fd657cf38568d21feb67ed2673))
+
 ## [5.5.0](https://github.com/equinor/tagreader-python/compare/v5.4.0...v5.5.0) (2024-08-19)
 
 
