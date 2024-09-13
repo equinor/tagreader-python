@@ -60,7 +60,7 @@ def get_auth_pi() -> HTTPKerberosAuth:
 
 
 def get_url_pi() -> str:
-    return r"https://piwebapi-qa.equinor.com/piwebapi"
+    return r"https://piwebapi.equinor.com/piwebapi"
 
 
 def get_auth_aspen(use_internal: bool = True):
