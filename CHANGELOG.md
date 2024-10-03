@@ -2,6 +2,13 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.0.1](https://github.com/equinor/tagreader-python/compare/v6.0.0...v6.0.1) (2024-10-03)
+
+
+### 🐛 Bug Fixes
+
+* include all hashlib.new inputs ([#379](https://github.com/equinor/tagreader-python/issues/379)) ([de319cf](https://github.com/equinor/tagreader-python/commit/de319cf99095897bdd5155e6da542a95f9dae392))
+
 ## [6.0.0](https://github.com/equinor/tagreader-python/compare/v5.5.0...v6.0.0) (2024-09-13)
 
 
