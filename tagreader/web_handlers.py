@@ -46,6 +46,7 @@ def patched_hashlib_new(name, data=b"", usedforsecurity=True):
         try:
             return hashlib_new_method(name, data=data, usedforsecurity=usedforsecurity)
         except TypeError:
+            # Required for python 3.8
             return hashlib_new_method(name, data=data)
 
 
