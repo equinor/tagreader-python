@@ -2,6 +2,14 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.0.2](https://github.com/equinor/tagreader-python/compare/v6.0.1...v6.0.2) (2024-10-22)
+
+
+### 🧹 Chores
+
+* **deps:** bump pycryptodome from 3.20.0 to 3.21.0 ([#382](https://github.com/equinor/tagreader-python/issues/382)) ([51d7c88](https://github.com/equinor/tagreader-python/commit/51d7c88e3a3a5feee32db7737598f2aca00195dc))
+* **deps:** bump webpack from 5.90.3 to 5.95.0 in /documentation ([#381](https://github.com/equinor/tagreader-python/issues/381)) ([a102c8a](https://github.com/equinor/tagreader-python/commit/a102c8ac53bd6acf4f1dd92d3e4a2a6f37134ed1))
+
 ## [6.0.1](https://github.com/equinor/tagreader-python/compare/v6.0.0...v6.0.1) (2024-10-03)
 
 
