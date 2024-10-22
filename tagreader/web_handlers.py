@@ -664,7 +664,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
                 f'm="{max_rows}" to="30" s="1">'
             )
-
+        query = query.replace("\t"," ").replace('\n'," ") # Replace new lines and tabs that are typical in formatted SQL queries with spaces. 
+        
+        # Need a solution to LIKE comments. These have a % symbol in the query that does not seem to pass through the request
+        
         connection_string += f"<![CDATA[{query}]]></SQL>"
         return connection_string
 
@@ -706,10 +709,21 @@ class AspenHandlerWeb(BaseHandlerWeb):
         res_text = self.fetch_text(url, params=params)
         # For now just return result as text regardless of value of parse
         if parse:
-            raise NotImplementedError(
-                "Use parse=False to receive and handle text result instead"
-            )
-        return res_text
+            dict = res.json()['data'][0]
+            
+            cols = []
+            for i in dict['cols']:
+                cols.append(i['n'])
+                
+            rows = []
+            
+            for i in dict['rows']:
+                element = []
+                for j in i['fld']:
+                    element.append(j['v'])
+                rows.append(element)
+            return pd.DataFrame(data=rows, columns=cols)
+        return res.text
 
 
 class PIHandlerWeb(BaseHandlerWeb):
