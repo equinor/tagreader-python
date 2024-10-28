@@ -19,7 +19,7 @@ from urllib3.exceptions import InsecureRequestWarning
 
 from tagreader.cache import BucketCache, SmartCache
 from tagreader.logger import logger
-from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
+from tagreader.utils import IMSType, ReaderType, is_mac, is_windows, urljoin
 
 
 class MD4:
@@ -38,11 +38,16 @@ class MD4:
         return self._hash_obj.hexdigest()
 
 
-def patched_hashlib_new(name, data=b""):
+def patched_hashlib_new(name, data=b"", usedforsecurity=True):
     if name.lower() == "md4":
         return MD4(data)
     else:
-        return hashlib_new_method(name, data)
+        # Try / Catch easier than detecting python version
+        try:
+            return hashlib_new_method(name, data=data, usedforsecurity=usedforsecurity)
+        except TypeError:
+            # Required for python 3.8
+            return hashlib_new_method(name, data=data)
 
 
 # Monkey-patch md4 in hashlib.new due to missing support for md4 in later releases of Python:
@@ -140,6 +145,33 @@ def list_piwebapi_sources(
     try:
         source_list = [r["Name"] for r in res.json()["Items"]]
         return source_list
+    except JSONDecodeError as e:
+        logger.error(f"Could not decode JSON response: {e}")
+
+
+def get_piwebapi_source_to_webid_dict(
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verify_ssl: Optional[bool] = True,
+) -> List[str]:
+    if url is None:
+        url = get_url_pi()
+
+    if auth is None:
+        auth = get_auth_pi()
+
+    if verify_ssl is None:
+        verify_ssl = get_verify_ssl()
+
+    if verify_ssl is False:
+        urllib3.disable_warnings(InsecureRequestWarning)
+
+    url_ = urljoin(url, "dataservers")
+    res = requests.get(url_, auth=auth, verify=verify_ssl)
+
+    res.raise_for_status()
+    try:
+        return {item["Name"]: item["WebId"] for item in res.json()["Items"]}
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
 
@@ -242,12 +274,13 @@ class AspenHandlerWeb(BaseHandlerWeb):
         tag: Optional[str],
         desc: Optional[str],
         datasource: Optional[str],
+        max: Optional[int] = 100000,
     ) -> Dict[str, Any]:
         if not datasource:
             raise ValueError("Data source is required argument")
         # Aspen Web API expects single space instead of consecutive spaces.
         tag = " ".join(tag.split())
-        params = {"datasource": datasource, "tag": tag, "max": 100, "getTrendable": 0}
+        params = {"datasource": datasource, "tag": tag, "max": max, "getTrendable": 0}
         return params
 
     def generate_read_query(
@@ -450,7 +483,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         desc = desc.replace("*", ".*") if isinstance(desc, str) else None
 
         params = self.generate_search_query(
-            tag=tag, desc=desc, datasource=self.datasource
+            tag=tag, desc=desc, datasource=self.datasource, max=100000
         )
         # Ensure space is encoded as "%20" instead of default "+" and leave asterisks
         # unencoded. Otherwise, searches for tags containing spaces break, as do wildcard
@@ -740,7 +773,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         )
 
     @staticmethod
-    def generate_search_query(
+    def generate_search_params(
         tag: Optional[str],
         desc: Optional[str],
         datasource: Optional[str],
@@ -751,10 +784,12 @@ class PIHandlerWeb(BaseHandlerWeb):
         if desc is not None:
             q.extend([f"description:{PIHandlerWeb.escape(desc)}"])
         query = " AND ".join(q)
-        params = {"q": f"{query}"}
+        params = {"query": f"{query}"}
 
         if datasource is not None:
-            params["scope"] = f"pi:{datasource}"
+            params["dataserverwebid"] = (
+                f"{get_piwebapi_source_to_webid_dict()[datasource]}"
+            )
 
         return params
 
@@ -864,23 +899,23 @@ class PIHandlerWeb(BaseHandlerWeb):
         timeout: Optional[int] = None,
         return_desc: bool = True,
     ) -> Union[List[Tuple[str, str]], List[str]]:
-        params = self.generate_search_query(
+        params = self.generate_search_params(
             tag=tag, desc=desc, datasource=self.datasource
         )
-        url = urljoin(self.base_url, "search", "query")
+        url = urljoin(self.base_url, "points", "search")
         done = False
         ret = []
         while not done:
             data = self.fetch(url, params=params, timeout=timeout)
 
             for item in data["Items"]:
-                description = item["Description"] if "Description" in item else ""
+                description = item["Descriptor"] if "Descriptor" in item else ""
                 ret.append((item["Name"], description))
-            next_start = int(data["Links"]["Next"].split("=")[-1])
-            if int(data["Links"]["Last"].split("=")[-1]) >= next_start:
-                params["start"] = next_start  # noqa
-            else:
-                done = True
+            # next_start = int(data["Links"]["Next"].split("=")[-1])
+            # if int(data["Links"]["Last"].split("=")[-1]) >= next_start:
+            #     params["start"] = next_start  # noqa
+            # else:
+            done = True
 
         if not return_desc:
             ret = [x[0] for x in ret]
@@ -920,16 +955,11 @@ class PIHandlerWeb(BaseHandlerWeb):
         if self.web_id_cache and tag in self.web_id_cache:
             return self.web_id_cache[tag]
 
-        params = self.generate_search_query(
+        params = self.generate_search_params(
             tag=tag, datasource=self.datasource, desc=None
         )
-        params["fields"] = "name;webid"
-        url = urljoin(self.base_url, "search", "query")
+        url = urljoin(self.base_url, "points", "search")
         data = self.fetch(url, params=params)
-
-        if len(data["Errors"]) > 0:
-            msg = f"Received error from server when searching for WebId for {tag}: {data['Errors']}"
-            raise ValueError(msg)
 
         if len(data["Items"]) > 1:
             # Compare elements and if same, return the first

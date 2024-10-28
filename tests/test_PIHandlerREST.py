@@ -35,28 +35,27 @@ def test_escape_chars() -> None:
 
 
 def test_generate_search_query() -> None:
-    assert PIHandlerWeb.generate_search_query(
+    assert PIHandlerWeb.generate_search_params(
         tag="SINUSOID", desc=None, datasource=None
-    ) == {"q": "name:SINUSOID"}
-    assert PIHandlerWeb.generate_search_query(
-        tag=r"BA:*.1", desc=None, datasource="sourcename"
+    ) == {"query": "name:SINUSOID"}
+    assert PIHandlerWeb.generate_search_params(
+        tag=r"BA:*.1", desc=None, datasource=None
     ) == {
-        "q": r"name:BA\:*.1",
-        "scope": "pi:sourcename",
+        "query": r"name:BA\:*.1",
     }
-    assert PIHandlerWeb.generate_search_query(
+    assert PIHandlerWeb.generate_search_params(
         tag="BA:*.1", datasource=None, desc=None
     ) == {
-        "q": r"name:BA\:*.1",
+        "query": r"name:BA\:*.1",
     }
-    assert PIHandlerWeb.generate_search_query(
+    assert PIHandlerWeb.generate_search_params(
         desc="Concentration Reactor 1", datasource=None, tag=None
     ) == {
-        "q": r"description:Concentration\ Reactor\ 1",
+        "query": r"description:Concentration\ Reactor\ 1",
     }
-    assert PIHandlerWeb.generate_search_query(
+    assert PIHandlerWeb.generate_search_params(
         tag="BA:*.1", desc="Concentration Reactor 1", datasource=None
-    ) == {"q": r"name:BA\:*.1 AND description:Concentration\ Reactor\ 1"}
+    ) == {"query": r"name:BA\:*.1 AND description:Concentration\ Reactor\ 1"}
 
 
 def test_is_summary(pi_handler: PIHandlerWeb) -> None:
