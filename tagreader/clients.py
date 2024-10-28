@@ -454,8 +454,8 @@ class IMSClient:
                     units[tag] = unit
             except Exception:
                 if self.search(tag) == []:  # check for nonexisting string
-                    print("Tag not found: " + str(tag))
-                    break
+                    logger.warning(f"Tag not found: {tag}")
+                    continue
         return units
 
     def get_descriptions(self, tags: Union[str, List[str]]) -> Dict[str, str]:
@@ -475,8 +475,8 @@ class IMSClient:
                     descriptions[tag] = desc
             except Exception:
                 if self.search(tag) == []:  # check for nonexisting string
-                    print("Tag not found: " + str(tag))
-                    break
+                    logger.warning(f"Tag not found: {tag}")
+                    continue
         return descriptions
 
     def read_tags(
