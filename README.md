@@ -13,7 +13,7 @@ as possible to the backend historians.
 You can install tagreader directly into your project from pypi by using pip
 or another package manager. The only requirement is Python version 3.8 or above.
 
-```shell"
+```shell
 pip install tagreader
 ```
 
@@ -26,7 +26,7 @@ The following are required and will be installed:
 * diskcache
 
 ## Usage
-Tagreader easy to use for both Equinor internal IMS services, and non-internal usage. For non-internal usage
+Tagreader is easy to use for both Equinor internal IMS services, and non-internal usage. For non-internal usage
 you simply need to provide the corresponding IMS service URLs and IMSType.
 See [data source](https://equinor.github.io/tagreader-python/docs/about/usage/data-source) for details.
 
