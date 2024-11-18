@@ -56,7 +56,7 @@ pip install --upgrade tagreader
 
 ***Note**: Since v2.7.0 the procedure described below will be automatically performed on Equinor hosts when importing the tagreader module. It should therefore no longer be necessary to perform this step manually.*
 
-The Web APIs are queried with the requests package. Requests does not utilize the system certificate store, but instead relies on the certifi bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verifySSL=False` for relevant function calls) or, strongly preferred, add the certificate to the certifi bundle. To do this, simply activate the virtual environment where you installed tagreader, and run the following snippet:
+The Web APIs are queried with the `requests` package. `requests` does not utilize the system certificate store, but instead relies on the `certifi` bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verifySSL=False` for relevant function calls) or, preferably, add the certificate to the `certifi` bundle. To do this, simply activate the virtual environment where you installed `tagreader`, and run the following snippet:
 
 ``` python
 from tagreader.utils import add_equinor_root_certificate
