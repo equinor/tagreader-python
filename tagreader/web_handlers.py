@@ -503,7 +503,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
             if not desc and not return_desc:
                 ret.append(tagname)
             else:
-                description = self._get_tag_description(tagname)
+                try:
+                    description = self._get_tag_description(tagname)
+                except KeyError:
+                    description = ""
                 ret.append((tagname, description))
 
         if not desc:
@@ -523,11 +526,11 @@ class AspenHandlerWeb(BaseHandlerWeb):
         query = self.generate_get_unit_query(tag)
         url = urljoin(self.base_url, "TagInfo")
         data = self.fetch(url, params=query)
-        try:
-            attr_data = data["data"]["tags"][0]["attrData"]
-        except KeyError as e:
-            logger.error(f"Error. I got this: {data}")
-            raise e
+        # try:
+        attr_data = data["data"]["tags"][0]["attrData"]
+        # except KeyError as e:
+        #     logger.error(f"Error. I got this: {data}")
+        #     raise e
         unit = ""
         for a in attr_data:
             if a["g"] == "Units":
@@ -559,8 +562,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
         try:
             data = self.fetch(url, params=query)
             desc = data["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
-        except KeyError:
-            desc = ""
+        # except KeyError:
+        #     desc = ""
         except JSONDecodeError:
             desc = ""
         return desc
