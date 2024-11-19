@@ -222,14 +222,6 @@ class BaseHandlerWeb(ABC):
             txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
             return json.loads(txt)
 
-    def fetch_text(
-        self, url, params: Optional[Union[str, Dict[str, str]]] = None
-    ) -> str:
-        res = self.session.get(url, params=params)
-        res.raise_for_status()
-
-        return res.text
-
     def connect(self):
         try:
             self.verify_connection(self.datasource)
@@ -667,10 +659,12 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
                 f'm="{max_rows}" to="30" s="1">'
             )
-        query = query.replace("\t"," ").replace('\n'," ") # Replace new lines and tabs that are typical in formatted SQL queries with spaces. 
-        
+        query = query.replace("\t", " ").replace(
+            "\n", " "
+        )  # Replace new lines and tabs that are typical in formatted SQL queries with spaces.
+
         # Need a solution to LIKE comments. These have a % symbol in the query that does not seem to pass through the request
-        
+
         connection_string += f"<![CDATA[{query}]]></SQL>"
         return connection_string
 
@@ -709,21 +703,23 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 max_rows=self._max_rows,
                 datasource=None,
             )
-        res_text = self.fetch_text(url, params=params)
-        # For now just return result as text regardless of value of parse
+
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+
         if parse:
-            dict = res.json()['data'][0]
-            
+            parsed_dict = res.json()["data"][0]
+
             cols = []
-            for i in dict['cols']:
-                cols.append(i['n'])
-                
+            for i in parsed_dict["cols"]:
+                cols.append(i["n"])
+
             rows = []
-            
-            for i in dict['rows']:
+
+            for i in parsed_dict["rows"]:
                 element = []
-                for j in i['fld']:
-                    element.append(j['v'])
+                for j in i["fld"]:
+                    element.append(j["v"])
                 rows.append(element)
             return pd.DataFrame(data=rows, columns=cols)
         return res.text
