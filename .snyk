@@ -4,22 +4,12 @@ ignore:
   SNYK-JS-INFLIGHT-6095116:
     - '*':
         reason: 'No patch available'
-        expires: 2024-11-01T00:00:00.000Z
+        expires: 2025-04-01T00:00:00.000Z
         created: 2023-12-04T09:05:00.000Z
-  SNYK-PYTHON-NOTEBOOK-7850171:
+  SNYK-PYTHON-PANDAS-8549481:
     - '*':
         reason: 'No patch available'
-        expires: 2024-11-01T00:00:00.000Z
-        created: 2024-09-11T12:17:00.000Z
-  SNYK-PYTHON-CRYPTOGRAPHY-7886970:
-    - '*':
-        reason: 'No patch available'
-        expires: 2024-11-01T00:00:00.000Z
-        created: 2024-09-11T12:17:00.000Z
-  SNYK-PYTHON-JUPYTERLAB-7850170:
-    - '*':
-        reason: 'No patch available'
-        expires: 2024-11-01T00:00:00.000Z
-        created: 2024-09-11T12:17:00.000Z
+        expires: 2025-04-01T00:00:00.000Z
+        created: 2025-01-02T10:30:00.000Z
 patch: {}
 version: v1.25.0
