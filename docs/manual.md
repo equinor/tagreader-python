@@ -56,11 +56,11 @@ pip install --upgrade tagreader
 
 ***Note**: Since v2.7.0 the procedure described below will be automatically performed on Equinor hosts when importing the tagreader module. It should therefore no longer be necessary to perform this step manually.*
 
-The Web APIs are queried with the requests package. Requests does not utilize the system certificate store, but instead relies on the certifi bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verifySSL=False` for relevant function calls) or, strongly preferred, add the certificate to the certifi bundle. To do this, simply activate the virtual environment where you installed tagreader, and run the following snippet:
+The Web APIs are queried with the `requests` package. `requests` does not utilize the system certificate store, but instead relies on the `certifi` bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verifySSL=False` for relevant function calls) or, preferably, add the certificate to the `certifi` bundle. To do this, simply activate the virtual environment where you installed `tagreader`, and run the following snippet:
 
 ``` python
-from tagreader.utils import add_statoil_root_certificate
-add_statoil_root_certificate()
+from tagreader.utils import add_equinor_root_certificate
+    add_equinor_root_certificate()
 ```
 
 The output should inform you that the certificate was successfully added. This needs to be repeated whenever certifi is upgraded in your python virtual environment. It is safe to run more than once: If the function detects that the certificate has already been added to your current certifi installation, the certificate will not be duplicated.
@@ -117,7 +117,7 @@ The client presents the interface for communicating with the data source to the 
 A connection to a data source is prepared by creating an instance of `tagreader.IMSClient` with the following input arguments:
 
 * `datasource` : Name of data source
-* `imstype` (optional): The name of the [IMS type](#ims-types) to query. Indicates the type of data source that is requested, and therefore determines which handler type to use. Valid values are `piwebapi` and `aspenone`. If not provided it will search the availble sources and find the type.
+* `imstype` (optional): The name of the [IMS type](#ims-types) to query. Indicates the type of data source that is requested, and therefore determines which handler type to use. Valid values are `piwebapi` and `aspenone`. If not provided it will search the available sources and find the type.
 * `tz` (optional): Time zone naive time stamps will be interpreted as belonging to this time zone. Similarly, the returned data points will be localized to this time zone. **Default**: _"Europe/Oslo"_.
 
 The following input arguments can be used when connecting to either `piwebapi` or to `aspenone`. None of these should be necessary to supply when connecting to Equinor servers.
@@ -209,7 +209,7 @@ Data is read by calling the client method `read()` with the following input argu
 By specifying the optional parameter `read_type` to `read()` , it is possible to specify what kind of data should be returned. The default query method is interpolated. All valid values for `read_type` are defined in the `utils.ReaderType` class (mirrored for convenience as `tagreader.ReaderType` ), although not all are currently implemented. Below is the list of implemented read types.
 
 * `INT` : The raw data points are interpolated so that one new data point is generated at each step of length `ts` starting at `start_time` and ending at or less than `ts` seconds before `end_time` .
-* The following aggregated read types perform a weighted calculation of the raw data within each interval. Where relevant, time-weighted calculations are used. Returned time stamps are anchored at the beginning of each interval. So for the 60 seconds long interval between 08:11:00 and 08:12:00, the time stamp will be 08:11:00.
+* The following aggregated read types perform a weighted calculation of the raw data within each interval, using time-weighted calculations where applicable. Returned timestamps are anchored at the beginning of each interval. For example, for a 60-second interval from 08:11:00 to 08:12:00, the timestamp will be 08:11:00.
   + `MIN` : The minimum value.
   + `MAX` : The maximum value.
   + `AVG` : The average value.

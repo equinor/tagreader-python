@@ -442,15 +442,20 @@ class IMSClient:
             tags = [tags]
         units = {}
         for tag in tags:
-            if self.cache is not None:
-                r = self.cache.get_metadata(key=tag, properties="unit")
-                if r is not None and "unit" in r:
-                    units[tag] = r["unit"]
-            if tag not in units:
-                unit = self.handler._get_tag_unit(tag)
-                if self.cache is not None and unit is not None:
-                    self.cache.put_metadata(key=tag, value={"unit": unit})
-                units[tag] = unit
+            try:
+                if self.cache is not None:
+                    r = self.cache.get_metadata(key=tag, properties="unit")
+                    if r is not None and "unit" in r:
+                        units[tag] = r["unit"]
+                if tag not in units:
+                    unit = self.handler._get_tag_unit(tag)
+                    if self.cache is not None and unit is not None:
+                        self.cache.put_metadata(key=tag, value={"unit": unit})
+                    units[tag] = unit
+            except Exception:
+                if self.search(tag) == []:  # check for nonexisting string
+                    logger.warning(f"Tag not found: {tag}")
+                    continue
         return units
 
     def get_descriptions(self, tags: Union[str, List[str]]) -> Dict[str, str]:
@@ -458,15 +463,20 @@ class IMSClient:
             tags = [tags]
         descriptions = {}
         for tag in tags:
-            if self.cache is not None:
-                r = self.cache.get_metadata(key=tag, properties="description")
-                if r is not None and "description" in r:
-                    descriptions[tag] = r["description"]
-            if tag not in descriptions:
-                desc = self.handler._get_tag_description(tag)
-                if self.cache is not None and desc is not None:
-                    self.cache.put_metadata(key=tag, value={"description": desc})
-                descriptions[tag] = desc
+            try:
+                if self.cache is not None:
+                    r = self.cache.get_metadata(key=tag, properties="description")
+                    if r is not None and "description" in r:
+                        descriptions[tag] = r["description"]
+                if tag not in descriptions:
+                    desc = self.handler._get_tag_description(tag)
+                    if self.cache is not None and desc is not None:
+                        self.cache.put_metadata(key=tag, value={"description": desc})
+                    descriptions[tag] = desc
+            except Exception:
+                if self.search(tag) == []:  # check for nonexisting string
+                    logger.warning(f"Tag not found: {tag}")
+                    continue
         return descriptions
 
     def read_tags(

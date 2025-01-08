@@ -2,6 +2,117 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.0.1](https://github.com/equinor/tagreader-python/compare/v6.0.0...v6.0.1) (2024-10-03)
+
+
+### 🐛 Bug Fixes
+
+* include all hashlib.new inputs ([#379](https://github.com/equinor/tagreader-python/issues/379)) ([de319cf](https://github.com/equinor/tagreader-python/commit/de319cf99095897bdd5155e6da542a95f9dae392))
+
+## [6.0.0](https://github.com/equinor/tagreader-python/compare/v5.5.0...v6.0.0) (2024-09-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* update code to work with updated pi backend ([#372](https://github.com/equinor/tagreader-python/issues/372))
+
+### 🧹 Chores
+
+* bump allowed msal-bearer ([#375](https://github.com/equinor/tagreader-python/issues/375)) ([bd1e332](https://github.com/equinor/tagreader-python/commit/bd1e332636e6c07bc1ade0f4482711e14e9b54f9))
+
+
+### ✨ Features
+
+* update code to work with updated pi backend ([#372](https://github.com/equinor/tagreader-python/issues/372)) ([9da2963](https://github.com/equinor/tagreader-python/commit/9da296357364545f4e66a119551cc0af67587c88))
+
+
+### 🐛 Bug Fixes
+
+* fix bug with wrong url for pi ([b283859](https://github.com/equinor/tagreader-python/commit/b2838599471340fd657cf38568d21feb67ed2673))
+
+## [5.5.0](https://github.com/equinor/tagreader-python/compare/v5.4.0...v5.5.0) (2024-08-19)
+
+
+### 📦 Build system
+
+* **deps:** Update dependencies and snyk ignore ([0db35a4](https://github.com/equinor/tagreader-python/commit/0db35a4b017d666a3d6ec8b8a717af3c0f1fcafa))
+
+
+### ✨ Features
+
+* return more aspen tag search results ([#357](https://github.com/equinor/tagreader-python/issues/357)) ([89f7961](https://github.com/equinor/tagreader-python/commit/89f7961f148861e543696e8edc3b161fd4335566))
+* return more search tag search results ([89f7961](https://github.com/equinor/tagreader-python/commit/89f7961f148861e543696e8edc3b161fd4335566))
+
+## [5.4.0](https://github.com/equinor/tagreader-python/compare/v5.3.0...v5.4.0) (2024-06-03)
+
+
+### 🧹 Chores
+
+* **deps:** bump jinja2 from 3.1.3 to 3.1.4 ([#343](https://github.com/equinor/tagreader-python/issues/343)) ([3503905](https://github.com/equinor/tagreader-python/commit/350390522f51aeb470f9a36d47f732cb0470cb73))
+* **deps:** bump msal-bearer from 0.2.1 to 1.0.0 ([#348](https://github.com/equinor/tagreader-python/issues/348)) ([f93e38f](https://github.com/equinor/tagreader-python/commit/f93e38f56242bf83407f31aa9c2c2bc9b14a2edc))
+* **deps:** bump pytest from 7.4.4 to 8.2.1 ([#345](https://github.com/equinor/tagreader-python/issues/345)) ([716b084](https://github.com/equinor/tagreader-python/commit/716b0845329af0a951d87081dd23162f642e5f3b))
+* **deps:** bump requests from 2.31.0 to 2.32.3 ([#350](https://github.com/equinor/tagreader-python/issues/350)) ([0e79987](https://github.com/equinor/tagreader-python/commit/0e799876c099181b1e94e0c0d2300dea6c38effc))
+* update manual.md ([5f3bc1a](https://github.com/equinor/tagreader-python/commit/5f3bc1afd5398c1677fa7f4fa71bc482b8239c4e))
+
+
+### ✨ Features
+
+* cleanup remove unused statoil certificate ([#337](https://github.com/equinor/tagreader-python/issues/337)) ([5f3bc1a](https://github.com/equinor/tagreader-python/commit/5f3bc1afd5398c1677fa7f4fa71bc482b8239c4e))
+
+
+### 🐛 Bug Fixes
+
+* handle invalid description search from aspen ([#340](https://github.com/equinor/tagreader-python/issues/340)) ([39a9364](https://github.com/equinor/tagreader-python/commit/39a93640160735d44e2c4f4dcb5678b2a6e467cc))
+
+## [5.3.0](https://github.com/equinor/tagreader-python/compare/v5.2.1...v5.3.0) (2024-04-19)
+
+
+### 📦 Build system
+
+* update snyk ignores and docusaurus ([#334](https://github.com/equinor/tagreader-python/issues/334)) ([a7aa362](https://github.com/equinor/tagreader-python/commit/a7aa362e4f732299e457b6538190f69c60cfb77b))
+
+
+### ✨ Features
+
+* aspen query_sql get host from source name ([#323](https://github.com/equinor/tagreader-python/issues/323)) ([bb6eced](https://github.com/equinor/tagreader-python/commit/bb6ecedad9c42ff346b492fd3111bcf6cea9b66f))
+
+
+### 🐛 Bug Fixes
+
+* got external url by default ([#339](https://github.com/equinor/tagreader-python/issues/339)) ([6df4a56](https://github.com/equinor/tagreader-python/commit/6df4a562194d2290f724561dce5a52e517cae07a))
+* remove circular import ([bb6eced](https://github.com/equinor/tagreader-python/commit/bb6ecedad9c42ff346b492fd3111bcf6cea9b66f))
+
+## [5.2.1](https://github.com/equinor/tagreader-python/compare/v5.2.0...v5.2.1) (2024-03-18)
+
+
+### 📦 Build system
+
+* **deps:** relax requests-ntlm version requirement ([61f3cd2](https://github.com/equinor/tagreader-python/commit/61f3cd2c883c57fcec627ca989f95df167a64600))
+
+## [5.2.0](https://github.com/equinor/tagreader-python/compare/v5.1.3...v5.2.0) (2024-03-18)
+
+
+### 🧹 Chores
+
+* update snyk ignore ([9428ffd](https://github.com/equinor/tagreader-python/commit/9428ffd3ea44913746465144a5eea8e2490ec228))
+
+
+### 👷 CI/CD
+
+* update tagreader dependencies ([ec16d46](https://github.com/equinor/tagreader-python/commit/ec16d4610cfd2ab1f39c66ea14b96175b32360c5))
+
+
+### ✨ Features
+
+* add legacy support for MD4 in Python patch versions greater than 4. Used in NTLM auth ([f9ac0c1](https://github.com/equinor/tagreader-python/commit/f9ac0c107ab51493fb1997ba6cc8aa448e795c9e))
+* authenticate to aspen api using bearer token ([#154](https://github.com/equinor/tagreader-python/issues/154)) ([5e40b27](https://github.com/equinor/tagreader-python/commit/5e40b27806a84ecf8166430e0bcdc8d47f5f230c))
+* optionally exclude descriptions from tag search results ([#118](https://github.com/equinor/tagreader-python/issues/118)) ([857a594](https://github.com/equinor/tagreader-python/commit/857a594b16064bb4824c33e8941b546ab0c38e9e))
+
+
+### 🐛 Bug Fixes
+
+* correct signature for MD4 monkeypatch ([6bd7e5c](https://github.com/equinor/tagreader-python/commit/6bd7e5cefd31326475349a30052ceba5db01acb8))
+
 ## [5.1.3](https://github.com/equinor/tagreader-python/compare/v5.1.2...v5.1.3) (2023-12-06)
 
 

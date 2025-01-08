@@ -1,11 +1,11 @@
+import hashlib
 import json
 import re
 import urllib.parse
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
+from hashlib import new as hashlib_new_method
 from json.decoder import JSONDecodeError
-from logging import warning
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -13,11 +13,45 @@ import pandas as pd
 import pytz
 import requests
 import urllib3
+from Crypto.Hash import MD4 as _MD4
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
+from urllib3.exceptions import InsecureRequestWarning
 
-from tagreader.cache import BaseCache, BucketCache, SmartCache
+from tagreader.cache import BucketCache, SmartCache
 from tagreader.logger import logger
-from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
+from tagreader.utils import IMSType, ReaderType, is_mac, is_windows, urljoin
+
+
+class MD4:
+    def __init__(self, data=None):
+        self._hash_obj = _MD4.new()
+        if data is not None:
+            self._hash_obj.update(data)
+
+    def update(self, data):
+        self._hash_obj.update(data)
+
+    def digest(self):
+        return self._hash_obj.digest()
+
+    def hexdigest(self):
+        return self._hash_obj.hexdigest()
+
+
+def patched_hashlib_new(name, data=b"", usedforsecurity=True):
+    if name.lower() == "md4":
+        return MD4(data)
+    else:
+        # Try / Catch easier than detecting python version
+        try:
+            return hashlib_new_method(name, data=data, usedforsecurity=usedforsecurity)
+        except TypeError:
+            # Required for python 3.8
+            return hashlib_new_method(name, data=data)
+
+
+# Monkey-patch md4 in hashlib.new due to missing support for md4 in later releases of Python:
+hashlib.new = patched_hashlib_new
 
 
 def get_verify_ssl() -> Union[bool, str]:
@@ -50,7 +84,7 @@ def get_auth_aspen(use_internal: bool = True):
     )
 
 
-def get_url_aspen(use_internal: bool = False) -> str:
+def get_url_aspen(use_internal: bool = True) -> str:
     if use_internal:
         # internal url (redirects to url including AtProcessDataREST.dll)
         return r"https://aspenone.api.equinor.com"
@@ -73,7 +107,7 @@ def list_aspenone_sources(
         verify_ssl = get_verify_ssl()
 
     if verify_ssl is False:
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
@@ -102,7 +136,7 @@ def list_piwebapi_sources(
         verify_ssl = get_verify_ssl()
 
     if verify_ssl is False:
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
     res = requests.get(url_, auth=auth, verify=verify_ssl)
@@ -111,6 +145,33 @@ def list_piwebapi_sources(
     try:
         source_list = [r["Name"] for r in res.json()["Items"]]
         return source_list
+    except JSONDecodeError as e:
+        logger.error(f"Could not decode JSON response: {e}")
+
+
+def get_piwebapi_source_to_webid_dict(
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verify_ssl: Optional[bool] = True,
+) -> List[str]:
+    if url is None:
+        url = get_url_pi()
+
+    if auth is None:
+        auth = get_auth_pi()
+
+    if verify_ssl is None:
+        verify_ssl = get_verify_ssl()
+
+    if verify_ssl is False:
+        urllib3.disable_warnings(InsecureRequestWarning)
+
+    url_ = urljoin(url, "dataservers")
+    res = requests.get(url_, auth=auth, verify=verify_ssl)
+
+    res.raise_for_status()
+    try:
+        return {item["Name"]: item["WebId"] for item in res.json()["Items"]}
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
 
@@ -128,7 +189,7 @@ class BaseHandlerWeb(ABC):
         self.session = requests.Session()
         self.session.auth = auth if auth is not None else get_auth_aspen()
         if verify_ssl is False:
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            urllib3.disable_warnings(InsecureRequestWarning)
         self.session.verify = verify_ssl if verify_ssl is not None else get_verify_ssl()
 
     def fetch(
@@ -160,14 +221,6 @@ class BaseHandlerWeb(ABC):
 
             txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
             return json.loads(txt)
-
-    def fetch_text(
-        self, url, params: Optional[Union[str, Dict[str, str]]] = None
-    ) -> str:
-        res = self.session.get(url, params=params)
-        res.raise_for_status()
-
-        return res.text
 
     def connect(self):
         try:
@@ -213,12 +266,13 @@ class AspenHandlerWeb(BaseHandlerWeb):
         tag: Optional[str],
         desc: Optional[str],
         datasource: Optional[str],
+        max: Optional[int] = 100000,
     ) -> Dict[str, Any]:
         if not datasource:
             raise ValueError("Data source is required argument")
         # Aspen Web API expects single space instead of consecutive spaces.
         tag = " ".join(tag.split())
-        params = {"datasource": datasource, "tag": tag, "max": 100, "getTrendable": 0}
+        params = {"datasource": datasource, "tag": tag, "max": max, "getTrendable": 0}
         return params
 
     def generate_read_query(
@@ -421,7 +475,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         desc = desc.replace("*", ".*") if isinstance(desc, str) else None
 
         params = self.generate_search_query(
-            tag=tag, desc=desc, datasource=self.datasource
+            tag=tag, desc=desc, datasource=self.datasource, max=100000
         )
         # Ensure space is encoded as "%20" instead of default "+" and leave asterisks
         # unencoded. Otherwise, searches for tags containing spaces break, as do wildcard
@@ -441,7 +495,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
             if not desc and not return_desc:
                 ret.append(tagname)
             else:
-                description = self._get_tag_description(tagname)
+                try:
+                    description = self._get_tag_description(tagname)
+                except KeyError:
+                    description = ""
                 ret.append((tagname, description))
 
         if not desc:
@@ -461,11 +518,11 @@ class AspenHandlerWeb(BaseHandlerWeb):
         query = self.generate_get_unit_query(tag)
         url = urljoin(self.base_url, "TagInfo")
         data = self.fetch(url, params=query)
-        try:
-            attr_data = data["data"]["tags"][0]["attrData"]
-        except KeyError as e:
-            logger.error(f"Error. I got this: {data}")
-            raise e
+        # try:
+        attr_data = data["data"]["tags"][0]["attrData"]
+        # except KeyError as e:
+        #     logger.error(f"Error. I got this: {data}")
+        #     raise e
         unit = ""
         for a in attr_data:
             if a["g"] == "Units":
@@ -494,11 +551,12 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_tag_description(self, tag: str):
         query = self.generate_get_description_query(tag)
         url = urljoin(self.base_url, "TagInfo")
-        data = self.fetch(url, params=query)
         try:
+            data = self.fetch(url, params=query)
             desc = data["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
-        except KeyError:
-            warning.warn(f"Unable to fetch description for {tag} from JSON: {j}")
+        # except KeyError:
+        #     desc = ""
+        except JSONDecodeError:
             desc = ""
         return desc
 
@@ -601,6 +659,11 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
                 f'm="{max_rows}" to="30" s="1">'
             )
+        query = query.replace("\t", " ").replace(
+            "\n", " "
+        )  # Replace new lines and tabs that are typical in formatted SQL queries with spaces.
+
+        # Need a solution to LIKE comments. These have a % symbol in the query that does not seem to pass through the request
 
         connection_string += f"<![CDATA[{query}]]></SQL>"
         return connection_string
@@ -614,6 +677,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
         if connection_string:
             self._connection_string = connection_string
         else:
+            if host is None:
+                from tagreader.clients import get_server_address_aspen
+
+                host = get_server_address_aspen(self.datasource)
             self._connection_string = (
                 f"DRIVER=AspenTech SQLPlus;HOST={host};"
                 f"PORT={port};CHARINT=N;CHARFLOAT=N;"
@@ -636,13 +703,26 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 max_rows=self._max_rows,
                 datasource=None,
             )
-        res_text = self.fetch_text(url, params=params)
-        # For now just return result as text regardless of value of parse
+
+        res = self.session.get(url, params=params)
+        res.raise_for_status()
+
         if parse:
-            raise NotImplementedError(
-                "Use parse=False to receive and handle text result instead"
-            )
-        return res_text
+            parsed_dict = res.json()["data"][0]
+
+            cols = []
+            for i in parsed_dict["cols"]:
+                cols.append(i["n"])
+
+            rows = []
+
+            for i in parsed_dict["rows"]:
+                element = []
+                for j in i["fld"]:
+                    element.append(j["v"])
+                rows.append(element)
+            return pd.DataFrame(data=rows, columns=cols)
+        return res.text
 
 
 class PIHandlerWeb(BaseHandlerWeb):
@@ -706,7 +786,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         )
 
     @staticmethod
-    def generate_search_query(
+    def generate_search_params(
         tag: Optional[str],
         desc: Optional[str],
         datasource: Optional[str],
@@ -717,10 +797,12 @@ class PIHandlerWeb(BaseHandlerWeb):
         if desc is not None:
             q.extend([f"description:{PIHandlerWeb.escape(desc)}"])
         query = " AND ".join(q)
-        params = {"q": f"{query}"}
+        params = {"query": f"{query}"}
 
         if datasource is not None:
-            params["scope"] = f"pi:{datasource}"
+            params["dataserverwebid"] = (
+                f"{get_piwebapi_source_to_webid_dict()[datasource]}"
+            )
 
         return params
 
@@ -830,23 +912,23 @@ class PIHandlerWeb(BaseHandlerWeb):
         timeout: Optional[int] = None,
         return_desc: bool = True,
     ) -> Union[List[Tuple[str, str]], List[str]]:
-        params = self.generate_search_query(
+        params = self.generate_search_params(
             tag=tag, desc=desc, datasource=self.datasource
         )
-        url = urljoin(self.base_url, "search", "query")
+        url = urljoin(self.base_url, "points", "search")
         done = False
         ret = []
         while not done:
             data = self.fetch(url, params=params, timeout=timeout)
 
             for item in data["Items"]:
-                description = item["Description"] if "Description" in item else ""
+                description = item["Descriptor"] if "Descriptor" in item else ""
                 ret.append((item["Name"], description))
-            next_start = int(data["Links"]["Next"].split("=")[-1])
-            if int(data["Links"]["Last"].split("=")[-1]) >= next_start:
-                params["start"] = next_start  # noqa
-            else:
-                done = True
+            # next_start = int(data["Links"]["Next"].split("=")[-1])
+            # if int(data["Links"]["Last"].split("=")[-1]) >= next_start:
+            #     params["start"] = next_start  # noqa
+            # else:
+            done = True
 
         if not return_desc:
             ret = [x[0] for x in ret]
@@ -886,16 +968,11 @@ class PIHandlerWeb(BaseHandlerWeb):
         if self.web_id_cache and tag in self.web_id_cache:
             return self.web_id_cache[tag]
 
-        params = self.generate_search_query(
+        params = self.generate_search_params(
             tag=tag, datasource=self.datasource, desc=None
         )
-        params["fields"] = "name;webid"
-        url = urljoin(self.base_url, "search", "query")
+        url = urljoin(self.base_url, "points", "search")
         data = self.fetch(url, params=params)
-
-        if len(data["Errors"]) > 0:
-            msg = f"Received error from server when searching for WebId for {tag}: {data['Errors']}"
-            raise ValueError(msg)
 
         if len(data["Items"]) > 1:
             # Compare elements and if same, return the first

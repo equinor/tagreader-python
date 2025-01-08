@@ -1,4 +1,4 @@
-name: '🧪 Build & test code'
+name: "🧪 Build & test code"
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
         os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -29,7 +29,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{matrix.python-version}}
-          cache: 'poetry'
+          cache: "poetry"
 
       - name: Check pyproject.toml validity
         run: poetry check --no-interaction

@@ -24,8 +24,9 @@ if is_GITHUB_ACTIONS:
 
 VERIFY_SSL = False if is_AZURE_PIPELINE else get_verify_ssl()
 
-SOURCE = "SNA"
-TAG = "ATCAI"
+SOURCE = "TRB"
+TAG = "xxx"
+FAKE_TAG = "so_random_it_cant_exist"
 START_TIME = datetime(2023, 5, 1, 10, 0, 0)
 STOP_TIME = datetime(2023, 5, 1, 11, 0, 0)
 SAMPLE_TIME = timedelta(seconds=60)
@@ -77,44 +78,31 @@ def test_verify_connection(aspen_handler: AspenHandlerWeb) -> None:
 
 
 def test_search_tag(client: IMSClient) -> None:
-    res = client.search(tag="so_specific_it_cannot_possibly_exist", desc=None)
+    res = client.search(tag=FAKE_TAG, desc=None)
     assert 0 == len(res)
 
-    res = client.search(tag="ATCAI", desc=None)
-    assert res == [("ATCAI", "Sine Input")]
+    res = client.search(tag="AverageCPUTimeVals", desc=None)
+    assert res == [("AverageCPUTimeVals", "Average CPU Time")]
 
-    res = client.search(tag="ATCM*", desc=None)
-    assert 5 <= len(res)
-
-    [taglist, desclist] = zip(*res)
-    assert "ATCMIXTIME1" in taglist
-    assert desclist[taglist.index("ATCMIXTIME1")] == "MIX TANK 1 TIMER"
-
-    res = client.search(tag="ATCM*", desc=None)
-    assert 5 <= len(res)
-    assert isinstance(res, list)
-    assert isinstance(res[0], tuple)
-
-    res = client.search("AspenCalcTrigger1", desc=None)
-    assert res == [("AspenCalcTrigger1", "")]
-
-    res = client.search("ATC*", "Sine*")
-    assert res == [("ATCAI", "Sine Input")]
-    with pytest.raises(ValueError):
-        _ = client.search(desc="Sine Input")  # noqa
-
-    res = client.search(tag="ATCM*", return_desc=False)
-    assert 5 <= len(res)
+    res = client.search(tag="Aspen*", desc=None, return_desc=False)
+    assert len(res) < 5
     assert isinstance(res, list)
     assert isinstance(res[0], str)
+
+    res = client.search(tag="Aspen*", desc=None)
+    assert len(res) < 5
+    assert isinstance(res, list)
+    assert isinstance(res[0], tuple)
 
     res = client.search("AspenCalcTrigger1")
     assert res == [("AspenCalcTrigger1", "")]
     res = client.search("AspenCalcTrigger1", desc=None)
     assert res == [("AspenCalcTrigger1", "")]
 
-    res = client.search("ATC*", "Sine*")
-    assert res == [("ATCAI", "Sine Input")]
+    res = client.search("AverageCPUTimeVals", "*CPU*")
+    assert res == [("AverageCPUTimeVals", "Average CPU Time")]
+    with pytest.raises(ValueError):
+        _ = client.search(desc="Sine Input")  # noqa
 
     with pytest.raises(ValueError):
         res = client.search("")
@@ -126,15 +114,23 @@ def test_search_tag(client: IMSClient) -> None:
 
 
 def test_read_unknown_tag(client: IMSClient) -> None:
-    df = client.read(
-        tags=["so_random_it_cant_exist"], start_time=START_TIME, end_time=STOP_TIME
-    )
+    df = client.read(tags=[FAKE_TAG], start_time=START_TIME, end_time=STOP_TIME)
     assert len(df.index) == 0
-    df = client.read(
-        tags=[TAG, "so_random_it_cant_exist"], start_time=START_TIME, end_time=STOP_TIME
-    )
+    df = client.read(tags=[TAG, FAKE_TAG], start_time=START_TIME, end_time=STOP_TIME)
     assert len(df.index) > 0
     assert len(df.columns == 1)
+
+
+def test_get_units(client: IMSClient) -> None:
+    d = client.get_units(FAKE_TAG)
+    assert isinstance(d, dict)
+    assert len(d.items()) == 0
+
+
+def test_get_desc(client: IMSClient) -> None:
+    d = client.get_descriptions(FAKE_TAG)
+    assert isinstance(d, dict)
+    assert len(d.items()) == 0
 
 
 def test_query_sql(client: IMSClient) -> None:
@@ -148,7 +144,7 @@ def test_query_sql(client: IMSClient) -> None:
     with raises(NotImplementedError):
         res = client.query_sql(query=query, parse=True)
         assert isinstance(res, str)
-    client.handler.initialize_connection_string(host="SNA-IMS.statoil.net")
+    client.handler.initialize_connection_string()
     query = "Select name, ip_description from ip_analogdef where name = 'atcai'"
     res = client.query_sql(query=query, parse=False)
     print(res)
