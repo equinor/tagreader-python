@@ -187,6 +187,7 @@ class BaseHandlerWeb(ABC):
         self.datasource = datasource
         self.base_url = url
         self.session = requests.Session()
+        self.auth = auth
         self.session.auth = auth if auth is not None else get_auth_aspen()
         if verify_ssl is False:
             urllib3.disable_warnings(InsecureRequestWarning)
@@ -790,6 +791,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         tag: Optional[str],
         desc: Optional[str],
         datasource: Optional[str],
+        auth: Optional[Any] = None,
     ) -> Dict[str, str]:
         q = []
         if tag is not None:
@@ -801,7 +803,7 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         if datasource is not None:
             params["dataserverwebid"] = (
-                f"{get_piwebapi_source_to_webid_dict()[datasource]}"
+                f"{get_piwebapi_source_to_webid_dict(auth=auth)[datasource]}"
             )
 
         return params
@@ -913,7 +915,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         return_desc: bool = True,
     ) -> Union[List[Tuple[str, str]], List[str]]:
         params = self.generate_search_params(
-            tag=tag, desc=desc, datasource=self.datasource
+            tag=tag, desc=desc, datasource=self.datasource, auth=self.auth
         )
         url = urljoin(self.base_url, "points", "search")
         done = False
@@ -969,7 +971,7 @@ class PIHandlerWeb(BaseHandlerWeb):
             return self.web_id_cache[tag]
 
         params = self.generate_search_params(
-            tag=tag, datasource=self.datasource, desc=None
+            tag=tag, datasource=self.datasource, desc=None, auth=self.auth
         )
         url = urljoin(self.base_url, "points", "search")
         data = self.fetch(url, params=params)
