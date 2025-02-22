@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, timedelta, tzinfo, UTC
 from itertools import groupby
 from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -557,7 +557,7 @@ class IMSClient:
             except ValueError:
                 start = convert_to_pydatetime(start)
         if end is None:
-            end = datetime.utcnow()
+            end = datetime.now(UTC)
         elif isinstance(end, (str, pd.Timestamp)):
             end = convert_to_pydatetime(end)
 
