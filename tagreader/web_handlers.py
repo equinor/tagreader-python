@@ -673,6 +673,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         return connection_string
 
     def initialize_connection_string(
+        # todo: is obsolete after removing ODBC
         self,
         host: Optional[str] = None,
         port: int = 10014,
@@ -715,16 +716,17 @@ class AspenHandlerWeb(BaseHandlerWeb):
             parsed_dict = res.json()["data"][0]
 
             cols = []
-            for i in parsed_dict["cols"]:
-                cols.append(i["n"])
+            if "cols" in parsed_dict.keys():
+                for i in parsed_dict["cols"]:
+                    cols.append(i["n"])
 
             rows = []
-
-            for i in parsed_dict["rows"]:
-                element = []
-                for j in i["fld"]:
-                    element.append(j["v"])
-                rows.append(element)
+            if "rows" in parsed_dict.keys():
+                for i in parsed_dict["rows"]:
+                    element = []
+                    for j in i["fld"]:
+                        element.append(j["v"])
+                    rows.append(element)
             return pd.DataFrame(data=rows, columns=cols)
         return res.text
 
