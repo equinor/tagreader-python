@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta, tzinfo, UTC
+from datetime import datetime, timedelta, timezone, tzinfo
 from itertools import groupby
 from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -127,6 +127,8 @@ def get_server_address_aspen(datasource: str) -> Optional[Tuple[str, int]]:
     services located under Aspen SQLplus service component. Then we find the
     host and port based on the path above and the UUID.
     """
+
+    # todo: is obsolete after removing ODBC
 
     if not is_windows():
         return None
@@ -557,7 +559,7 @@ class IMSClient:
             except ValueError:
                 start = convert_to_pydatetime(start)
         if end is None:
-            end = datetime.now(UTC)
+            end = datetime.now(timezone.utc)
         elif isinstance(end, (str, pd.Timestamp)):
             end = convert_to_pydatetime(end)
 
