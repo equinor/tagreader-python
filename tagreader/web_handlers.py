@@ -72,10 +72,7 @@ def get_auth_aspen(use_internal: bool = True):
     if use_internal:
         return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
-    try:
-        from msal_bearer import BearerAuth
-    except ImportError:
-        from msal_bearer.BearerAuth import BearerAuth
+    from msal_bearer import BearerAuth
 
     tenantID = "3aa4a235-b6e2-48d5-9195-7fcf05b459b0"
     clientID = "7adaaa99-897f-428c-8a5f-4053db565b32"
