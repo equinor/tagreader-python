@@ -72,7 +72,7 @@ def get_auth_aspen(use_internal: bool = True):
     if use_internal:
         return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
-    from msal_bearer.BearerAuth import BearerAuth
+    from msal_bearer import BearerAuth
 
     tenantID = "3aa4a235-b6e2-48d5-9195-7fcf05b459b0"
     clientID = "7adaaa99-897f-428c-8a5f-4053db565b32"
@@ -187,6 +187,7 @@ class BaseHandlerWeb(ABC):
         self.datasource = datasource
         self.base_url = url
         self.session = requests.Session()
+        self.auth = auth
         self.session.auth = auth if auth is not None else get_auth_aspen()
         if verify_ssl is False:
             urllib3.disable_warnings(InsecureRequestWarning)
@@ -259,6 +260,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
 
     @staticmethod
     def generate_connection_string(host, *_, **__):
+        # todo: is obsolete after removing ODBC
         raise NotImplementedError
 
     @staticmethod
@@ -669,11 +671,13 @@ class AspenHandlerWeb(BaseHandlerWeb):
         return connection_string
 
     def initialize_connection_string(
+        # todo: is obsolete after removing ODBC
         self,
         host: Optional[str] = None,
         port: int = 10014,
         connection_string: Optional[str] = None,
     ):
+        # todo: is obsolete after removing ODBC
         if connection_string:
             self._connection_string = connection_string
         else:
@@ -711,16 +715,17 @@ class AspenHandlerWeb(BaseHandlerWeb):
             parsed_dict = res.json()["data"][0]
 
             cols = []
-            for i in parsed_dict["cols"]:
-                cols.append(i["n"])
+            if "cols" in parsed_dict.keys():
+                for i in parsed_dict["cols"]:
+                    cols.append(i["n"])
 
             rows = []
-
-            for i in parsed_dict["rows"]:
-                element = []
-                for j in i["fld"]:
-                    element.append(j["v"])
-                rows.append(element)
+            if "rows" in parsed_dict.keys():
+                for i in parsed_dict["rows"]:
+                    element = []
+                    for j in i["fld"]:
+                        element.append(j["v"])
+                    rows.append(element)
             return pd.DataFrame(data=rows, columns=cols)
         return res.text
 
@@ -755,6 +760,7 @@ class PIHandlerWeb(BaseHandlerWeb):
 
     @staticmethod
     def generate_connection_string(host, *_, **__):
+        # todo: is obsolete after removing ODBC
         raise NotImplementedError
 
     @staticmethod
@@ -790,6 +796,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         tag: Optional[str],
         desc: Optional[str],
         datasource: Optional[str],
+        auth: Optional[Any] = None,
     ) -> Dict[str, str]:
         q = []
         if tag is not None:
@@ -801,7 +808,7 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         if datasource is not None:
             params["dataserverwebid"] = (
-                f"{get_piwebapi_source_to_webid_dict()[datasource]}"
+                f"{get_piwebapi_source_to_webid_dict(auth=auth)[datasource]}"
             )
 
         return params
@@ -913,7 +920,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         return_desc: bool = True,
     ) -> Union[List[Tuple[str, str]], List[str]]:
         params = self.generate_search_params(
-            tag=tag, desc=desc, datasource=self.datasource
+            tag=tag, desc=desc, datasource=self.datasource, auth=self.auth
         )
         url = urljoin(self.base_url, "points", "search")
         done = False
@@ -969,7 +976,7 @@ class PIHandlerWeb(BaseHandlerWeb):
             return self.web_id_cache[tag]
 
         params = self.generate_search_params(
-            tag=tag, datasource=self.datasource, desc=None
+            tag=tag, datasource=self.datasource, desc=None, auth=self.auth
         )
         url = urljoin(self.base_url, "points", "search")
         data = self.fetch(url, params=params)

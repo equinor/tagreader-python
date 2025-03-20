@@ -2,6 +2,35 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.0.2](https://github.com/equinor/tagreader-python/compare/v6.0.1...v6.0.2) (2025-02-04)
+
+
+### 📦 Build system
+
+* **deps:** Update dependencies and fix snyk ignore ([#403](https://github.com/equinor/tagreader-python/issues/403)) ([e85797c](https://github.com/equinor/tagreader-python/commit/e85797ccc4cfeb68190fa2dd9bc1b757aabc5077))
+
+
+### 🧹 Chores
+
+* **deps:** bump http-proxy-middleware from 2.0.6 to 2.0.7 in /documentation ([#385](https://github.com/equinor/tagreader-python/issues/385)) ([495c25f](https://github.com/equinor/tagreader-python/commit/495c25f71edd531ff994580ade55fb71f14289d7))
+* **deps:** bump mermaid from 10.9.0 to 10.9.3 in /documentation ([#384](https://github.com/equinor/tagreader-python/issues/384)) ([502b476](https://github.com/equinor/tagreader-python/commit/502b476c83c5aee809428e9952377ca5f5887845))
+* **deps:** bump pycryptodome from 3.20.0 to 3.21.0 ([#382](https://github.com/equinor/tagreader-python/issues/382)) ([51d7c88](https://github.com/equinor/tagreader-python/commit/51d7c88e3a3a5feee32db7737598f2aca00195dc))
+* **deps:** bump webpack from 5.90.3 to 5.95.0 in /documentation ([#381](https://github.com/equinor/tagreader-python/issues/381)) ([a102c8a](https://github.com/equinor/tagreader-python/commit/a102c8ac53bd6acf4f1dd92d3e4a2a6f37134ed1))
+
+
+### 📚 Documentation
+
+* **manual:** fix typos ([#392](https://github.com/equinor/tagreader-python/issues/392)) ([3ec839d](https://github.com/equinor/tagreader-python/commit/3ec839d1e129c729456d32af8e1154e6a790ee54))
+* **manual:** fix typos and clarifications ([#391](https://github.com/equinor/tagreader-python/issues/391)) ([f851de9](https://github.com/equinor/tagreader-python/commit/f851de9da51afb8a09099a0b162cfc9e972d61e9))
+* **readme:** fix typos ([#387](https://github.com/equinor/tagreader-python/issues/387)) ([8e1a167](https://github.com/equinor/tagreader-python/commit/8e1a1670bd50494840a16aa10b1e232a78c9834f))
+
+
+### 🐛 Bug Fixes
+
+* fix query sql parsing ([7a764f3](https://github.com/equinor/tagreader-python/commit/7a764f3d9ea88fb2e517673a42673d0958c3570a))
+* fix wrong auth being used for pi when using ntlm or basic ([#407](https://github.com/equinor/tagreader-python/issues/407)) ([44b68ba](https://github.com/equinor/tagreader-python/commit/44b68ba1b13f9399b5c8b1acc7caaf1602243b4b))
+* handle units and descriptions for empty tags ([#162](https://github.com/equinor/tagreader-python/issues/162)) ([5a7ccc2](https://github.com/equinor/tagreader-python/commit/5a7ccc2ebff8bd50688a1c8e01765e41b75ead5b))
+
 ## [6.0.1](https://github.com/equinor/tagreader-python/compare/v6.0.0...v6.0.1) (2024-10-03)
 
 
