@@ -114,7 +114,7 @@ def test_interval_reads(
         end=None,
         get_status=get_status,
     )
-    pd.testing.assert_frame_equal(data[start:], df_read)  # type: ignore[misc]
+    pd.testing.assert_frame_equal(data[start:], df_read)
     df_read = cache.fetch(
         tagname="tag1",
         read_type=ReaderType.INT,
@@ -123,7 +123,7 @@ def test_interval_reads(
         end=end,
         get_status=get_status,
     )
-    pd.testing.assert_frame_equal(data[:end], df_read)  # type: ignore[misc]
+    pd.testing.assert_frame_equal(data[:end], df_read)
     df_read = cache.fetch(
         tagname="tag1",
         read_type=ReaderType.INT,
@@ -150,7 +150,7 @@ def test_interval_reads(
         end=end,
         get_status=get_status,
     )
-    pd.testing.assert_frame_equal(data[start:end], df_read)  # type: ignore[misc]
+    pd.testing.assert_frame_equal(data[start:end], df_read)
 
 
 def test_store_empty_df(

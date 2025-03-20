@@ -464,7 +464,7 @@ def test_fetch(cache: BucketCache) -> None:
         end=END_TIME_1 - pd.Timedelta("15m"),
     )
     pd.testing.assert_frame_equal(
-        DF1.loc[START_TIME_1 : END_TIME_1 - pd.Timedelta("15m")],  # type: ignore[misc]
+        DF1.loc[START_TIME_1 : END_TIME_1 - pd.Timedelta("15m")],
         df_read,
         check_freq=False,
     )
@@ -541,9 +541,9 @@ def test_store_overlapping_df(cache: BucketCache) -> None:
     )
     df_expected = pd.concat(
         [
-            DF1[START_TIME_1 : START_TIME_3 - pd.Timedelta(TS, unit="s")],  # type: ignore[misc]
-            DF3[START_TIME_3:END_TIME_3],  # type: ignore[misc]
-            DF2[END_TIME_3 + pd.Timedelta(TS, unit="s") : END_TIME_2],  # type: ignore[misc]
+            DF1[START_TIME_1 : START_TIME_3 - pd.Timedelta(TS, unit="s")],
+            DF3[START_TIME_3:END_TIME_3],
+            DF2[END_TIME_3 + pd.Timedelta(TS, unit="s") : END_TIME_2],
         ]
     )
 
