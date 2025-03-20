@@ -259,11 +259,6 @@ class AspenHandlerWeb(BaseHandlerWeb):
         self._connection_string = ""  # Used for raw SQL queries
 
     @staticmethod
-    def generate_connection_string(host, *_, **__):
-        # todo: is obsolete after removing ODBC
-        raise NotImplementedError
-
-    @staticmethod
     def generate_search_query(
         tag: Optional[str],
         desc: Optional[str],
@@ -670,27 +665,6 @@ class AspenHandlerWeb(BaseHandlerWeb):
         connection_string += f"<![CDATA[{query}]]></SQL>"
         return connection_string
 
-    def initialize_connection_string(
-        # todo: is obsolete after removing ODBC
-        self,
-        host: Optional[str] = None,
-        port: int = 10014,
-        connection_string: Optional[str] = None,
-    ):
-        # todo: is obsolete after removing ODBC
-        if connection_string:
-            self._connection_string = connection_string
-        else:
-            if host is None:
-                from tagreader.clients import get_server_address_aspen
-
-                host = get_server_address_aspen(self.datasource)
-            self._connection_string = (
-                f"DRIVER=AspenTech SQLPlus;HOST={host};"
-                f"PORT={port};CHARINT=N;CHARFLOAT=N;"
-                "CHARTIME=N;CONVERTERRORS=N"
-            )
-
     def query_sql(self, query: str, parse: bool = True) -> Union[str, pd.DataFrame]:
         url = urljoin(self.base_url, "SQL")
         if self._connection_string is None:
@@ -757,11 +731,6 @@ class PIHandlerWeb(BaseHandlerWeb):
     @staticmethod
     def _time_to_UTC_string(time: datetime) -> str:
         return time.astimezone(pytz.UTC).strftime("%d-%b-%y %H:%M:%S")
-
-    @staticmethod
-    def generate_connection_string(host, *_, **__):
-        # todo: is obsolete after removing ODBC
-        raise NotImplementedError
 
     @staticmethod
     def escape(s: str) -> str:

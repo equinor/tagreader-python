@@ -232,19 +232,3 @@ def test_generate_sql_query(aspen_handler: AspenHandlerWeb) -> None:
         "<![CDATA[myquery]]></SQL>"
     )
     assert res == expected
-
-
-def test_initialize_connection_string(aspen_handler: AspenHandlerWeb) -> None:
-    # todo: is obsolete after removing ODBC
-    aspen_handler.initialize_connection_string(
-        host="my_host", port=999, connection_string="my_connection_string"
-    )
-    assert aspen_handler._connection_string == "my_connection_string"
-    aspen_handler.initialize_connection_string(
-        host="my_host",
-        port=999,
-    )
-    assert aspen_handler._connection_string == (
-        "DRIVER=AspenTech SQLPlus;HOST=my_host;PORT=999;"
-        "CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N"
-    )
