@@ -260,6 +260,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
 
     @staticmethod
     def generate_connection_string(host, *_, **__):
+        # todo: is obsolete after removing ODBC
         raise NotImplementedError
 
     @staticmethod
@@ -676,6 +677,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         port: int = 10014,
         connection_string: Optional[str] = None,
     ):
+        # todo: is obsolete after removing ODBC
         if connection_string:
             self._connection_string = connection_string
         else:
@@ -758,6 +760,7 @@ class PIHandlerWeb(BaseHandlerWeb):
 
     @staticmethod
     def generate_connection_string(host, *_, **__):
+        # todo: is obsolete after removing ODBC
         raise NotImplementedError
 
     @staticmethod

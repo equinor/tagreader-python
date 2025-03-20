@@ -170,6 +170,7 @@ def get_server_address_pi(datasource: str) -> Optional[Tuple[str, int]]:
     :return: host, port
     :type: tuple(string, int)
     """
+    # todo: is obsolete after removing ODBC
 
     if not is_windows():
         return None
