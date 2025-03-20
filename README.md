@@ -6,24 +6,16 @@
 [![Downloads](https://pepy.tech/badge/tagreader)](https://pepy.tech/project/tagreader)
 
 Tagreader is a Python package for reading timeseries data from the OSIsoft PI and Aspen Infoplus.21
-Information Manufacturing Systems (IMS) systems. It is intended to be easy to use, and present as similar interfaces
-as possible to the backend historians.
+Information Management Systems (IMS). It is intended to be easy to use, and present as similar interfaces
+as possible to the backend plant historians.
 
 ## Installation
 You can install tagreader directly into your project from pypi by using pip
-or another package manager. The only requirement is Python version 3.8 or above.
+or another package manager. Supports Python version 3.9.2 and above.
 
 ```shell
 pip install tagreader
 ```
-
-The following are required and will be installed:
-
-* pandas
-* requests
-* requests-kerberos
-* certifi
-* diskcache
 
 ## Usage
 Tagreader is easy to use for both Equinor internal IMS services, and non-internal usage. For non-internal usage

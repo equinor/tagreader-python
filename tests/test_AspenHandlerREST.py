@@ -235,6 +235,7 @@ def test_generate_sql_query(aspen_handler: AspenHandlerWeb) -> None:
 
 
 def test_initialize_connection_string(aspen_handler: AspenHandlerWeb) -> None:
+    # todo: is obsolete after removing ODBC
     aspen_handler.initialize_connection_string(
         host="my_host", port=999, connection_string="my_connection_string"
     )

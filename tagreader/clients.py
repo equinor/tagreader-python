@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, timedelta, timezone, tzinfo
 from itertools import groupby
 from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -128,6 +128,8 @@ def get_server_address_aspen(datasource: str) -> Optional[Tuple[str, int]]:
     host and port based on the path above and the UUID.
     """
 
+    # todo: is obsolete after removing ODBC
+
     if not is_windows():
         return None
     import winreg
@@ -168,6 +170,7 @@ def get_server_address_pi(datasource: str) -> Optional[Tuple[str, int]]:
     :return: host, port
     :type: tuple(string, int)
     """
+    # todo: is obsolete after removing ODBC
 
     if not is_windows():
         return None
@@ -557,7 +560,7 @@ class IMSClient:
             except ValueError:
                 start = convert_to_pydatetime(start)
         if end is None:
-            end = datetime.utcnow()
+            end = datetime.now(timezone.utc)
         elif isinstance(end, (str, pd.Timestamp)):
             end = convert_to_pydatetime(end)
 

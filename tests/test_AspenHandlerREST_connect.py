@@ -2,8 +2,8 @@ import os
 from datetime import datetime, timedelta
 from typing import Generator
 
+import pandas as pd
 import pytest
-from pytest import raises
 
 from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import IMSType
@@ -137,18 +137,17 @@ def test_query_sql(client: IMSClient) -> None:
     # The % causes WC_E_SYNTAX error in result. Tried "everything" but no go.
     # Leaving it for now.
     # query = "SELECT name, ip_description FROM ip_analogdef WHERE name LIKE 'ATC%'"
-    query = "Select name, ip_description from ip_analogdef where name = 'atcai'"
+    query = "Select name, ip_description from ip_analogdef where name = 'atc'"
     res = client.query_sql(query=query, parse=False)
-    print(res)
+    # print(res)
     assert isinstance(res, str)
-    with raises(NotImplementedError):
-        res = client.query_sql(query=query, parse=True)
-        assert isinstance(res, str)
-    client.handler.initialize_connection_string()
-    query = "Select name, ip_description from ip_analogdef where name = 'atcai'"
-    res = client.query_sql(query=query, parse=False)
-    print(res)
-    assert isinstance(res, str)
-    with raises(NotImplementedError):
-        res = client.query_sql(query=query, parse=True)
-        assert isinstance(res, str)
+
+    res = client.query_sql(query=query, parse=True)
+    assert isinstance(res, pd.DataFrame)
+    assert res.empty
+
+    query = "Select name, ip_description from ip_analogdef where name = 'AverageCPUTimeVals'"
+    res = client.query_sql(query=query, parse=True)
+    assert isinstance(res, pd.DataFrame)
+    assert len(res.index.values) == 1
+    assert res.index.values[0] == 0
