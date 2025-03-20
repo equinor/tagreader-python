@@ -2,6 +2,14 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.0.3](https://github.com/equinor/tagreader-python/compare/v6.0.2...v6.0.3) (2025-03-20)
+
+
+### 🧹 Chores
+
+* **deps:** bump certifi from 2024.12.14 to 2025.1.31 ([#406](https://github.com/equinor/tagreader-python/issues/406)) ([9a370c6](https://github.com/equinor/tagreader-python/commit/9a370c64b9968ddc8b6a575c02daa47fde9c9529))
+* update cryptography to &gt;= 44.0.0 ([#410](https://github.com/equinor/tagreader-python/issues/410)) ([9651de7](https://github.com/equinor/tagreader-python/commit/9651de725dd2c9117202e2655650c8bb9d3ad12d))
+
 ## [6.0.2](https://github.com/equinor/tagreader-python/compare/v6.0.1...v6.0.2) (2025-02-04)
 
 
