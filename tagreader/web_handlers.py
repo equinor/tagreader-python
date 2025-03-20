@@ -19,7 +19,7 @@ from urllib3.exceptions import InsecureRequestWarning
 
 from tagreader.cache import BucketCache, SmartCache
 from tagreader.logger import logger
-from tagreader.utils import IMSType, ReaderType, is_mac, is_windows, urljoin
+from tagreader.utils import ReaderType, is_mac, is_windows, urljoin
 
 
 class MD4:

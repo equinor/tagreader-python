@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta, timezone, tzinfo
 from itertools import groupby
 from operator import itemgetter
@@ -16,9 +15,6 @@ from tagreader.utils import (
     ReaderType,
     convert_to_pydatetime,
     ensure_datetime_with_tz,
-    find_registry_key,
-    find_registry_key_from_name,
-    is_windows,
 )
 from tagreader.web_handlers import (
     AspenHandlerWeb,
