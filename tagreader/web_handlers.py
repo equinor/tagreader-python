@@ -213,6 +213,10 @@ class BaseHandlerWeb(ABC):
             logger.warning(f"No data found for {url} {params}")
             return {}
 
+        if res.text.startswith("XML Error"):
+            logger.warning(f"Invalid data returned for {url} {params}")
+            return {}
+
         try:
             return res.json()
         except JSONDecodeError:
