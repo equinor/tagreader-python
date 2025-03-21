@@ -5,7 +5,7 @@ import pytest
 import pytz
 
 from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
-from tagreader.utils import IMSType, ReaderType, is_windows
+from tagreader.utils import IMSType, ReaderType
 
 
 def test_init_client_without_cache() -> None:
