@@ -2,6 +2,18 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.0.4](https://github.com/equinor/tagreader-python/compare/v6.0.3...v6.0.4) (2025-03-21)
+
+
+### 🧹 Chores
+
+* remove obsolete functions ([#418](https://github.com/equinor/tagreader-python/issues/418)) ([0929499](https://github.com/equinor/tagreader-python/commit/092949955d81dfdf1c91489d0e22a251d64f0850))
+
+
+### 🐛 Bug Fixes
+
+* mypy errors, remove unused mypy ignore statements ([#419](https://github.com/equinor/tagreader-python/issues/419)) ([f6edc8d](https://github.com/equinor/tagreader-python/commit/f6edc8de23272da7909d594925ae3aefe68970c6))
+
 ## [6.0.3](https://github.com/equinor/tagreader-python/compare/v6.0.2...v6.0.3) (2025-03-20)
 
 
