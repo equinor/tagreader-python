@@ -1,13 +1,18 @@
 import enum
+import hashlib
 import logging
 import platform
-import warnings
+import ssl
 from datetime import datetime, tzinfo
 from enum import Enum
+from pathlib import Path
 from typing import Union
 
+import certifi
 import pandas as pd
 import pytz
+import requests
+from platformdirs import user_data_dir
 
 from tagreader.logger import logger
 
@@ -26,7 +31,6 @@ def is_linux() -> bool:
 
 if is_windows():
     import winreg
-
 
 if is_mac():
     import socket
@@ -103,64 +107,82 @@ def add_equinor_root_certificate() -> bool:
     running on Equinor host.
 
     NB! This needs to be repeated after updating the cacert module.
-    NB! Will not download certificates.
 
     Returns:
         bool: True if function completes successfully
     """
-    import hashlib
-    import ssl
+    certificate = find_local_equinor_root_certificate()
 
-    import certifi
+    # If certificate is not found locally, we download it from the Equinor server
+    if certificate == "":
+        logger.debug(
+            "Unable to locate Equinor Root CA certificate on this host. Downloading from Equinor server."
+        )
+        response = requests.get("http://pki.equinor.com/aia/ecpr.crt")
 
-    EQUINOR_root_PEM_HASH = "5A206332CE73CED1D44C8A99C4C43B7CEE03DF5F"
+        if response.status_code != 200:
+            logger.error(
+                "Unable to find Equinor Root CA certificate locally and on Equinor server."
+            )
+            return False
+
+        certificate = response.text.replace("\r", "")
+
+        # Write result to user data so we can read the cert from there next time
+        filepath = Path(user_data_dir("tagreader")) / "equinor_root_ca.crt"
+        try:
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+            filepath.write_text(certificate)
+            logger.debug("Equinor Root CA certificate written to cache")
+        except Exception as e:
+            logger.debug(f"Failed to write Equinor Root CA certificate to cache: {e}")
+
+    if certificate in certifi.contents():
+        logger.debug("Equinor Root Certificate already exists in certifi store")
+        return True
+
+    ca_file = certifi.where()
+    with open(ca_file, "ab") as f:
+        f.write(bytes(certificate, "ascii"))
+    logger.debug("Equinor Root Certificate added to certifi store")
+
+
+def find_local_equinor_root_certificate() -> str:
+    equinor_root_pem_hash = "5A206332CE73CED1D44C8A99C4C43B7CEE03DF5F"
     ca_search = "Equinor Root CA"
 
-    found = False
-    der = None
-
-    if is_linux():
-        return True
-    elif is_windows():
-        logger.debug("Scanning CA certificate in Windows cert store", end="")
+    if is_windows():
+        logger.debug("Checking for Equinor Root CA in Windows certificate store")
         for cert in ssl.enum_certificates("CA"):
-            der = cert[0]
+            found_cert = cert[0]
             # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
-            if hashlib.sha1(der).hexdigest().upper() == EQUINOR_root_PEM_HASH:
-                found = True
-                logger.debug("CA certificate found!")
-                break
+            if hashlib.sha1(found_cert).hexdigest().upper() == equinor_root_pem_hash:
+                return ssl.DER_cert_to_PEM_cert(found_cert)
+
     elif is_mac():
+        logger.debug("Checking for Equinor Root CA in MacOS certificate store")
         macos_ca_certs = subprocess.run(
             ["security", "find-certificate", "-a", "-c", ca_search, "-Z"],
             stdout=subprocess.PIPE,
         ).stdout
 
-        if EQUINOR_root_PEM_HASH in str(macos_ca_certs).upper():
+        if equinor_root_pem_hash in str(macos_ca_certs).upper():
             c = get_macos_equinor_certificates()
             for cert in c:
                 # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
-                if hashlib.sha1(cert).hexdigest().upper() == EQUINOR_root_PEM_HASH:
-                    der = cert
-                    found = True
-                    break
+                if hashlib.sha1(cert).hexdigest().upper() == equinor_root_pem_hash:
+                    return ssl.DER_cert_to_PEM_cert(cert)
 
-    if found and der:
-        pem = ssl.DER_cert_to_PEM_cert(der)
-        if pem in certifi.contents():
-            logger.debug(
-                "CA Certificate already exists in certifi store. Nothing to do."
-            )
-        else:
-            logger.debug("Writing certificate to certifi store.")
-            ca_file = certifi.where()
-            with open(ca_file, "ab") as f:
-                f.write(bytes(pem, "ascii"))
-            logger.debug("Completed")
-    else:
-        warnings.warn("Unable to locate root certificate on this host.")
+    # If the certificate is not found in the local cert store, look in the tagreader cache
+    filepath = Path(user_data_dir("tagreader")) / "equinor_root_ca.crt"
 
-    return found
+    try:
+        if filepath.exists():
+            return filepath.read_text()
+    except Exception as e:
+        logger.debug(f"Failed to read Equinor Root CA certificate from cache: {e}")
+
+    return ""
 
 
 def get_macos_equinor_certificates():
