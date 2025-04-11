@@ -3,15 +3,16 @@ import hashlib
 import logging
 import platform
 import ssl
-import warnings
 from datetime import datetime, tzinfo
 from enum import Enum
+from pathlib import Path
 from typing import Union
 
 import certifi
 import pandas as pd
 import pytz
 import requests
+from platformdirs import user_data_dir
 
 from tagreader.logger import logger
 
@@ -112,6 +113,7 @@ def add_equinor_root_certificate() -> bool:
     """
     certificate = find_local_equinor_root_certificate()
 
+    # If certificate is not found locally, we download it from the Equinor server
     if certificate == "":
         logger.debug(
             "Unable to locate Equinor Root CA certificate on this host. Downloading from Equinor server."
@@ -125,6 +127,15 @@ def add_equinor_root_certificate() -> bool:
             return False
 
         certificate = response.text.replace("\r", "")
+
+        # Write result to user data so we can read the cert from there next time
+        filepath = Path(user_data_dir("tagreader")) / "equinor_root_ca.crt"
+        try:
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+            filepath.write_text(certificate)
+            logger.debug("Equinor Root CA certificate written to cache")
+        except Exception as e:
+            logger.debug(f"Failed to write Equinor Root CA certificate to cache: {e}")
 
     if certificate in certifi.contents():
         logger.debug("Equinor Root Certificate already exists in certifi store")
@@ -161,6 +172,15 @@ def find_local_equinor_root_certificate() -> str:
                 # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
                 if hashlib.sha1(cert).hexdigest().upper() == equinor_root_pem_hash:
                     return ssl.DER_cert_to_PEM_cert(cert)
+
+    # If the certificate is not found in the local cert store, look in the tagreader cache
+    filepath = Path(user_data_dir("tagreader")) / "equinor_root_ca.crt"
+
+    try:
+        if filepath.exists():
+            return filepath.read_text()
+    except Exception as e:
+        logger.debug(f"Failed to read Equinor Root CA certificate from cache: {e}")
 
     return ""
 

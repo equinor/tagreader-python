@@ -39,6 +39,7 @@ matplotlib = { version = "^3.7.5", optional = true }
 diskcache = "^5.6.1"
 pycryptodome = "^3.20.0"
 requests-ntlm = ">=1.1,<=2.0"
+platformdirs = "^4.3.7"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3"
