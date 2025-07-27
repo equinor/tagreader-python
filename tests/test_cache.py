@@ -1,21 +1,20 @@
 import os
-import sys
-from importlib.util import find_spec
+from datetime import timedelta
+from pathlib import Path
+from typing import Generator
 
 import pandas as pd
 import pytest
 
-from tagreader.cache import SmartCache, safe_tagname
+from tagreader.cache import BaseCache, SmartCache, safe_tagname
 from tagreader.utils import ReaderType
 
-if not find_spec("tables"):
-    pytest.skip("Cache requires package 'tables'", allow_module_level=True)
-
 os.environ["NUMEXPR_MAX_THREADS"] = "8"
+MINUTE = timedelta(seconds=60)
 
 
-@pytest.fixture()
-def data():
+@pytest.fixture  # type: ignore[misc]
+def data() -> Generator[pd.DataFrame, None, None]:
     length = 10
     df_total = pd.DataFrame(
         {"tag1": range(0, length)},
@@ -26,162 +25,174 @@ def data():
     yield df_total
 
 
-@pytest.fixture()
-def cache(request):
-    cache = SmartCache("testcache.h5")
-    yield cache
-    cache.remove()
+def test_base_cache(tmp_path: Path) -> None:
+    webidcache = BaseCache(directory=tmp_path)
+
+    webid = "F1DPwgwnpmLxqECAJV2HpxdobgmQIAAAUElMQUIuRVFVSU5PUi5DT01cMTMyMC9BSU0sMTctVFQtNzE5Ng"
+    tag = "example_tag_name"
+    webidcache[tag] = webid
+
+    del webidcache
+
+    webidcache = BaseCache(directory=tmp_path)
+
+    assert "example_tag_name" in webidcache
+    assert webidcache["example_tag_name"] == webid
 
 
-def test_safe_tagname():
+def test_safe_tagname() -> None:
     assert safe_tagname("ASGB.tt-___56_ _%_/_") == "ASGB_tt___56____"
 
 
-def test_key_path(cache):
-    pass
+def test_key_path(cache: SmartCache) -> None:
+    assert cache.size_limit == int(4e9)
 
 
-def test_cache_single_store_and_fetch(cache, data):
-    cache.store(data, readtype=ReaderType.INT)
-    df_read = cache.fetch("tag1", ReaderType.INT, 60)
+def test_cache_single_store_and_fetch(
+    cache: SmartCache, data: pd.DataFrame, get_status: bool = False
+) -> None:
+    cache.store(
+        df=data,
+        read_type=ReaderType.INT,
+        get_status=get_status,
+        tagname="tag1",
+        ts=MINUTE,
+    )
+    df_read = cache.fetch(
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        get_status=get_status,
+        start=None,
+        end=None,
+    )
     pd.testing.assert_frame_equal(data, df_read)
 
 
-def test_cache_multiple_store_single_fetch(cache, data):
+def test_cache_multiple_store_single_fetch(
+    cache: SmartCache, data: pd.DataFrame, get_status: bool = False
+) -> None:
     df1 = data[0:3]
     df2 = data[2:10]
-    cache.store(df1, readtype=ReaderType.INT)
-    cache.store(df2, readtype=ReaderType.INT)
-    df_read = cache.fetch("tag1", ReaderType.INT, 60)
+    cache.store(
+        df=df1, read_type=ReaderType.INT, tagname="tag1", ts=MINUTE, get_status=False
+    )
+    cache.store(
+        df=df2, read_type=ReaderType.INT, tagname="tag1", ts=MINUTE, get_status=False
+    )
+    df_read = cache.fetch(
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        get_status=False,
+        start=None,
+        end=None,
+    )
     pd.testing.assert_frame_equal(df_read, data)
 
 
-def test_interval_reads(cache, data):
-    cache.store(data, readtype=ReaderType.INT)
-    start_time_oob = pd.to_datetime("2018-01-18 04:55:00")
-    start_time = pd.to_datetime("2018-01-18 05:05:00")
-    stop_time = pd.to_datetime("2018-01-18 05:08:00")
-    stop_time_oob = pd.to_datetime("2018-01-18 06:00:00")
+def test_interval_reads(
+    cache: SmartCache, data: pd.DataFrame, get_status: bool = False
+) -> None:
+    cache.store(
+        df=data,
+        read_type=ReaderType.INT,
+        get_status=get_status,
+        tagname="tag1",
+        ts=MINUTE,
+    )
+    start_oob = pd.to_datetime("2018-01-18 04:55:00")
+    start = pd.to_datetime("2018-01-18 05:05:00")
+    end = pd.to_datetime("2018-01-18 05:08:00")
+    end_oob = pd.to_datetime("2018-01-18 06:00:00")
 
-    df_read = cache.fetch("tag1", ReaderType.INT, ts=60, start_time=start_time)
-    pd.testing.assert_frame_equal(data[start_time:], df_read)
-    df_read = cache.fetch("tag1", ReaderType.INT, ts=60, stop_time=stop_time)
-    pd.testing.assert_frame_equal(data[:stop_time], df_read)
-    df_read = cache.fetch("tag1", ReaderType.INT, ts=60, start_time=start_time_oob)
-    pd.testing.assert_frame_equal(data, df_read)
-    df_read = cache.fetch("tag1", ReaderType.INT, ts=60, stop_time=stop_time_oob)
+    df_read = cache.fetch(
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        start=start,
+        end=None,
+        get_status=get_status,
+    )
+    pd.testing.assert_frame_equal(data[start:], df_read)
+    df_read = cache.fetch(
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        start=None,
+        end=end,
+        get_status=get_status,
+    )
+    pd.testing.assert_frame_equal(data[:end], df_read)
+    df_read = cache.fetch(
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        start=start_oob,
+        end=None,
+        get_status=get_status,
+    )
     pd.testing.assert_frame_equal(data, df_read)
     df_read = cache.fetch(
-        "tag1", ReaderType.INT, ts=60, start_time=start_time, stop_time=stop_time
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        start=None,
+        end=end_oob,
+        get_status=get_status,
     )
-    pd.testing.assert_frame_equal(data[start_time:stop_time], df_read)
+    pd.testing.assert_frame_equal(data, df_read)
+    df_read = cache.fetch(
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        start=start,
+        end=end,
+        get_status=get_status,
+    )
+    pd.testing.assert_frame_equal(data[start:end], df_read)
 
 
-def test_match_tag(cache):
-    assert (
-        cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=60, tagname="tag1")
-        is True
-    )
-    assert (
-        cache._match_tag(
-            "INT/s86401/tag1", readtype=ReaderType.INT, ts=86401, tagname="tag1"
-        )
-        is True
-    )
-    assert (
-        cache._match_tag("INT/s60/tag1", readtype=ReaderType.RAW, ts=60, tagname="tag1")
-        is False
-    )
-    assert (
-        cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=10, tagname="tag1")
-        is False
-    )
-    assert (
-        cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=60, tagname="tag2")
-        is False
-    )
-    assert cache._match_tag("INT/s60/tag1", ts=60, tagname="tag1") is True
-    assert (
-        cache._match_tag(
-            "INT/s60/tag1", readtype=ReaderType.INTERPOLATE, tagname="tag1"
-        )
-        is True
-    )
-    assert cache._match_tag("INT/s60/tag1", readtype=ReaderType.INT, ts=60) is True
-    assert (
-        cache._match_tag(
-            "INT/s60/tag1",
-            readtype=[ReaderType.INT, ReaderType.RAW],
-            ts=[60, 10],
-            tagname=["tag1", "tag2"],
-        )
-        is True
-    )
-    assert (
-        cache._match_tag(
-            "INT/s60/tag1",
-            readtype=[ReaderType.AVERAGE, ReaderType.RAW],
-            ts=[60, 10],
-            tagname=["tag1", "tag2"],
-        )
-        is False
-    )
-    assert (
-        cache._match_tag(
-            "INT/s60/tag1",
-            readtype=[ReaderType.INT, ReaderType.RAW],
-            ts=[120, 10],
-            tagname=["tag1", "tag2"],
-        )
-        is False
-    )
-    assert (
-        cache._match_tag(
-            "INT/s60/tag1",
-            readtype=[ReaderType.INT, ReaderType.RAW],
-            ts=[60, 10],
-            tagname=["tag3", "tag2"],
-        )
-        is False
-    )
-
-
-def test_delete_tag(cache, data):
-    cache.store(data, readtype=ReaderType.INT)
-    cache.store(data, readtype=ReaderType.RAW)
-    with cache._get_hdfstore() as f:
-        assert "INT/s60/tag1" in f
-        assert "RAW/tag1" in f
-    cache.delete_key("tag1", ReaderType.INT, 60)
-    cache.delete_key("tag1")
-    with cache._get_hdfstore() as f:
-        assert "INT/s60/tag1" not in f
-        assert "RAW/tag1" not in f
-
-
-def test_store_empty_df(cache, data):
+def test_store_empty_df(
+    cache: SmartCache, data: pd.DataFrame, get_status: bool = False
+) -> None:
     # Empty dataframes should not be stored (note: df full of NaN is not empty!)
-    cache.store(data, readtype=ReaderType.INT)
+    cache.store(
+        df=data,
+        read_type=ReaderType.INT,
+        get_status=get_status,
+        tagname="tag1",
+        ts=MINUTE,
+    )
     df = pd.DataFrame({"tag1": []})
     cache.store(
-        df, readtype=ReaderType.INT, ts=60
+        df=df, read_type=ReaderType.INT, ts=MINUTE, tagname="tag1", get_status=False
     )  # Specify ts to ensure correct key /if/ stored
-    df_read = cache.fetch("tag1", ReaderType.INT, 60)
+    df_read = cache.fetch(
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        get_status=get_status,
+        ts=MINUTE,
+        start=None,
+        end=None,
+    )
     pd.testing.assert_frame_equal(data, df_read)
 
 
-def test_store_metadata(cache):
-    cache.store_tag_metadata("tag1", {"unit": "%", "desc": "Some description"})
-    cache.store_tag_metadata("tag1", {"max": 60})
-    r = cache.fetch_tag_metadata("tag1", "unit")
+def test_store_metadata(cache: SmartCache) -> None:
+    cache.put_metadata("tag1", {"unit": "%", "desc": "Some description"})
+    cache.put_metadata("tag1", {"max": 60})
+    r = cache.get_metadata("tag1", "unit")
+    assert isinstance(r, dict)
     assert "%" == r["unit"]
-    r = cache.fetch_tag_metadata("tag1", ["unit", "max", "noworky"])
+    r = cache.get_metadata("tag1", ["unit", "max", "noworky"])
+    assert isinstance(r, dict)
     assert "%" == r["unit"]
     assert 60 == r["max"]
     assert "noworky" not in r
 
 
-def test_to_DST_skips_time(cache):
+def test_to_dst_skips_time(cache: SmartCache, get_status: bool = False) -> None:
     index = pd.date_range(
         start="2018-03-25 01:50:00",
         end="2018-03-25 03:30:00",
@@ -189,17 +200,30 @@ def test_to_DST_skips_time(cache):
         freq="600s",
         name="time",
     )
-    index.freq = None
+    index.freq = None  # type: ignore[misc]
     df = pd.DataFrame({"tag1": range(0, len(index))}, index=index)
     assert (
-        df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6
+        df.loc["2018-03-25 01:50:00":"2018-03-25 03:10:00"].size == (2 + 1 * 6 + 1) - 6  # type: ignore[misc]
     )
-    cache.store(df, readtype=ReaderType.INT)
-    df_read = cache.fetch("tag1", ReaderType.INT, 600)
+    cache.store(
+        df=df,
+        read_type=ReaderType.INT,
+        get_status=get_status,
+        tagname="tag1",
+        ts=MINUTE,
+    )
+    df_read = cache.fetch(
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        get_status=get_status,
+        start=None,
+        end=None,
+    )
     pd.testing.assert_frame_equal(df_read, df)
 
 
-def test_from_DST_folds_time(cache):
+def test_from_dst_folds_time(cache: SmartCache, get_status: bool = False) -> None:
     index = pd.date_range(
         start="2017-10-29 00:30:00",
         end="2017-10-29 04:30:00",
@@ -207,18 +231,31 @@ def test_from_DST_folds_time(cache):
         freq="600s",
         name="time",
     )
-    index.freq = None
+    index.freq = None  # type: ignore[misc]
     df = pd.DataFrame({"tag1": range(0, len(index))}, index=index)
     assert len(df) == (4 + 1) * 6 + 1
     # Time exists inside fold:
     assert (
-        df["tag1"].loc["2017-10-29 01:10:00+02:00":"2017-10-29 01:50:00+02:00"].size
+        df["tag1"].loc["2017-10-29 01:10:00+02:00":"2017-10-29 01:50:00+02:00"].size  # type: ignore[misc]
         == 5
     )
     # Time inside fold is always included:
     assert (
-        df.loc["2017-10-29 01:50:00":"2017-10-29 03:10:00"].size == 2 + (1 + 1) * 6 + 1
+        df.loc["2017-10-29 01:50:00":"2017-10-29 03:10:00"].size == 2 + (1 + 1) * 6 + 1  # type: ignore[misc]
     )
-    cache.store(df, readtype=ReaderType.INT)
-    df_read = cache.fetch("tag1", ReaderType.INT, 600)
+    cache.store(
+        df=df,
+        read_type=ReaderType.INT,
+        get_status=get_status,
+        tagname="tag1",
+        ts=MINUTE,
+    )
+    df_read = cache.fetch(
+        tagname="tag1",
+        read_type=ReaderType.INT,
+        ts=MINUTE,
+        get_status=get_status,
+        start=None,
+        end=None,
+    )
     pd.testing.assert_frame_equal(df_read, df)

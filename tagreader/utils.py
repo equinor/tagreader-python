@@ -1,12 +1,20 @@
 import enum
+import hashlib
 import logging
 import platform
-import warnings
-from datetime import datetime
+import ssl
+from datetime import datetime, tzinfo
+from enum import Enum
+from pathlib import Path
 from typing import Union
 
+import certifi
 import pandas as pd
 import pytz
+import requests
+from platformdirs import user_data_dir
+
+from tagreader.logger import logger
 
 
 def is_windows() -> bool:
@@ -24,69 +32,40 @@ def is_linux() -> bool:
 if is_windows():
     import winreg
 
-
 if is_mac():
     import socket
     import subprocess
 
 
-def find_registry_key(base_key, search_key_name: str):
-    search_key_name = search_key_name.lower()
-    if base_key is not None:
-        num_keys, _, _ = winreg.QueryInfoKey(base_key)
-        for i in range(0, num_keys):
-            key_name = winreg.EnumKey(base_key, i)
-            if key_name.lower() == search_key_name:
-                return winreg.OpenKey(base_key, key_name)
-            else:
-                key = find_registry_key(
-                    winreg.OpenKey(base_key, key_name), search_key_name
-                )
-            if key is not None:
-                return key
-    return None
-
-
-def find_registry_key_from_name(base_key, search_key_name: str):
-    search_key_name = search_key_name.lower()
-    num_keys, _, _ = winreg.QueryInfoKey(base_key)
-    key = key_string = None
-    for i in range(0, num_keys):
+def convert_to_pydatetime(date_stamp: Union[datetime, str, pd.Timestamp]) -> datetime:
+    if isinstance(date_stamp, datetime):
+        return date_stamp
+    elif isinstance(date_stamp, pd.Timestamp):
+        return date_stamp.to_pydatetime()
+    else:
         try:
-            key_string = winreg.EnumKey(base_key, i)
-            key = winreg.OpenKey(base_key, key_string)
-            _, num_vals, _ = winreg.QueryInfoKey(key)
-            if num_vals > 0:
-                (_, key_name, _) = winreg.EnumValue(key, 0)
-                if str(key_name).lower() == search_key_name:
-                    break
-        except Exception as err:
-            logging.error("{}: {}".format(i, err))
-    return key, key_string
+            return pd.to_datetime(str(date_stamp), format="ISO8601").to_pydatetime()
+        except ValueError:
+            return pd.to_datetime(str(date_stamp), dayfirst=True).to_pydatetime()
 
 
 def ensure_datetime_with_tz(
     date_stamp: Union[datetime, str, pd.Timestamp],
-    tz: str = "Europe/Oslo",
-) -> pd.Timestamp:
-    if isinstance(date_stamp, str):
-        try:
-            date_stamp = pd.to_datetime(date_stamp, format="ISO8601")
-        except ValueError:
-            date_stamp = pd.to_datetime(date_stamp, dayfirst=True)
+    tz: tzinfo = pytz.timezone("Europe/Oslo"),
+) -> datetime:
+    date_stamp = convert_to_pydatetime(date_stamp)
 
     if not date_stamp.tzinfo:
-        date_stamp = pytz.timezone(tz).localize(date_stamp)
+        date_stamp = tz.localize(date_stamp)
 
     return date_stamp
 
 
 def urljoin(*args) -> str:
-    """Joins components of URL. Ensures slashes are inserted or removed where
+    """
+    Joins components of URL. Ensures slashes are inserted or removed where
     needed, and does not strip trailing slash of last element.
 
-    Arguments:
-        str
     Returns:
         str -- Generated URL
     """
@@ -119,89 +98,108 @@ class ReaderType(enum.IntEnum):
     SNAPSHOT = FINAL = LAST = enum.auto()  # Last sampled value
 
 
-def add_statoil_root_certificate(noisy: bool = True) -> bool:
-    """This is a utility function for Equinor employees on Equinor managed machines.
+def add_equinor_root_certificate() -> bool:
+    """
+    This is a utility function for Equinor employees on Equinor managed machines.
 
-    The function searches for the Statoil Root certificate in the
+    The function searches for the Equinor Root certificate in the
     cert store and imports it to the cacert bundle. Does nothing if not
     running on Equinor host.
 
-    This needs to be repeated after updating the cacert module.
+    NB! This needs to be repeated after updating the cacert module.
 
     Returns:
         bool: True if function completes successfully
     """
-    import hashlib
-    import ssl
+    certificate = find_local_equinor_root_certificate()
 
-    import certifi
+    # If certificate is not found locally, we download it from the Equinor server
+    if certificate == "":
+        logger.debug(
+            "Unable to locate Equinor Root CA certificate on this host. Downloading from Equinor server."
+        )
+        response = requests.get("http://pki.equinor.com/aia/ecpr.crt")
 
-    STATOIL_ROOT_PEM_HASH = "ce7bb185ab908d2fea28c7d097841d9d5bbf2c76"
+        if response.status_code != 200:
+            logger.error(
+                "Unable to find Equinor Root CA certificate locally and on Equinor server."
+            )
+            return False
 
-    found = False
-    der = None
+        certificate = response.text.replace("\r", "")
 
-    if is_linux():
+        # Write result to user data so we can read the cert from there next time
+        filepath = Path(user_data_dir("tagreader")) / "equinor_root_ca.crt"
+        try:
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+            filepath.write_text(certificate)
+            logger.debug("Equinor Root CA certificate written to cache")
+        except Exception as e:
+            logger.debug(f"Failed to write Equinor Root CA certificate to cache: {e}")
+
+    if certificate in certifi.contents():
+        logger.debug("Equinor Root Certificate already exists in certifi store")
         return True
-    elif is_windows():
-        if noisy:
-            print("Scanning CA certs in Windows cert store", end="")
-        for cert in ssl.enum_certificates("CA"):
-            if noisy:
-                print(".", end="")
-            der = cert[0]
-            if hashlib.sha1(der).hexdigest() == STATOIL_ROOT_PEM_HASH:
-                found = True
-                if noisy:
-                    print(" found it!")
-                break
-    elif is_mac():
-        import subprocess
 
+    ca_file = certifi.where()
+    with open(ca_file, "ab") as f:
+        f.write(bytes(certificate, "ascii"))
+    logger.debug("Equinor Root Certificate added to certifi store")
+
+
+def find_local_equinor_root_certificate() -> str:
+    equinor_root_pem_hash = "5A206332CE73CED1D44C8A99C4C43B7CEE03DF5F"
+    ca_search = "Equinor Root CA"
+
+    if is_windows():
+        logger.debug("Checking for Equinor Root CA in Windows certificate store")
+        for cert in ssl.enum_certificates("CA"):
+            found_cert = cert[0]
+            # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
+            if hashlib.sha1(found_cert).hexdigest().upper() == equinor_root_pem_hash:
+                return ssl.DER_cert_to_PEM_cert(found_cert)
+
+    elif is_mac():
+        logger.debug("Checking for Equinor Root CA in MacOS certificate store")
         macos_ca_certs = subprocess.run(
-            ["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-Z"],
+            ["security", "find-certificate", "-a", "-c", ca_search, "-Z"],
             stdout=subprocess.PIPE,
         ).stdout
 
-        if STATOIL_ROOT_PEM_HASH.upper() in str(macos_ca_certs).upper():
-            c = get_macos_statoil_certificates()
+        if equinor_root_pem_hash in str(macos_ca_certs).upper():
+            c = get_macos_equinor_certificates()
             for cert in c:
-                if hashlib.sha1(cert).hexdigest() == STATOIL_ROOT_PEM_HASH:
-                    der = cert
-                    found = True
-                    break
+                # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
+                if hashlib.sha1(cert).hexdigest().upper() == equinor_root_pem_hash:
+                    return ssl.DER_cert_to_PEM_cert(cert)
 
-    if found and der:
-        pem = ssl.DER_cert_to_PEM_cert(der)
-        if pem in certifi.contents():
-            if noisy:
-                print("Certificate already exists in certifi store. Nothing to do.")
-        else:
-            if noisy:
-                print("Writing certificate to certifi store.")
-            cafile = certifi.where()
-            with open(cafile, "ab") as f:
-                f.write(bytes(pem, "ascii"))
-            if noisy:
-                print("Completed")
-    else:
-        warnings.warn("Unable to locate root certificate on this host.")
+    # If the certificate is not found in the local cert store, look in the tagreader cache
+    filepath = Path(user_data_dir("tagreader")) / "equinor_root_ca.crt"
 
-    return found
+    try:
+        if filepath.exists():
+            return filepath.read_text()
+    except Exception as e:
+        logger.debug(f"Failed to read Equinor Root CA certificate from cache: {e}")
+
+    return ""
 
 
-def get_macos_statoil_certificates():
+def get_macos_equinor_certificates():
     import ssl
     import tempfile
 
+    ca_search = "Equinor Root CA"
+
     ctx = ssl.create_default_context()
     macos_ca_certs = subprocess.run(
-        ["security", "find-certificate", "-a", "-c", "Statoil Root CA", "-p"],
+        ["security", "find-certificate", "-a", "-c", ca_search, "-p"],
         stdout=subprocess.PIPE,
     ).stdout
-    with tempfile.NamedTemporaryFile("w+b") as tmp_file:
+    with tempfile.NamedTemporaryFile("w+b", delete=False) as tmp_file:
         tmp_file.write(macos_ca_certs)
-        ctx.load_verify_locations(tmp_file.name)
+
+    ctx.load_verify_locations(tmp_file.name)
 
     return ctx.get_ca_certs(binary_form=True)
 
@@ -235,6 +233,7 @@ def is_equinor() -> bool:
 
         host = socket.gethostname()
 
+        # deepcode ignore IdenticalBranches: Not an error. First test is just more precise.
         if host + ".client.statoil.net" in str(s):
             return True
         elif "client.statoil.net" in host and host in str(s):
@@ -248,3 +247,11 @@ def is_equinor() -> bool:
             f"Unsupported system: {platform.system()}. Please report this as an issue."
         )
     return False
+
+
+class IMSType(str, Enum):
+    PIWEBAPI = "piwebapi"
+    ASPENONE = "aspenone"
+    PI = "pi"
+    ASPEN = "aspen"
+    IP21 = "ip21"

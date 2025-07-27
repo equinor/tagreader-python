@@ -2,6 +2,413 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.0.4](https://github.com/equinor/tagreader-python/compare/v6.0.3...v6.0.4) (2025-04-11)
+
+
+### 🧹 Chores
+
+* remove obsolete functions ([#418](https://github.com/equinor/tagreader-python/issues/418)) ([0929499](https://github.com/equinor/tagreader-python/commit/092949955d81dfdf1c91489d0e22a251d64f0850))
+
+
+### 🐛 Bug Fixes
+
+* fix certificate handling for equinor clients ([#422](https://github.com/equinor/tagreader-python/issues/422)) ([7283277](https://github.com/equinor/tagreader-python/commit/728327736a6da64ab7efbef112681a4957108d44))
+* mypy errors, remove unused mypy ignore statements ([#419](https://github.com/equinor/tagreader-python/issues/419)) ([f6edc8d](https://github.com/equinor/tagreader-python/commit/f6edc8de23272da7909d594925ae3aefe68970c6))
+
+## [6.0.3](https://github.com/equinor/tagreader-python/compare/v6.0.2...v6.0.3) (2025-03-20)
+
+
+### 🧹 Chores
+
+* **deps:** bump certifi from 2024.12.14 to 2025.1.31 ([#406](https://github.com/equinor/tagreader-python/issues/406)) ([9a370c6](https://github.com/equinor/tagreader-python/commit/9a370c64b9968ddc8b6a575c02daa47fde9c9529))
+* update cryptography to &gt;= 44.0.0 ([#410](https://github.com/equinor/tagreader-python/issues/410)) ([9651de7](https://github.com/equinor/tagreader-python/commit/9651de725dd2c9117202e2655650c8bb9d3ad12d))
+
+## [6.0.2](https://github.com/equinor/tagreader-python/compare/v6.0.1...v6.0.2) (2025-02-04)
+
+
+### 📦 Build system
+
+* **deps:** Update dependencies and fix snyk ignore ([#403](https://github.com/equinor/tagreader-python/issues/403)) ([e85797c](https://github.com/equinor/tagreader-python/commit/e85797ccc4cfeb68190fa2dd9bc1b757aabc5077))
+
+
+### 🧹 Chores
+
+* **deps:** bump http-proxy-middleware from 2.0.6 to 2.0.7 in /documentation ([#385](https://github.com/equinor/tagreader-python/issues/385)) ([495c25f](https://github.com/equinor/tagreader-python/commit/495c25f71edd531ff994580ade55fb71f14289d7))
+* **deps:** bump mermaid from 10.9.0 to 10.9.3 in /documentation ([#384](https://github.com/equinor/tagreader-python/issues/384)) ([502b476](https://github.com/equinor/tagreader-python/commit/502b476c83c5aee809428e9952377ca5f5887845))
+* **deps:** bump pycryptodome from 3.20.0 to 3.21.0 ([#382](https://github.com/equinor/tagreader-python/issues/382)) ([51d7c88](https://github.com/equinor/tagreader-python/commit/51d7c88e3a3a5feee32db7737598f2aca00195dc))
+* **deps:** bump webpack from 5.90.3 to 5.95.0 in /documentation ([#381](https://github.com/equinor/tagreader-python/issues/381)) ([a102c8a](https://github.com/equinor/tagreader-python/commit/a102c8ac53bd6acf4f1dd92d3e4a2a6f37134ed1))
+
+
+### 📚 Documentation
+
+* **manual:** fix typos ([#392](https://github.com/equinor/tagreader-python/issues/392)) ([3ec839d](https://github.com/equinor/tagreader-python/commit/3ec839d1e129c729456d32af8e1154e6a790ee54))
+* **manual:** fix typos and clarifications ([#391](https://github.com/equinor/tagreader-python/issues/391)) ([f851de9](https://github.com/equinor/tagreader-python/commit/f851de9da51afb8a09099a0b162cfc9e972d61e9))
+* **readme:** fix typos ([#387](https://github.com/equinor/tagreader-python/issues/387)) ([8e1a167](https://github.com/equinor/tagreader-python/commit/8e1a1670bd50494840a16aa10b1e232a78c9834f))
+
+
+### 🐛 Bug Fixes
+
+* fix query sql parsing ([7a764f3](https://github.com/equinor/tagreader-python/commit/7a764f3d9ea88fb2e517673a42673d0958c3570a))
+* fix wrong auth being used for pi when using ntlm or basic ([#407](https://github.com/equinor/tagreader-python/issues/407)) ([44b68ba](https://github.com/equinor/tagreader-python/commit/44b68ba1b13f9399b5c8b1acc7caaf1602243b4b))
+* handle units and descriptions for empty tags ([#162](https://github.com/equinor/tagreader-python/issues/162)) ([5a7ccc2](https://github.com/equinor/tagreader-python/commit/5a7ccc2ebff8bd50688a1c8e01765e41b75ead5b))
+
+## [6.0.1](https://github.com/equinor/tagreader-python/compare/v6.0.0...v6.0.1) (2024-10-03)
+
+
+### 🐛 Bug Fixes
+
+* include all hashlib.new inputs ([#379](https://github.com/equinor/tagreader-python/issues/379)) ([de319cf](https://github.com/equinor/tagreader-python/commit/de319cf99095897bdd5155e6da542a95f9dae392))
+
+## [6.0.0](https://github.com/equinor/tagreader-python/compare/v5.5.0...v6.0.0) (2024-09-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* update code to work with updated pi backend ([#372](https://github.com/equinor/tagreader-python/issues/372))
+
+### 🧹 Chores
+
+* bump allowed msal-bearer ([#375](https://github.com/equinor/tagreader-python/issues/375)) ([bd1e332](https://github.com/equinor/tagreader-python/commit/bd1e332636e6c07bc1ade0f4482711e14e9b54f9))
+
+
+### ✨ Features
+
+* update code to work with updated pi backend ([#372](https://github.com/equinor/tagreader-python/issues/372)) ([9da2963](https://github.com/equinor/tagreader-python/commit/9da296357364545f4e66a119551cc0af67587c88))
+
+
+### 🐛 Bug Fixes
+
+* fix bug with wrong url for pi ([b283859](https://github.com/equinor/tagreader-python/commit/b2838599471340fd657cf38568d21feb67ed2673))
+
+## [5.5.0](https://github.com/equinor/tagreader-python/compare/v5.4.0...v5.5.0) (2024-08-19)
+
+
+### 📦 Build system
+
+* **deps:** Update dependencies and snyk ignore ([0db35a4](https://github.com/equinor/tagreader-python/commit/0db35a4b017d666a3d6ec8b8a717af3c0f1fcafa))
+
+
+### ✨ Features
+
+* return more aspen tag search results ([#357](https://github.com/equinor/tagreader-python/issues/357)) ([89f7961](https://github.com/equinor/tagreader-python/commit/89f7961f148861e543696e8edc3b161fd4335566))
+* return more search tag search results ([89f7961](https://github.com/equinor/tagreader-python/commit/89f7961f148861e543696e8edc3b161fd4335566))
+
+## [5.4.0](https://github.com/equinor/tagreader-python/compare/v5.3.0...v5.4.0) (2024-06-03)
+
+
+### 🧹 Chores
+
+* **deps:** bump jinja2 from 3.1.3 to 3.1.4 ([#343](https://github.com/equinor/tagreader-python/issues/343)) ([3503905](https://github.com/equinor/tagreader-python/commit/350390522f51aeb470f9a36d47f732cb0470cb73))
+* **deps:** bump msal-bearer from 0.2.1 to 1.0.0 ([#348](https://github.com/equinor/tagreader-python/issues/348)) ([f93e38f](https://github.com/equinor/tagreader-python/commit/f93e38f56242bf83407f31aa9c2c2bc9b14a2edc))
+* **deps:** bump pytest from 7.4.4 to 8.2.1 ([#345](https://github.com/equinor/tagreader-python/issues/345)) ([716b084](https://github.com/equinor/tagreader-python/commit/716b0845329af0a951d87081dd23162f642e5f3b))
+* **deps:** bump requests from 2.31.0 to 2.32.3 ([#350](https://github.com/equinor/tagreader-python/issues/350)) ([0e79987](https://github.com/equinor/tagreader-python/commit/0e799876c099181b1e94e0c0d2300dea6c38effc))
+* update manual.md ([5f3bc1a](https://github.com/equinor/tagreader-python/commit/5f3bc1afd5398c1677fa7f4fa71bc482b8239c4e))
+
+
+### ✨ Features
+
+* cleanup remove unused statoil certificate ([#337](https://github.com/equinor/tagreader-python/issues/337)) ([5f3bc1a](https://github.com/equinor/tagreader-python/commit/5f3bc1afd5398c1677fa7f4fa71bc482b8239c4e))
+
+
+### 🐛 Bug Fixes
+
+* handle invalid description search from aspen ([#340](https://github.com/equinor/tagreader-python/issues/340)) ([39a9364](https://github.com/equinor/tagreader-python/commit/39a93640160735d44e2c4f4dcb5678b2a6e467cc))
+
+## [5.3.0](https://github.com/equinor/tagreader-python/compare/v5.2.1...v5.3.0) (2024-04-19)
+
+
+### 📦 Build system
+
+* update snyk ignores and docusaurus ([#334](https://github.com/equinor/tagreader-python/issues/334)) ([a7aa362](https://github.com/equinor/tagreader-python/commit/a7aa362e4f732299e457b6538190f69c60cfb77b))
+
+
+### ✨ Features
+
+* aspen query_sql get host from source name ([#323](https://github.com/equinor/tagreader-python/issues/323)) ([bb6eced](https://github.com/equinor/tagreader-python/commit/bb6ecedad9c42ff346b492fd3111bcf6cea9b66f))
+
+
+### 🐛 Bug Fixes
+
+* got external url by default ([#339](https://github.com/equinor/tagreader-python/issues/339)) ([6df4a56](https://github.com/equinor/tagreader-python/commit/6df4a562194d2290f724561dce5a52e517cae07a))
+* remove circular import ([bb6eced](https://github.com/equinor/tagreader-python/commit/bb6ecedad9c42ff346b492fd3111bcf6cea9b66f))
+
+## [5.2.1](https://github.com/equinor/tagreader-python/compare/v5.2.0...v5.2.1) (2024-03-18)
+
+
+### 📦 Build system
+
+* **deps:** relax requests-ntlm version requirement ([61f3cd2](https://github.com/equinor/tagreader-python/commit/61f3cd2c883c57fcec627ca989f95df167a64600))
+
+## [5.2.0](https://github.com/equinor/tagreader-python/compare/v5.1.3...v5.2.0) (2024-03-18)
+
+
+### 🧹 Chores
+
+* update snyk ignore ([9428ffd](https://github.com/equinor/tagreader-python/commit/9428ffd3ea44913746465144a5eea8e2490ec228))
+
+
+### 👷 CI/CD
+
+* update tagreader dependencies ([ec16d46](https://github.com/equinor/tagreader-python/commit/ec16d4610cfd2ab1f39c66ea14b96175b32360c5))
+
+
+### ✨ Features
+
+* add legacy support for MD4 in Python patch versions greater than 4. Used in NTLM auth ([f9ac0c1](https://github.com/equinor/tagreader-python/commit/f9ac0c107ab51493fb1997ba6cc8aa448e795c9e))
+* authenticate to aspen api using bearer token ([#154](https://github.com/equinor/tagreader-python/issues/154)) ([5e40b27](https://github.com/equinor/tagreader-python/commit/5e40b27806a84ecf8166430e0bcdc8d47f5f230c))
+* optionally exclude descriptions from tag search results ([#118](https://github.com/equinor/tagreader-python/issues/118)) ([857a594](https://github.com/equinor/tagreader-python/commit/857a594b16064bb4824c33e8941b546ab0c38e9e))
+
+
+### 🐛 Bug Fixes
+
+* correct signature for MD4 monkeypatch ([6bd7e5c](https://github.com/equinor/tagreader-python/commit/6bd7e5cefd31326475349a30052ceba5db01acb8))
+
+## [5.1.3](https://github.com/equinor/tagreader-python/compare/v5.1.2...v5.1.3) (2023-12-06)
+
+
+### 🐛 Bug Fixes
+
+* add both certificates until AspenOne supports the new Equinor Root CA ([e6a2c2b](https://github.com/equinor/tagreader-python/commit/e6a2c2b6089f27f9edc286e33aa93d077849c81e))
+
+## [5.1.2](https://github.com/equinor/tagreader-python/compare/v5.1.1...v5.1.2) (2023-12-05)
+
+### 🧹 Chores
+
+* ensure that the repo is in accordance with Equinor guidelines for open-source projects ([9469c22](https://github.com/equinor/tagreader-python/commit/9469c22abcc88d5ba72af406ab45cff99b548276))
+* chore: avoid trying to add Statoil certificate if Equinor Root CA is already found
+* chore: avoid default caching web ids in PiHandlerWeb
+* chore: allow numpy integers and floats as timedelta arguments and add timeout to search method
+
+### 🐛 Bug Fixes
+* fix: allow None-timedelta when reading Snapshots or Raw data
+
+## [5.1.1](https://github.com/equinor/tagreader-python/compare/v5.1.0...v5.1.1) (2023-12-05)
+
+
+### 📦 Build system
+
+* ignore cryptography vulnearbility. No patch available ([eecaf1a](https://github.com/equinor/tagreader-python/commit/eecaf1a301e9c2b6957d2c5f133136fceba89a97))
+* remove pyodbc ([719f09a](https://github.com/equinor/tagreader-python/commit/719f09a00d2ac80a09a1a693f112563bb70a6e39))
+* remove unused dependencies ([0288207](https://github.com/equinor/tagreader-python/commit/028820772356adff58859fdfc6fc9a87f0750be6))
+* upgrade Docusaurus ([261c573](https://github.com/equinor/tagreader-python/commit/261c5735d4a80e467d093b0494ba1e22059d7c85))
+
+## [5.1.0](https://github.com/equinor/tagreader-python/compare/v5.0.0...v5.1.0) (2023-09-28)
+
+
+### 📦 Build system
+
+* **deps:** upgrade build dependencies ([9e38faa](https://github.com/equinor/tagreader-python/commit/9e38faacb7755b7af84bb0a4126276f072621556))
+
+
+### 🧹 Chores
+
+* update pyproject.toml ([24e15e2](https://github.com/equinor/tagreader-python/commit/24e15e217ad9a4861788eee52607a57340c79c06))
+
+
+### ✨ Features
+
+* support new Equinor certificates ([#271](https://github.com/equinor/tagreader-python/issues/271)) ([604b6fb](https://github.com/equinor/tagreader-python/commit/604b6fbba47f4b027d9a3fc2ce2b6fbce8f188c3))
+
+
+### 🐛 Bug Fixes
+
+* correctly add root certificate for macos ([ac6a884](https://github.com/equinor/tagreader-python/commit/ac6a8848e9289b2d05c9e4244803cc61f97e3730))
+
+## [5.0.0](https://github.com/equinor/tagreader-python/compare/v4.3.1...v5.0.0) (2023-09-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* Client cache is no longer forced on when cache is set to None
+* ODBC based clients are no longer supported due to available REST services
+
+### 🧹 Chores
+
+* Add information about deprecated ODBC clients and improve UX ([5176de2](https://github.com/equinor/tagreader-python/commit/5176de22f04b565134ce180830a3c69aecf6c9a7))
+
+
+### 📚 Documentation
+
+* Update Docs and examples to reflect changes in v5 ([1667b9d](https://github.com/equinor/tagreader-python/commit/1667b9d4c48200307a5e93aa4e3bf5bfc8eedac1))
+
+
+### ✨ Features
+
+* Remove forced caching ([#266](https://github.com/equinor/tagreader-python/issues/266)) ([4504fa3](https://github.com/equinor/tagreader-python/commit/4504fa3eb563d888dfb6b61a55ceef218afe0fa1)), closes [#265](https://github.com/equinor/tagreader-python/issues/265)
+* Remove ODBC support ([a7c7485](https://github.com/equinor/tagreader-python/commit/a7c74857cf13fd579f8e36d4b8d5d0ff7d2b91ac)), closes [#263](https://github.com/equinor/tagreader-python/issues/263)
+
+## [4.3.1](https://github.com/equinor/tagreader-python/compare/v4.3.0...v4.3.1) (2023-09-13)
+
+
+### 🧹 Chores
+
+* add deprecation warning for ODBC based clients. Will be removed in next release ([0a6fd88](https://github.com/equinor/tagreader-python/commit/0a6fd8817d0a34febf078e5658858a1371c13bbe))
+
+## [4.3.0](https://github.com/equinor/tagreader-python/compare/v4.2.5...v4.3.0) (2023-09-12)
+
+
+### 📦 Build system
+
+* **deps:** bump poetry.lock ([2fc96ff](https://github.com/equinor/tagreader-python/commit/2fc96ff741cd182caf0c01ab3ebc974c473135c1))
+* **deps:** swap notebooks package and update deps ([#257](https://github.com/equinor/tagreader-python/issues/257)) ([5207763](https://github.com/equinor/tagreader-python/commit/52077633bbf324fa729fdcce384c33b5ee009f40))
+
+
+### 🧹 Chores
+
+* change baseURL in docs ([f9af801](https://github.com/equinor/tagreader-python/commit/f9af801f44634dc0d3a2e7e60616f7dec6c4b87c))
+* **deps:** bump actions/checkout from 3 to 4 ([#256](https://github.com/equinor/tagreader-python/issues/256)) ([1ea0c42](https://github.com/equinor/tagreader-python/commit/1ea0c426a6e5feec735fcb0810c0e5732572b221))
+* update pre-commit mypy ([cc4f584](https://github.com/equinor/tagreader-python/commit/cc4f584b411f80f5e3c4b98f003edc82d80cc696))
+
+
+### 📚 Documentation
+
+* add docusaurus documentation ([92cd4ce](https://github.com/equinor/tagreader-python/commit/92cd4ce6c59c6c2cc5ee382a150013fa2976d785))
+* fix broken links ([205bf21](https://github.com/equinor/tagreader-python/commit/205bf21cff2f1878e11a66153bb7e585c54d889f))
+* update example jupyter notebook ([#251](https://github.com/equinor/tagreader-python/issues/251)) ([e7035e0](https://github.com/equinor/tagreader-python/commit/e7035e01b19ad071b973fa8cd18f84530368be2e))
+
+
+### ✨ Features
+
+* allow passing settings to cache ([196719c](https://github.com/equinor/tagreader-python/commit/196719ca3cd4aab4c0d60591c98d921d5550b339))
+* allow timedelta passed as float ([#260](https://github.com/equinor/tagreader-python/issues/260)) ([96ff0a1](https://github.com/equinor/tagreader-python/commit/96ff0a1607d8d00f0f1eebd3f2218ef2507b39fb)), closes [#259](https://github.com/equinor/tagreader-python/issues/259)
+
+
+### 🐛 Bug Fixes
+
+* AttributeError: 'str' object has no attribute 'localize' with c.read() ([#250](https://github.com/equinor/tagreader-python/issues/250)) ([3cd2678](https://github.com/equinor/tagreader-python/commit/3cd267826c506a09112dd4845f6e25df08e988cf))
+* web_handlers add default optional parameters ([#248](https://github.com/equinor/tagreader-python/issues/248)) ([f40007a](https://github.com/equinor/tagreader-python/commit/f40007a2f4c9a8b759b82b70b3a3460fb294a97c))
+
+## [4.2.5](https://github.com/equinor/tagreader-python/compare/v4.2.4...v4.2.5) (2023-07-12)
+
+
+### 👷 CI/CD
+
+* Resolve automatic deploy to PyPI ([7c44190](https://github.com/equinor/tagreader-python/commit/7c441906a56b5e104dc5d5a0d4cb2ac36ef4ea88), [e21b451](https://github.com/equinor/tagreader-python/commit/e21b4510c92c912876d8fc20ed8d5578e6aeecc2))
+
+### 🧹 Chores
+
+* General code cleanup and maintenance ([dff0d71](https://github.com/equinor/tagreader-python/commit/dff0d71f3cca0bf31bc4c508bb4200ff2780afee))
+
+
+### 📚 Documentation
+
+* Update docs and example notebook ([550ac14](https://github.com/equinor/tagreader-python/commit/550ac147bd81a47d36b074f3bfc0cf77432da929))
+
+
+### 🐛 Bug Fixes
+
+* remove default arguments from caching classes ([a48db69](https://github.com/equinor/tagreader-python/commit/a48db69c729d41f9f46c0ebb415f640b52ad241d))
+
+## [4.2.3](https://github.com/equinor/tagreader-python/compare/v4.2.2...v4.2.3) (2023-07-12)
+
+
+### 🧪 Tests
+
+* assert that cache is not SmartCache when creating a client without specifying cache ([fa8d7d0](https://github.com/equinor/tagreader-python/commit/fa8d7d0abae6ce1a5fe8da20b5ebeb0ad960a411))
+
+
+### 🐛 Bug Fixes
+
+* correct caching when get_status=True ([#240](https://github.com/equinor/tagreader-python/issues/240)) ([ede82f5](https://github.com/equinor/tagreader-python/commit/ede82f57bce09b5965914d6027b419bef0fa8a9b)), closes [#239](https://github.com/equinor/tagreader-python/issues/239)
+
+## [4.2.2](https://github.com/equinor/tagreader-python/compare/v4.2.1...v4.2.2) (2023-07-12)
+
+
+### 🧹 Chores
+
+* make tagreader.__version__ available for user ([#236](https://github.com/equinor/tagreader-python/issues/236)) ([8531d41](https://github.com/equinor/tagreader-python/commit/8531d4132feac526f558f3a60327973f68437620))
+
+## [4.2.1](https://github.com/equinor/tagreader-python/compare/v4.2.0...v4.2.1) (2023-07-06)
+
+
+### 🧹 Chores
+
+* pre-commit fix ([bf7e1e4](https://github.com/equinor/tagreader-python/commit/bf7e1e46c6f7934552e90b4245cf299a0824a4ce))
+
+
+### 🐛 Bug Fixes
+
+* use correct arguments when reading single tag and code cleanup ([#234](https://github.com/equinor/tagreader-python/issues/234)) ([e0fafd4](https://github.com/equinor/tagreader-python/commit/e0fafd499fdb08391b51343145c1f50051fa0d99)), closes [#231](https://github.com/equinor/tagreader-python/issues/231)
+
+## [4.2.0](https://github.com/equinor/tagreader-python/compare/v4.1.4...v4.2.0) (2023-06-28)
+
+
+### ✨ Features
+
+* let user specify cache when creating the client ([#227](https://github.com/equinor/tagreader-python/issues/227)) ([1ad859d](https://github.com/equinor/tagreader-python/commit/1ad859d0fddfa9e5529cc092472bc4b57ed45944))
+
+
+### ⏪️ Revert
+
+* revert threading due to non-tread-safe handling of cache ([#229](https://github.com/equinor/tagreader-python/issues/229)) ([6b379ef](https://github.com/equinor/tagreader-python/commit/6b379ef1e1748a69afa17ac86fdb78f55126c183))
+
+## [4.1.4](https://github.com/equinor/tagreader-python/compare/v4.1.3...v4.1.4) (2023-06-28)
+
+
+### 🔨 Refactor
+
+* added try catch around list_sources ([#224](https://github.com/equinor/tagreader-python/issues/224)) ([7be34c8](https://github.com/equinor/tagreader-python/commit/7be34c88bdf9bd22a29e4546ee7c648140c692de))
+
+
+### 🧹 Chores
+
+* clean up logging and code format ([ba82b18](https://github.com/equinor/tagreader-python/commit/ba82b186cd31d62f872d73987ab6a84d9a1c50ff))
+* improve logging for web service API error ([2b38479](https://github.com/equinor/tagreader-python/commit/2b38479cebe9f7d65588dd799ee22a7815ef8794))
+
+
+### 📦 Build system
+
+* **deps:** update poetry lock ([4addde1](https://github.com/equinor/tagreader-python/commit/4addde18174ed60cac65cf745a0119afd311c64f))
+
+## [4.1.3](https://github.com/equinor/tagreader-python/compare/v4.1.1...v4.1.3) (2023-06-21)
+
+
+### 👷 CI/CD
+
+* Add workflow dispatch for publish ([a68d616](https://github.com/equinor/tagreader-python/commit/a68d61659c73fcbb2f021005b798f63aa8195880))
+* Make release-please publish automatically on approved release ([cc30519](https://github.com/equinor/tagreader-python/commit/cc305195845340b27915c3c57041e0f5d7f4e20c))
+
+
+### 🧹 Chores
+
+* Update links in notebook examples ([#223](https://github.com/equinor/tagreader-python/issues/223)) ([4c8df7a](https://github.com/equinor/tagreader-python/commit/4c8df7aeefce1d742d0c272c77a025793029c0b4)), closes [#220](https://github.com/equinor/tagreader-python/issues/220)
+
+
+### ✨ Features
+
+* Increase reading performance by reading concurrently using threads ([#221](https://github.com/equinor/tagreader-python/issues/221)) ([f731c3a](https://github.com/equinor/tagreader-python/commit/f731c3aa96034a7666b351ef8d7e4d4e22a0ec96)), closes [#194](https://github.com/equinor/tagreader-python/issues/194)
+
+
+## [4.1.1](https://github.com/equinor/tagreader-python/compare/v4.1.0...v4.1.1) (2023-06-14)
+
+
+### 📚 Documentation
+
+* add homepage and repo to pyproject.toml ([5e90bee](https://github.com/equinor/tagreader-python/commit/5e90beedead882948d0f0b6db189f23bbc71f814))
+
+## [4.1.0](https://github.com/equinor/tagreader-python/compare/v4.0.3...v4.1.0) (2023-06-14)
+
+
+### 🔨 Refactor
+
+* make code pass mypy and add strict type validation ([#190](https://github.com/equinor/tagreader-python/issues/190)) ([9efc942](https://github.com/equinor/tagreader-python/commit/9efc942eb6580e8c629e0a4bb5b2bb24af871f6f))
+
+
+### ✨ Features
+
+* add persistent web-id cache for PIWebAPI ([64eb76c](https://github.com/equinor/tagreader-python/commit/64eb76cd90e9e2d4091ebf97b716be53c9bde7ec))
+* use diskcache as caching backend ([f7f7a5f](https://github.com/equinor/tagreader-python/commit/f7f7a5ff0edefd21eeb60b41dbd94d6726cd0caf)), closes [#205](https://github.com/equinor/tagreader-python/issues/205)
+
+
+### 🐛 Bug Fixes
+
+* do not throw error when start and end time is submitted when using SNAPSHOT and ODBC connectors ([#213](https://github.com/equinor/tagreader-python/issues/213)) ([4e9a4c9](https://github.com/equinor/tagreader-python/commit/4e9a4c9011a05be3f73fa5719ef94ea30afe38e0))
+
+
+### 👷 CI/CD
+
+* correct PyPi test upload ([8217af6](https://github.com/equinor/tagreader-python/commit/8217af6bd6587c9ed6380f132b74abe297f143f6))
+
 ## [4.0.3](https://github.com/equinor/tagreader-python/compare/v4.0.2...v4.0.3) (2023-06-09)
 
 
@@ -107,33 +514,33 @@ Last release under the name `pyIMS`.
 ### Changed
 - Major rewrite to accommodate for other types of connections than ODBC in the future.
 - **Breaking**: It is now necessary to specify imstype (`pi` or `aspen`) when initiating a client.
-- Update to new default DAS server address. 
+- Update to new default DAS server address.
 
 ### Fixed
 - Force keep_tz=False to suppress FutureWarning in Pandas >= 0.24.
-- Fix reading of digital states from PI. 
+- Fix reading of digital states from PI.
 
 ### Added
 - Add get_units() and get_descriptions() methods to fetch engineering units and description for
-specified tags. 
+specified tags.
 - Enable tag search by description.
 - Package version made available in `pyims.__version__`.
 
 ## [0.0.8] - 2019-01-17
 ### Changed
 - Improve documentation.
-- Add commonly requested documentation, including docstring, for specifying query method for 
+- Add commonly requested documentation, including docstring, for specifying query method for
 read_tags.
 
 ## [0.0.7] - 2018-06-18
 ### Fixed
 - Fix bug where timezone was locked to Europe/Oslo.
-- Discovered that Pandas >=0.23 is required. 0.22 causes a weird timezone bug during DST folds when 
+- Discovered that Pandas >=0.23 is required. 0.22 causes a weird timezone bug during DST folds when
 using cache.
 
 ## [0.0.6] - 2018-06-08
 ### Added
-- Aspen now supports avg, min, max, rng, std and var queries. These have timestamps in 
+- Aspen now supports avg, min, max, rng, std and var queries. These have timestamps in
 the middle of the period.
 
 ### Changed
@@ -145,9 +552,9 @@ the middle of the period.
 
 ## [0.0.5] - 2018-06-07
 ### Added
-- Introduce time zones. Start- and stop time for queries are always performed relative to server 
-time, so we have to know where the server is located. The default time zone is "Europe/Oslo", but 
-this can be changed for e.g. Peregrino by specifying `tz="America/Sao_Paulo"` upon initialization 
+- Introduce time zones. Start- and stop time for queries are always performed relative to server
+time, so we have to know where the server is located. The default time zone is "Europe/Oslo", but
+this can be changed for e.g. Peregrino by specifying `tz="America/Sao_Paulo"` upon initialization
 of the client.
 
 ### Changed
@@ -155,23 +562,23 @@ of the client.
 - Interpolated queries for IP.21 now return extrapolated values after last valid datapoint.
 
 ### Fixed
-- Properly handle transitions to and from DST (Daylight savings time). 
-- Queries should now always return data for exactly `start_time <= time <= stop_time`. Off-by-one data 
-(e.g. no data for `stop_time` or data for `stop_time+ts`) is a bug (except for PI queries with 
+- Properly handle transitions to and from DST (Daylight savings time).
+- Queries should now always return data for exactly `start_time <= time <= stop_time`. Off-by-one data
+(e.g. no data for `stop_time` or data for `stop_time+ts`) is a bug (except for PI queries with
 `stop_time` close to DST changes, in which case PI may act silly).
 
 ## [0.0.4] - 2018-06-01
 ### Fixed
-- Fix cache sorting issue when reading across two segments that were previously written in 
-nonchronological order. 
+- Fix cache sorting issue when reading across two segments that were previously written in
+nonchronological order.
 
 ## [0.0.3] - 2018-05-30
-### Added 
+### Added
 - Add support for tags with mappings (relevant for SNA and SNB) by specifying tags on the form `tag;map`
 - Fix NaturalNameWarning when using '.' in tagnames
 
 ## 0.0.2 - 2018-04-13
-Initial release. Supports the most common tag read queries for IP.21 and PI. 
+Initial release. Supports the most common tag read queries for IP.21 and PI.
 
 [1.1.0]: https://github.com/equinor/tagreader-python/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/equinor/tagreader-python/compare/v1.0.0...v1.0.1
