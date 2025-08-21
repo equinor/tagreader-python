@@ -412,7 +412,7 @@ class IMSClient:
     ):
         start = start_time
         end = stop_time
-        logger.warn(
+        logger.warning(
             (
                 "This function has been renamed to read() and is deprecated. "
                 "Please call 'read()' instead"
