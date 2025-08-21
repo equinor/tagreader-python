@@ -383,7 +383,6 @@ class IMSClient:
     def _multi_read_tags(self, tag_list, start_time, stop_time, ts, read_type, get_status, cache=None):
 
         if read_type in [ReaderType.SNAPSHOT, ReaderType.RAW]:
-
             missing_data = {}
             for tag in tag_list:
                 missing_data[tag] = {}
@@ -397,29 +396,26 @@ class IMSClient:
                                     )
 
         elif read_type in [ReaderType.INT]:
-
             missing_data = {}
 
             df = pd.DataFrame(columns=tag_list, index=pd.date_range(start_time.tz_convert("UTC"),
                                                             stop_time.tz_convert("UTC"), freq=pd.Timedelta(ts)))
 
             if isinstance(cache, SmartCache):
-
                 for tag in tag_list:
-
                     df_tag = cache.fetch(
                         tagname=tag,
-                        readtype=read_type,
+                        read_type=read_type,
                         ts=ts,
-                        start_time=start_time,
-                        stop_time=stop_time
-                        )
+                        start=start_time,
+                        end=stop_time,
+                        get_status=get_status,
+                    )
 
                     missing_intervals = get_missing_intervals(
                         df_tag, start_time, stop_time, ts, read_type)
 
                     if missing_intervals:
-
                         missing_data[tag] = {}
 
                         for interval in range(len(missing_intervals)):
@@ -453,7 +449,6 @@ class IMSClient:
                     and not get_status
                 ):
                     for column in missing_df:
-
                         cache.store(
                                     df=missing_df[column].to_frame(),
                                     readtype=read_type,
@@ -470,9 +465,7 @@ class IMSClient:
                                                             stop_time.tz_convert("UTC"), freq=pd.Timedelta(ts)))
 
             if isinstance(cache, SmartCache):
-
                 for tag in tag_list:
-
                     df_tag = cache.fetch(
                         tagname=tag,
                         readtype=read_type,
@@ -485,9 +478,7 @@ class IMSClient:
                         df_tag, start_time, stop_time, ts, read_type)
 
                     if missing_intervals:
-
                         missing_data[tag] = {}
-
                         for interval in range(len(missing_intervals)):
                             missing_data[tag][interval] = {'start_time': missing_intervals[interval][0], 'stop_time': missing_intervals[interval][1]}
 
@@ -519,7 +510,6 @@ class IMSClient:
                     and not get_status
                 ):
                     for column in missing_df:
-
                         cache.store(
                                     df=missing_df[column].to_frame(),
                                     readtype=read_type,
