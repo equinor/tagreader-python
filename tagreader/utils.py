@@ -55,10 +55,13 @@ def ensure_datetime_with_tz(
 ) -> datetime:
     date_stamp = convert_to_pydatetime(date_stamp)
 
-    if not date_stamp.tzinfo:
-        date_stamp = tz.localize(date_stamp)
-
-    return date_stamp
+    if date_stamp.tzinfo:
+        return date_stamp
+    else:
+        if hasattr(tz, "localize"):
+            return tz.localize(date_stamp)
+        else:
+            return date_stamp.replace(tzinfo=tz)
 
 
 def urljoin(*args) -> str:
