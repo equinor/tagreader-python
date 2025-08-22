@@ -17,7 +17,7 @@ if is_GITHUBACTION:
         "All tests in module require connection to PI server", allow_module_level=True
     )
 
-verifySSL = False if is_AZUREPIPELINE else get_verify_ssl()
+verify_ssl = False if is_AZUREPIPELINE else get_verify_ssl()
 
 SOURCE = "PIMAM"
 TAGS = {
@@ -36,7 +36,7 @@ def client() -> Generator[IMSClient, None, None]:
     c = IMSClient(
         datasource=SOURCE,
         imstype="piwebapi",
-        verifySSL=bool(verifySSL),
+        verify_ssl=bool(verify_ssl),
     )
     c.cache = None
     c.connect()
@@ -50,7 +50,7 @@ def client() -> Generator[IMSClient, None, None]:
 def pi_handler(cache: SmartCache) -> Generator[PIHandlerWeb, None, None]:
     h = PIHandlerWeb(
         datasource=SOURCE,
-        verify_ssl=bool(verifySSL),
+        verify_ssl=bool(verify_ssl),
         auth=None,
         options={},
         url=None,
@@ -63,7 +63,7 @@ def pi_handler(cache: SmartCache) -> Generator[PIHandlerWeb, None, None]:
 
 
 def test_list_all_piwebapi_sources() -> None:
-    res = list_piwebapi_sources(verify_ssl=bool(verifySSL), auth=None, url=None)
+    res = list_piwebapi_sources(verify_ssl=bool(verify_ssl), auth=None, url=None)
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:
@@ -72,7 +72,7 @@ def test_list_all_piwebapi_sources() -> None:
 
 
 def test_list_sources_piwebapi() -> None:
-    res = list_sources(imstype="piwebapi", verifySSL=bool(verifySSL))
+    res = list_sources(imstype="piwebapi", verify_ssl=bool(verify_ssl))
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:
