@@ -275,22 +275,22 @@ def is_equinor() -> bool:
                     print(f"An unexpected error occurred: {e}")
                     return []
 
-        if any(
-            domain in get_mac_dns_search_list()
-            for domain in ["client.statoil.net", "statoil.net", "equinor.com"]
-        ):
-            return True
+            if any(
+                domain in get_mac_dns_search_list()
+                for domain in ["client.statoil.net", "statoil.net", "equinor.com"]
+            ):
+                return True
 
-        s = subprocess.run(
-            ["security", "find-certificate", "-a", "-c" "client.statoil.net"],
-            stdout=subprocess.PIPE,
-        ).stdout
+            s = subprocess.run(
+                ["security", "find-certificate", "-a", "-c" "client.statoil.net"],
+                stdout=subprocess.PIPE,
+            ).stdout
 
-        # deepcode ignore IdenticalBranches: Not an error. First test is just more precise.
-        if hostname + ".client.statoil.net" in str(s):
-            return True
-        elif "client.statoil.net" in hostname and hostname in str(s):
-            return True
+            # deepcode ignore IdenticalBranches: Not an error. First test is just more precise.
+            if hostname + ".client.statoil.net" in str(s):
+                return True
+            elif "client.statoil.net" in hostname and hostname in str(s):
+                return True
     else:
         raise OSError(
             f"Unsupported system: {platform.system()}. Please report this as an issue."
