@@ -1,14 +1,15 @@
-[tool.poetry]
+[project]
 name = "tagreader"
 version = "6.0.4"
 description = "Tagreader is a Python package for reading trend data from the OSIsoft PI and Aspen Infoplus.21 IMS systems."
-authors = ["Einar S. Idsø <eiids@equinor.com>", "Morten Dæhli Aslesen <masl@equinor.com"]
+authors = [
+    { name = "Einar S. Idsø", email = "eiids@equinor.com" },
+    { name = "Morten Dæhli Aslesen", email = "masl@equinor.com" }
+]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "tagreader"}]
 keywords=["Aspen InfoPlus.21", "OSIsoft PI"]
-homepage = "https://github.com/equinor/tagreader-python"
-repository = "https://github.com/equinor/tagreader-python"
+requires-python = ">=3.9.2,<4.0.0"
 classifiers=[
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -18,36 +19,39 @@ classifiers=[
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Utilities",
 ]
+dependencies = [
+    "pandas>=1",
+    "certifi>=2024.12.14,<2026.0.0",
+    "requests>=2.32.5",
+    "requests-kerberos>=0",
+    "msal-bearer>=1.3.3",
+    "diskcache>=5.6.1",
+    "pycryptodome>=3.20.0",
+    "requests-ntlm>=1.1,<=2.0",
+    "platformdirs>=4.3.7",
+    "urllib3>=2.5.0" # To avoid security issue https://www.cve.org/CVERecord?id=CVE-2025-50182
+]
 
-[tool.poetry.dependencies]
-python = "^3.9.2"
-pandas = ">=1"
-certifi = ">=2024.12.14,<2026.0.0"
-requests = "^2"
-requests-kerberos = "^0"
-msal-bearer = "^1.3.0"
-notebook = { version = "^7.2.2", optional = true }
-matplotlib = { version = "^3.7.5", optional = true }
-diskcache = "^5.6.1"
-pycryptodome = "^3.20.0"
-requests-ntlm = ">=1.1,<=2.0"
-platformdirs = "^4.3.7"
+[tool.poetry.group.test.dependencies]
+pytest = ">=7,<9"
+# pytest-cov = ">=6.0.0"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3"
-pytest = ">=7,<9"
+# "black>=24.1.1",
+pre-commit = ">=3.0"
 
-[tool.poetry.extras]
-notebooks = ["notebook", "matplotlib"]
+[project.urls]
+homepage = "https://github.com/equinor/tagreader-python"
+repository = "https://github.com/equinor/tagreader-python"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
