@@ -32,7 +32,7 @@ def list_sources(
     imstype: Union[IMSType, str],
     url: Optional[str] = None,
     auth: Optional[Any] = None,
-    verifySSL: bool = True,
+    verify_ssl: Optional[Union[bool, str]] = True,
 ) -> List[str]:
     if isinstance(imstype, str):
         try:
@@ -47,11 +47,11 @@ def list_sources(
     if imstype == IMSType.PIWEBAPI:
         if auth is None:
             auth = get_auth_pi()
-        return list_piwebapi_sources(url=url, auth=auth, verify_ssl=verifySSL)
+        return list_piwebapi_sources(url=url, auth=auth, verify_ssl=verify_ssl)
     elif imstype == IMSType.ASPENONE:
         if auth is None:
             auth = get_auth_aspen()
-        return list_aspenone_sources(url=url, auth=auth, verify_ssl=verifySSL)
+        return list_aspenone_sources(url=url, auth=auth, verify_ssl=verify_ssl)
     elif imstype in [IMSType.PI, IMSType.ASPEN, IMSType.IP21]:
         raise ValueError(
             f"ODBC clients are no longer supported. Given ims client type: {imstype}."
@@ -120,14 +120,14 @@ def get_handler(
     datasource: str,
     url: Optional[str],
     options: Dict[str, Union[int, float, str]],
-    verifySSL: Optional[bool],
+    verify_ssl: Optional[Union[bool, str]],
     auth: Optional[Any],
     cache: Optional[Union[SmartCache, BucketCache]] = None,
 ):
     if imstype is None:
         try:
             if datasource in list_aspenone_sources(
-                url=None, auth=None, verify_ssl=verifySSL
+                url=None, auth=None, verify_ssl=verify_ssl
             ):
                 imstype = IMSType.ASPENONE
         except HTTPError as e:
@@ -135,7 +135,7 @@ def get_handler(
     if imstype is None:
         try:
             if datasource in list_piwebapi_sources(
-                url=None, auth=None, verify_ssl=verifySSL
+                url=None, auth=None, verify_ssl=verify_ssl
             ):
                 imstype = IMSType.PIWEBAPI
         except HTTPError as e:
@@ -146,7 +146,7 @@ def get_handler(
             url=url,
             datasource=datasource,
             options=options,
-            verify_ssl=verifySSL,
+            verify_ssl=verify_ssl,
             auth=auth,
             cache=cache,
         )
@@ -156,7 +156,7 @@ def get_handler(
             datasource=datasource,
             url=url,
             options=options,
-            verify_ssl=verifySSL,
+            verify_ssl=verify_ssl,
             auth=auth,
         )
     elif imstype in [IMSType.PI, IMSType.ASPEN, IMSType.IP21]:
@@ -178,7 +178,7 @@ class IMSClient:
         tz: Union[tzinfo, str] = pytz.timezone("Europe/Oslo"),
         url: Optional[str] = None,
         handler_options: Dict[str, Union[int, float, str]] = {},  # noqa:
-        verifySSL: bool = True,
+        verify_ssl: Optional[Union[bool, str]] = True,
         auth: Optional[Any] = None,
         cache: Optional[Union[SmartCache, BucketCache]] = None,
     ):
@@ -209,7 +209,7 @@ class IMSClient:
             datasource=datasource,
             url=url,
             options=handler_options,
-            verifySSL=verifySSL,
+            verify_ssl=verify_ssl,
             auth=auth,
             cache=self.cache,
         )
@@ -412,7 +412,7 @@ class IMSClient:
     ):
         start = start_time
         end = stop_time
-        logger.warn(
+        logger.warning(
             (
                 "This function has been renamed to read() and is deprecated. "
                 "Please call 'read()' instead"

@@ -95,7 +95,7 @@ def get_url_aspen(use_internal: bool = True) -> str:
 def list_aspenone_sources(
     url: Optional[str] = None,
     auth: Optional[Any] = None,
-    verify_ssl: Optional[bool] = True,
+    verify_ssl: Optional[Union[bool, str]] = True,
 ) -> List[str]:
     if url is None:
         url = get_url_aspen()
@@ -124,7 +124,7 @@ def list_aspenone_sources(
 def list_piwebapi_sources(
     url: Optional[str] = None,
     auth: Optional[Any] = None,
-    verify_ssl: Optional[bool] = True,
+    verify_ssl: Optional[Union[bool, str]] = True,
 ) -> List[str]:
     if url is None:
         url = get_url_pi()
@@ -152,7 +152,7 @@ def list_piwebapi_sources(
 def get_piwebapi_source_to_webid_dict(
     url: Optional[str] = None,
     auth: Optional[Any] = None,
-    verify_ssl: Optional[bool] = True,
+    verify_ssl: Optional[Union[bool, str]] = True,
 ) -> List[str]:
     if url is None:
         url = get_url_pi()
@@ -182,7 +182,7 @@ class BaseHandlerWeb(ABC):
         datasource: Optional[str],
         url: Optional[str],
         auth: Optional[Any],
-        verify_ssl: Optional[bool],
+        verify_ssl: Optional[Union[bool, str]],
     ):
         self.datasource = datasource
         self.base_url = url
@@ -241,7 +241,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         datasource: Optional[str],
         url: Optional[str] = None,
         auth: Optional[Any] = None,
-        verify_ssl: Optional[bool] = True,
+        verify_ssl: Optional[Union[bool, str]] = True,
         options: Dict[str, Any] = dict(),
     ):
         if url is None:
@@ -710,7 +710,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         url: Optional[str],
         datasource: Optional[str],
         auth: Optional[Any],
-        verify_ssl: bool,
+        verify_ssl: Optional[Union[bool, str]],
         options: Dict[str, Union[int, float, str]],
         cache: Optional[Union[SmartCache, BucketCache]],
     ):
