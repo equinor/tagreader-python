@@ -38,6 +38,7 @@ diskcache = "^5.6.1"
 pycryptodome = "^3.20.0"
 requests-ntlm = ">=1.1,<=2.0"
 platformdirs = "^4.3.7"
+urllib3 = "^2.5.0" # To avoid security issue https://www.cve.org/CVERecord?id=CVE-2025-50182
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3"
