@@ -117,7 +117,7 @@ def add_equinor_root_certificate() -> bool:
         logger.debug(
             "Unable to locate Equinor Root CA certificate on this host. Downloading from Equinor server."
         )
-        response = requests.get("http://pki.equinor.com/aia/ecpr.crt")
+        response = requests.get("http://pki.equinor.com/aia/ecpr.crt", timeout=20)
 
         if response.status_code != 200:
             logger.error(
@@ -230,7 +230,8 @@ def is_equinor() -> bool:
         if hostname.lower().startswith("eqdev") or hostname.lower().startswith("eqpc"):
             return True
         with winreg.OpenKey(  # type: ignore
-            winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\ControlSet001\Services\Tcpip\Parameters"  # type: ignore
+            winreg.HKEY_LOCAL_MACHINE,
+            r"SYSTEM\ControlSet001\Services\Tcpip\Parameters",  # type: ignore
         ) as key:
             domain = winreg.QueryValueEx(key, "Domain")  # type: ignore
             if "statoil" in domain[0] or "equinor" in domain[0]:
@@ -282,7 +283,7 @@ def is_equinor() -> bool:
                 return True
 
             s = subprocess.run(
-                ["security", "find-certificate", "-a", "-c" "client.statoil.net"],
+                ["security", "find-certificate", "-a", "-cclient.statoil.net"],
                 stdout=subprocess.PIPE,
             ).stdout
 
