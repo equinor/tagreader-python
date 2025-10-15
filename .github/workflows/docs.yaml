@@ -1,5 +1,8 @@
 name: "📚 Publish Docs"
 
+permissions:
+  contents: write
+
 on:
   # Workflow dispatch is used for manual triggers
   workflow_dispatch:
