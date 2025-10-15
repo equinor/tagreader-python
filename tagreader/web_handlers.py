@@ -655,9 +655,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
                 f'm="{max_rows}" to="30" s="1">'
             )
-        query = query.replace(
-            "\t", " "
-        ).replace(
+        query = query.replace("\t", " ").replace(
             "\n", " "
         )  # Replace new lines and tabs that are typical in formatted SQL queries with spaces.
 
@@ -845,15 +843,17 @@ class PIHandlerWeb(BaseHandlerWeb):
         if self._is_summary(read_type):
             params["selectedFields"] = "Links;Items.Value.Timestamp;Items.Value.Value"
             if get_status:
-                params["selectedFields"] += (
+                params[
+                    "selectedFields"
+                ] += (
                     ";Items.Value.Good;Items.Value.Questionable;Items.Value.Substituted"
                 )
         elif read_type in [ReaderType.INT, ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
             params["selectedFields"] = "Links;Items.Timestamp;Items.Value"
             if get_status:
-                params["selectedFields"] += (
-                    ";Items.Good;Items.Questionable;Items.Substituted"
-                )
+                params[
+                    "selectedFields"
+                ] += ";Items.Good;Items.Questionable;Items.Substituted"
         elif read_type == ReaderType.SNAPSHOT:
             params["selectedFields"] = "Timestamp;Value"
             if get_status:
@@ -1077,7 +1077,9 @@ class PIHandlerWeb(BaseHandlerWeb):
         if get_status:
             df["Status"] = (
                 # Values are boolean, but no need to do .astype(int)
-                df["Questionable"] + 2 * (1 - df["Good"]) + 4 * df["Substituted"]
+                df["Questionable"]
+                + 2 * (1 - df["Good"])
+                + 4 * df["Substituted"]
             )
             df = df.drop(columns=["Good", "Questionable", "Substituted"])
 
