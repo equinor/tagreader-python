@@ -1,5 +1,8 @@
 name: "🧪 Build & test code"
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
   workflow_call:
