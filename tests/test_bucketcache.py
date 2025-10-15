@@ -464,7 +464,7 @@ def test_fetch(cache: BucketCache) -> None:
         end=END_TIME_1 - pd.Timedelta("15m"),
     )
     pd.testing.assert_frame_equal(
-        DF1.loc[START_TIME_1 : END_TIME_1 - pd.Timedelta("15m")],  # type: ignore[misc]
+        DF1.loc[START_TIME_1 : END_TIME_1 - pd.Timedelta("15m")],
         df_read,
         check_freq=False,
     )
