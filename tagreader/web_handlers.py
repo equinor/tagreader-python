@@ -107,7 +107,7 @@ def list_aspenone_sources(
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
 
-    res = requests.get(url_, params=params, auth=auth, verify=verify_ssl)
+    res = requests.get(url_, params=params, auth=auth, verify=verify_ssl, timeout=300)
     res.raise_for_status()
     try:
         source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
@@ -134,7 +134,7 @@ def list_piwebapi_sources(
         urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verify_ssl)
+    res = requests.get(url_, auth=auth, verify=verify_ssl, timeout=300)
 
     res.raise_for_status()
     try:
@@ -162,7 +162,7 @@ def get_piwebapi_source_to_webid_dict(
         urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verify_ssl)
+    res = requests.get(url_, auth=auth, verify=verify_ssl, timeout=300)
 
     res.raise_for_status()
     try:
@@ -316,12 +316,12 @@ class AspenHandlerWeb(BaseHandlerWeb):
         else:
             query = '<Q f="d" allQuotes="1">'
 
-        query += "<Tag>" f"<N><![CDATA[{tagname}]]></N>"
+        query += f"<Tag><N><![CDATA[{tagname}]]></N>"
 
         if mapname:
             query += f"<M><![CDATA[{mapname}]]></M>"
 
-        query += f"<D><![CDATA[{self.datasource}]]></D>" "<F><![CDATA[VAL]]></F>"
+        query += f"<D><![CDATA[{self.datasource}]]></D><F><![CDATA[VAL]]></F>"
 
         if read_type == ReaderType.SNAPSHOT:
             query += "<VS>1</VS>"
@@ -843,10 +843,10 @@ class PIHandlerWeb(BaseHandlerWeb):
         if self._is_summary(read_type):
             params["selectedFields"] = "Links;Items.Value.Timestamp;Items.Value.Value"
             if get_status:
-                params["selectedFields"] += (
-                    ";Items.Value.Good"
-                    ";Items.Value.Questionable"
-                    ";Items.Value.Substituted"
+                params[
+                    "selectedFields"
+                ] += (
+                    ";Items.Value.Good;Items.Value.Questionable;Items.Value.Substituted"
                 )
         elif read_type in [ReaderType.INT, ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
             params["selectedFields"] = "Links;Items.Timestamp;Items.Value"
