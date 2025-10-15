@@ -1,6 +1,6 @@
 [project]
 name = "tagreader"
-version = "6.1.0"
+version = "6.2.0"
 description = "Tagreader is a Python package for reading trend data from the OSIsoft PI and Aspen Infoplus.21 IMS systems."
 authors = [
     { name = "Einar S. Idsø", email = "eiids@equinor.com" },
