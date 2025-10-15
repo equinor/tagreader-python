@@ -2,6 +2,13 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.2.1](https://github.com/equinor/tagreader-python/compare/v6.2.0...v6.2.1) (2025-10-15)
+
+
+### 🧹 Chores
+
+* add permissions to pipelines ([#451](https://github.com/equinor/tagreader-python/issues/451)) ([ed4863a](https://github.com/equinor/tagreader-python/commit/ed4863aa71835927411e14d902291ddeac123f34))
+
 ## [6.2.0](https://github.com/equinor/tagreader-python/compare/v6.1.0...v6.2.0) (2025-10-15)
 
 
