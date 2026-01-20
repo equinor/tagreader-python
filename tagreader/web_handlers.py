@@ -194,14 +194,20 @@ class BaseHandlerWeb(ABC):
         params: Optional[Union[str, Dict[str, str]]] = None,
         timeout: Optional[int] = None,
     ) -> Dict:
-        res = self.session.get(
-            url,
-            params=params,
-            timeout=(
-                None,
-                timeout,
-            ),
-        )  # Noqa. Read timeout, No connect timeout.
+
+        if isinstance(params, str):
+            res = self.session.post(
+                url,
+                data=params.encode("utf-8"),
+                headers={"Content-Type": "text/xml; charset=utf-8"},
+                timeout=(None, timeout),
+            )
+        else:
+            res = self.session.get(
+                url,
+                params=params,
+                timeout=(None, timeout),
+            )  # Noqa. Read timeout, No connect timeout.
         res.raise_for_status()
 
         if len(res.text) == 0:
