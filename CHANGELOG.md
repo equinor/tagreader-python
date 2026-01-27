@@ -2,6 +2,24 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.2.1](https://github.com/equinor/tagreader-python/compare/v6.2.0...v6.2.1) (2026-01-27)
+
+
+### 🧹 Chores
+
+* add permissions to pipelines ([#451](https://github.com/equinor/tagreader-python/issues/451)) ([ed4863a](https://github.com/equinor/tagreader-python/commit/ed4863aa71835927411e14d902291ddeac123f34))
+* **deps:** bump actions/checkout from 5 to 6 ([#459](https://github.com/equinor/tagreader-python/issues/459)) ([3f21255](https://github.com/equinor/tagreader-python/commit/3f21255982fe6c691a2eaf6ed77d227753e44834))
+* **deps:** bump actions/setup-node from 5 to 6 ([#453](https://github.com/equinor/tagreader-python/issues/453)) ([9348e76](https://github.com/equinor/tagreader-python/commit/9348e765ada0417495bca9c294dccdbd27b47ea7))
+* **deps:** bump certifi from 2025.10.5 to 2025.11.12 ([#458](https://github.com/equinor/tagreader-python/issues/458)) ([03c79f7](https://github.com/equinor/tagreader-python/commit/03c79f7ae29f8c7f40efabfbd287340122a928b3))
+* **deps:** bump lodash from 4.17.21 to 4.17.23 in /documentation in the npm_and_yarn group across 1 directory ([#464](https://github.com/equinor/tagreader-python/issues/464)) ([99a2cb3](https://github.com/equinor/tagreader-python/commit/99a2cb30da2c839e4786af9a664f2c5a58380cdb))
+* **deps:** bump mdast-util-to-hast from 13.1.0 to 13.2.1 in /documentation in the npm_and_yarn group across 1 directory ([#463](https://github.com/equinor/tagreader-python/issues/463)) ([b395e40](https://github.com/equinor/tagreader-python/commit/b395e406831ce0459efcdf19107615eb9346fab7))
+* **deps:** bump node-forge from 1.3.1 to 1.3.2 in /documentation in the npm_and_yarn group across 1 directory ([#460](https://github.com/equinor/tagreader-python/issues/460)) ([1d63bf2](https://github.com/equinor/tagreader-python/commit/1d63bf2265dcdab1a2956c73caa5582020f8caba))
+* **deps:** bump pandas from 2.2.3 to 2.3.3 ([#455](https://github.com/equinor/tagreader-python/issues/455)) ([abd434d](https://github.com/equinor/tagreader-python/commit/abd434d4edcaaf305ff25785389f44139e343235))
+* **deps:** bump platformdirs from 4.3.7 to 4.4.0 ([#454](https://github.com/equinor/tagreader-python/issues/454)) ([851b20a](https://github.com/equinor/tagreader-python/commit/851b20affcb0751f659f8319ae06384ef05729e6))
+* **deps:** bump pycryptodome from 3.22.0 to 3.23.0 ([#457](https://github.com/equinor/tagreader-python/issues/457)) ([7c13835](https://github.com/equinor/tagreader-python/commit/7c138359bb283c98b27d0d3c275e011862d39e82))
+* **deps:** bump urllib3 from 2.5.0 to 2.6.0 in the pip group across 1 directory ([#461](https://github.com/equinor/tagreader-python/issues/461)) ([5ed0434](https://github.com/equinor/tagreader-python/commit/5ed04342c4b0b7d849abd016c89052fed56ea794))
+* **deps:** bump urllib3 from 2.6.0 to 2.6.3 ([#465](https://github.com/equinor/tagreader-python/issues/465)) ([e75e6a2](https://github.com/equinor/tagreader-python/commit/e75e6a2a8f79db52b3349666c9b2ad79a3a27393))
+
 ## [6.2.0](https://github.com/equinor/tagreader-python/compare/v6.1.0...v6.2.0) (2025-10-15)
 
 
