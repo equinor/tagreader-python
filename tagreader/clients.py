@@ -2,11 +2,11 @@ from datetime import datetime, timedelta, timezone, tzinfo
 from itertools import groupby
 from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple, Union
-from urllib.error import HTTPError
 
 import numpy as np
 import pandas as pd
 import pytz
+import requests
 
 from tagreader.cache import BucketCache, SmartCache
 from tagreader.logger import logger
@@ -130,7 +130,7 @@ def get_handler(
                 url=None, auth=None, verify_ssl=verify_ssl
             ):
                 imstype = IMSType.ASPENONE
-        except HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             logger.debug(f"Could not list Aspenone sources: {e}")
     if imstype is None:
         try:
@@ -138,7 +138,7 @@ def get_handler(
                 url=None, auth=None, verify_ssl=verify_ssl
             ):
                 imstype = IMSType.PIWEBAPI
-        except HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             logger.debug(f"Could not list PI sources: {e}")
 
     if imstype == IMSType.PIWEBAPI:
