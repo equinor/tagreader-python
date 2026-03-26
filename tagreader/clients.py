@@ -2,11 +2,11 @@ from datetime import datetime, timedelta, timezone, tzinfo
 from itertools import groupby
 from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple, Union
-from urllib.error import HTTPError
 
 import numpy as np
 import pandas as pd
 import pytz
+import requests
 
 from tagreader.cache import BucketCache, SmartCache
 from tagreader.logger import logger
@@ -21,6 +21,7 @@ from tagreader.web_handlers import (
     PIHandlerWeb,
     get_auth_aspen,
     get_auth_pi,
+    get_url_aspen,
     list_aspenone_sources,
     list_piwebapi_sources,
 )
@@ -121,24 +122,41 @@ def get_handler(
     url: Optional[str],
     options: Dict[str, Union[int, float, str]],
     verify_ssl: Optional[Union[bool, str]],
-    auth: Optional[Any],
+    auth: Optional[Any] = None,
     cache: Optional[Union[SmartCache, BucketCache]] = None,
 ):
     if imstype is None:
+        orig_auth = auth
+        orig_url = url
         try:
-            if datasource in list_aspenone_sources(
+            aspen_source = list_aspenone_sources(
                 url=None, auth=None, verify_ssl=verify_ssl
-            ):
-                imstype = IMSType.ASPENONE
-        except HTTPError as e:
-            logger.debug(f"Could not list Aspenone sources: {e}")
+            )
+        except requests.exceptions.HTTPError:
+            # Try again using app registration auth
+            try:
+                auth = get_auth_aspen(False)
+                url = get_url_aspen(False)
+                aspen_source = list_aspenone_sources(
+                    auth=auth, url=url, verify_ssl=verify_ssl
+                )
+            except requests.exceptions.HTTPError as e:
+                logger.debug(f"Could not list Aspenone sources: {e}")
+                aspen_source = []
+
+        if datasource in aspen_source:
+            imstype = IMSType.ASPENONE
+        else:
+            auth = orig_auth
+            url = orig_url
+
     if imstype is None:
         try:
             if datasource in list_piwebapi_sources(
                 url=None, auth=None, verify_ssl=verify_ssl
             ):
                 imstype = IMSType.PIWEBAPI
-        except HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             logger.debug(f"Could not list PI sources: {e}")
 
     if imstype == IMSType.PIWEBAPI:
