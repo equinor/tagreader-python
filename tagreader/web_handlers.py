@@ -13,6 +13,7 @@ import pandas as pd
 import requests
 import urllib3
 from Crypto.Hash import MD4 as _MD4
+from msal_bearer import BearerAuth
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -54,19 +55,27 @@ def get_verify_ssl() -> Union[bool, str]:
     return "/etc/ssl/certs/ca-bundle.trust.crt"
 
 
-def get_auth_pi() -> HTTPKerberosAuth:
-    return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+def get_auth_pi(use_internal: bool = True) -> Union[HTTPKerberosAuth, BearerAuth]:
+    if use_internal:
+        return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+
+    tenant_id = "3aa4a235-b6e2-48d5-9195-7fcf05b459b0"
+    client_id = "98fe146b-2687-4db9-9c84-45f4cd9063af"
+
+    scopes = ["https://piwebapi.equinor.com//user_impersonation"]
+
+    return BearerAuth.get_auth(
+        tenantID=tenant_id, clientID=client_id, scopes=scopes, verbose=True
+    )
 
 
 def get_url_pi() -> str:
     return r"https://piwebapi.equinor.com/piwebapi"
 
 
-def get_auth_aspen(use_internal: bool = True):
+def get_auth_aspen(use_internal: bool = True) -> Union[HTTPKerberosAuth, BearerAuth]:
     if use_internal:
         return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
-
-    from msal_bearer import BearerAuth
 
     tenantID = "3aa4a235-b6e2-48d5-9195-7fcf05b459b0"
     clientID = "7adaaa99-897f-428c-8a5f-4053db565b32"
@@ -135,7 +144,14 @@ def list_piwebapi_sources(
         urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verify_ssl, timeout=300)
+    res = requests.get(
+        url_,
+        auth=auth,
+        verify=verify_ssl,
+        timeout=300,
+        headers={"Accept": "application/json"},
+        allow_redirects=False,
+    )
 
     res.raise_for_status()
     try:
@@ -172,6 +188,8 @@ def get_piwebapi_source_to_webid_dict(
         return {item["Name"]: item["WebId"] for item in res.json()["Items"]}
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
+
+    return []
 
 
 class BaseHandlerWeb(ABC):
