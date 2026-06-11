@@ -74,7 +74,7 @@ stamps as well as the returned data shall use Rio local time, and using the loca
 ``` python
 c = tagreader.IMSClient(datasource="PER",
                         imstype="aspenone",
-                        tz="Brazil/East",
+                        tz="America/Sao_Paulo",
                         url="https://aspenone-per.equinor.com/ProcessExplorer/ProcessData/AtProcessDataREST.dll")
 c.connect()
 ```

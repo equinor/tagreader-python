@@ -7,10 +7,10 @@ from datetime import datetime, tzinfo
 from enum import Enum
 from pathlib import Path
 from typing import Union
+from zoneinfo import ZoneInfo
 
 import certifi
 import pandas as pd
-import pytz
 import requests
 from platformdirs import user_data_dir
 
@@ -50,12 +50,12 @@ def convert_to_pydatetime(date_stamp: Union[datetime, str, pd.Timestamp]) -> dat
 
 def ensure_datetime_with_tz(
     date_stamp: Union[datetime, str, pd.Timestamp],
-    tz: tzinfo = pytz.timezone("Europe/Oslo"),
+    tz: tzinfo = ZoneInfo("Europe/Oslo"),
 ) -> datetime:
     date_stamp = convert_to_pydatetime(date_stamp)
 
     if not date_stamp.tzinfo:
-        date_stamp = tz.localize(date_stamp)
+        date_stamp = date_stamp.replace(tzinfo=tz)
 
     return date_stamp
 

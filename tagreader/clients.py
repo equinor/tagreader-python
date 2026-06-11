@@ -2,10 +2,10 @@ from datetime import datetime, timedelta, timezone, tzinfo
 from itertools import groupby
 from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple, Union
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import numpy as np
 import pandas as pd
-import pytz
 import requests
 
 from tagreader.cache import BucketCache, SmartCache
@@ -26,7 +26,7 @@ from tagreader.web_handlers import (
     list_piwebapi_sources,
 )
 
-NONE_START_TIME = datetime(1970, 1, 1, tzinfo=pytz.UTC)
+NONE_START_TIME = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 
 def list_sources(
@@ -193,7 +193,7 @@ class IMSClient:
         self,
         datasource: str,
         imstype: Optional[Union[str, IMSType]] = None,
-        tz: Union[tzinfo, str] = pytz.timezone("Europe/Oslo"),
+        tz: Union[tzinfo, str] = ZoneInfo("Europe/Oslo"),
         url: Optional[str] = None,
         handler_options: Dict[str, Union[int, float, str]] = {},  # noqa:
         verify_ssl: Optional[Union[bool, str]] = True,
@@ -210,10 +210,12 @@ class IMSClient:
                 )
 
         if isinstance(tz, str):
-            if tz in pytz.all_timezones:
-                self.tz = pytz.timezone(tz)
-            else:
-                raise ValueError(f"Invalid timezone string  Given type was {type(tz)}")
+            try:
+                self.tz = ZoneInfo(tz)
+            except ZoneInfoNotFoundError:
+                raise ValueError(
+                    f"Invalid timezone string. Given type was {type(tz)}"
+                ) from None
         elif isinstance(tz, tzinfo):
             self.tz = tz
         else:
