@@ -3,11 +3,11 @@ import hashlib
 import platform
 import socket
 import ssl
-from datetime import datetime, tzinfo
+from datetime import datetime, timezone, tzinfo
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Union
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import certifi
 import pandas as pd
@@ -53,11 +53,21 @@ def ensure_datetime_with_tz(
     tz: Optional[tzinfo] = None,
 ) -> datetime:
     if tz is None:
-        tz = ZoneInfo("Europe/Oslo")
+        try:
+            tz = ZoneInfo("Europe/Oslo")
+        except ZoneInfoNotFoundError:
+            logger.warning(
+                "Unable to load timezone 'Europe/Oslo'. Falling back to UTC."
+            )
+            tz = timezone.utc
     date_stamp = convert_to_pydatetime(date_stamp)
 
     if not date_stamp.tzinfo:
-        date_stamp = date_stamp.replace(tzinfo=tz)
+        localize = getattr(tz, "localize", None)
+        if callable(localize):
+            date_stamp = localize(date_stamp)
+        else:
+            date_stamp = date_stamp.replace(tzinfo=tz)
 
     return date_stamp
 
