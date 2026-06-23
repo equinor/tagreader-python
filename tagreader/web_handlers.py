@@ -5,14 +5,21 @@ import urllib.parse
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 from hashlib import new as hashlib_new_method
+from http.cookiejar import Cookie, CookieJar
 from json.decoder import JSONDecodeError
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import browser_cookie3
 import numpy as np
 import pandas as pd
 import requests
 import urllib3
 from Crypto.Hash import MD4 as _MD4
+from msal_bearer import BearerAuth, get_user_name
+from playwright.sync_api import BrowserContext
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import sync_playwright
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -54,19 +61,137 @@ def get_verify_ssl() -> Union[bool, str]:
     return "/etc/ssl/certs/ca-bundle.trust.crt"
 
 
-def get_auth_pi() -> HTTPKerberosAuth:
-    return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+def f5_check_browser_cookie():
+    cookies = browser_cookie3.edge(domain_name=".equinor.com")
+    if len(cookies) == 0:
+        raise ConnectionError(
+            "No cookies found for .piwebapi.equinor.com. Please log in to the F5 VPN using Microsoft Edge and try again."
+        )
+    for cookie in cookies:
+        if "piweb" in cookie.domain:  # or "pivision" in cookie.domain:
+            print(f"Found cookie for {cookie.domain}, looks good!")
+
+            if "MRHSession" in cookie.name:
+                print("Found MRHSession cookie, looks good!")
+                return cookie
+            # return cookie
+    return None
+
+
+def browser_context_to_cookiejar(
+    context: BrowserContext, domain_filter: Optional[str] = None
+):
+    """Convert Playwright browser context cookies to a Requests cookie jar."""
+    cookie_jar = CookieJar()
+    for cookie in context.cookies():
+        domain = cookie.get("domain")
+        if domain_filter and (not domain or domain_filter not in domain):
+            continue
+
+        cookie_jar.set_cookie(
+            Cookie(
+                name=cookie["name"],
+                value=cookie["value"],
+                domain=domain,
+                path=cookie.get("path", "/"),
+                secure=cookie.get("secure", False),
+                expires=cookie.get("expires"),
+                rest={"HttpOnly": cookie.get("httpOnly", False)},
+            )
+        )
+    return cookie_jar
+
+
+def transfer_browser_context_to_session(
+    cookie_jar: Union[CookieJar, BrowserContext],
+    session: Optional[requests.Session] = None,
+    domain_filter: Optional[str] = None,
+) -> requests.Session:
+    """Attach Playwright context cookies to a requests session."""
+    if session is None:
+        session = requests.Session()
+
+    if isinstance(cookie_jar, BrowserContext):
+        session.cookies.update(browser_context_to_cookiejar(cookie_jar, domain_filter))
+
+    if isinstance(cookie_jar, CookieJar):
+        session.cookies.update(cookie_jar)
+
+    if isinstance(cookie_jar, list):
+        for x in cookie_jar:
+            if isinstance(x, Cookie):
+                session.cookies.update(x)
+            elif isinstance(x, dict) and "name" in x and "value" in x:
+                session.cookies.set(
+                    name=x["name"],
+                    value=x["value"],
+                    domain=x.get("domain", None),
+                    path=x.get("path", "/"),
+                    secure=x.get("secure", False),
+                    expires=x.get("expires", None),
+                    rest={"HttpOnly": x.get("httpOnly", False)},
+                )
+
+    return session
+
+
+def ensure_f5_authenticated_context():
+    STATE_FILE = Path(f"f5_{get_user_name()}_piwebapi_session.json")
+
+    AUTH_TEST_URL = "https://piwebapi.equinor.com/piwebapi/system"
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=False, channel="msedge")
+
+        context = browser.new_context(
+            storage_state=str(STATE_FILE) if STATE_FILE.exists() else None
+        )
+
+        page = context.new_page()
+        page.set_default_navigation_timeout(180_000)
+
+        page.goto(
+            AUTH_TEST_URL,
+            wait_until="domcontentloaded",
+            timeout=180_000,
+        )
+
+        if any(
+            x in page.url.casefold()
+            for x in ["oauth", "login", "signin", "microsoftonline"]
+        ):
+            print("Complete login in the browser window...")
+
+            try:
+                page.wait_for_url("**/piwebapi/**", timeout=300_000)
+            except PlaywrightTimeoutError:
+                input("Press Enter if login is complete...")
+
+            context.storage_state(path=str(STATE_FILE))
+        return context.cookies()
+
+    raise ValueError("Unexpected error in F5 authentication flow")
+
+
+def get_auth_pi(use_internal: bool = True) -> Union[HTTPKerberosAuth, BearerAuth]:
+    if use_internal:
+        return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+
+    cookie = f5_check_browser_cookie()
+    if cookie is not None:
+        print("Using cookie-based authentication for PI Web API")
+        return cookie
+
+    return ensure_f5_authenticated_context()
 
 
 def get_url_pi() -> str:
     return r"https://piwebapi.equinor.com/piwebapi"
 
 
-def get_auth_aspen(use_internal: bool = True):
+def get_auth_aspen(use_internal: bool = True) -> Union[HTTPKerberosAuth, BearerAuth]:
     if use_internal:
         return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
-
-    from msal_bearer import BearerAuth
 
     tenantID = "3aa4a235-b6e2-48d5-9195-7fcf05b459b0"
     clientID = "7adaaa99-897f-428c-8a5f-4053db565b32"
@@ -126,7 +251,7 @@ def list_piwebapi_sources(
         url = get_url_pi()
 
     if auth is None:
-        auth = get_auth_pi()
+        auth = get_auth_pi(use_internal=False)
 
     if verify_ssl is None:
         verify_ssl = get_verify_ssl()
@@ -135,7 +260,22 @@ def list_piwebapi_sources(
         urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verify_ssl, timeout=300)
+    if (
+        isinstance(auth, Cookie)
+        or isinstance(auth, list)
+        and all(isinstance(a, Cookie) or isinstance(a, dict) for a in auth)
+    ):
+        session = transfer_browser_context_to_session(cookie_jar=auth)
+        res = session.get(url_, verify=verify_ssl, timeout=300)
+    else:
+        res = requests.get(
+            url_,
+            auth=auth,
+            verify=verify_ssl,
+            timeout=300,
+            headers={"Accept": "application/json"},
+            allow_redirects=False,
+        )
 
     res.raise_for_status()
     try:
@@ -172,6 +312,8 @@ def get_piwebapi_source_to_webid_dict(
         return {item["Name"]: item["WebId"] for item in res.json()["Items"]}
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
+
+    return []
 
 
 class BaseHandlerWeb(ABC):
