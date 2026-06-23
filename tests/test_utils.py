@@ -24,9 +24,6 @@ def test_ensure_is_datetime_string() -> None:
         "02.01.03 00:00:00", ZoneInfo("America/Sao_Paulo")
     ) == datetime.datetime(2003, 1, 2, 0, 0, 0, tzinfo=ZoneInfo("America/Sao_Paulo"))
     assert ensure_datetime_with_tz(
-        "02.01.03 00:00:00", ZoneInfo("America/Sao_Paulo")
-    ) == datetime.datetime(2003, 1, 2, 0, 0, 0, tzinfo=ZoneInfo("America/Sao_Paulo"))
-    assert ensure_datetime_with_tz(
         datetime.datetime(2003, 1, 2, 0, 0, 0, tzinfo=ZoneInfo("America/Sao_Paulo")),
         ZoneInfo("America/Sao_Paulo"),
     ) == datetime.datetime(2003, 1, 2, 0, 0, 0, tzinfo=ZoneInfo("America/Sao_Paulo"))
