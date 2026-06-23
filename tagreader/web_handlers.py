@@ -115,6 +115,8 @@ def list_aspenone_sources(
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
 
+    return []
+
 
 def list_piwebapi_sources(
     url: Optional[str] = None,
@@ -142,6 +144,8 @@ def list_piwebapi_sources(
         return source_list
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
+
+    return []
 
 
 def get_piwebapi_source_to_webid_dict(
