@@ -20,8 +20,8 @@ client creation. If it is not specified, then the default value *Europe/Oslo* is
 use case where Equinor employees want to fetch data from Norwegian assets and display them with Norwegian time stamps,
 nothing needs to be done.
 
-*Note:* It is a good idea to update the `pytz` package rather frequently (at least twice per year) to ensure that time
-zone information is up-to-date. `pip install --upgrade pytz` .
+*Note:* Tagreader uses Python's built-in `zoneinfo` module. Keep your system time zone database up to date. On
+environments without an IANA database, install/update `tzdata` with `pip install --upgrade tzdata`.
 
 **Example (advanced usage)**
 
@@ -36,7 +36,7 @@ from datetime import datetime, timedelta
 from dateutil import tz
 c = tagreader.IMSClient("PINO", "pi", tz="US/Central")  # Force output data to Houston time
 c.connect()
-tzinfo = tz.gettz("Brazil/East")  # Generate timezone object for Rio local time
+tzinfo = tz.gettz("America/Sao_Paulo")  # Generate timezone object for Rio local time
 event_time = datetime(2020, 7, 20, 15, 5, 0, tzinfo=tzinfo)
 start_time = event_time - timedelta(minutes=30)
 end_time = event_time + timedelta(minutes=10)

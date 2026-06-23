@@ -541,9 +541,9 @@ def test_store_overlapping_df(cache: BucketCache) -> None:
     )
     df_expected = pd.concat(
         [
-            DF1[START_TIME_1 : START_TIME_3 - pd.Timedelta(TS, unit="s")],
+            DF1[START_TIME_1 : START_TIME_3 - TS],
             DF3[START_TIME_3:END_TIME_3],
-            DF2[END_TIME_3 + pd.Timedelta(TS, unit="s") : END_TIME_2],
+            DF2[END_TIME_3 + TS : END_TIME_2],
         ]
     )
 

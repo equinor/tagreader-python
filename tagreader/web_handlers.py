@@ -3,14 +3,13 @@ import json
 import re
 import urllib.parse
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from hashlib import new as hashlib_new_method
 from json.decoder import JSONDecodeError
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import pytz
 import requests
 import urllib3
 from Crypto.Hash import MD4 as _MD4
@@ -441,7 +440,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         return ret
 
     def _get_default_mapname(self, tagname: str):
-        (tagname, _) = self.split_tagmap(tagname)
+        tagname, _ = self.split_tagmap(tagname)
         all_maps = self._get_maps(tagname)
         for k, v in all_maps.items():
             if v:
@@ -733,7 +732,7 @@ class PIHandlerWeb(BaseHandlerWeb):
 
     @staticmethod
     def _time_to_UTC_string(time: datetime) -> str:
-        return time.astimezone(pytz.UTC).strftime("%d-%b-%y %H:%M:%S")
+        return time.astimezone(timezone.utc).strftime("%d-%b-%y %H:%M:%S")
 
     @staticmethod
     def escape(s: str) -> str:
@@ -998,7 +997,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         if not web_id:
             return pd.DataFrame()
 
-        (url, params) = self.generate_read_query(
+        url, params = self.generate_read_query(
             tag=web_id,
             start=start,
             end=end,

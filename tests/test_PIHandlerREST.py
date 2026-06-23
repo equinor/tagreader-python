@@ -102,7 +102,7 @@ def test_generate_read_query(pi_handler: PIHandlerWeb, read_type: str) -> None:
     stop = ensure_datetime_with_tz(STOP_TIME)
     ts = timedelta(seconds=SAMPLE_TIME)
 
-    (url, params) = pi_handler.generate_read_query(
+    url, params = pi_handler.generate_read_query(
         tag=pi_handler.tag_to_web_id(tag="alreadyknowntag"),  # type: ignore[arg-type]
         start=start,
         end=stop,
@@ -176,7 +176,7 @@ def test_generate_read_query_with_status(
     stop = ensure_datetime_with_tz(STOP_TIME)
     ts = timedelta(seconds=SAMPLE_TIME)
 
-    (url, params) = pi_handler.generate_read_query(
+    url, params = pi_handler.generate_read_query(
         tag=pi_handler.tag_to_web_id("alreadyknowntag"),  # type: ignore[arg-type]
         start=start,
         end=stop,
@@ -234,7 +234,7 @@ def test_generate_read_query_long_sample_time(pi_handler: PIHandlerWeb) -> None:
     stop = ensure_datetime_with_tz(STOP_TIME)
     ts = timedelta(seconds=86410)
 
-    (url, params) = pi_handler.generate_read_query(
+    url, params = pi_handler.generate_read_query(
         tag=pi_handler.tag_to_web_id("alreadyknowntag"),  # type: ignore[arg-type]
         start=start,
         end=stop,
