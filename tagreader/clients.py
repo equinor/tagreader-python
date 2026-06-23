@@ -193,7 +193,7 @@ class IMSClient:
         self,
         datasource: str,
         imstype: Optional[Union[str, IMSType]] = None,
-        tz: Union[tzinfo, str] = ZoneInfo("Europe/Oslo"),
+        tz: Optional[Union[tzinfo, str]] = None,
         url: Optional[str] = None,
         handler_options: Dict[str, Union[int, float, str]] = {},  # noqa:
         verify_ssl: Optional[Union[bool, str]] = True,
@@ -209,12 +209,14 @@ class IMSClient:
                     f" We suggest to use the tagreader.IMSType enumerator when initiating a client."
                 )
 
+        if tz is None or tz == "":
+            tz = ZoneInfo("Europe/Oslo")
         if isinstance(tz, str):
             try:
                 self.tz = ZoneInfo(tz)
             except ZoneInfoNotFoundError:
                 raise ValueError(
-                    f"Invalid timezone string. Given type was {type(tz)}"
+                    f"Invalid timezone string. Given tz was {tz}"
                 ) from None
         elif isinstance(tz, tzinfo):
             self.tz = tz

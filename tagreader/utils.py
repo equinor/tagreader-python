@@ -6,7 +6,7 @@ import ssl
 from datetime import datetime, tzinfo
 from enum import Enum
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 from zoneinfo import ZoneInfo
 
 import certifi
@@ -50,8 +50,10 @@ def convert_to_pydatetime(date_stamp: Union[datetime, str, pd.Timestamp]) -> dat
 
 def ensure_datetime_with_tz(
     date_stamp: Union[datetime, str, pd.Timestamp],
-    tz: tzinfo = ZoneInfo("Europe/Oslo"),
+    tz: Optional[tzinfo] = None,
 ) -> datetime:
+    if tz is None:
+        tz = ZoneInfo("Europe/Oslo")
     date_stamp = convert_to_pydatetime(date_stamp)
 
     if not date_stamp.tzinfo:
