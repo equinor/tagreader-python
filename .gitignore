@@ -127,6 +127,9 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# F5 PI Web API session/auth token files (contain live cookies - never commit)
+f5_*_piwebapi_session.json
+
 # Pyre type checker
 .pyre/
 

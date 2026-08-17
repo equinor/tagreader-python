@@ -39,7 +39,8 @@ dependencies = [
     "platformdirs>=4.3.7",
     "urllib3>=2.5.0", # To avoid security issue https://www.cve.org/CVERecord?id=CVE-2025-50182
     "playwright (>=1.59.0,<2.0.0)",
-    "browser-cookie3 (>=0.20.1,<0.21.0)"
+    "browser-cookie3 (>=0.20.1,<0.21.0)",
+    "cachetools (>=5.5.0,<7.0.0)"
 ]
 
 [tool.poetry.group.test.dependencies]

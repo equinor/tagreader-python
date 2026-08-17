@@ -80,6 +80,18 @@ pycryptodomex = "*"
 shadowcopy = {version = "*", markers = "python_version >= \"3.7\" and platform_system == \"Windows\""}
 
 [[package]]
+name = "cachetools"
+version = "6.2.6"
+description = "Extensible memoizing collections and decorators"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "cachetools-6.2.6-py3-none-any.whl", hash = "sha256:8c9717235b3c651603fff0076db52d6acbfd1b338b8ed50256092f7ce9c85bda"},
+    {file = "cachetools-6.2.6.tar.gz", hash = "sha256:16c33e1f276b9a9c0b49ab5782d901e3ad3de0dd6da9bf9bcd29ac5672f2f9e6"},
+]
+
+[[package]]
 name = "certifi"
 version = "2025.11.12"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -2140,4 +2152,4 @@ tests = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9.2,<4.0.0"
-content-hash = "2599a8359d069cec44b35e5476a8cbab08836a09628a1b0d8d6ba3a0710f1871"
+content-hash = "e473718e883fa4c3fe916426554faffb57dc8b098397df00056472f5858319a3"

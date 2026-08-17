@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 from hashlib import new as hashlib_new_method
 from http.cookiejar import Cookie, CookieJar
-from json.decoder import JSONDecodeError
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -15,11 +14,13 @@ import numpy as np
 import pandas as pd
 import requests
 import urllib3
+from cachetools import TTLCache
 from Crypto.Hash import MD4 as _MD4
 from msal_bearer import BearerAuth, get_user_name
 from playwright.sync_api import BrowserContext
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
+from requests.exceptions import JSONDecodeError
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -69,10 +70,10 @@ def f5_check_browser_cookie():
         )
     for cookie in cookies:
         if "piweb" in cookie.domain:  # or "pivision" in cookie.domain:
-            print(f"Found cookie for {cookie.domain}, looks good!")
+            logger.info(f"Found cookie for {cookie.domain}, looks good!")
 
             if "MRHSession" in cookie.name:
-                print("Found MRHSession cookie, looks good!")
+                logger.info("Found MRHSession cookie, looks good!")
                 return cookie
             # return cookie
     return None
@@ -103,7 +104,7 @@ def browser_context_to_cookiejar(
 
 
 def transfer_browser_context_to_session(
-    cookie_jar: Union[CookieJar, BrowserContext],
+    cookie_jar: Union[Cookie, CookieJar, BrowserContext, list],
     session: Optional[requests.Session] = None,
     domain_filter: Optional[str] = None,
 ) -> requests.Session:
@@ -117,10 +118,13 @@ def transfer_browser_context_to_session(
     if isinstance(cookie_jar, CookieJar):
         session.cookies.update(cookie_jar)
 
+    if isinstance(cookie_jar, Cookie):
+        session.cookies.set_cookie(cookie_jar)
+
     if isinstance(cookie_jar, list):
         for x in cookie_jar:
             if isinstance(x, Cookie):
-                session.cookies.update(x)
+                session.cookies.set_cookie(x)
             elif isinstance(x, dict) and "name" in x and "value" in x:
                 session.cookies.set(
                     name=x["name"],
@@ -133,6 +137,25 @@ def transfer_browser_context_to_session(
                 )
 
     return session
+
+
+def is_cookie_auth(auth: Any) -> bool:
+    """True if auth is cookie-based and must go through a session, not requests' auth arg."""
+    if isinstance(auth, (Cookie, CookieJar, BrowserContext)):
+        return True
+    return isinstance(auth, list)
+
+
+_F5_AUTH_CACHE_TTL = timedelta(minutes=10)
+_f5_auth_cache: TTLCache = TTLCache(maxsize=1, ttl=_F5_AUTH_CACHE_TTL.total_seconds())
+
+
+def _get_cached_f5_auth() -> Optional[Any]:
+    return _f5_auth_cache.get("pi")
+
+
+def _set_cached_f5_auth(auth: Any) -> None:
+    _f5_auth_cache["pi"] = auth
 
 
 def ensure_f5_authenticated_context():
@@ -177,12 +200,19 @@ def get_auth_pi(use_internal: bool = True) -> Union[HTTPKerberosAuth, BearerAuth
     if use_internal:
         return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
+    cached = _get_cached_f5_auth()
+    if cached is not None:
+        return cached
+
     cookie = f5_check_browser_cookie()
     if cookie is not None:
-        print("Using cookie-based authentication for PI Web API")
+        logger.info("Using cookie-based authentication for PI Web API")
+        _set_cached_f5_auth(cookie)
         return cookie
 
-    return ensure_f5_authenticated_context()
+    context_cookies = ensure_f5_authenticated_context()
+    _set_cached_f5_auth(context_cookies)
+    return context_cookies
 
 
 def get_url_pi() -> str:
@@ -247,11 +277,12 @@ def list_piwebapi_sources(
     auth: Optional[Any] = None,
     verify_ssl: Optional[Union[bool, str]] = True,
 ) -> List[str]:
-    if url is None:
+    _url_was_none = url is None
+    if _url_was_none:
         url = get_url_pi()
 
     if auth is None:
-        auth = get_auth_pi(use_internal=False)
+        auth = get_auth_pi()
 
     if verify_ssl is None:
         verify_ssl = get_verify_ssl()
@@ -260,11 +291,7 @@ def list_piwebapi_sources(
         urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
-    if (
-        isinstance(auth, Cookie)
-        or isinstance(auth, list)
-        and all(isinstance(a, Cookie) or isinstance(a, dict) for a in auth)
-    ):
+    if is_cookie_auth(auth):
         session = transfer_browser_context_to_session(cookie_jar=auth)
         res = session.get(url_, verify=verify_ssl, timeout=300)
     else:
@@ -276,6 +303,14 @@ def list_piwebapi_sources(
             headers={"Accept": "application/json"},
             allow_redirects=False,
         )
+        if res.status_code == 302:
+            logger.warning(
+                f"Received 302 redirect from {url_}. This may indicate that the F5 VPN is not authenticated. Please log in to the F5 VPN and try again."
+            )
+            if _url_was_none:
+                return list_piwebapi_sources(
+                    url=url, auth=get_auth_pi(use_internal=False), verify_ssl=verify_ssl
+                )
 
     res.raise_for_status()
     try:
@@ -305,7 +340,13 @@ def get_piwebapi_source_to_webid_dict(
         urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verify_ssl, timeout=300)
+    if is_cookie_auth(auth):
+        session = transfer_browser_context_to_session(cookie_jar=auth)
+        res = session.get(url_, verify=verify_ssl, timeout=300)
+    else:
+        res = requests.get(
+            url_, auth=auth, verify=verify_ssl, timeout=300, allow_redirects=False
+        )
 
     res.raise_for_status()
     try:
@@ -328,7 +369,15 @@ class BaseHandlerWeb(ABC):
         self.base_url = url
         self.session = requests.Session()
         self.auth = auth
-        self.session.auth = auth if auth is not None else get_auth_aspen()
+        resolved_auth = auth if auth is not None else get_auth_aspen()
+        # Cookie-based (F5) auth is attached to the session once and reused for all
+        # requests; it must not be passed as requests' auth handler.
+        if is_cookie_auth(resolved_auth):
+            self.session = transfer_browser_context_to_session(
+                cookie_jar=resolved_auth, session=self.session
+            )
+        else:
+            self.session.auth = resolved_auth
         if verify_ssl is False:
             urllib3.disable_warnings(InsecureRequestWarning)
         self.session.verify = verify_ssl if verify_ssl is not None else get_verify_ssl()
@@ -862,7 +911,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         if url is None:
             url = get_url_pi()
         if auth is None:
-            auth = get_auth_pi()
+            # Prefer a valid in-memory F5 token over the default (Kerberos) auth.
+            auth = _get_cached_f5_auth() or get_auth_pi()
         super().__init__(
             url=url,
             datasource=datasource,
