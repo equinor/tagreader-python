@@ -246,10 +246,12 @@ def list_aspenone_sources(
     auth: Optional[Any] = None,
     verify_ssl: Optional[Union[bool, str]] = True,
 ) -> List[str]:
-    if url is None:
+    url_was_none = url is None
+    if url_was_none:
         url = get_url_aspen()
 
-    if auth is None:
+    auth_was_none = auth is None
+    if auth_was_none:
         auth = get_auth_aspen()
 
     if verify_ssl is None:
@@ -267,6 +269,12 @@ def list_aspenone_sources(
         source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
         return source_list
     except JSONDecodeError as e:
+        if auth_was_none and url_was_none:
+            return list_aspenone_sources(
+                url=get_url_aspen(use_internal=False),
+                auth=get_auth_aspen(use_internal=False),
+                verify_ssl=verify_ssl,
+            )
         logger.error(f"Could not decode JSON response: {e}")
 
     return []
