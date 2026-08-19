@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Generator, cast
+from typing import Generator
 
 import pytest
 
