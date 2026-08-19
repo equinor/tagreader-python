@@ -9,6 +9,8 @@ from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import IMSType
 from tagreader.web_handlers import (
     AspenHandlerWeb,
+    get_auth_aspen,
+    get_url_aspen,
     get_verify_ssl,
     list_aspenone_sources,
 )
@@ -36,8 +38,9 @@ SAMPLE_TIME = timedelta(seconds=60)
 def client() -> Generator[IMSClient, None, None]:
     c = IMSClient(
         datasource=SOURCE,
-        imstype="aspenone",
         verify_ssl=bool(VERIFY_SSL),
+        auth=get_auth_aspen(use_internal=False),
+        url=get_url_aspen(use_internal=False),
     )
     c.cache = None
     c.connect()
@@ -49,7 +52,11 @@ def client() -> Generator[IMSClient, None, None]:
 @pytest.fixture  # type: ignore[misc]
 def aspen_handler() -> Generator[AspenHandlerWeb, None, None]:
     h = AspenHandlerWeb(
-        datasource=SOURCE, verify_ssl=bool(VERIFY_SSL), auth=None, url=None, options={}
+        datasource=SOURCE,
+        verify_ssl=bool(VERIFY_SSL),
+        auth=get_auth_aspen(use_internal=False),
+        url=get_url_aspen(use_internal=False),
+        options={},
     )
     yield h
 

@@ -35,7 +35,6 @@ SAMPLE_TIME = 60
 def client() -> Generator[IMSClient, None, None]:
     c = IMSClient(
         datasource=SOURCE,
-        imstype="piwebapi",
         verify_ssl=bool(verify_ssl),
     )
     c.cache = None
