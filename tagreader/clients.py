@@ -50,8 +50,6 @@ def list_sources(
             auth = get_auth_pi()
         return list_piwebapi_sources(url=url, auth=auth, verify_ssl=verify_ssl)
     elif imstype == IMSType.ASPENONE:
-        if auth is None:
-            auth = get_auth_aspen()
         return list_aspenone_sources(url=url, auth=auth, verify_ssl=verify_ssl)
     elif imstype in [IMSType.PI, IMSType.ASPEN, IMSType.IP21]:
         raise ValueError(
@@ -132,7 +130,7 @@ def get_handler(
             aspen_source = list_aspenone_sources(
                 url=None, auth=None, verify_ssl=verify_ssl
             )
-        except requests.exceptions.HTTPError:
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
             # Try again using app registration auth
             try:
                 auth = get_auth_aspen(False)
