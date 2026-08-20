@@ -65,9 +65,10 @@ def get_verify_ssl() -> Union[bool, str]:
 def f5_check_browser_cookie():
     cookies = browser_cookie3.edge(domain_name=".equinor.com")
     if len(cookies) == 0:
-        raise ConnectionError(
-            "No cookies found for .piwebapi.equinor.com. Please log in to the F5 VPN using Microsoft Edge and try again."
+        logger.info(
+            "No existing Equinor cookies found; starting interactive F5 authentication."
         )
+        return None
     for cookie in cookies:
         if "piweb" in cookie.domain:  # or "pivision" in cookie.domain:
             logger.info(f"Found cookie for {cookie.domain}, looks good!")
