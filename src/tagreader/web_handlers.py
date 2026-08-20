@@ -89,14 +89,15 @@ def browser_context_to_cookiejar(
         if domain_filter and (not domain or domain_filter not in domain):
             continue
 
+        expires = cookie.get("expires")
         cookie_jar.set_cookie(
-            Cookie(
+            requests.cookies.create_cookie(
                 name=cookie["name"],
                 value=cookie["value"],
-                domain=domain,
+                domain=domain or "",
                 path=cookie.get("path", "/"),
                 secure=cookie.get("secure", False),
-                expires=cookie.get("expires"),
+                expires=None if expires == -1 else expires,
                 rest={"HttpOnly": cookie.get("httpOnly", False)},
             )
         )
