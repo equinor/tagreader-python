@@ -173,6 +173,8 @@ def get_piwebapi_source_to_webid_dict(
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
 
+    return []
+
 
 class BaseHandlerWeb(ABC):
     def __init__(
