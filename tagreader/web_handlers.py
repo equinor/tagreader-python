@@ -198,7 +198,9 @@ def ensure_f5_authenticated_context():
     raise ValueError("Unexpected error in F5 authentication flow")
 
 
-def get_auth_pi(use_internal: bool = True) -> Union[HTTPKerberosAuth, BearerAuth]:
+def get_auth_pi(
+    use_internal: bool = True,
+) -> Union[HTTPKerberosAuth, Cookie, List[Cookie]]:
     if use_internal:
         return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
@@ -336,7 +338,7 @@ def get_piwebapi_source_to_webid_dict(
     url: Optional[str] = None,
     auth: Optional[Any] = None,
     verify_ssl: Optional[Union[bool, str]] = True,
-) -> List[str]:
+) -> dict[str, str]:
     if url is None:
         url = get_url_pi()
 
@@ -364,7 +366,7 @@ def get_piwebapi_source_to_webid_dict(
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
 
-    return []
+    return {}
 
 
 class BaseHandlerWeb(ABC):
