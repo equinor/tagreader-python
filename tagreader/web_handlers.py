@@ -1,6 +1,8 @@
 import hashlib
 import json
+import os
 import re
+import stat
 import urllib.parse
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
@@ -17,6 +19,7 @@ import urllib3
 from cachetools import TTLCache
 from Crypto.Hash import MD4 as _MD4
 from msal_bearer import BearerAuth, get_user_name
+from platformdirs import user_data_dir
 from playwright.sync_api import BrowserContext
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
@@ -160,8 +163,20 @@ def _set_cached_f5_auth(auth: Any) -> None:
     _f5_auth_cache["pi"] = auth
 
 
+def _write_storage_state(context: BrowserContext, state_file: Path) -> None:
+    """Persist Playwright storage state with owner-only (0o600) permissions."""
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    context.storage_state(path=str(state_file))
+    try:
+        os.chmod(state_file, stat.S_IRUSR | stat.S_IWUSR)
+    except OSError as e:
+        logger.warning(f"Could not restrict permissions on {state_file}: {e}")
+
+
 def ensure_f5_authenticated_context():
-    STATE_FILE = Path(f"f5_{get_user_name()}_piwebapi_session.json")
+    STATE_FILE = (
+        Path(user_data_dir("tagreader")) / f"f5_{get_user_name()}_piwebapi_session.json"
+    )
 
     AUTH_TEST_URL = "https://piwebapi.equinor.com/piwebapi/system"
 
@@ -192,7 +207,7 @@ def ensure_f5_authenticated_context():
             except PlaywrightTimeoutError:
                 input("Press Enter if login is complete...")
 
-            context.storage_state(path=str(STATE_FILE))
+            _write_storage_state(context, STATE_FILE)
         return context.cookies()
 
     raise ValueError("Unexpected error in F5 authentication flow")
