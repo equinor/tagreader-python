@@ -1,18 +1,29 @@
 import hashlib
 import json
+import os
 import re
+import stat
 import urllib.parse
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 from hashlib import new as hashlib_new_method
-from json.decoder import JSONDecodeError
+from http.cookiejar import Cookie, CookieJar
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import browser_cookie3
 import numpy as np
 import pandas as pd
 import requests
 import urllib3
+from cachetools import TTLCache
 from Crypto.Hash import MD4 as _MD4
+from msal_bearer import BearerAuth, get_user_name
+from platformdirs import user_data_dir
+from playwright.sync_api import BrowserContext
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import sync_playwright
+from requests.exceptions import JSONDecodeError
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -54,19 +65,192 @@ def get_verify_ssl() -> Union[bool, str]:
     return "/etc/ssl/certs/ca-bundle.trust.crt"
 
 
-def get_auth_pi() -> HTTPKerberosAuth:
-    return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+def f5_check_browser_cookie():
+    try:
+        cookies = browser_cookie3.edge(domain_name=".equinor.com")
+    except Exception as e:
+        # e.g. "Unable to get key for cookie decryption" on Windows when Edge uses
+        # App-Bound Encryption, is locked, or the cookie DB is inaccessible. Any
+        # failure here should degrade to interactive login rather than crash.
+        logger.info(
+            f"Could not read Edge cookies ({e}); "
+            "falling back to interactive F5 authentication."
+        )
+        return None
+    if len(cookies) == 0:
+        logger.info(
+            "No existing Equinor cookies found; starting interactive F5 authentication."
+        )
+        return None
+    for cookie in cookies:
+        if "piweb" in cookie.domain:  # or "pivision" in cookie.domain:
+            logger.info(f"Found cookie for {cookie.domain}, looks good!")
+
+            if "MRHSession" in cookie.name:
+                logger.info("Found MRHSession cookie, looks good!")
+                return cookie
+            # return cookie
+    return None
+
+
+def browser_context_to_cookiejar(
+    context: BrowserContext, domain_filter: Optional[str] = None
+):
+    """Convert Playwright browser context cookies to a Requests cookie jar."""
+    cookie_jar = CookieJar()
+    for cookie in context.cookies():
+        domain = cookie.get("domain")
+        if domain_filter and (not domain or domain_filter not in domain):
+            continue
+
+        expires = cookie.get("expires")
+        cookie_jar.set_cookie(
+            requests.cookies.create_cookie(
+                name=cookie["name"],
+                value=cookie["value"],
+                domain=domain or "",
+                path=cookie.get("path", "/"),
+                secure=cookie.get("secure", False),
+                expires=None if expires == -1 else expires,
+                rest={"HttpOnly": cookie.get("httpOnly", False)},
+            )
+        )
+    return cookie_jar
+
+
+def transfer_browser_context_to_session(
+    cookie_jar: Union[Cookie, CookieJar, BrowserContext, list],
+    session: Optional[requests.Session] = None,
+    domain_filter: Optional[str] = None,
+) -> requests.Session:
+    """Attach Playwright context cookies to a requests session."""
+    if session is None:
+        session = requests.Session()
+
+    if isinstance(cookie_jar, BrowserContext):
+        session.cookies.update(browser_context_to_cookiejar(cookie_jar, domain_filter))
+
+    if isinstance(cookie_jar, CookieJar):
+        session.cookies.update(cookie_jar)
+
+    if isinstance(cookie_jar, Cookie):
+        session.cookies.set_cookie(cookie_jar)
+
+    if isinstance(cookie_jar, list):
+        for x in cookie_jar:
+            if isinstance(x, Cookie):
+                session.cookies.set_cookie(x)
+            elif isinstance(x, dict) and "name" in x and "value" in x:
+                session.cookies.set(
+                    name=x["name"],
+                    value=x["value"],
+                    domain=x.get("domain", None),
+                    path=x.get("path", "/"),
+                    secure=x.get("secure", False),
+                    expires=x.get("expires", None),
+                    rest={"HttpOnly": x.get("httpOnly", False)},
+                )
+
+    return session
+
+
+def is_cookie_auth(auth: Any) -> bool:
+    """True if auth is cookie-based and must go through a session, not requests' auth arg."""
+    if isinstance(auth, (Cookie, CookieJar, BrowserContext)):
+        return True
+    return isinstance(auth, list)
+
+
+_F5_AUTH_CACHE_TTL = timedelta(minutes=10)
+_f5_auth_cache: TTLCache = TTLCache(maxsize=1, ttl=_F5_AUTH_CACHE_TTL.total_seconds())
+
+
+def _get_cached_f5_auth() -> Optional[Any]:
+    return _f5_auth_cache.get("pi")
+
+
+def _set_cached_f5_auth(auth: Any) -> None:
+    _f5_auth_cache["pi"] = auth
+
+
+def _write_storage_state(context: BrowserContext, state_file: Path) -> None:
+    """Persist Playwright storage state with owner-only (0o600) permissions."""
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    context.storage_state(path=str(state_file))
+    try:
+        os.chmod(state_file, stat.S_IRUSR | stat.S_IWUSR)
+    except OSError as e:
+        logger.warning(f"Could not restrict permissions on {state_file}: {e}")
+
+
+def ensure_f5_authenticated_context():
+    STATE_FILE = (
+        Path(user_data_dir("tagreader")) / f"f5_{get_user_name()}_piwebapi_session.json"
+    )
+
+    AUTH_TEST_URL = "https://piwebapi.equinor.com/piwebapi/system"
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=False, channel="msedge")
+
+        context = browser.new_context(
+            storage_state=str(STATE_FILE) if STATE_FILE.exists() else None
+        )
+
+        page = context.new_page()
+        page.set_default_navigation_timeout(180_000)
+
+        page.goto(
+            AUTH_TEST_URL,
+            wait_until="domcontentloaded",
+            timeout=180_000,
+        )
+
+        if any(
+            x in page.url.casefold()
+            for x in ["oauth", "login", "signin", "microsoftonline"]
+        ):
+            print("Complete login in the browser window...")
+
+            try:
+                page.wait_for_url("**/piwebapi/**", timeout=300_000)
+            except PlaywrightTimeoutError:
+                input("Press Enter if login is complete...")
+
+            _write_storage_state(context, STATE_FILE)
+        return context.cookies()
+
+    raise ValueError("Unexpected error in F5 authentication flow")
+
+
+def get_auth_pi(
+    use_internal: bool = True,
+) -> Union[HTTPKerberosAuth, Cookie, List[Cookie]]:
+    if use_internal:
+        return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+
+    cached = _get_cached_f5_auth()
+    if cached is not None:
+        return cached
+
+    cookie = f5_check_browser_cookie()
+    if cookie is not None:
+        logger.info("Using cookie-based authentication for PI Web API")
+        _set_cached_f5_auth(cookie)
+        return cookie
+
+    context_cookies = ensure_f5_authenticated_context()
+    _set_cached_f5_auth(context_cookies)
+    return context_cookies
 
 
 def get_url_pi() -> str:
     return r"https://piwebapi.equinor.com/piwebapi"
 
 
-def get_auth_aspen(use_internal: bool = True):
+def get_auth_aspen(use_internal: bool = True) -> Union[HTTPKerberosAuth, BearerAuth]:
     if use_internal:
         return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
-
-    from msal_bearer import BearerAuth
 
     tenantID = "3aa4a235-b6e2-48d5-9195-7fcf05b459b0"
     clientID = "7adaaa99-897f-428c-8a5f-4053db565b32"
@@ -91,10 +275,12 @@ def list_aspenone_sources(
     auth: Optional[Any] = None,
     verify_ssl: Optional[Union[bool, str]] = True,
 ) -> List[str]:
-    if url is None:
+    url_was_none = url is None
+    if url_was_none:
         url = get_url_aspen()
 
-    if auth is None:
+    auth_was_none = auth is None
+    if auth_was_none:
         auth = get_auth_aspen()
 
     if verify_ssl is None:
@@ -112,6 +298,12 @@ def list_aspenone_sources(
         source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
         return source_list
     except JSONDecodeError as e:
+        if auth_was_none and url_was_none:
+            return list_aspenone_sources(
+                url=get_url_aspen(use_internal=False),
+                auth=get_auth_aspen(use_internal=False),
+                verify_ssl=verify_ssl,
+            )
         logger.error(f"Could not decode JSON response: {e}")
 
     return []
@@ -122,7 +314,8 @@ def list_piwebapi_sources(
     auth: Optional[Any] = None,
     verify_ssl: Optional[Union[bool, str]] = True,
 ) -> List[str]:
-    if url is None:
+    _url_was_none = url is None
+    if _url_was_none:
         url = get_url_pi()
 
     if auth is None:
@@ -135,7 +328,26 @@ def list_piwebapi_sources(
         urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verify_ssl, timeout=300)
+    if is_cookie_auth(auth):
+        session = transfer_browser_context_to_session(cookie_jar=auth)
+        res = session.get(url_, verify=verify_ssl, timeout=300)
+    else:
+        res = requests.get(
+            url_,
+            auth=auth,
+            verify=verify_ssl,
+            timeout=300,
+            headers={"Accept": "application/json"},
+            allow_redirects=False,
+        )
+        if res.status_code == 302:
+            logger.warning(
+                f"Received 302 redirect from {url_}. This may indicate that the F5 VPN is not authenticated. Please log in to the F5 VPN and try again."
+            )
+            if _url_was_none:
+                return list_piwebapi_sources(
+                    url=url, auth=get_auth_pi(use_internal=False), verify_ssl=verify_ssl
+                )
 
     res.raise_for_status()
     try:
@@ -151,7 +363,7 @@ def get_piwebapi_source_to_webid_dict(
     url: Optional[str] = None,
     auth: Optional[Any] = None,
     verify_ssl: Optional[Union[bool, str]] = True,
-) -> List[str]:
+) -> dict[str, str]:
     if url is None:
         url = get_url_pi()
 
@@ -165,7 +377,13 @@ def get_piwebapi_source_to_webid_dict(
         urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verify_ssl, timeout=300)
+    if is_cookie_auth(auth):
+        session = transfer_browser_context_to_session(cookie_jar=auth)
+        res = session.get(url_, verify=verify_ssl, timeout=300)
+    else:
+        res = requests.get(
+            url_, auth=auth, verify=verify_ssl, timeout=300, allow_redirects=False
+        )
 
     res.raise_for_status()
     try:
@@ -173,7 +391,7 @@ def get_piwebapi_source_to_webid_dict(
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
 
-    return []
+    return {}
 
 
 class BaseHandlerWeb(ABC):
@@ -188,7 +406,15 @@ class BaseHandlerWeb(ABC):
         self.base_url = url
         self.session = requests.Session()
         self.auth = auth
-        self.session.auth = auth if auth is not None else get_auth_aspen()
+        resolved_auth = auth if auth is not None else get_auth_aspen()
+        # Cookie-based (F5) auth is attached to the session once and reused for all
+        # requests; it must not be passed as requests' auth handler.
+        if is_cookie_auth(resolved_auth):
+            self.session = transfer_browser_context_to_session(
+                cookie_jar=resolved_auth, session=self.session
+            )
+        else:
+            self.session.auth = resolved_auth
         if verify_ssl is False:
             urllib3.disable_warnings(InsecureRequestWarning)
         self.session.verify = verify_ssl if verify_ssl is not None else get_verify_ssl()
@@ -722,7 +948,8 @@ class PIHandlerWeb(BaseHandlerWeb):
         if url is None:
             url = get_url_pi()
         if auth is None:
-            auth = get_auth_pi()
+            # Prefer a valid in-memory F5 token over the default (Kerberos) auth.
+            auth = _get_cached_f5_auth() or get_auth_pi()
         super().__init__(
             url=url,
             datasource=datasource,
