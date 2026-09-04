@@ -66,7 +66,17 @@ def get_verify_ssl() -> Union[bool, str]:
 
 
 def f5_check_browser_cookie():
-    cookies = browser_cookie3.edge(domain_name=".equinor.com")
+    try:
+        cookies = browser_cookie3.edge(domain_name=".equinor.com")
+    except Exception as e:
+        # e.g. "Unable to get key for cookie decryption" on Windows when Edge uses
+        # App-Bound Encryption, is locked, or the cookie DB is inaccessible. Any
+        # failure here should degrade to interactive login rather than crash.
+        logger.info(
+            f"Could not read Edge cookies ({e}); "
+            "falling back to interactive F5 authentication."
+        )
+        return None
     if len(cookies) == 0:
         logger.info(
             "No existing Equinor cookies found; starting interactive F5 authentication."
