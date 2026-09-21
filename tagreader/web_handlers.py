@@ -86,17 +86,11 @@ def get_url_aspen(use_internal: bool = True) -> str:
     return r"https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData/AtProcessDataREST.dll"
 
 
-def list_aspenone_sources(
-    url: Optional[str] = None,
-    auth: Optional[Any] = None,
-    verify_ssl: Optional[Union[bool, str]] = True,
+def _fetch_aspenone_sources(
+    url: str,
+    auth: Any,
+    verify_ssl: Optional[Union[bool, str]],
 ) -> List[str]:
-    if url is None:
-        url = get_url_aspen()
-
-    if auth is None:
-        auth = get_auth_aspen()
-
     if verify_ssl is None:
         verify_ssl = get_verify_ssl()
 
@@ -117,17 +111,33 @@ def list_aspenone_sources(
     return []
 
 
-def list_piwebapi_sources(
+# Keyed on url only so default-auth calls share the cache regardless of auth or verify_ssl.
+_aspenone_sources_cache: Dict[str, List[str]] = {}
+
+
+def list_aspenone_sources(
     url: Optional[str] = None,
     auth: Optional[Any] = None,
     verify_ssl: Optional[Union[bool, str]] = True,
 ) -> List[str]:
     if url is None:
-        url = get_url_pi()
+        url = get_url_aspen()
 
-    if auth is None:
-        auth = get_auth_pi()
+    if auth is not None:
+        return _fetch_aspenone_sources(url, auth, verify_ssl)
 
+    if url not in _aspenone_sources_cache:
+        _aspenone_sources_cache[url] = _fetch_aspenone_sources(
+            url, get_auth_aspen(), verify_ssl
+        )
+    return _aspenone_sources_cache[url]
+
+
+def _fetch_piwebapi_sources(
+    url: str,
+    auth: Any,
+    verify_ssl: Optional[Union[bool, str]],
+) -> List[str]:
     if verify_ssl is None:
         verify_ssl = get_verify_ssl()
 
@@ -145,6 +155,28 @@ def list_piwebapi_sources(
         logger.error(f"Could not decode JSON response: {e}")
 
     return []
+
+
+# Keyed on url only so default-auth calls share the cache regardless of auth or verify_ssl.
+_piwebapi_sources_cache: Dict[str, List[str]] = {}
+
+
+def list_piwebapi_sources(
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verify_ssl: Optional[Union[bool, str]] = True,
+) -> List[str]:
+    if url is None:
+        url = get_url_pi()
+
+    if auth is not None:
+        return _fetch_piwebapi_sources(url, auth, verify_ssl)
+
+    if url not in _piwebapi_sources_cache:
+        _piwebapi_sources_cache[url] = _fetch_piwebapi_sources(
+            url, get_auth_pi(), verify_ssl
+        )
+    return _piwebapi_sources_cache[url]
 
 
 def get_piwebapi_source_to_webid_dict(
