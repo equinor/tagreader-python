@@ -130,7 +130,7 @@ def list_aspenone_sources(
         url_sources = _fetch_aspenone_sources(url, get_auth_aspen(), verify_ssl)
         if len(url_sources) > 0:
             _aspenone_sources_cache[url] = url_sources
-    return _aspenone_sources_cache[url]
+    return list(_aspenone_sources_cache[url])
 
 
 def _fetch_piwebapi_sources(
@@ -176,7 +176,7 @@ def list_piwebapi_sources(
         url_sources = _fetch_piwebapi_sources(url, get_auth_pi(), verify_ssl)
         if len(url_sources) > 0:
             _piwebapi_sources_cache[url] = url_sources
-    return _piwebapi_sources_cache[url]
+    return list(_piwebapi_sources_cache[url])
 
 
 def get_piwebapi_source_to_webid_dict(
