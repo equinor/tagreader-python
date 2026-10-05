@@ -7,7 +7,12 @@ import pytest
 from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
-from tagreader.web_handlers import PIHandlerWeb, get_verify_ssl, list_piwebapi_sources
+from tagreader.web_handlers import (
+    PIHandlerWeb,
+    _piwebapi_sources_cache,
+    get_verify_ssl,
+    list_piwebapi_sources,
+)
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -68,6 +73,18 @@ def test_list_all_piwebapi_sources() -> None:
     for r in res:
         assert isinstance(r, str)
         assert 3 <= len(r)
+
+
+def test_list_piwebapi_sources_uses_cache() -> None:
+    url = "http://127.0.0.1:1/piwebapi-cache-test"
+    cached_sources = ["cached-source"]
+    _piwebapi_sources_cache[url] = cached_sources
+    try:
+        res = list_piwebapi_sources(url=url, auth=None)
+    finally:
+        _piwebapi_sources_cache.pop(url, None)
+
+    assert res == cached_sources
 
 
 def test_list_sources_piwebapi() -> None:

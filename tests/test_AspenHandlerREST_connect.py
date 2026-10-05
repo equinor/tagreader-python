@@ -9,6 +9,7 @@ from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import IMSType
 from tagreader.web_handlers import (
     AspenHandlerWeb,
+    _aspenone_sources_cache,
     get_auth_aspen,
     get_url_aspen,
     get_verify_ssl,
@@ -68,6 +69,18 @@ def test_list_all_aspen_one_sources() -> None:
     assert isinstance(res[0], str)
     for r in res:
         assert 3 <= len(r) <= 20
+
+
+def test_list_aspenone_sources_uses_cache() -> None:
+    url = "http://127.0.0.1:1/aspen-cache-test"
+    cached_sources = ["cached-source"]
+    _aspenone_sources_cache[url] = cached_sources
+    try:
+        res = list_aspenone_sources(url=url, auth=None)
+    finally:
+        _aspenone_sources_cache.pop(url, None)
+
+    assert res == cached_sources
 
 
 def test_list_sources_aspen_one() -> None:
