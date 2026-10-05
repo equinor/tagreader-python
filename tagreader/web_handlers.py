@@ -130,6 +130,8 @@ def list_aspenone_sources(
         url_sources = _fetch_aspenone_sources(url, get_auth_aspen(), verify_ssl)
         if len(url_sources) > 0:
             _aspenone_sources_cache[url] = url_sources
+        else:
+            return []
     return list(_aspenone_sources_cache[url])
 
 
