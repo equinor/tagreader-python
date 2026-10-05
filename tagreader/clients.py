@@ -365,7 +365,7 @@ class IMSClient:
                                 end=end,
                             )
                     frames.append(df)
-                    if len(df) < self.handler._max_rows:
+                    if len(df) < self.handler.max_rows:
                         break
                     start = df.index[-1]
 

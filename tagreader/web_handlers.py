@@ -220,12 +220,37 @@ class BaseHandlerWeb(ABC):
     ):
         self.datasource = datasource
         self.base_url = url
+        self.max_rows = 10000
         self.session = requests.Session()
         self.auth = auth
         self.session.auth = auth if auth is not None else get_auth_aspen()
         if verify_ssl is False:
             urllib3.disable_warnings(InsecureRequestWarning)
         self.session.verify = verify_ssl if verify_ssl is not None else get_verify_ssl()
+
+    @property
+    def datasource(self) -> str:
+        return self._datasource
+
+    @datasource.setter
+    def datasource(self, value: Optional[str]) -> None:
+        self._datasource = value if value is not None else ""
+
+    @property
+    def base_url(self) -> str:
+        return self._base_url
+
+    @base_url.setter
+    def base_url(self, value: Optional[str]) -> None:
+        self._base_url = value if value is not None else ""
+
+    @property
+    def max_rows(self) -> int:
+        return self._max_rows
+
+    @max_rows.setter
+    def max_rows(self, value: int) -> None:
+        self._max_rows = value
 
     def fetch(
         self,
@@ -282,7 +307,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         verify_ssl: Optional[Union[bool, str]] = True,
         options: Dict[str, Any] = dict(),
     ):
-        if url is None:
+        if url is None or url == "":
             url = get_url_aspen()
         if auth is None:
             auth = get_auth_aspen()
@@ -293,7 +318,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
             auth=auth,
             verify_ssl=verify_ssl,
         )
-        self._max_rows = options.get("max_rows", 100000)
+        self.max_rows = int(options.get("max_rows", 100000))
         self._connection_string = ""  # Used for raw SQL queries
 
     @staticmethod
@@ -372,7 +397,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 f"<RT>{rt}</RT>"
             )
         if read_type in [ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
-            query += f"<X>{self._max_rows}</X>"
+            query += f"<X>{self.max_rows}</X>"
         if read_type not in [ReaderType.INT, ReaderType.SNAPSHOT]:
             query += f"<O>{outsiders}</O>"
         if read_type not in [ReaderType.RAW]:
@@ -631,7 +656,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         # so we need to limit the range. Note -1 because INT normally includes
         # both start and end time.
         if read_type == ReaderType.INT:
-            end = min(end, start + sample_time * (self._max_rows - 1))
+            end = min(end, start + sample_time * (self.max_rows - 1))
 
         tag_name, map_name = self.split_tagmap(tag)
 
@@ -709,14 +734,14 @@ class AspenHandlerWeb(BaseHandlerWeb):
             params = self.generate_sql_query(
                 datasource=self.datasource,
                 query=query,
-                max_rows=self._max_rows,
+                max_rows=self.max_rows,
                 connection_string=None,
             )
         else:
             params = self.generate_sql_query(
                 connection_string=self._connection_string,
                 query=query,
-                max_rows=self._max_rows,
+                max_rows=self.max_rows,
                 datasource=None,
             )
 
@@ -752,8 +777,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         options: Dict[str, Union[int, float, str]],
         cache: Optional[Union[SmartCache, BucketCache]],
     ):
-        self._max_rows = options.get("max_rows", 10000)
-        if url is None:
+        if url is None or url == "":
             url = get_url_pi()
         if auth is None:
             auth = get_auth_pi()
@@ -763,7 +787,7 @@ class PIHandlerWeb(BaseHandlerWeb):
             auth=auth,
             verify_ssl=verify_ssl,
         )
-        self._max_rows = options.get("max_rows", 10000)
+        self.max_rows = int(options.get("max_rows", 10000))
         self.web_id_cache = cache
 
     @staticmethod
@@ -899,7 +923,7 @@ class PIHandlerWeb(BaseHandlerWeb):
                 params["selectedFields"] += ";Good;Questionable;Substituted"
 
         if read_type == ReaderType.RAW:
-            params["maxCount"] = self._max_rows
+            params["maxCount"] = self.max_rows
 
         return url, params
 
