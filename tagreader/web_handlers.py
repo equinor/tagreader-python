@@ -127,9 +127,9 @@ def list_aspenone_sources(
         return _fetch_aspenone_sources(url, auth, verify_ssl)
 
     if url not in _aspenone_sources_cache:
-        _aspenone_sources_cache[url] = _fetch_aspenone_sources(
-            url, get_auth_aspen(), verify_ssl
-        )
+        url_sources = _fetch_aspenone_sources(url, get_auth_aspen(), verify_ssl)
+        if len(url_sources) > 0:
+            _aspenone_sources_cache[url] = url_sources
     return _aspenone_sources_cache[url]
 
 
@@ -173,9 +173,9 @@ def list_piwebapi_sources(
         return _fetch_piwebapi_sources(url, auth, verify_ssl)
 
     if url not in _piwebapi_sources_cache:
-        _piwebapi_sources_cache[url] = _fetch_piwebapi_sources(
-            url, get_auth_pi(), verify_ssl
-        )
+        url_sources = _fetch_piwebapi_sources(url, get_auth_pi(), verify_ssl)
+        if len(url_sources) > 0:
+            _piwebapi_sources_cache[url] = url_sources
     return _piwebapi_sources_cache[url]
 
 
