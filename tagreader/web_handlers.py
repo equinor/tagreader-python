@@ -882,7 +882,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         query = " AND ".join(q)
         params = {"query": f"{query}"}
 
-        if datasource is not None:
+        if isinstance(datasource, str) and len(datasource) > 0:
             params["dataserverwebid"] = (
                 f"{get_piwebapi_source_to_webid_dict(auth=auth)[datasource]}"
             )
