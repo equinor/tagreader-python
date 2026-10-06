@@ -255,7 +255,7 @@ class BaseHandlerWeb(ABC):
     def fetch(
         self,
         url,
-        params: Optional[Union[str, Dict[str, str]]] = None,
+        params: Optional[Union[bytes, str, Dict[str, str]]] = None,
         timeout: Optional[int] = None,
         use_post: bool = False,
     ) -> Dict:
@@ -268,15 +268,16 @@ class BaseHandlerWeb(ABC):
                 headers["Content-Type"] = (
                     "application/x-www-form-urlencoded; charset=utf-8"
                 )
-            elif params is not None:
+            elif isinstance(params, str) and params is not None:
                 params = params.encode("utf-8")
                 headers["Content-Type"] = "text/xml; charset=utf-8"
-                res = self.session.post(
-                    url,
-                    data=params,
-                    headers=headers,
-                    timeout=(None, timeout),
-                )
+
+            res = self.session.post(
+                url,
+                data=params,
+                headers=headers,
+                timeout=(None, timeout),
+            )
         else:
             res = self.session.get(
                 url,
