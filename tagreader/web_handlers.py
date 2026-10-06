@@ -748,9 +748,9 @@ class AspenHandlerWeb(BaseHandlerWeb):
         datasource: Optional[str] = None,
         max_rows: int = 100000,
     ) -> str:
-        if connection_string is None and datasource is None:
+        if not connection_string and not datasource:
             raise ValueError("Either connection_string or datasource must be provided")
-        if connection_string is not None:
+        if connection_string:
             connection_string = (
                 f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">'
             )
