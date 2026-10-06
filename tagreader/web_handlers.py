@@ -510,7 +510,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_maps(self, tagname: str):
         params = self.generate_get_map_query(tagname)
         url = urljoin(self.base_url, "TagInfo")
-        data = self.fetch(url, params=params)
+        data = self.fetch(url, params=params, use_post=not tagname.isascii())
 
         if "tags" not in data["data"]:
             return {}
@@ -599,7 +599,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_tag_unit(self, tag: str):
         query = self.generate_get_unit_query(tag)
         url = urljoin(self.base_url, "TagInfo")
-        data = self.fetch(url, params=query)
+        data = self.fetch(url, params=query, use_post=not tag.isascii())
         # try:
         attr_data = data["data"]["tags"][0]["attrData"]
         # except KeyError as e:
@@ -634,7 +634,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         query = self.generate_get_description_query(tag)
         url = urljoin(self.base_url, "TagInfo")
         try:
-            data = self.fetch(url, params=query)
+            data = self.fetch(url, params=query, use_post=not tag.isascii())
             desc = data["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
         # except KeyError:
         #     desc = ""
@@ -682,6 +682,11 @@ class AspenHandlerWeb(BaseHandlerWeb):
             end = min(end, start + sample_time * (self.max_rows - 1))
 
         tag_name, map_name = self.split_tagmap(tag)
+        if tag_name is None:
+            tag_name = ""
+        if map_name is None:
+            map_name = ""
+        # Could probably check here if tag_name or map_name contains non_ascii, and set use_post
 
         params = self.generate_read_query(
             tagname=tag_name,
@@ -693,6 +698,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
             metadata={},
         )
 
+        # Consider use_post = use_post or not tag.isascii()
         data = self.fetch(url, params=params, use_post=use_post)
 
         if len(data) == 0:  # Normally for timestamps in future

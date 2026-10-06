@@ -79,8 +79,20 @@ def test_aspen_non_ascii() -> None:
         auth=get_auth_aspen(use_internal=False),
         url=get_url_aspen(use_internal=False),
     )
+    # Searching is currently not stable, therefore doing partial search with wildcard
     matches = client.search(tag="GRA-Fakkelm*", desc=None, return_desc=False)
     assert non_ascii_tag in matches
+
+    unit = client.get_units(non_ascii_tag)
+    assert isinstance(unit, dict)
+    assert isinstance(unit[non_ascii_tag], str)
+
+    desc = client.get_descriptions(non_ascii_tag)
+    assert isinstance(desc, dict)
+    assert isinstance(desc[non_ascii_tag], str)
+
+    maps = client.handler._get_maps(non_ascii_tag)
+    assert isinstance(maps, dict)
 
     data = client.read(
         tags=non_ascii_tag, start_time=START_TIME, end_time=STOP_TIME, ts=SAMPLE_TIME
