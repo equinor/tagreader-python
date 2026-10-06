@@ -159,8 +159,8 @@ def get_handler(
 
     if imstype == IMSType.PIWEBAPI:
         return PIHandlerWeb(
-            url=url,
             datasource=datasource,
+            url=url,
             options=options,
             verify_ssl=verify_ssl,
             auth=auth,

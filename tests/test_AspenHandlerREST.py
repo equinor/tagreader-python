@@ -1,4 +1,5 @@
 from datetime import timedelta
+from inspect import signature
 from typing import Generator, Optional
 
 import pytest
@@ -248,9 +249,8 @@ def test_generate_read_query_long_sample_time(aspen_handler: AspenHandlerWeb) ->
 
 def test_generate_sql_query(aspen_handler: AspenHandlerWeb) -> None:
     res = aspen_handler.generate_sql_query(
-        datasource=None,
-        connection_string="my_connection_stringing",
         query="myquery",
+        connection_string="my_connection_stringing",
         max_rows=9999,
     )
     expected = (
@@ -259,10 +259,9 @@ def test_generate_sql_query(aspen_handler: AspenHandlerWeb) -> None:
     )
     assert res == expected
     res = aspen_handler.generate_sql_query(
-        datasource="mydatasource",
         query="myquery",
+        datasource="mydatasource",
         max_rows=9999,
-        connection_string=None,
     )
     expected = (
         '<SQL t="SQLplus" ds="mydatasource" '
@@ -271,3 +270,8 @@ def test_generate_sql_query(aspen_handler: AspenHandlerWeb) -> None:
         "<![CDATA[myquery]]></SQL>"
     )
     assert res == expected
+
+
+def test_generate_sql_query_requires_query() -> None:
+    with pytest.raises(TypeError, match="query"):
+        signature(AspenHandlerWeb.generate_sql_query).bind(datasource="source_name")
