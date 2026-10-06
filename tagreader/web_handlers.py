@@ -755,10 +755,6 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">'
             )
         else:
-            if not datasource:
-                raise ValueError(
-                    "Datasource must be provided if connection_string is None."
-                )
             connection_string = (
                 f'<SQL t="SQLplus" ds="{datasource}" '
                 'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
