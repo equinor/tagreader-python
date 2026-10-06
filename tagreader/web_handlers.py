@@ -255,16 +255,28 @@ class BaseHandlerWeb(ABC):
     def fetch(
         self,
         url,
-        params: Optional[Union[str, Dict[str, str]]] = None,
+        params: Optional[Union[bytes, str, Dict[str, str]]] = None,
         json_str: Optional[str] = None,
         timeout: Optional[int] = None,
+        use_post: bool = False,
     ) -> Dict:
+        if use_post:
+            headers = {}
+            if isinstance(params, dict):
+                params = urllib.parse.urlencode(
+                    params, safe="*", quote_via=urllib.parse.quote
+                ).encode("utf-8")
+                headers["Content-Type"] = (
+                    "application/x-www-form-urlencoded; charset=utf-8"
+                )
+            elif isinstance(params, str):
+                params = params.encode("utf-8")
+                headers["Content-Type"] = "text/xml; charset=utf-8"
 
-        if isinstance(params, str):
             res = self.session.post(
                 url,
-                data=params.encode("utf-8"),
-                headers={"Content-Type": "text/xml; charset=utf-8"},
+                data=params,
+                headers=headers,
                 timeout=(None, timeout),
             )
         else:
@@ -274,6 +286,7 @@ class BaseHandlerWeb(ABC):
                 json=json_str,
                 timeout=(None, timeout),
             )  # Noqa. Read timeout, No connect timeout.
+
         res.raise_for_status()
 
         if len(res.text) == 0:
@@ -506,7 +519,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_maps(self, tagname: str):
         params = self.generate_get_map_query(tagname)
         url = urljoin(self.base_url, "TagInfo")
-        data = self.fetch(url, params=params)
+        data = self.fetch(url, params=params, use_post=not tagname.isascii())
 
         if "tags" not in data["data"]:
             return {}
@@ -593,7 +606,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
     def _get_tag_unit(self, tag: str):
         query = self.generate_get_unit_query(tag)
         url = urljoin(self.base_url, "TagInfo")
-        data = self.fetch(url, params=query)
+        data = self.fetch(url, params=query, use_post=not tag.isascii())
         # try:
         attr_data = data["data"]["tags"][0]["attrData"]
         # except KeyError as e:
@@ -628,7 +641,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         query = self.generate_get_description_query(tag)
         url = urljoin(self.base_url, "TagInfo")
         try:
-            data = self.fetch(url, params=query)
+            data = self.fetch(url, params=query, use_post=not tag.isascii())
             desc = data["data"]["tags"][0]["attrData"][0]["samples"][0]["v"]
         # except KeyError:
         #     desc = ""
@@ -645,6 +658,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
         get_status: bool = False,
+        use_post: bool = False,
     ):
         if read_type not in [
             ReaderType.INT,
@@ -675,6 +689,11 @@ class AspenHandlerWeb(BaseHandlerWeb):
             end = min(end, start + sample_time * (self.max_rows - 1))
 
         tag_name, map_name = self.split_tagmap(tag)
+        if tag_name is None:
+            tag_name = ""
+        if map_name is None:
+            map_name = ""
+        # Could probably check here if tag_name or map_name contains non_ascii, and set use_post
 
         if tag_name is not None:
             params = self.generate_read_query(
@@ -687,7 +706,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 metadata={},
             )
 
-            data = self.fetch(url, params=params)
+            # Consider use_post = use_post or not tag.isascii()
+            data = self.fetch(url, params=params, use_post=use_post)
         else:
             data = {}
 
@@ -695,9 +715,22 @@ class AspenHandlerWeb(BaseHandlerWeb):
             return pd.DataFrame(columns=[tag])
 
         if "er" in data["data"][0]["samples"][0]:
+            if not use_post and data["data"][0]["samples"][0]["er"] == 5:
+                return self.read_tag(
+                    tag=tag,
+                    start=start,
+                    end=end,
+                    sample_time=sample_time,
+                    read_type=read_type,
+                    metadata=metadata,
+                    get_status=get_status,
+                    use_post=True,
+                )
+
             logger.warning(
                 f"API error for {tag}: {data['data'][0]['samples'][0]['es']} params: {params}"
             )
+
             return pd.DataFrame(columns=[tag])
         if get_status:
             # The "l" field maps 1:1 to ODBC status field values 0, 1, 2, 4, 5, 6
