@@ -256,7 +256,6 @@ class BaseHandlerWeb(ABC):
         self,
         url,
         params: Optional[Union[bytes, str, Dict[str, str]]] = None,
-        json_str: Optional[str] = None,
         timeout: Optional[int] = None,
         use_post: bool = False,
     ) -> Dict:
@@ -283,7 +282,6 @@ class BaseHandlerWeb(ABC):
             res = self.session.get(
                 url,
                 params=params,
-                json=json_str,
                 timeout=(None, timeout),
             )  # Noqa. Read timeout, No connect timeout.
 
@@ -307,11 +305,11 @@ class BaseHandlerWeb(ABC):
             txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
             return json.loads(txt)
 
-    def post(self, url, json=None, headers=None) -> requests.Response:
+    def post(self, url, json_str=None, headers=None) -> requests.Response:
         if not self.session.verify:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-        res = self.session.post(url, json=json, headers=headers)
+        res = self.session.post(url, json=json_str, headers=headers)
         res.raise_for_status()
         return res
 
@@ -1202,7 +1200,6 @@ class PIHandlerWeb(BaseHandlerWeb):
         metadata: Optional[Dict[str, str]] = None,
         get_status: bool = False,
     ):
-
         if len(tag_list) > 950:
             raise RuntimeError(
                 f"ERROR: Trying to read too many tags ({len(tag_list)}). Server will return a HTTP 429 Too Many "
@@ -1210,7 +1207,6 @@ class PIHandlerWeb(BaseHandlerWeb):
             )
 
         urls = {}
-
         for tag in tag_list:
             for interval in tag_list[tag]:
                 _, params = self.generate_read_query(
@@ -1218,7 +1214,7 @@ class PIHandlerWeb(BaseHandlerWeb):
                     end=tag_list[tag][interval]["stop_time"],
                     sample_time=sample_time,
                     read_type=read_type,
-                    tag=None,
+                    tag=tag,
                     metadata=metadata,
                     get_status=get_status,
                 )
@@ -1238,30 +1234,22 @@ class PIHandlerWeb(BaseHandlerWeb):
                 }.get(read_type, "summary")
 
                 url = f"streams/{webid}/{get_action}"
-
                 url = urljoin(self.base_url, f"{url}{query_filter}")
-
                 urls[tag] = {"Method": "Get", "Resource": url}
 
         headers = {"Content-Type": "Application/json", "X-Requested-With": ""}
-
-        res = self.post(url=self.base_url + "/batch", json=urls, headers=headers)
-
-        j = res.json()
+        res = self.post(url=self.base_url + "/batch", json_str=urls, headers=headers)
 
         df = pd.DataFrame()
-
         data = {}
-
+        j = res.json()
         for tag in j:
             timestamps = []
-
             data[tag] = []
             if get_status:
                 data[f"{tag}::status"] = []
 
             if read_type == ReaderType.SNAPSHOT:
-
                 if isinstance(j[tag]["Content"]["Value"], float):
                     data[tag].append(j[tag]["Content"]["Value"])
                 else:

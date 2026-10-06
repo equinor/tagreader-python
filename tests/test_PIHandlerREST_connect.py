@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from typing import Generator
 
+import pandas as pd
 import pytest
 
 from tagreader.cache import SmartCache
@@ -180,6 +181,33 @@ def test_read(client: IMSClient, read_type: str, size: int) -> None:
         assert df.shape == (size, 1) or df.shape == (size - 1, 1)
         assert df.index[0] >= ensure_datetime_with_tz(START_TIME)
         assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
+
+
+def test_multi_read_tags(client: IMSClient) -> None:
+    tags = [TAGS["Float32"], "SINUSOID"]
+    result = client.multi_read_tags(
+        tags=tags,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.INT,
+    )
+    expected = client.read(
+        tags=tags,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.INT,
+    )
+
+    assert result.shape == (61, 2)
+    assert list(result.columns) == tags
+    assert result.notna().any().all()
+    assert result.index.is_unique
+    assert result.index.is_monotonic_increasing
+    pd.testing.assert_frame_equal(
+        result, expected, check_dtype=False, check_names=False, check_freq=False
+    )
 
 
 def test_read_with_status(client: IMSClient) -> None:

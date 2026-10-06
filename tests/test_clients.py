@@ -3,7 +3,9 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 import pytest
+from requests.auth import AuthBase
 
+from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
 from tagreader.utils import IMSType, ReaderType
 
@@ -11,6 +13,51 @@ from tagreader.utils import IMSType, ReaderType
 def test_init_client_without_cache() -> None:
     client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
     assert not client.cache
+
+
+def test_multi_read_tags_smartcache_hits(cache: SmartCache) -> None:
+    tags = ["tag1", "tag2"]
+    sample_time = timedelta(seconds=60)
+    cached_data = pd.DataFrame(
+        {"tag1": [1.0, 2.0, 3.0, 4.0], "tag2": [5.0, 6.0, 7.0, 8.0]},
+        index=pd.date_range("2020-04-01 09:05:00", periods=4, freq="60s", tz="UTC"),
+    )
+    for tag in tags:
+        cache.store(
+            df=cached_data[[tag]],
+            tagname=tag,
+            read_type=ReaderType.INT,
+            ts=sample_time,
+            get_status=False,
+        )
+        cache[tag] = f"cached-webid-{tag}"
+
+    client = IMSClient(
+        datasource="cache-test",
+        imstype=IMSType.PIWEBAPI,
+        url="cache-only://pi",
+        auth=AuthBase(),
+        verify_ssl=True,
+        cache=cache,
+        tz="Europe/Oslo",
+    )
+    cache.enable_cache_statistics()
+    cache.stats(reset=True)
+    expected = cached_data.tz_convert(client.tz)
+
+    try:
+        for read_number in (1, 2):
+            result = client.multi_read_tags(
+                tags=tags,
+                start_time=expected.index[0],
+                end_time=expected.index[-1],
+                ts=60,
+                read_type=ReaderType.INT,
+            )
+            pd.testing.assert_frame_equal(result, expected, check_dtype=False)
+            assert cache.stats() == (len(tags) * read_number, 0)
+    finally:
+        client.handler.session.close()
 
 
 def test_init_client_with_tzinfo() -> None:

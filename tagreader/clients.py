@@ -405,8 +405,8 @@ class IMSClient:
             df = pd.DataFrame(
                 columns=tag_list,
                 index=pd.date_range(
-                    start_time.tz_convert("UTC"),
-                    stop_time.tz_convert("UTC"),
+                    start_time.astimezone(timezone.utc),
+                    stop_time.astimezone(timezone.utc),
                     freq=pd.Timedelta(ts),
                 ),
             )
@@ -470,14 +470,13 @@ class IMSClient:
             df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
 
         else:
-
             missing_data = {}
 
             df = pd.DataFrame(
                 columns=tag_list,
                 index=pd.date_range(
-                    stop_time.tz_convert("UTC"),
-                    stop_time.tz_convert("UTC"),
+                    start_time.astimezone(timezone.utc),
+                    stop_time.astimezone(timezone.utc),
                     freq=pd.Timedelta(ts),
                 ),
             )
