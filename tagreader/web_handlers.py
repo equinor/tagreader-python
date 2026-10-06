@@ -268,7 +268,7 @@ class BaseHandlerWeb(ABC):
                 headers["Content-Type"] = (
                     "application/x-www-form-urlencoded; charset=utf-8"
                 )
-            elif isinstance(params, str) and params is not None:
+            elif isinstance(params, str):
                 params = params.encode("utf-8")
                 headers["Content-Type"] = "text/xml; charset=utf-8"
 
