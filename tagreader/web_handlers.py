@@ -257,21 +257,36 @@ class BaseHandlerWeb(ABC):
         url,
         params: Optional[Union[str, Dict[str, str]]] = None,
         timeout: Optional[int] = None,
+        use_post: bool = False,
     ) -> Dict:
-
-        if isinstance(params, str):
-            res = self.session.post(
-                url,
-                data=params.encode("utf-8"),
-                headers={"Content-Type": "text/xml; charset=utf-8"},
-                timeout=(None, timeout),
-            )
+        if use_post:
+            headers = {}
+            if isinstance(params, dict):
+                params = urllib.parse.urlencode(
+                    params, safe="*", quote_via=urllib.parse.quote
+                ).encode("utf-8")
+                headers["Content-Type"] = (
+                    "application/x-www-form-urlencoded; charset=utf-8"
+                )
+            elif params is not None:
+                params = params.encode("utf-8")
+                headers["Content-Type"] = "text/xml; charset=utf-8"
+                res = self.session.post(
+                    url,
+                    data=params,
+                    headers=headers,
+                    timeout=(None, timeout),
+                )
         else:
             res = self.session.get(
                 url,
                 params=params,
-                timeout=(None, timeout),
+                timeout=(
+                    None,
+                    timeout,
+                ),
             )  # Noqa. Read timeout, No connect timeout.
+
         res.raise_for_status()
 
         if len(res.text) == 0:
@@ -635,6 +650,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
         get_status: bool = False,
+        use_post: bool = False,
     ):
         if read_type not in [
             ReaderType.INT,
@@ -676,15 +692,28 @@ class AspenHandlerWeb(BaseHandlerWeb):
             metadata={},
         )
 
-        data = self.fetch(url, params=params)
+        data = self.fetch(url, params=params, use_post=use_post)
 
         if len(data) == 0:  # Normally for timestamps in future
             return pd.DataFrame(columns=[tag])
 
         if "er" in data["data"][0]["samples"][0]:
+            if not use_post and data["data"][0]["samples"][0]["er"] == 5:
+                return self.read_tag(
+                    tag=tag,
+                    start=start,
+                    end=end,
+                    sample_time=sample_time,
+                    read_type=read_type,
+                    metadata=metadata,
+                    get_status=get_status,
+                    use_post=True,
+                )
+
             logger.warning(
                 f"API error for {tag}: {data['data'][0]['samples'][0]['es']} params: {params}"
             )
+
             return pd.DataFrame(columns=[tag])
         if get_status:
             # The "l" field maps 1:1 to ODBC status field values 0, 1, 2, 4, 5, 6

@@ -71,6 +71,23 @@ def test_list_all_aspen_one_sources() -> None:
         assert 3 <= len(r) <= 20
 
 
+def test_aspen_non_ascii() -> None:
+    non_ascii_tag = "GRA-Fakkelmål"
+    client = IMSClient(
+        datasource="GRA",
+        verify_ssl=False,
+        auth=get_auth_aspen(use_internal=False),
+        url=get_url_aspen(use_internal=False),
+    )
+    matches = client.search(tag="GRA-Fakkelm*", desc=None, return_desc=False)
+    assert non_ascii_tag in matches
+
+    data = client.read(
+        tags=non_ascii_tag, start_time=START_TIME, end_time=STOP_TIME, ts=SAMPLE_TIME
+    )
+    assert not data.empty
+
+
 def test_list_aspenone_sources_uses_cache() -> None:
     url = "http://127.0.0.1:1/aspen-cache-test"
     cached_sources = ["cached-source"]
