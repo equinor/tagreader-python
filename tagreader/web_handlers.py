@@ -362,6 +362,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
     ) -> Dict[str, Any]:
         if not datasource:
             raise ValueError("Data source is required argument")
+
         # Aspen Web API expects single space instead of consecutive spaces.
         tag = " ".join(tag.split())
         params = {"datasource": datasource, "tag": tag, "max": max, "getTrendable": 0}
@@ -548,16 +549,12 @@ class AspenHandlerWeb(BaseHandlerWeb):
     ) -> Union[List[Tuple[str, str]], List[str]]:
         ret = []
 
-        if tag is None:
-            if desc is None:
-                raise ValueError("Tag is a required argument")
-            # return ret
-            elif len(desc) == 0:
-                raise ValueError("Tag is a required argument")
-            # return ret
-        elif desc is None and len(tag) == 0:
-            raise ValueError("Tag is a required argument")
-            # return ret
+        # Currently not possible to search only using description.
+        if not tag:
+            raise ValueError("Input tag is a required argument")
+
+        if not tag and not desc:
+            raise ValueError("Either tag or desc must be provided.")
 
         tag = tag.replace("%", "*") if isinstance(tag, str) else None
         # Prepare for regex
@@ -690,11 +687,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
             end = min(end, start + sample_time * (self.max_rows - 1))
 
         tag_name, map_name = self.split_tagmap(tag)
-        if tag_name is None:
-            tag_name = ""
+        if tag_name is None or len(tag_name) == 0:
+            raise ValueError(f"Input tag: {tag} returns no tag_name. Invalid input.")
         if map_name is None:
             map_name = ""
-        # Could probably check here if tag_name or map_name contains non_ascii, and set use_post
 
         if tag_name is not None:
             params = self.generate_read_query(
