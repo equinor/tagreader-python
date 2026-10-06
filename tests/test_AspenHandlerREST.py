@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Generator, Optional
 
 import pytest
 
@@ -10,7 +11,7 @@ SAMPLE_TIME = timedelta(seconds=60)
 
 
 @pytest.fixture  # type: ignore[misc]
-def aspen_handler() -> AspenHandlerWeb:  # type: ignore[misc]
+def aspen_handler() -> Generator[AspenHandlerWeb, None, None]:
     h = AspenHandlerWeb(
         datasource="source_name", auth=None, options={}, url=None, verify_ssl=None
     )
@@ -39,6 +40,44 @@ def test_generate_search_query() -> None:
     assert AspenHandlerWeb.generate_search_query(
         tag="ATCAI", datasource="source_name", desc=None
     ) == {"datasource": "source_name", "tag": "ATCAI", "max": 100000, "getTrendable": 0}
+
+
+@pytest.mark.parametrize(  # type: ignore[misc]
+    ("tag", "desc", "message"),
+    [
+        (None, None, "Input tag is a required argument"),
+        (None, "", "Input tag is a required argument"),
+        (None, "Sine Input", "Input tag is a required argument"),
+        ("", None, "Either tag or desc must be provided."),
+        ("", "", "Either tag or desc must be provided."),
+    ],
+)
+def test_search_requires_tag(
+    aspen_handler: AspenHandlerWeb,
+    tag: Optional[str],
+    desc: Optional[str],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError) as error:
+        aspen_handler.search(tag=tag, desc=desc)
+    assert str(error.value) == message
+
+
+@pytest.mark.parametrize("tag", ["", ";IP_ANALOGMAP"])  # type: ignore[misc]
+def test_read_tag_rejects_empty_tag_name(
+    aspen_handler: AspenHandlerWeb, tag: str
+) -> None:
+    start = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")
+    with pytest.raises(ValueError) as error:
+        aspen_handler.read_tag(
+            tag=tag,
+            start=start,
+            end=start + SAMPLE_TIME,
+            sample_time=SAMPLE_TIME,
+            read_type=ReaderType.INT,
+            metadata={},
+        )
+    assert str(error.value) == (f"Input tag: {tag} returns no tag_name. Invalid input.")
 
 
 def test_split_tagmap() -> None:
