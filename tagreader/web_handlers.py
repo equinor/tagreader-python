@@ -753,6 +753,9 @@ class AspenHandlerWeb(BaseHandlerWeb):
         datasource: Optional[str] = None,
         max_rows: int = 100000,
     ) -> str:
+        if not query:
+            raise ValueError("Query must not be empty")
+
         if not connection_string and not datasource:
             raise ValueError("Either connection_string or datasource must be provided")
         if connection_string:
@@ -765,14 +768,9 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 'dso="CHARINT=N;CHARFLOAT=N;CHARTIME=N;CONVERTERRORS=N" '
                 f'm="{max_rows}" to="30" s="1">'
             )
-        if query is None:
-            query = ""
-
         # Replace new lines and tabs that are typical in formatted SQL queries with spaces.
         query = query.replace("\t", " ").replace("\n", " ")
-
         # Need a solution to LIKE comments. These have a % symbol in the query that does not seem to pass through the request
-
         connection_string += f"<![CDATA[{query}]]></SQL>"
         return connection_string
 
