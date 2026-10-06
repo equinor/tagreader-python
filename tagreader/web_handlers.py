@@ -1206,33 +1206,23 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         urls = {}
         for tag in tag_list:
+            web_id = self.tag_to_web_id(tag)
+            if not web_id:
+                return pd.DataFrame()
+
             for interval in tag_list[tag]:
-                _, params = self.generate_read_query(
+                url, params = self.generate_read_query(
+                    tag=web_id,
                     start=tag_list[tag][interval]["start_time"],
                     end=tag_list[tag][interval]["stop_time"],
                     sample_time=sample_time,
                     read_type=read_type,
-                    tag=tag,
                     metadata=metadata,
                     get_status=get_status,
                 )
 
-                query_filter = self.create_filter(params)
-
-                webid = self.tag_to_web_id(tag)
-
-                if not webid:
-                    return pd.DataFrame()
-
-                get_action = {
-                    ReaderType.INT: "interpolated",
-                    ReaderType.RAW: "recorded",
-                    ReaderType.SNAPSHOT: "value",
-                    ReaderType.SHAPEPRESERVING: "plot",
-                }.get(read_type, "summary")
-
-                url = f"streams/{webid}/{get_action}"
-                url = urljoin(self.base_url, f"{url}{query_filter}")
+                query = urllib.parse.urlencode(params)
+                url = f"{urljoin(self.base_url, url)}?{query}"
                 urls[tag] = {"Method": "Get", "Resource": url}
 
         headers = {"Content-Type": "Application/json", "X-Requested-With": ""}
@@ -1265,7 +1255,6 @@ class PIHandlerWeb(BaseHandlerWeb):
                 df = pd.concat([df, df_tag], axis=1)
                 data = {}
                 timestamps = []
-
             elif read_type in [
                 ReaderType.INT,
                 ReaderType.INTERPOLATED,
@@ -1273,7 +1262,6 @@ class PIHandlerWeb(BaseHandlerWeb):
                 ReaderType.RAW,
             ]:
                 for item in j[tag]["Content"]["Items"]:
-
                     if isinstance(item["Value"], float):
                         data[tag].append(item["Value"])
                     else:
@@ -1292,7 +1280,6 @@ class PIHandlerWeb(BaseHandlerWeb):
                 df = pd.concat([df, df_tag], axis=1)
                 data = {}
                 timestamps = []
-
             else:
                 for item in j[tag]["Content"]["Items"]:
                     if isinstance(item["Value"]["Value"], float):
@@ -1329,7 +1316,6 @@ class PIHandlerWeb(BaseHandlerWeb):
                 df.index = pd.to_datetime(
                     df.index, format="%Y-%m-%dT%H:%M:%SZ", utc=True
                 )
-
         except ValueError:
             df.index = pd.to_datetime(df.index, utc=True)
 
@@ -1342,9 +1328,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         # all the other summaries stamp start of interval by shifting all timestamps
         # one interval down.
         if read_type == ReaderType.MAX:
-            import pytz
-
-            min_start_time = datetime.now().astimezone(pytz.utc)
+            min_start_time = datetime.now(timezone.utc)
             for tag in tag_list:
                 for interval in tag_list[tag]:
                     if tag_list[tag][interval]["start_time"] < min_start_time:
@@ -1356,53 +1340,3 @@ class PIHandlerWeb(BaseHandlerWeb):
 
     def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
         raise NotImplementedError
-
-    def create_filter(self, params):
-        """
-        Creates URL filter from parameters. Returns a string that will be appended to the request URL.
-
-        :param params:
-        :return:
-        """
-        filter_list = []
-        if "interval" in params.keys():
-            filter_list.append(f"interval={params['interval']}")
-
-        if "summaryType" in params.keys():
-            filter_list.append(f"summaryType={params['summaryType']}")
-
-        if "startTime" in params.keys():
-            url_start_time_ = self.date_to_urldate(params["startTime"])
-            filter_list.append(f"starttime={url_start_time_}")
-
-        if "endTime" in params.keys():
-            url_stop_time = self.date_to_urldate(params["endTime"])
-            filter_list.append(f"endtime={url_stop_time}")
-
-        n = 0
-        if filter_list:
-            for filters in filter_list:
-                if n == 0:
-                    filter = f"?{filters}"
-                else:
-                    filter = f"{filter}&{filters}"
-                n += 1
-        else:
-            filter = ""
-
-        return filter
-
-    def date_to_urldate(self, date):
-        """
-        Converts timestamp to url date format.
-
-        :param date: Date and time in timestamp format
-        :return:
-        """
-
-        d = date.split("-")[0]
-        m = datetime.strptime(date.split("-")[1], "%b").month
-        y = date.split("-")[2][:2]
-        t = date.split(" ")[1]
-
-        return f"20{y}-{m}-{d}T{t}Z"

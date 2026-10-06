@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone, tzinfo
 from itertools import groupby
 from operator import itemgetter
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import numpy as np
@@ -464,7 +464,11 @@ class IMSClient:
                 if cache is not None and not get_status:
                     for column in missing_df:
                         cache.store(
-                            df=missing_df[column].to_frame(), readtype=read_type, ts=ts
+                            df=missing_df[column].to_frame(),
+                            tagname=cast(str, column),
+                            read_type=read_type,
+                            ts=ts,
+                            get_status=get_status,
                         )
 
             df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
@@ -507,7 +511,6 @@ class IMSClient:
 
                 if not missing_data:
                     return df.tz_convert(self.tz).sort_index()
-
             else:
                 for tag in tag_list:
                     missing_data[tag] = {}
