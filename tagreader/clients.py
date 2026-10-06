@@ -161,9 +161,9 @@ def get_handler(
         return PIHandlerWeb(
             datasource=datasource,
             url=url,
-            options=options,
-            verify_ssl=verify_ssl,
             auth=auth,
+            verify_ssl=verify_ssl,
+            options=options,
             cache=cache,
         )
 

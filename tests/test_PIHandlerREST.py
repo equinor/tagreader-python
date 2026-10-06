@@ -16,10 +16,10 @@ SAMPLE_TIME = 60
 def pi_handler(cache: SmartCache) -> Generator[PIHandlerWeb, None, None]:
     h = PIHandlerWeb(
         datasource="sourcename",
-        auth=None,
-        options={},
         url=None,
+        auth=None,
         verify_ssl=True,
+        options={},
         cache=cache,
     )
     if not isinstance(h.web_id_cache, SmartCache):
