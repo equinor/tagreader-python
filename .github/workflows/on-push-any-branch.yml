@@ -1,5 +1,8 @@
 name: '✨ On push to any branch'
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
@@ -12,11 +15,6 @@ jobs:
   lint:
     name: '💎 Code Quality'
     uses: ./.github/workflows/lint.yml
-
-  snyk:
-    name: '️‍🕵️‍♀️ Snyk vulnerability scan'
-    uses: ./.github/workflows/snyk.yml
-    secrets: inherit
 
   test:
     name: '🧪 Build & test Code'

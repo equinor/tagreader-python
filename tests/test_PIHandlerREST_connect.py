@@ -7,7 +7,12 @@ import pytest
 from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
-from tagreader.web_handlers import PIHandlerWeb, get_verify_ssl, list_piwebapi_sources
+from tagreader.web_handlers import (
+    PIHandlerWeb,
+    _piwebapi_sources_cache,
+    get_verify_ssl,
+    list_piwebapi_sources,
+)
 
 is_GITHUBACTION = "GITHUB_ACTION" in os.environ
 is_AZUREPIPELINE = "TF_BUILD" in os.environ
@@ -17,7 +22,7 @@ if is_GITHUBACTION:
         "All tests in module require connection to PI server", allow_module_level=True
     )
 
-verifySSL = False if is_AZUREPIPELINE else get_verify_ssl()
+verify_ssl = False if is_AZUREPIPELINE else get_verify_ssl()
 
 SOURCE = "PIMAM"
 TAGS = {
@@ -35,8 +40,7 @@ SAMPLE_TIME = 60
 def client() -> Generator[IMSClient, None, None]:
     c = IMSClient(
         datasource=SOURCE,
-        imstype="piwebapi",
-        verifySSL=bool(verifySSL),
+        verify_ssl=bool(verify_ssl),
     )
     c.cache = None
     c.connect()
@@ -50,7 +54,7 @@ def client() -> Generator[IMSClient, None, None]:
 def pi_handler(cache: SmartCache) -> Generator[PIHandlerWeb, None, None]:
     h = PIHandlerWeb(
         datasource=SOURCE,
-        verify_ssl=bool(verifySSL),
+        verify_ssl=bool(verify_ssl),
         auth=None,
         options={},
         url=None,
@@ -63,7 +67,7 @@ def pi_handler(cache: SmartCache) -> Generator[PIHandlerWeb, None, None]:
 
 
 def test_list_all_piwebapi_sources() -> None:
-    res = list_piwebapi_sources(verify_ssl=bool(verifySSL), auth=None, url=None)
+    res = list_piwebapi_sources(verify_ssl=bool(verify_ssl), auth=None, url=None)
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:
@@ -71,8 +75,20 @@ def test_list_all_piwebapi_sources() -> None:
         assert 3 <= len(r)
 
 
+def test_list_piwebapi_sources_uses_cache() -> None:
+    url = "http://127.0.0.1:1/piwebapi-cache-test"
+    cached_sources = ["cached-source"]
+    _piwebapi_sources_cache[url] = cached_sources
+    try:
+        res = list_piwebapi_sources(url=url, auth=None)
+    finally:
+        _piwebapi_sources_cache.pop(url, None)
+
+    assert res == cached_sources
+
+
 def test_list_sources_piwebapi() -> None:
-    res = list_sources(imstype="piwebapi", verifySSL=bool(verifySSL))
+    res = list_sources(imstype="piwebapi", verify_ssl=bool(verify_ssl))
     assert isinstance(res, list)
     assert len(res) >= 1
     for r in res:

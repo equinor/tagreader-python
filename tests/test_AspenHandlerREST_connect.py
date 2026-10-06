@@ -9,6 +9,9 @@ from tagreader.clients import IMSClient, list_sources
 from tagreader.utils import IMSType
 from tagreader.web_handlers import (
     AspenHandlerWeb,
+    _aspenone_sources_cache,
+    get_auth_aspen,
+    get_url_aspen,
     get_verify_ssl,
     list_aspenone_sources,
 )
@@ -25,10 +28,10 @@ if is_GITHUB_ACTIONS:
 VERIFY_SSL = False if is_AZURE_PIPELINE else get_verify_ssl()
 
 SOURCE = "TRB"
-TAG = "xxx"
+TAG = "AverageCPUTimeVals"
 FAKE_TAG = "so_random_it_cant_exist"
-START_TIME = datetime(2023, 5, 1, 10, 0, 0)
-STOP_TIME = datetime(2023, 5, 1, 11, 0, 0)
+START_TIME = datetime(2025, 5, 1, 10, 0, 0)
+STOP_TIME = datetime(2025, 5, 1, 11, 0, 0)
 SAMPLE_TIME = timedelta(seconds=60)
 
 
@@ -36,8 +39,9 @@ SAMPLE_TIME = timedelta(seconds=60)
 def client() -> Generator[IMSClient, None, None]:
     c = IMSClient(
         datasource=SOURCE,
-        imstype="aspenone",
-        verifySSL=bool(VERIFY_SSL),
+        verify_ssl=bool(VERIFY_SSL),
+        auth=get_auth_aspen(use_internal=False),
+        url=get_url_aspen(use_internal=False),
     )
     c.cache = None
     c.connect()
@@ -49,7 +53,11 @@ def client() -> Generator[IMSClient, None, None]:
 @pytest.fixture  # type: ignore[misc]
 def aspen_handler() -> Generator[AspenHandlerWeb, None, None]:
     h = AspenHandlerWeb(
-        datasource=SOURCE, verify_ssl=bool(VERIFY_SSL), auth=None, url=None, options={}
+        datasource=SOURCE,
+        verify_ssl=bool(VERIFY_SSL),
+        auth=get_auth_aspen(use_internal=False),
+        url=get_url_aspen(use_internal=False),
+        options={},
     )
     yield h
 
@@ -63,8 +71,20 @@ def test_list_all_aspen_one_sources() -> None:
         assert 3 <= len(r) <= 20
 
 
+def test_list_aspenone_sources_uses_cache() -> None:
+    url = "http://127.0.0.1:1/aspen-cache-test"
+    cached_sources = ["cached-source"]
+    _aspenone_sources_cache[url] = cached_sources
+    try:
+        res = list_aspenone_sources(url=url, auth=None)
+    finally:
+        _aspenone_sources_cache.pop(url, None)
+
+    assert res == cached_sources
+
+
 def test_list_sources_aspen_one() -> None:
-    res = list_sources(imstype=IMSType.ASPENONE, verifySSL=bool(VERIFY_SSL))
+    res = list_sources(imstype=IMSType.ASPENONE, verify_ssl=bool(VERIFY_SSL))
     assert isinstance(res, list)
     assert len(res) >= 1
     assert isinstance(res[0], str)
@@ -81,8 +101,8 @@ def test_search_tag(client: IMSClient) -> None:
     res = client.search(tag=FAKE_TAG, desc=None)
     assert 0 == len(res)
 
-    res = client.search(tag="AverageCPUTimeVals", desc=None)
-    assert res == [("AverageCPUTimeVals", "Average CPU Time")]
+    res = client.search(tag=TAG, desc=None)
+    assert res == [(TAG, "Average CPU Time")]
 
     res = client.search(tag="Aspen*", desc=None, return_desc=False)
     assert len(res) < 5
@@ -99,8 +119,8 @@ def test_search_tag(client: IMSClient) -> None:
     res = client.search("AspenCalcTrigger1", desc=None)
     assert res == [("AspenCalcTrigger1", "")]
 
-    res = client.search("AverageCPUTimeVals", "*CPU*")
-    assert res == [("AverageCPUTimeVals", "Average CPU Time")]
+    res = client.search(TAG, "*CPU*")
+    assert res == [(TAG, "Average CPU Time")]
     with pytest.raises(ValueError):
         _ = client.search(desc="Sine Input")  # noqa
 
@@ -146,7 +166,7 @@ def test_query_sql(client: IMSClient) -> None:
     assert isinstance(res, pd.DataFrame)
     assert res.empty
 
-    query = "Select name, ip_description from ip_analogdef where name = 'AverageCPUTimeVals'"
+    query = f"Select name, ip_description from ip_analogdef where name = '{TAG}'"
     res = client.query_sql(query=query, parse=True)
     assert isinstance(res, pd.DataFrame)
     assert len(res.index.values) == 1

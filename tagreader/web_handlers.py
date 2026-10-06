@@ -3,14 +3,13 @@ import json
 import re
 import urllib.parse
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from hashlib import new as hashlib_new_method
 from json.decoder import JSONDecodeError
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import pytz
 import requests
 import urllib3
 from Crypto.Hash import MD4 as _MD4
@@ -42,12 +41,7 @@ def patched_hashlib_new(name, data=b"", usedforsecurity=True):
     if name.lower() == "md4":
         return MD4(data)
     else:
-        # Try / Catch easier than detecting python version
-        try:
-            return hashlib_new_method(name, data=data, usedforsecurity=usedforsecurity)
-        except TypeError:
-            # Required for python 3.8
-            return hashlib_new_method(name, data=data)
+        return hashlib_new_method(name, data=data, usedforsecurity=usedforsecurity)
 
 
 # Monkey-patch md4 in hashlib.new due to missing support for md4 in later releases of Python:
@@ -92,17 +86,11 @@ def get_url_aspen(use_internal: bool = True) -> str:
     return r"https://ewepwapa1pep04-statoilsrm.msappproxy.net/ProcessExplorer/ProcessData/AtProcessDataREST.dll"
 
 
-def list_aspenone_sources(
-    url: Optional[str] = None,
-    auth: Optional[Any] = None,
-    verify_ssl: Optional[Union[str, bool]] = True,
-) -> Union[None, List[str]]:
-    if url is None:
-        url = get_url_aspen()
-
-    if auth is None:
-        auth = get_auth_aspen()
-
+def _fetch_aspenone_sources(
+    url: str,
+    auth: Any,
+    verify_ssl: Optional[Union[bool, str]],
+) -> List[str]:
     if verify_ssl is None:
         verify_ssl = get_verify_ssl()
 
@@ -112,7 +100,7 @@ def list_aspenone_sources(
     url_ = urljoin(url, "DataSources")
     params = {"service": "ProcessData", "allQuotes": 1}
 
-    res = requests.get(url_, params=params, auth=auth, verify=verify_ssl)
+    res = requests.get(url_, params=params, auth=auth, verify=verify_ssl, timeout=300)
     res.raise_for_status()
     try:
         source_list = [r["n"] for r in res.json()["data"] if r["t"] == "IP21"]
@@ -120,18 +108,38 @@ def list_aspenone_sources(
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
 
+    return []
 
-def list_piwebapi_sources(
+
+# Keyed on url only so default-auth calls share the cache regardless of auth or verify_ssl.
+_aspenone_sources_cache: Dict[str, List[str]] = {}
+
+
+def list_aspenone_sources(
     url: Optional[str] = None,
     auth: Optional[Any] = None,
-    verify_ssl: Optional[Union[str, bool]] = True,
-) -> Union[None, List[str]]:
+    verify_ssl: Optional[Union[bool, str]] = True,
+) -> List[str]:
     if url is None:
-        url = get_url_pi()
+        url = get_url_aspen()
 
-    if auth is None:
-        auth = get_auth_pi()
+    if auth is not None:
+        return _fetch_aspenone_sources(url, auth, verify_ssl)
 
+    if url not in _aspenone_sources_cache:
+        url_sources = _fetch_aspenone_sources(url, get_auth_aspen(), verify_ssl)
+        if len(url_sources) > 0:
+            _aspenone_sources_cache[url] = url_sources
+        else:
+            return []
+    return list(_aspenone_sources_cache[url])
+
+
+def _fetch_piwebapi_sources(
+    url: str,
+    auth: Any,
+    verify_ssl: Optional[Union[bool, str]],
+) -> List[str]:
     if verify_ssl is None:
         verify_ssl = get_verify_ssl()
 
@@ -139,7 +147,7 @@ def list_piwebapi_sources(
         urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verify_ssl)
+    res = requests.get(url_, auth=auth, verify=verify_ssl, timeout=300)
 
     res.raise_for_status()
     try:
@@ -148,12 +156,36 @@ def list_piwebapi_sources(
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
 
+    return []
+
+
+# Keyed on url only so default-auth calls share the cache regardless of auth or verify_ssl.
+_piwebapi_sources_cache: Dict[str, List[str]] = {}
+
+
+def list_piwebapi_sources(
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verify_ssl: Optional[Union[bool, str]] = True,
+) -> List[str]:
+    if url is None:
+        url = get_url_pi()
+
+    if auth is not None:
+        return _fetch_piwebapi_sources(url, auth, verify_ssl)
+
+    if url not in _piwebapi_sources_cache:
+        url_sources = _fetch_piwebapi_sources(url, get_auth_pi(), verify_ssl)
+        if len(url_sources) > 0:
+            _piwebapi_sources_cache[url] = url_sources
+    return list(_piwebapi_sources_cache[url])
+
 
 def get_piwebapi_source_to_webid_dict(
     url: Optional[str] = None,
     auth: Optional[Any] = None,
-    verify_ssl: Optional[Union[str, bool]] = True,
-) -> Union[None, Dict[str, str]]:
+    verify_ssl: Optional[Union[bool, str]] = True,
+) -> List[str]:
     if url is None:
         url = get_url_pi()
 
@@ -167,13 +199,15 @@ def get_piwebapi_source_to_webid_dict(
         urllib3.disable_warnings(InsecureRequestWarning)
 
     url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verify_ssl)
+    res = requests.get(url_, auth=auth, verify=verify_ssl, timeout=300)
 
     res.raise_for_status()
     try:
         return {item["Name"]: item["WebId"] for item in res.json()["Items"]}
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
+
+    return []
 
 
 class BaseHandlerWeb(ABC):
@@ -182,16 +216,41 @@ class BaseHandlerWeb(ABC):
         datasource: Optional[str],
         url: Optional[str],
         auth: Optional[Any],
-        verify_ssl: Optional[bool],
+        verify_ssl: Optional[Union[bool, str]],
     ):
         self.datasource = datasource
         self.base_url = url
+        self.max_rows = 10000
         self.session = requests.Session()
         self.auth = auth
         self.session.auth = auth if auth is not None else get_auth_aspen()
         if verify_ssl is False:
             urllib3.disable_warnings(InsecureRequestWarning)
         self.session.verify = verify_ssl if verify_ssl is not None else get_verify_ssl()
+
+    @property
+    def datasource(self) -> str:
+        return self._datasource
+
+    @datasource.setter
+    def datasource(self, value: Optional[str]) -> None:
+        self._datasource = value if value is not None else ""
+
+    @property
+    def base_url(self) -> str:
+        return self._base_url
+
+    @base_url.setter
+    def base_url(self, value: Optional[str]) -> None:
+        self._base_url = value if value is not None else ""
+
+    @property
+    def max_rows(self) -> int:
+        return self._max_rows
+
+    @max_rows.setter
+    def max_rows(self, value: int) -> None:
+        self._max_rows = value
 
     def fetch(
         self,
@@ -200,19 +259,29 @@ class BaseHandlerWeb(ABC):
         json_str: Optional[str] = None,
         timeout: Optional[int] = None,
     ) -> Dict:
-        res = self.session.get(
-            url,
-            params=params,
-            json=json_str,
-            timeout=(
-                None,
-                timeout,
-            ),
-        )  # Noqa. Read timeout, No connect timeout.
+
+        if isinstance(params, str):
+            res = self.session.post(
+                url,
+                data=params.encode("utf-8"),
+                headers={"Content-Type": "text/xml; charset=utf-8"},
+                timeout=(None, timeout),
+            )
+        else:
+            res = self.session.get(
+                url,
+                params=params,
+                json=json_str,
+                timeout=(None, timeout),
+            )  # Noqa. Read timeout, No connect timeout.
         res.raise_for_status()
 
         if len(res.text) == 0:
             logger.warning(f"No data found for {url} {params}")
+            return {}
+
+        if res.text.startswith("XML Error"):
+            logger.warning(f"Invalid data returned for {url} {params}")
             return {}
 
         try:
@@ -253,10 +322,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
         datasource: Optional[str],
         url: Optional[str] = None,
         auth: Optional[Any] = None,
-        verify_ssl: Optional[bool] = True,
+        verify_ssl: Optional[Union[bool, str]] = True,
         options: Dict[str, Any] = dict(),
     ):
-        if url is None:
+        if url is None or url == "":
             url = get_url_aspen()
         if auth is None:
             auth = get_auth_aspen()
@@ -267,7 +336,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
             auth=auth,
             verify_ssl=verify_ssl,
         )
-        self._max_rows = options.get("max_rows", 100000)
+        self.max_rows = int(options.get("max_rows", 100000))
         self._connection_string = ""  # Used for raw SQL queries
 
     @staticmethod
@@ -329,12 +398,12 @@ class AspenHandlerWeb(BaseHandlerWeb):
         else:
             query = '<Q f="d" allQuotes="1">'
 
-        query += "<Tag>" f"<N><![CDATA[{tagname}]]></N>"
+        query += f"<Tag><N><![CDATA[{tagname}]]></N>"
 
         if mapname:
             query += f"<M><![CDATA[{mapname}]]></M>"
 
-        query += f"<D><![CDATA[{self.datasource}]]></D>" "<F><![CDATA[VAL]]></F>"
+        query += f"<D><![CDATA[{self.datasource}]]></D><F><![CDATA[VAL]]></F>"
 
         if read_type == ReaderType.SNAPSHOT:
             query += "<VS>1</VS>"
@@ -346,7 +415,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
                 f"<RT>{rt}</RT>"
             )
         if read_type in [ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
-            query += f"<X>{self._max_rows}</X>"
+            query += f"<X>{self.max_rows}</X>"
         if read_type not in [ReaderType.INT, ReaderType.SNAPSHOT]:
             query += f"<O>{outsiders}</O>"
         if read_type not in [ReaderType.RAW]:
@@ -450,7 +519,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         return ret
 
     def _get_default_mapname(self, tagname: str):
-        (tagname, _) = self.split_tagmap(tagname)
+        tagname, _ = self.split_tagmap(tagname)
         all_maps = self._get_maps(tagname)
         for k, v in all_maps.items():
             if v:
@@ -603,7 +672,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         # so we need to limit the range. Note -1 because INT normally includes
         # both start and end time.
         if read_type == ReaderType.INT:
-            end = min(end, start + sample_time * (self._max_rows - 1))
+            end = min(end, start + sample_time * (self.max_rows - 1))
 
         tag_name, map_name = self.split_tagmap(tag)
 
@@ -686,14 +755,14 @@ class AspenHandlerWeb(BaseHandlerWeb):
             params = self.generate_sql_query(
                 datasource=self.datasource,
                 query=query,
-                max_rows=self._max_rows,
+                max_rows=self.max_rows,
                 connection_string=None,
             )
         else:
             params = self.generate_sql_query(
                 connection_string=self._connection_string,
                 query=query,
-                max_rows=self._max_rows,
+                max_rows=self.max_rows,
                 datasource=None,
             )
 
@@ -725,12 +794,11 @@ class PIHandlerWeb(BaseHandlerWeb):
         datasource: Optional[str],
         url: Optional[str],
         auth: Optional[Any],
-        verify_ssl: bool,
+        verify_ssl: Optional[Union[bool, str]],
         options: Dict[str, Union[int, float, str]],
         cache: Optional[Union[SmartCache, BucketCache]],
     ):
-        self._max_rows = options.get("max_rows", 10000)
-        if url is None:
+        if url is None or url == "":
             url = get_url_pi()
         if auth is None:
             auth = get_auth_pi()
@@ -740,12 +808,12 @@ class PIHandlerWeb(BaseHandlerWeb):
             auth=auth,
             verify_ssl=verify_ssl,
         )
-        self._max_rows = options.get("max_rows", 10000)
+        self.max_rows = int(options.get("max_rows", 10000))
         self.web_id_cache = cache
 
     @staticmethod
     def _time_to_UTC_string(time: datetime) -> str:
-        return time.astimezone(pytz.UTC).strftime("%d-%b-%y %H:%M:%S")
+        return time.astimezone(timezone.utc).strftime("%d-%b-%y %H:%M:%S")
 
     @staticmethod
     def escape(s: str) -> str:
@@ -864,10 +932,10 @@ class PIHandlerWeb(BaseHandlerWeb):
         if self._is_summary(read_type):
             params["selectedFields"] = "Links;Items.Value.Timestamp;Items.Value.Value"
             if get_status:
-                params["selectedFields"] += (
-                    ";Items.Value.Good"
-                    ";Items.Value.Questionable"
-                    ";Items.Value.Substituted"
+                params[
+                    "selectedFields"
+                ] += (
+                    ";Items.Value.Good;Items.Value.Questionable;Items.Value.Substituted"
                 )
         elif read_type in [ReaderType.INT, ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
             params["selectedFields"] = "Links;Items.Timestamp;Items.Value"
@@ -881,7 +949,7 @@ class PIHandlerWeb(BaseHandlerWeb):
                 params["selectedFields"] += ";Good;Questionable;Substituted"
 
         if read_type == ReaderType.RAW:
-            params["maxCount"] = self._max_rows
+            params["maxCount"] = self.max_rows
 
         return url, params
 
@@ -1015,7 +1083,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         if not web_id:
             return pd.DataFrame()
 
-        (url, params) = self.generate_read_query(
+        url, params = self.generate_read_query(
             tag=web_id,
             start=start,
             end=end,

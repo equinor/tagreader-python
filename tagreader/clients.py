@@ -2,11 +2,11 @@ from datetime import datetime, timedelta, timezone, tzinfo
 from itertools import groupby
 from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple, Union
-from urllib.error import HTTPError
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import numpy as np
 import pandas as pd
-import pytz
+import requests
 
 from tagreader.cache import BucketCache, SmartCache
 from tagreader.logger import logger
@@ -21,18 +21,19 @@ from tagreader.web_handlers import (
     PIHandlerWeb,
     get_auth_aspen,
     get_auth_pi,
+    get_url_aspen,
     list_aspenone_sources,
     list_piwebapi_sources,
 )
 
-NONE_START_TIME = datetime(1970, 1, 1, tzinfo=pytz.UTC)
+NONE_START_TIME = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 
 def list_sources(
     imstype: Union[IMSType, str],
     url: Optional[str] = None,
     auth: Optional[Any] = None,
-    verifySSL: bool = True,
+    verify_ssl: Optional[Union[bool, str]] = True,
 ) -> List[str]:
     if isinstance(imstype, str):
         try:
@@ -47,11 +48,9 @@ def list_sources(
     if imstype == IMSType.PIWEBAPI:
         if auth is None:
             auth = get_auth_pi()
-        return list_piwebapi_sources(url=url, auth=auth, verify_ssl=verifySSL)
+        return list_piwebapi_sources(url=url, auth=auth, verify_ssl=verify_ssl)
     elif imstype == IMSType.ASPENONE:
-        if auth is None:
-            auth = get_auth_aspen()
-        return list_aspenone_sources(url=url, auth=auth, verify_ssl=verifySSL)
+        return list_aspenone_sources(url=url, auth=auth, verify_ssl=verify_ssl)
     elif imstype in [IMSType.PI, IMSType.ASPEN, IMSType.IP21]:
         raise ValueError(
             f"ODBC clients are no longer supported. Given ims client type: {imstype}."
@@ -120,25 +119,42 @@ def get_handler(
     datasource: str,
     url: Optional[str],
     options: Dict[str, Union[int, float, str]],
-    verifySSL: Optional[bool],
-    auth: Optional[Any],
+    verify_ssl: Optional[Union[bool, str]],
+    auth: Optional[Any] = None,
     cache: Optional[Union[SmartCache, BucketCache]] = None,
 ):
     if imstype is None:
+        orig_auth = auth
+        orig_url = url
         try:
-            if datasource in list_aspenone_sources(
-                url=None, auth=None, verify_ssl=verifySSL
-            ):
-                imstype = IMSType.ASPENONE
-        except HTTPError as e:
-            logger.debug(f"Could not list Aspenone sources: {e}")
+            aspen_source = list_aspenone_sources(
+                url=None, auth=None, verify_ssl=verify_ssl
+            )
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
+            # Try again using app registration auth
+            try:
+                auth = get_auth_aspen(False)
+                url = get_url_aspen(False)
+                aspen_source = list_aspenone_sources(
+                    auth=auth, url=url, verify_ssl=verify_ssl
+                )
+            except requests.exceptions.HTTPError as e:
+                logger.debug(f"Could not list Aspenone sources: {e}")
+                aspen_source = []
+
+        if datasource in aspen_source:
+            imstype = IMSType.ASPENONE
+        else:
+            auth = orig_auth
+            url = orig_url
+
     if imstype is None:
         try:
             if datasource in list_piwebapi_sources(
-                url=None, auth=None, verify_ssl=verifySSL
+                url=None, auth=None, verify_ssl=verify_ssl
             ):
                 imstype = IMSType.PIWEBAPI
-        except HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             logger.debug(f"Could not list PI sources: {e}")
 
     if imstype == IMSType.PIWEBAPI:
@@ -146,7 +162,7 @@ def get_handler(
             url=url,
             datasource=datasource,
             options=options,
-            verify_ssl=verifySSL,
+            verify_ssl=verify_ssl,
             auth=auth,
             cache=cache,
         )
@@ -156,7 +172,7 @@ def get_handler(
             datasource=datasource,
             url=url,
             options=options,
-            verify_ssl=verifySSL,
+            verify_ssl=verify_ssl,
             auth=auth,
         )
     elif imstype in [IMSType.PI, IMSType.ASPEN, IMSType.IP21]:
@@ -175,10 +191,10 @@ class IMSClient:
         self,
         datasource: str,
         imstype: Optional[Union[str, IMSType]] = None,
-        tz: Union[tzinfo, str] = pytz.timezone("Europe/Oslo"),
+        tz: Optional[Union[tzinfo, str]] = None,
         url: Optional[str] = None,
         handler_options: Dict[str, Union[int, float, str]] = {},  # noqa:
-        verifySSL: bool = True,
+        verify_ssl: Optional[Union[bool, str]] = True,
         auth: Optional[Any] = None,
         cache: Optional[Union[SmartCache, BucketCache]] = None,
     ):
@@ -191,11 +207,15 @@ class IMSClient:
                     f" We suggest to use the tagreader.IMSType enumerator when initiating a client."
                 )
 
+        if tz is None or tz == "":
+            tz = ZoneInfo("Europe/Oslo")
         if isinstance(tz, str):
-            if tz in pytz.all_timezones:
-                self.tz = pytz.timezone(tz)
-            else:
-                raise ValueError(f"Invalid timezone string  Given type was {type(tz)}")
+            try:
+                self.tz = ZoneInfo(tz)
+            except ZoneInfoNotFoundError:
+                raise ValueError(
+                    f"Invalid timezone string. Given tz was {tz}"
+                ) from None
         elif isinstance(tz, tzinfo):
             self.tz = tz
         else:
@@ -209,7 +229,7 @@ class IMSClient:
             datasource=datasource,
             url=url,
             options=handler_options,
-            verifySSL=verifySSL,
+            verify_ssl=verify_ssl,
             auth=auth,
             cache=self.cache,
         )
@@ -345,7 +365,7 @@ class IMSClient:
                                 end=end,
                             )
                     frames.append(df)
-                    if len(df) < self.handler._max_rows:
+                    if len(df) < self.handler.max_rows:
                         break
                     start = df.index[-1]
 

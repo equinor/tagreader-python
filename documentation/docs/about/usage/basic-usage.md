@@ -20,7 +20,7 @@ interpretation between the server and the client object.
 
 Equinor root certificates are automatically added when using an Equinor Managed computer, which allow SSL verification.
 
-For non-Equinor users: If you run info SSL verification errors and prefer to not set `verifySSL=False` ,
+For non-Equinor users: If you run info SSL verification errors and prefer to not set `verify_ssl=False` ,
 you can try the procedure outlined [here](https://incognitjoe.github.io/adding-certs-to-requests.html).
 :::
 
@@ -50,7 +50,7 @@ should be necessary to supply when connecting to Equinor servers.
 
 * `url` (optional): Path to server root, e.g. _"https://aspenone/ProcessData/AtProcessDataREST.dll"_
 or _"https://piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype`.
-* `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
+* `verify_ssl` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object
 that works with Equinor servers.
 * `cache` (optional): [Cache](caching.md) data locally in order to avoid re-reading the same data multiple times.
@@ -74,7 +74,7 @@ stamps as well as the returned data shall use Rio local time, and using the loca
 ``` python
 c = tagreader.IMSClient(datasource="PER",
                         imstype="aspenone",
-                        tz="Brazil/East",
+                        tz="America/Sao_Paulo",
                         url="https://aspenone-per.equinor.com/ProcessExplorer/ProcessData/AtProcessDataREST.dll")
 c.connect()
 ```
@@ -92,7 +92,7 @@ c = tagreader.IMSClient(datasource="myplant",
                         url="https://api.mycompany.com/aspenone",
                         imstype="aspenone",
                         auth=auth,
-                        verifySSL=False)
+                        verify_ssl=False)
 c.connect()
 ```
 

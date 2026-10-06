@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union, cast
 
 import pandas as pd
-import pytz
 from diskcache import Cache
 
 from tagreader.logger import logger
@@ -21,7 +20,7 @@ def safe_tagname(tagname: str) -> str:
 def timestamp_to_epoch(timestamp: datetime) -> int:
     origin = datetime(1970, 1, 1)
     if timestamp.tzinfo is not None:
-        timestamp = timestamp.astimezone(pytz.utc).replace(tzinfo=None)
+        timestamp = timestamp.astimezone(timezone.utc).replace(tzinfo=None)
     return (timestamp - origin) // timedelta(seconds=1)
 
 

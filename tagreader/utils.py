@@ -1,16 +1,16 @@
 import enum
 import hashlib
-import logging
 import platform
+import socket
 import ssl
-from datetime import datetime, tzinfo
+from datetime import datetime, timezone, tzinfo
 from enum import Enum
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import certifi
 import pandas as pd
-import pytz
 import requests
 from platformdirs import user_data_dir
 
@@ -33,7 +33,6 @@ if is_windows():
     import winreg
 
 if is_mac():
-    import socket
     import subprocess
 
 
@@ -51,17 +50,26 @@ def convert_to_pydatetime(date_stamp: Union[datetime, str, pd.Timestamp]) -> dat
 
 def ensure_datetime_with_tz(
     date_stamp: Union[datetime, str, pd.Timestamp],
-    tz: tzinfo = pytz.timezone("Europe/Oslo"),
+    tz: Optional[tzinfo] = None,
 ) -> datetime:
+    if tz is None:
+        try:
+            tz = ZoneInfo("Europe/Oslo")
+        except ZoneInfoNotFoundError:
+            logger.warning(
+                "Unable to load timezone 'Europe/Oslo'. Falling back to UTC."
+            )
+            tz = timezone.utc
     date_stamp = convert_to_pydatetime(date_stamp)
 
-    if date_stamp.tzinfo:
-        return date_stamp
-    else:
-        if hasattr(tz, "localize"):
-            return tz.localize(date_stamp)
+    if not date_stamp.tzinfo:
+        localize = getattr(tz, "localize", None)
+        if callable(localize):
+            date_stamp = localize(date_stamp)
         else:
-            return date_stamp.replace(tzinfo=tz)
+            date_stamp = date_stamp.replace(tzinfo=tz)
+
+    return date_stamp
 
 
 def urljoin(*args) -> str:
@@ -121,7 +129,7 @@ def add_equinor_root_certificate() -> bool:
         logger.debug(
             "Unable to locate Equinor Root CA certificate on this host. Downloading from Equinor server."
         )
-        response = requests.get("http://pki.equinor.com/aia/ecpr.crt")
+        response = requests.get("http://pki.equinor.com/aia/ecpr.crt", timeout=20)
 
         if response.status_code != 200:
             logger.error(
@@ -148,6 +156,7 @@ def add_equinor_root_certificate() -> bool:
     with open(ca_file, "ab") as f:
         f.write(bytes(certificate, "ascii"))
     logger.debug("Equinor Root Certificate added to certifi store")
+    return True
 
 
 def find_local_equinor_root_certificate() -> str:
@@ -156,7 +165,7 @@ def find_local_equinor_root_certificate() -> str:
 
     if is_windows():
         logger.debug("Checking for Equinor Root CA in Windows certificate store")
-        for cert in ssl.enum_certificates("CA"):
+        for cert in ssl.enum_certificates("CA"):  # type: ignore
             found_cert = cert[0]
             # deepcode ignore InsecureHash: <Only hashes to compare with known hash>
             if hashlib.sha1(found_cert).hexdigest().upper() == equinor_root_pem_hash:
@@ -192,6 +201,9 @@ def get_macos_equinor_certificates():
     import ssl
     import tempfile
 
+    if not is_mac():
+        raise OSError("Function only works on MacOS")
+
     ca_search = "Equinor Root CA"
 
     ctx = ssl.create_default_context()
@@ -213,37 +225,84 @@ def is_equinor() -> bool:
     If Windows host:
     Finds host's domain in Windows Registry at
     HKLM\\SYSTEM\\ControlSet001\\Services\\Tcpip\\Parameters\\Domain
+    or check if hostname starts with eqdev or eqpc
     If mac os host:
-    Finds statoil.net as AD hostname in certificates
+    Finds statoil.net as AD hostname in certificates or
+    Finds statoil.net, client.statoil.net or equinor.com in dns search domains
     If Linux host:
-    Checks whether statoil.no is search domain
+    Checks whether statoil.no is dns search domains
 
     Returns:
         bool: True if Equinor
     """
+
+    hostname = socket.gethostname()
+
     if is_windows():
-        with winreg.OpenKey(
-            winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\ControlSet001\Services\Tcpip\Parameters"
+        if hostname.lower().startswith("eqdev") or hostname.lower().startswith("eqpc"):
+            return True
+        with winreg.OpenKey(  # type: ignore
+            winreg.HKEY_LOCAL_MACHINE,
+            r"SYSTEM\ControlSet001\Services\Tcpip\Parameters",  # type: ignore
         ) as key:
-            domain = winreg.QueryValueEx(key, "Domain")
-        if "statoil" in domain[0]:
-            return True
-    elif is_mac():
-        s = subprocess.run(
-            ["security", "find-certificate", "-a", "-c" "client.statoil.net"],
-            stdout=subprocess.PIPE,
-        ).stdout
-
-        host = socket.gethostname()
-
-        # deepcode ignore IdenticalBranches: Not an error. First test is just more precise.
-        if host + ".client.statoil.net" in str(s):
-            return True
-        elif "client.statoil.net" in host and host in str(s):
-            return True
-    elif is_linux():
+            domain = winreg.QueryValueEx(key, "Domain")  # type: ignore
+            if "statoil" in domain[0] or "equinor" in domain[0]:
+                return True
+    elif is_linux() or is_mac():
         with open("/etc/resolv.conf", "r") as f:
-            if "statoil.no" in f.read():
+            if any(
+                domain in f.read()
+                for domain in ["client.statoil.net", "statoil.net", "equinor.com"]
+            ):
+                return True
+
+        if is_mac():
+
+            def get_mac_dns_search_list():
+                """
+                Retrieves the DNS search list configured on macOS.
+                """
+                try:
+                    # Execute the scutil command to get DNS configuration
+                    result = subprocess.run(
+                        ["scutil", "--dns"], capture_output=True, text=True, check=True
+                    )
+                    output = result.stdout
+
+                    search_list = []
+                    # Parse the output to find the search domains
+                    for line in output.splitlines():
+                        if "search domain" in line:
+                            # Extract the domain from the line
+                            parts = line.split(":")
+                            if len(parts) > 1:
+                                domain = parts[1].strip()
+                                # Remove any leading/trailing quotes if present
+                                domain = domain.strip('"')
+                                search_list.append(domain)
+                    return search_list
+                except subprocess.CalledProcessError as e:
+                    print(f"Error executing scutil: {e}")
+                    return []
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
+                    return []
+
+            if any(
+                domain in get_mac_dns_search_list()
+                for domain in ["client.statoil.net", "statoil.net", "equinor.com"]
+            ):
+                return True
+
+            s = subprocess.run(
+                ["security", "find-certificate", "-a", "-cclient.statoil.net"],
+                stdout=subprocess.PIPE,
+            ).stdout
+
+            # deepcode ignore IdenticalBranches: Not an error. First test is just more precise.
+            if hostname + ".client.statoil.net" in str(s):
+                return True
+            elif "client.statoil.net" in hostname and hostname in str(s):
                 return True
     else:
         raise OSError(

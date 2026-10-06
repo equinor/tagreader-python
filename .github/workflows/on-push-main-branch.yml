@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   publish-docs:
     name: '️‍📚️ Publish Docs'

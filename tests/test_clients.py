@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import pytest
-import pytz
 
 from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
 from tagreader.utils import IMSType, ReaderType
@@ -21,32 +21,32 @@ def test_init_client_with_tzinfo() -> None:
         datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Eastern"
     )
     print(client.tz)
-    assert client.tz == pytz.timezone("US/Eastern")
+    assert client.tz == ZoneInfo("US/Eastern")
 
     client = IMSClient(
         datasource="mock",
         imstype=IMSType.PIWEBAPI,
         cache=None,
-        tz=pytz.timezone("US/Eastern"),
+        tz=ZoneInfo("US/Eastern"),
     )
     print(client.tz)
-    assert client.tz == pytz.timezone("US/Eastern")
+    assert client.tz == ZoneInfo("US/Eastern")
 
     client = IMSClient(
         datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="Europe/Oslo"
     )
     print(client.tz)
-    assert client.tz == pytz.timezone("Europe/Oslo")
+    assert client.tz == ZoneInfo("Europe/Oslo")
 
     client = IMSClient(
         datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Central"
     )
     print(client.tz)
-    assert client.tz == pytz.timezone("US/Central")
+    assert client.tz == ZoneInfo("US/Central")
 
     client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
     print(client.tz)
-    assert client.tz == pytz.timezone("Europe/Oslo")
+    assert client.tz == ZoneInfo("Europe/Oslo")
 
     with pytest.raises(ValueError):
         _ = IMSClient(
@@ -63,15 +63,15 @@ def test_init_client_with_datasource() -> None:
         datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Eastern"
     )
     print(client.tz)
-    assert client.tz == pytz.timezone("US/Eastern")
+    assert client.tz == ZoneInfo("US/Eastern")
     client = IMSClient(
         datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="US/Central"
     )
     print(client.tz)
-    assert client.tz == pytz.timezone("US/Central")
+    assert client.tz == ZoneInfo("US/Central")
     client = IMSClient(datasource="mock", imstype=IMSType.PIWEBAPI, cache=None)
     print(client.tz)
-    assert client.tz == pytz.timezone("Europe/Oslo")
+    assert client.tz == ZoneInfo("Europe/Oslo")
     with pytest.raises(ValueError):
         _ = IMSClient(
             datasource="mock", imstype=IMSType.PIWEBAPI, cache=None, tz="WRONGVALUE"

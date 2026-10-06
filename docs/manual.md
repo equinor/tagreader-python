@@ -56,7 +56,7 @@ pip install --upgrade tagreader
 
 ***Note**: Since v2.7.0 the procedure described below will be automatically performed on Equinor hosts when importing the tagreader module. It should therefore no longer be necessary to perform this step manually.*
 
-The Web APIs are queried with the `requests` package. `requests` does not utilize the system certificate store, but instead relies on the `certifi` bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verifySSL=False` for relevant function calls) or, preferably, add the certificate to the `certifi` bundle. To do this, simply activate the virtual environment where you installed `tagreader`, and run the following snippet:
+The Web APIs are queried with the `requests` package. `requests` does not utilize the system certificate store, but instead relies on the `certifi` bundle. In order to avoid SSL verification errors, we need to either turn off SSL verification (optional input argument `verify_ssø=False` for relevant function calls) or, preferably, add the certificate to the `certifi` bundle. To do this, simply activate the virtual environment where you installed `tagreader`, and run the following snippet:
 
 ``` python
 from tagreader.utils import add_equinor_root_certificate
@@ -67,7 +67,7 @@ The output should inform you that the certificate was successfully added. This n
 
 ### For non-Equinor users
 
-If you run info SSL verification errors and prefer to not set `verifySSL=False` , you can try the procedure outlined [here](https://incognitjoe.github.io/adding-certs-to-requests.html).
+If you run info SSL verification errors and prefer to not set `verify_ssl=False ` , you can try the procedure outlined [here](https://incognitjoe.github.io/adding-certs-to-requests.html).
 
 # Importing the module
 
@@ -93,7 +93,7 @@ The method `tagreader.list_sources()` can query for available PI and IP.21 serve
 The following input arguments are only relevant when calling `list_sources()` with a Web API `imstype` ( `piwebapi` or `aspenone` ):
 
 * `url` (optional): Path to server root, e.g. _"https:<span>//aspenone/ProcessData/AtProcessDataREST.dll"_ or _"https:<span>//piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` if `imstype` is `piwebapi` or `aspenone` .
-* `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
+* `verify_ssl` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth objects that work with Equinor servers. If not connecting to an Equinor server, you may have to create your own auth.
 
 **Example:**
@@ -106,7 +106,7 @@ list_sources("piwebapi")
 
 When called with `imstype` set to `piwebapi` or `aspenone`, `list_sources()` will connect to the web server URL and query for the available list of data sources. This list is normally the complete set of data sources available on the server, and does not indicate whether the user is authorized to query the source or not.
 
-When querying Equinor Web API for data sources, `list_sources()` should require no input argument except `imstype="piwebapi"` or `imstype="aspenone"`. For non-Equinor servers, `url` will need to be specified, as may `auth` and `verifySSL` .
+When querying Equinor Web API for data sources, `list_sources()` should require no input argument except `imstype="piwebapi"` or `imstype="aspenone"`. For non-Equinor servers, `url` will need to be specified, as may `auth` and `verify_ssl` .
 
 # The Client
 
@@ -123,7 +123,7 @@ A connection to a data source is prepared by creating an instance of `tagreader.
 The following input arguments can be used when connecting to either `piwebapi` or to `aspenone`. None of these should be necessary to supply when connecting to Equinor servers.
 
 * `url` (optional): Path to server root, e.g. _"https:<span>//aspenone/ProcessData/AtProcessDataREST.dll"_ or _"https:<span>//piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` .
-* `verifySSL` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
+* `verify_ssl` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object that works with Equinor servers.
 
 ## Connecting to data source
@@ -143,7 +143,7 @@ Connecting to the Peregrino IP.21 data source using AspenTech Process Data REST 
 ``` python
 c = tagreader.IMSClient(datasource="PER",
                         imstype="aspenone",
-                        tz="Brazil/East",
+                        tz="America/Sao_Paulo",
                         url="https://aspenone-per.equinor.com/ProcessExplorer/ProcessData/AtProcessDataREST.dll")
 c.connect()
 ```
@@ -160,7 +160,7 @@ c = tagreader.IMSClient(datasource="myplant",
                         url="https://api.mycompany.com/aspenone",
                         imstype="aspenone",
                         auth=auth,
-                        verifySSL=False)
+                        verify_ssl=False)
 c.connect()
 ```
 
@@ -303,7 +303,7 @@ There are two levels of determining which time zone input arguments should be in
 
 The client-provided time zone can be specified with the optional `tz` argument (string, e.g. "*US/Central*") during client creation. If it is not specified, then the default value *Europe/Oslo* is used. Note that for the most common use case where Equinor employees want to fetch data from Norwegian assets and display them with Norwegian time stamps, nothing needs to be done.
 
-*Note:* It is a good idea to update the `pytz` package rather frequently (at least twice per year) to ensure that time zone information is up to date. `pip install --upgrade pytz` .
+*Note:* Tagreader uses Python's built-in `zoneinfo` module. Keep your system time zone database up to date. On environments without an IANA database, install/update `tzdata` with `pip install --upgrade tzdata`.
 
 **Example (advanced usage)**
 
@@ -315,7 +315,7 @@ from datetime import datetime, timedelta
 from dateutil import tz
 c = tagreader.IMSClient("PINO", "pi", tz="US/Central")  # Force output data to Houston time
 c.connect()
-tzinfo = tz.gettz("Brazil/East")  # Generate timezone object for Rio local time
+tzinfo = tz.gettz("America/Sao_Paulo")  # Generate timezone object for Rio local time
 event_time = datetime(2020, 7, 20, 15, 5, 0, tzinfo=tzinfo)
 start_time = event_time - timedelta(minutes=30)
 end_time = event_time + timedelta(minutes=10)
