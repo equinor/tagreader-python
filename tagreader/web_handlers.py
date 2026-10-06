@@ -1205,13 +1205,14 @@ class PIHandlerWeb(BaseHandlerWeb):
             )
 
         urls = {}
+        request_tags = {}
         for tag in tag_list:
             web_id = self.tag_to_web_id(tag)
             if not web_id:
                 return pd.DataFrame()
 
             for interval in tag_list[tag]:
-                url, params = self.generate_read_query(
+                curr_url, params = self.generate_read_query(
                     tag=web_id,
                     start=tag_list[tag][interval]["start_time"],
                     end=tag_list[tag][interval]["stop_time"],
@@ -1222,84 +1223,50 @@ class PIHandlerWeb(BaseHandlerWeb):
                 )
 
                 query = urllib.parse.urlencode(params)
-                url = f"{urljoin(self.base_url, url)}?{query}"
-                urls[tag] = {"Method": "Get", "Resource": url}
+                url = f"{urljoin(self.base_url, curr_url)}?{query}"
+                request_id = str(len(urls))
+                urls[request_id] = {"Method": "Get", "Resource": url}
+                request_tags[request_id] = tag
 
         headers = {"Content-Type": "Application/json", "X-Requested-With": ""}
         res = self.post(url=self.base_url + "/batch", json_str=urls, headers=headers)
 
-        df = pd.DataFrame()
-        data = {}
-        j = res.json()
-        for tag in j:
-            timestamps = []
-            data[tag] = []
+        frames_by_tag: Dict[str, List[pd.DataFrame]] = {}
+        for request_id, response in res.json().items():
+            tag = request_tags[request_id]
+            content = response["Content"]
+            if read_type == ReaderType.SNAPSHOT:
+                samples = [content]
+            elif self._is_summary(read_type):
+                samples = [item["Value"] for item in content["Items"]]
+            else:
+                samples = content["Items"]
+
+            data: Dict[str, List[Union[int, float]]] = {tag: []}
             if get_status:
                 data[f"{tag}::status"] = []
-
-            if read_type == ReaderType.SNAPSHOT:
-                if isinstance(j[tag]["Content"]["Value"], float):
-                    data[tag].append(j[tag]["Content"]["Value"])
-                else:
-                    data[tag].append(np.nan)
-
+            timestamps = []
+            for sample in samples:
+                value = sample["Value"]
+                data[tag].append(value if isinstance(value, (int, float)) else np.nan)
                 if get_status:
-                    data[tag + "::status"].append(
-                        j[tag]["Content"]["Questionable"]
-                        + 2 * (1 - j[tag]["Content"]["Good"])
-                        + 4 * j[tag]["Content"]["Substituted"]
+                    data[f"{tag}::status"].append(
+                        sample["Questionable"]
+                        + 2 * (1 - sample["Good"])
+                        + 4 * sample["Substituted"]
                     )
+                timestamps.append(sample["Timestamp"])
 
-                timestamps.append(j[tag]["Content"]["Timestamp"])
-                df_tag = pd.DataFrame(data, index=timestamps)
-                df = pd.concat([df, df_tag], axis=1)
-                data = {}
-                timestamps = []
-            elif read_type in [
-                ReaderType.INT,
-                ReaderType.INTERPOLATED,
-                ReaderType.INTERPOLATE,
-                ReaderType.RAW,
-            ]:
-                for item in j[tag]["Content"]["Items"]:
-                    if isinstance(item["Value"], float):
-                        data[tag].append(item["Value"])
-                    else:
-                        data[tag].append(np.nan)
+            frames_by_tag.setdefault(tag, []).append(
+                pd.DataFrame(data, index=timestamps)
+            )
 
-                    if get_status:
-                        data[tag + "::status"].append(
-                            item["Questionable"]
-                            + 2 * (1 - item["Good"])
-                            + 4 * item["Substituted"]
-                        )
-
-                    timestamps.append(item["Timestamp"])
-
-                df_tag = pd.DataFrame(data, index=timestamps)
-                df = pd.concat([df, df_tag], axis=1)
-                data = {}
-                timestamps = []
-            else:
-                for item in j[tag]["Content"]["Items"]:
-                    if isinstance(item["Value"]["Value"], float):
-                        data[tag].append(item["Value"]["Value"])
-                    else:
-                        data[tag].append(np.nan)
-
-                    if get_status:
-                        data[tag + "::status"].append(
-                            item["Value"]["Questionable"]
-                            + 2 * (1 - item["Value"]["Good"])
-                            + 4 * item["Value"]["Substituted"]
-                        )
-
-                    timestamps.append(item["Value"]["Timestamp"])
-
-                df_tag = pd.DataFrame(data, index=timestamps)
-                df = pd.concat([df, df_tag], axis=1)
-                data = {}
-                timestamps = []
+        frames = []
+        for tag in tag_list:
+            if tag in frames_by_tag:
+                df_tag = pd.concat(frames_by_tag[tag], axis=0)
+                frames.append(df_tag[~df_tag.index.duplicated(keep="first")])
+        df = pd.concat(frames, axis=1) if frames else pd.DataFrame()
 
         # Can happen for RAW reads w/o data in interval
         if df.empty:

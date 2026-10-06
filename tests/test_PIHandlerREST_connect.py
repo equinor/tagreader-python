@@ -7,7 +7,7 @@ import pytest
 from requests import Response
 
 from tagreader.cache import SmartCache
-from tagreader.clients import IMSClient, list_sources
+from tagreader.clients import IMSClient, get_missing_intervals, list_sources
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.web_handlers import (
     PIHandlerWeb,
@@ -209,6 +209,148 @@ def test_multi_read_tags(client: IMSClient) -> None:
     pd.testing.assert_frame_equal(
         result, expected, check_dtype=False, check_names=False, check_freq=False
     )
+
+
+@pytest.mark.parametrize(  # type: ignore[misc]
+    "read_type", [ReaderType.RAW, ReaderType.SNAPSHOT, ReaderType.AVG, ReaderType.MAX]
+)
+def test_read_multi_tag_response_formats(
+    client: IMSClient, read_type: ReaderType
+) -> None:
+    tag = TAGS["Float32"]
+    result = client.multi_read_tags(
+        tags=[tag],
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=read_type,
+        get_status=True,
+    )
+    expected = client.read(
+        tags=tag,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=read_type,
+        get_status=True,
+    )
+    assert not expected.empty
+    pd.testing.assert_frame_equal(
+        result, expected, check_dtype=False, check_names=False, check_freq=False
+    )
+
+
+def test_multi_read_tags_integer_values(client: IMSClient) -> None:
+    tag = TAGS["Int32"]
+    expected = client.read(
+        tags=tag,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.INT,
+    )
+    assert expected.shape == (61, 1)
+    assert expected[tag].notna().all()
+    assert (expected[tag] % 1 == 0).all()
+
+    result = client.multi_read_tags(
+        tags=[tag],
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.INT,
+    )
+    pd.testing.assert_frame_equal(
+        result, expected, check_dtype=False, check_names=False, check_freq=False
+    )
+
+
+def test_multi_read_tags_with_status(client: IMSClient) -> None:
+    tags = [TAGS["Float32"], "SINUSOID"]
+    expected = client.read(
+        tags=tags,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.INT,
+        get_status=True,
+    )
+    result = client.multi_read_tags(
+        tags=tags,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.INT,
+        get_status=True,
+    )
+    assert result.shape == (61, 4)
+    assert list(result.columns) == list(expected.columns)
+    pd.testing.assert_frame_equal(
+        result, expected, check_dtype=False, check_names=False, check_freq=False
+    )
+
+
+def test_multi_read_tags_multiple_missing_intervals(
+    client: IMSClient, cache: SmartCache
+) -> None:
+    tag = TAGS["Float32"]
+    sample_time = timedelta(seconds=SAMPLE_TIME)
+    expected = client.read(
+        tags=tag,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.INT,
+    )
+    assert expected.shape == (61, 1)
+    assert expected[tag].notna().all()
+    cached_data = pd.concat(
+        [expected.iloc[:10], expected.iloc[20:30], expected.iloc[40:]]
+    ).tz_convert("UTC")
+    assert (
+        len(
+            get_missing_intervals(
+                df=cached_data,
+                start=expected.index[0].to_pydatetime(),
+                end=expected.index[-1].to_pydatetime(),
+                ts=sample_time,
+                read_type=ReaderType.INT,
+            )
+        )
+        == 2
+    )
+    cache.store(
+        df=cached_data,
+        tagname=tag,
+        read_type=ReaderType.INT,
+        ts=sample_time,
+        get_status=False,
+    )
+    client.cache = cache
+    try:
+        result = client.multi_read_tags(
+            tags=[tag],
+            start_time=START_TIME,
+            end_time=STOP_TIME,
+            ts=SAMPLE_TIME,
+            read_type=ReaderType.INT,
+        )
+        pd.testing.assert_frame_equal(
+            result, expected, check_dtype=False, check_names=False, check_freq=False
+        )
+        cached_result = cache.fetch(
+            tagname=tag,
+            read_type=ReaderType.INT,
+            ts=sample_time,
+            start=expected.index[0].to_pydatetime(),
+            end=expected.index[-1].to_pydatetime(),
+            get_status=False,
+        )
+        pd.testing.assert_frame_equal(
+            cached_result, expected.tz_convert("UTC"), check_freq=False
+        )
+    finally:
+        client.cache = None
 
 
 def test_multi_read_tags_smartcache_miss(client: IMSClient, cache: SmartCache) -> None:

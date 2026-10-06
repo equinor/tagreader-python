@@ -382,28 +382,16 @@ class IMSClient:
     def _multi_read_tags(
         self, tag_list, start_time, stop_time, ts, read_type, get_status, cache=None
     ):
-
-        if read_type in [ReaderType.SNAPSHOT, ReaderType.RAW]:
-            missing_data = {}
-            for tag in tag_list:
-                missing_data[tag] = {}
-                missing_data[tag]["0"] = {
-                    "start_time": start_time,
-                    "stop_time": stop_time,
-                }
-
-            df = self.handler.read_multi_tag(
-                tag_list=missing_data,
-                sample_time=ts,
-                read_type=read_type,
-                get_status=get_status,
-            )
-
-        elif read_type in [ReaderType.INT]:
-            missing_data = {}
-
+        regular_read = read_type not in (ReaderType.SNAPSHOT, ReaderType.RAW)
+        missing_data = {}
+        df = pd.DataFrame()
+        if regular_read:
             df = pd.DataFrame(
-                columns=tag_list,
+                columns=[
+                    column
+                    for tag in tag_list
+                    for column in ([tag, f"{tag}::status"] if get_status else [tag])
+                ],
                 index=pd.date_range(
                     start_time.astimezone(timezone.utc),
                     stop_time.astimezone(timezone.utc),
@@ -411,142 +399,60 @@ class IMSClient:
                 ),
             )
 
-            if isinstance(cache, SmartCache):
-                for tag in tag_list:
-                    df_tag = cache.fetch(
-                        tagname=tag,
+        for tag in tag_list:
+            intervals = [(start_time, stop_time)]
+            if regular_read and isinstance(cache, SmartCache):
+                df_tag = cache.fetch(
+                    tagname=tag,
+                    read_type=read_type,
+                    ts=ts,
+                    start=start_time,
+                    end=stop_time,
+                    get_status=get_status,
+                )
+                intervals = get_missing_intervals(
+                    df_tag, start_time, stop_time, ts, read_type
+                )
+                df = df.fillna(df_tag)
+
+            if intervals:
+                missing_data[tag] = {
+                    interval_number: {
+                        "start_time": interval_start,
+                        "stop_time": interval_end,
+                    }
+                    for interval_number, (interval_start, interval_end) in enumerate(
+                        intervals
+                    )
+                }
+
+        if missing_data:
+            missing_df = self.handler.read_multi_tag(
+                tag_list=missing_data,
+                sample_time=ts,
+                read_type=read_type,
+                get_status=get_status,
+            )
+
+            df = df.fillna(missing_df) if read_type == ReaderType.INT else missing_df
+            if (
+                regular_read
+                and len(missing_df.index) > 0
+                and cache is not None
+                and not get_status
+            ):
+                for column in missing_df:
+                    cache.store(
+                        df=missing_df[column].to_frame(),
+                        tagname=cast(str, column),
                         read_type=read_type,
                         ts=ts,
-                        start=start_time,
-                        end=stop_time,
                         get_status=get_status,
                     )
 
-                    missing_intervals = get_missing_intervals(
-                        df_tag, start_time, stop_time, ts, read_type
-                    )
-
-                    if missing_intervals:
-                        missing_data[tag] = {}
-
-                        for interval in range(len(missing_intervals)):
-                            missing_data[tag][interval] = {
-                                "start_time": missing_intervals[interval][0],
-                                "stop_time": missing_intervals[interval][1],
-                            }
-
-                    df = df.fillna(df_tag)
-
-                if not missing_data:
-                    return df.tz_convert(self.tz).sort_index()
-
-            else:
-                for tag in tag_list:
-                    missing_data[tag] = {}
-                    missing_data[tag]["0"] = {
-                        "start_time": start_time,
-                        "stop_time": stop_time,
-                    }
-
-            missing_df = self.handler.read_multi_tag(
-                tag_list=missing_data,
-                sample_time=ts,
-                read_type=read_type,
-                get_status=get_status,
-            )
-
-            if read_type in [read_type.INT]:
-                df = df.fillna(missing_df)
-            else:
-                df = missing_df
-
-            if len(missing_df.index) > 0:
-                if cache is not None and not get_status:
-                    for column in missing_df:
-                        cache.store(
-                            df=missing_df[column].to_frame(),
-                            tagname=cast(str, column),
-                            read_type=read_type,
-                            ts=ts,
-                            get_status=get_status,
-                        )
-
+        if regular_read:
             df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
-
-        else:
-            missing_data = {}
-
-            df = pd.DataFrame(
-                columns=tag_list,
-                index=pd.date_range(
-                    start_time.astimezone(timezone.utc),
-                    stop_time.astimezone(timezone.utc),
-                    freq=pd.Timedelta(ts),
-                ),
-            )
-
-            if isinstance(cache, SmartCache):
-                for tag in tag_list:
-                    df_tag = cache.fetch(
-                        tagname=tag,
-                        readtype=read_type,
-                        ts=ts,
-                        start_time=start_time,
-                        stop_time=stop_time,
-                    )
-
-                    missing_intervals = get_missing_intervals(
-                        df_tag, start_time, stop_time, ts, read_type
-                    )
-
-                    if missing_intervals:
-                        missing_data[tag] = {}
-                        for interval in range(len(missing_intervals)):
-                            missing_data[tag][interval] = {
-                                "start_time": missing_intervals[interval][0],
-                                "stop_time": missing_intervals[interval][1],
-                            }
-
-                    df = df.fillna(df_tag)
-
-                if not missing_data:
-                    return df.tz_convert(self.tz).sort_index()
-            else:
-                for tag in tag_list:
-                    missing_data[tag] = {}
-                    missing_data[tag]["0"] = {
-                        "start_time": start_time,
-                        "stop_time": stop_time,
-                    }
-
-            missing_df = self.handler.read_multi_tag(
-                tag_list=missing_data,
-                sample_time=ts,
-                read_type=read_type,
-                get_status=get_status,
-            )
-
-            if read_type in [read_type.INT]:
-                df = df.fillna(missing_df)
-            else:
-                df = missing_df
-
-            if len(missing_df.index) > 0:
-                if cache is not None and not get_status:
-                    for column in missing_df:
-                        cache.store(
-                            df=missing_df[column].to_frame(),
-                            readtype=read_type,
-                            ts=ts,
-                            start_time=start_time,
-                            stop_time=stop_time,
-                        )
-
-            df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
-
-        df = df.tz_convert(self.tz).sort_index()
-
-        return df
+        return df.tz_convert(self.tz).sort_index()
 
     def get_units(self, tags: Union[str, List[str]]):
         if isinstance(tags, str):
