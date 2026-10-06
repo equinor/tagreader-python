@@ -753,12 +753,14 @@ class AspenHandlerWeb(BaseHandlerWeb):
 
     @staticmethod
     def generate_sql_query(
-        connection_string: Optional[str],
-        datasource: Optional[str],
-        query: Optional[str],
+        query: str,
+        connection_string: Optional[str] = None,
+        datasource: Optional[str] = None,
         max_rows: int = 100000,
-    ):
-        if connection_string is not None:
+    ) -> str:
+        if not connection_string and not datasource:
+            raise ValueError("Either connection_string or datasource must be provided")
+        if connection_string:
             connection_string = (
                 f'<SQL c="{connection_string}" m="{max_rows}" to="30" s="1">'
             )
@@ -781,20 +783,12 @@ class AspenHandlerWeb(BaseHandlerWeb):
 
     def query_sql(self, query: str, parse: bool = True) -> Union[str, pd.DataFrame]:
         url = urljoin(self.base_url, "SQL")
-        if self._connection_string is None:
-            params = self.generate_sql_query(
-                datasource=self.datasource,
-                query=query,
-                max_rows=self.max_rows,
-                connection_string=None,
-            )
-        else:
-            params = self.generate_sql_query(
-                connection_string=self._connection_string,
-                query=query,
-                max_rows=self.max_rows,
-                datasource=None,
-            )
+        params = self.generate_sql_query(
+            query=query,
+            connection_string=self._connection_string,
+            datasource=self.datasource,
+            max_rows=self.max_rows,
+        )
 
         res = self.session.get(url, params=params)
         res.raise_for_status()
