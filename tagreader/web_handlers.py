@@ -692,21 +692,18 @@ class AspenHandlerWeb(BaseHandlerWeb):
         if map_name is None:
             map_name = ""
 
-        if tag_name is not None:
-            params = self.generate_read_query(
-                tagname=tag_name,
-                mapname=map_name,
-                start=start,
-                end=end,
-                sample_time=sample_time,
-                read_type=read_type,
-                metadata={},
-            )
+        params = self.generate_read_query(
+            tagname=tag_name,
+            mapname=map_name,
+            start=start,
+            end=end,
+            sample_time=sample_time,
+            read_type=read_type,
+            metadata={},
+        )
 
-            # Consider use_post = use_post or not tag.isascii()
-            data = self.fetch(url, params=params, use_post=use_post)
-        else:
-            data = {}
+        # Consider use_post = use_post or not tag.isascii()
+        data = self.fetch(url, params=params, use_post=use_post)
 
         if len(data) == 0:  # Normally for timestamps in future
             return pd.DataFrame(columns=[tag])
@@ -899,7 +896,6 @@ class PIHandlerWeb(BaseHandlerWeb):
         metadata: Optional[Dict[str, str]],
         get_status: bool = False,
     ) -> Tuple[str, Dict[str, str]]:
-
         if read_type in [
             ReaderType.COUNT,
             ReaderType.GOOD,
