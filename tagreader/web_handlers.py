@@ -889,9 +889,9 @@ class PIHandlerWeb(BaseHandlerWeb):
     def generate_read_query(
         self,
         tag: str,
-        start: pd.Timestamp,
-        end: pd.Timestamp,
-        sample_time: Optional[Union[int, pd.Timestamp]],
+        start: datetime,
+        end: datetime,
+        sample_time: timedelta,
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
         get_status: bool = False,
@@ -911,20 +911,19 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         web_id = tag
 
+        seconds = 0
+        if read_type != ReaderType.SNAPSHOT:
+            seconds = int(sample_time.total_seconds())
+
         get_action = {
             ReaderType.INT: "interpolated",
             ReaderType.RAW: "recorded",
             ReaderType.SNAPSHOT: "value",
             ReaderType.SHAPEPRESERVING: "plot",
         }.get(read_type, "summary")
-
         url = f"streams/{web_id}/{get_action}"
 
         params = {}
-
-        seconds = 0
-        if read_type != ReaderType.SNAPSHOT:
-            seconds = int(sample_time.total_seconds())
 
         if read_type != ReaderType.SNAPSHOT:
             params["startTime"] = self._time_to_UTC_string(start)
