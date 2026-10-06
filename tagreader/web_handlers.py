@@ -888,7 +888,7 @@ class PIHandlerWeb(BaseHandlerWeb):
 
     def generate_read_query(
         self,
-        tag: Optional[str],
+        tag: str,
         start: pd.Timestamp,
         end: pd.Timestamp,
         sample_time: Optional[Union[int, pd.Timestamp]],
@@ -906,19 +906,19 @@ class PIHandlerWeb(BaseHandlerWeb):
         ]:
             raise NotImplementedError
 
-        if tag:
-            web_id = tag
+        if not tag:
+            raise ValueError("Tag must be provided.")
 
-            get_action = {
-                ReaderType.INT: "interpolated",
-                ReaderType.RAW: "recorded",
-                ReaderType.SNAPSHOT: "value",
-                ReaderType.SHAPEPRESERVING: "plot",
-            }.get(read_type, "summary")
+        web_id = tag
 
-            url = f"streams/{web_id}/{get_action}"
-        else:
-            url = ""
+        get_action = {
+            ReaderType.INT: "interpolated",
+            ReaderType.RAW: "recorded",
+            ReaderType.SNAPSHOT: "value",
+            ReaderType.SHAPEPRESERVING: "plot",
+        }.get(read_type, "summary")
+
+        url = f"streams/{web_id}/{get_action}"
 
         params = {}
 
