@@ -309,15 +309,18 @@ class BaseHandlerWeb(ABC):
             return json.loads(txt)
 
     def connect(self):
+        if self.datasource == "":
+            raise ValueError("Datasource must be specified")
+
         try:
             self.verify_connection(self.datasource)
         except requests.ConnectionError:
             raise ConnectionError(
-                f"Not able to connect to {self.base_url}. Check network connection."
+                f"Not able to connect to api at {self.base_url}. Check network connection."
             ) from None
 
     @abstractmethod
-    def verify_connection(self, datasource: str): ...
+    def verify_connection(self, datasource: str) -> bool: ...
 
 
 class AspenHandlerWeb(BaseHandlerWeb):
