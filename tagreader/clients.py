@@ -379,27 +379,37 @@ class IMSClient:
         df = df.rename(columns={"value": tag})
         return df
 
-
-    def _multi_read_tags(self, tag_list, start_time, stop_time, ts, read_type, get_status, cache=None):
+    def _multi_read_tags(
+        self, tag_list, start_time, stop_time, ts, read_type, get_status, cache=None
+    ):
 
         if read_type in [ReaderType.SNAPSHOT, ReaderType.RAW]:
             missing_data = {}
             for tag in tag_list:
                 missing_data[tag] = {}
-                missing_data[tag]['0'] = {'start_time': start_time, 'stop_time': stop_time}
+                missing_data[tag]["0"] = {
+                    "start_time": start_time,
+                    "stop_time": stop_time,
+                }
 
             df = self.handler.read_multi_tag(
-                                    tag_list=missing_data,
-                                    sample_time=ts,
-                                    read_type=read_type,
-                                    get_status=get_status
-                                    )
+                tag_list=missing_data,
+                sample_time=ts,
+                read_type=read_type,
+                get_status=get_status,
+            )
 
         elif read_type in [ReaderType.INT]:
             missing_data = {}
 
-            df = pd.DataFrame(columns=tag_list, index=pd.date_range(start_time.tz_convert("UTC"),
-                                                            stop_time.tz_convert("UTC"), freq=pd.Timedelta(ts)))
+            df = pd.DataFrame(
+                columns=tag_list,
+                index=pd.date_range(
+                    start_time.tz_convert("UTC"),
+                    stop_time.tz_convert("UTC"),
+                    freq=pd.Timedelta(ts),
+                ),
+            )
 
             if isinstance(cache, SmartCache):
                 for tag in tag_list:
@@ -413,13 +423,17 @@ class IMSClient:
                     )
 
                     missing_intervals = get_missing_intervals(
-                        df_tag, start_time, stop_time, ts, read_type)
+                        df_tag, start_time, stop_time, ts, read_type
+                    )
 
                     if missing_intervals:
                         missing_data[tag] = {}
 
                         for interval in range(len(missing_intervals)):
-                            missing_data[tag][interval] = {'start_time': missing_intervals[interval][0], 'stop_time': missing_intervals[interval][1]}
+                            missing_data[tag][interval] = {
+                                "start_time": missing_intervals[interval][0],
+                                "stop_time": missing_intervals[interval][1],
+                            }
 
                     df = df.fillna(df_tag)
 
@@ -429,14 +443,17 @@ class IMSClient:
             else:
                 for tag in tag_list:
                     missing_data[tag] = {}
-                    missing_data[tag]['0'] = {'start_time': start_time, 'stop_time': stop_time}
+                    missing_data[tag]["0"] = {
+                        "start_time": start_time,
+                        "stop_time": stop_time,
+                    }
 
             missing_df = self.handler.read_multi_tag(
-                                tag_list=missing_data,
-                                sample_time=ts,
-                                read_type=read_type,
-                                get_status=get_status
-                                )
+                tag_list=missing_data,
+                sample_time=ts,
+                read_type=read_type,
+                get_status=get_status,
+            )
 
             if read_type in [read_type.INT]:
                 df = df.fillna(missing_df)
@@ -444,16 +461,11 @@ class IMSClient:
                 df = missing_df
 
             if len(missing_df.index) > 0:
-                if (
-                    cache is not None
-                    and not get_status
-                ):
+                if cache is not None and not get_status:
                     for column in missing_df:
                         cache.store(
-                                    df=missing_df[column].to_frame(),
-                                    readtype=read_type,
-                                    ts=ts
-                                    )
+                            df=missing_df[column].to_frame(), readtype=read_type, ts=ts
+                        )
 
             df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
 
@@ -461,8 +473,14 @@ class IMSClient:
 
             missing_data = {}
 
-            df = pd.DataFrame(columns=tag_list, index=pd.date_range(stop_time.tz_convert("UTC"),
-                                                            stop_time.tz_convert("UTC"), freq=pd.Timedelta(ts)))
+            df = pd.DataFrame(
+                columns=tag_list,
+                index=pd.date_range(
+                    stop_time.tz_convert("UTC"),
+                    stop_time.tz_convert("UTC"),
+                    freq=pd.Timedelta(ts),
+                ),
+            )
 
             if isinstance(cache, SmartCache):
                 for tag in tag_list:
@@ -471,16 +489,20 @@ class IMSClient:
                         readtype=read_type,
                         ts=ts,
                         start_time=start_time,
-                        stop_time=stop_time
-                        )
+                        stop_time=stop_time,
+                    )
 
                     missing_intervals = get_missing_intervals(
-                        df_tag, start_time, stop_time, ts, read_type)
+                        df_tag, start_time, stop_time, ts, read_type
+                    )
 
                     if missing_intervals:
                         missing_data[tag] = {}
                         for interval in range(len(missing_intervals)):
-                            missing_data[tag][interval] = {'start_time': missing_intervals[interval][0], 'stop_time': missing_intervals[interval][1]}
+                            missing_data[tag][interval] = {
+                                "start_time": missing_intervals[interval][0],
+                                "stop_time": missing_intervals[interval][1],
+                            }
 
                     df = df.fillna(df_tag)
 
@@ -490,14 +512,17 @@ class IMSClient:
             else:
                 for tag in tag_list:
                     missing_data[tag] = {}
-                    missing_data[tag]['0'] = {'start_time': start_time, 'stop_time': stop_time}
+                    missing_data[tag]["0"] = {
+                        "start_time": start_time,
+                        "stop_time": stop_time,
+                    }
 
             missing_df = self.handler.read_multi_tag(
-                                tag_list=missing_data,
-                                sample_time=ts,
-                                read_type=read_type,
-                                get_status=get_status
-                                )
+                tag_list=missing_data,
+                sample_time=ts,
+                read_type=read_type,
+                get_status=get_status,
+            )
 
             if read_type in [read_type.INT]:
                 df = df.fillna(missing_df)
@@ -505,18 +530,15 @@ class IMSClient:
                 df = missing_df
 
             if len(missing_df.index) > 0:
-                if (
-                    cache is not None
-                    and not get_status
-                ):
+                if cache is not None and not get_status:
                     for column in missing_df:
                         cache.store(
-                                    df=missing_df[column].to_frame(),
-                                    readtype=read_type,
-                                    ts=ts,
-                                    start_time=start_time,
-                                    stop_time=stop_time,
-                                    )
+                            df=missing_df[column].to_frame(),
+                            readtype=read_type,
+                            ts=ts,
+                            start_time=start_time,
+                            stop_time=stop_time,
+                        )
 
             df = df[~df.index.duplicated(keep="first")]  # Deduplicate on index
 
@@ -592,7 +614,6 @@ class IMSClient:
             get_status=get_status,
         )
 
-
     def multi_read_tags(
         self,
         tags: list,
@@ -634,21 +655,21 @@ class IMSClient:
         if len(tags) != len(set(tags)):
             duplicates = [x for n, x in enumerate(tags) if x in tags[:n]]
             tag_list = [*set(tags)]
-            warnings.warn(
-                f"Duplicate tags found, removed duplicates: {', '.join(duplicates)}")
+            logger.warning(
+                f"Duplicate tags found, removed duplicates: {', '.join(duplicates)}"
+            )
 
         res = self._multi_read_tags(
-                            tag_list=tags,
-                            start_time=start_time,
-                            stop_time=end_time,
-                            ts=ts,
-                            read_type=read_type,
-                            get_status=get_status,
-                            cache=self.cache
-                        )
+            tag_list=tag_list,
+            start_time=start_time,
+            stop_time=end_time,
+            ts=ts,
+            read_type=read_type,
+            get_status=get_status,
+            cache=self.cache,
+        )
 
         return res
-
 
     def read(
         self,

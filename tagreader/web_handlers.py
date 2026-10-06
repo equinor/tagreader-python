@@ -256,7 +256,7 @@ class BaseHandlerWeb(ABC):
         self,
         url,
         params: Optional[Union[str, Dict[str, str]]] = None,
-        json: Optional[Dict[str, Any]] = None,
+        json_input: Optional[Dict[str, Any]] = None,
         timeout: Optional[int] = None,
     ) -> Dict:
 
@@ -264,7 +264,7 @@ class BaseHandlerWeb(ABC):
             res = self.session.post(
                 url,
                 data=params.encode("utf-8"),
-                json=json,
+                json=json_input,
                 headers={"Content-Type": "text/xml; charset=utf-8"},
                 timeout=(None, timeout),
             )
@@ -272,14 +272,35 @@ class BaseHandlerWeb(ABC):
             res = self.session.get(
                 url,
                 params=params,
-                json=json,
+                json=json_input,
                 timeout=(None, timeout),
             )  # Noqa. Read timeout, No connect timeout.
-    def post(self, url, params=None, json=None, headers=None) -> Response:
+
+        res.raise_for_status()
+
+        if len(res.text) == 0:
+            logger.warning(f"No data found for {url} {params}")
+            return {}
+
+        if res.text.startswith("XML Error"):
+            logger.warning(f"Invalid data returned for {url} {params}")
+            return {}
+
+        try:
+            return res.json()
+        except JSONDecodeError:
+            # AspenOne sometimes returns completely and utterly invalid -nan.
+            # Since json/simplejson has no mechanism to handle this, we need to
+            # pre-process
+
+            txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
+            return json.loads(txt)
+
+    def post(self, url, params=None, json_input=None, headers=None):
         if not self.session.verify:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-        res = self.session.post(url, params=params, json=json, headers=headers)
+        res = self.session.post(url, params=params, json=json_input, headers=headers)
         res.raise_for_status()
 
         if len(res.text) == 0:
@@ -1167,7 +1188,6 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         return df.rename(columns={"Value": tag, "Status": tag + "::status"})
 
-
     def read_multi_tag(
         self,
         tag_list: dict,
@@ -1192,12 +1212,12 @@ class PIHandlerWeb(BaseHandlerWeb):
             for interval in tag_list[tag]:
 
                 _, params = self.generate_read_query(
-                    start_time=tag_list[tag][interval]['start_time'],
-                    stop_time=tag_list[tag][interval]['stop_time'],
+                    start_time=tag_list[tag][interval]["start_time"],
+                    stop_time=tag_list[tag][interval]["stop_time"],
                     sample_time=sample_time,
                     read_type=read_type,
                     tag=None,
-                    get_status=get_status
+                    get_status=get_status,
                 )
 
                 query_filter = self.create_filter(params)
@@ -1222,7 +1242,7 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         headers = {"Content-Type": "Application/json", "X-Requested-With": ""}
 
-        res = self.post(url=self.base_url + "/batch", json=urls, headers=headers)
+        res = self.post(url=self.base_url + "/batch", json_input=urls, headers=headers)
 
         j = res.json()
 
@@ -1239,34 +1259,44 @@ class PIHandlerWeb(BaseHandlerWeb):
 
             if read_type == ReaderType.SNAPSHOT:
 
-                if type(j[tag]['Content']['Value']) == float:
-                    data[tag].append(j[tag]['Content']['Value'])
+                if isinstance(j[tag]["Content"]["Value"], float):
+                    data[tag].append(j[tag]["Content"]["Value"])
                 else:
                     data[tag].append(np.nan)
 
                 if get_status:
-                    data[tag + '::status'].append(j[tag]['Content']["Questionable"] + 2 * (1 - j[tag]['Content']["Good"])
-                                                 + 4 * j[tag]['Content']["Substituted"])
+                    data[tag + "::status"].append(
+                        j[tag]["Content"]["Questionable"]
+                        + 2 * (1 - j[tag]["Content"]["Good"])
+                        + 4 * j[tag]["Content"]["Substituted"]
+                    )
 
-                timestamps.append(j[tag]['Content']['Timestamp'])
+                timestamps.append(j[tag]["Content"]["Timestamp"])
                 df_tag = pd.DataFrame(data, index=timestamps)
                 df = pd.concat([df, df_tag], axis=1)
                 data = {}
                 timestamps = []
 
-            elif read_type in [ReaderType.INT, ReaderType.INTERPOLATED, ReaderType.INTERPOLATE, ReaderType.RAW]:
-                for item in j[tag]['Content']['Items']:
-
-                    if type(item['Value']) == float:
-                        data[tag].append(item['Value'])
+            elif read_type in [
+                ReaderType.INT,
+                ReaderType.INTERPOLATED,
+                ReaderType.INTERPOLATE,
+                ReaderType.RAW,
+            ]:
+                for item in j[tag]["Content"]["Items"]:
+                    if isinstance(item["Value"], float):
+                        data[tag].append(item["Value"])
                     else:
                         data[tag].append(np.nan)
 
                     if get_status:
-                        data[tag + '::status'].append(item["Questionable"] + 2 * (1 - item["Good"])
-                                                     + 4 * item["Substituted"])
+                        data[tag + "::status"].append(
+                            item["Questionable"]
+                            + 2 * (1 - item["Good"])
+                            + 4 * item["Substituted"]
+                        )
 
-                    timestamps.append(item['Timestamp'])
+                    timestamps.append(item["Timestamp"])
 
                 df_tag = pd.DataFrame(data, index=timestamps)
                 df = pd.concat([df, df_tag], axis=1)
@@ -1274,18 +1304,20 @@ class PIHandlerWeb(BaseHandlerWeb):
                 timestamps = []
 
             else:
-                for item in j[tag]['Content']['Items']:
-
-                    if type(item['Value']['Value']) == float:
-                        data[tag].append(item['Value']['Value'])
+                for item in j[tag]["Content"]["Items"]:
+                    if isinstance(item["Value"]["Value"], float):
+                        data[tag].append(item["Value"]["Value"])
                     else:
                         data[tag].append(np.nan)
 
                     if get_status:
-                        data[tag + '::status'].append(item['Value']["Questionable"] + 2 * (1 - item['Value']["Good"]) +
-                                                     4 * item['Value']["Substituted"])
+                        data[tag + "::status"].append(
+                            item["Value"]["Questionable"]
+                            + 2 * (1 - item["Value"]["Good"])
+                            + 4 * item["Value"]["Substituted"]
+                        )
 
-                    timestamps.append(item['Value']['Timestamp'])
+                    timestamps.append(item["Value"]["Timestamp"])
 
                 df_tag = pd.DataFrame(data, index=timestamps)
                 df = pd.concat([df, df_tag], axis=1)
@@ -1299,16 +1331,20 @@ class PIHandlerWeb(BaseHandlerWeb):
         try:
             if read_type == ReaderType.RAW or read_type == ReaderType.SNAPSHOT:
                 # Sub-second timestamps are common
-                df.index = pd.to_datetime(df.index, format="%Y-%m-%dT%H:%M:%S.%fZ", utc=True)
+                df.index = pd.to_datetime(
+                    df.index, format="%Y-%m-%dT%H:%M:%S.%fZ", utc=True
+                )
             else:
                 # Sub-second timestamps are uncommon
-                df.index = pd.to_datetime(df.index, format="%Y-%m-%dT%H:%M:%SZ", utc=True)
+                df.index = pd.to_datetime(
+                    df.index, format="%Y-%m-%dT%H:%M:%SZ", utc=True
+                )
 
         except ValueError:
             df.index = pd.to_datetime(df.index, utc=True)
 
         if read_type == ReaderType.VAR:
-            df = df ** 2
+            df = df**2
 
         df.index.name = "time"
 
@@ -1317,11 +1353,12 @@ class PIHandlerWeb(BaseHandlerWeb):
         # one interval down.
         if read_type == ReaderType.MAX:
             import pytz
+
             min_start_time = datetime.datetime.now().astimezone(pytz.utc)
             for tag in tag_list:
                 for interval in tag_list[tag]:
-                    if tag_list[tag][interval]['start_time'] < min_start_time:
-                        min_start_time = tag_list[tag][interval]['start_time']
+                    if tag_list[tag][interval]["start_time"] < min_start_time:
+                        min_start_time = tag_list[tag][interval]["start_time"]
             if df.index[0] > min_start_time:
                 df.index = df.index - sample_time
 
@@ -1374,7 +1411,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         """
 
         d = date.split("-")[0]
-        m = datetime.datetime.strptime(date.split("-")[1], '%b').month
+        m = datetime.datetime.strptime(date.split("-")[1], "%b").month
         y = date.split("-")[2][:2]
         t = date.split(" ")[1]
 
