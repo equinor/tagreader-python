@@ -922,7 +922,6 @@ class PIHandlerWeb(BaseHandlerWeb):
             ReaderType.SHAPEPRESERVING: "plot",
         }.get(read_type, "summary")
         url = f"streams/{web_id}/{get_action}"
-
         params = {}
 
         if read_type != ReaderType.SNAPSHOT:
