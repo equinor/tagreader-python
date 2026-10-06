@@ -543,7 +543,7 @@ class AspenHandlerWeb(BaseHandlerWeb):
         ret = []
 
         # Currently not possible to search only using description.
-        if tag is None:
+        if not tag:
             raise ValueError("Input tag is a required argument")
 
         if not tag and not desc:
