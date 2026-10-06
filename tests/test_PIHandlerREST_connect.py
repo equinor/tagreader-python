@@ -212,7 +212,14 @@ def test_multi_read_tags(client: IMSClient) -> None:
 
 
 @pytest.mark.parametrize(  # type: ignore[misc]
-    "read_type", [ReaderType.RAW, ReaderType.SNAPSHOT, ReaderType.AVG, ReaderType.MAX]
+    "read_type",
+    [
+        ReaderType.RAW,
+        ReaderType.SNAPSHOT,
+        ReaderType.AVG,
+        ReaderType.MAX,
+        ReaderType.VAR,
+    ],
 )
 def test_read_multi_tag_response_formats(
     client: IMSClient, read_type: ReaderType
@@ -235,6 +242,33 @@ def test_read_multi_tag_response_formats(
         get_status=True,
     )
     assert not expected.empty
+    pd.testing.assert_frame_equal(
+        result, expected, check_dtype=False, check_names=False, check_freq=False
+    )
+
+
+def test_multi_read_tags_var_preserves_nonzero_status(client: IMSClient) -> None:
+    tag = TAGS["Float32"]
+    start_time = "2012-10-09 10:30:00"
+    end_time = "2012-10-09 11:00:00"
+    expected = client.read(
+        tags=tag,
+        start_time=start_time,
+        end_time=end_time,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.VAR,
+        get_status=True,
+    )
+    assert expected.shape == (30, 2)
+    assert (expected[f"{tag}::status"] == 2).all()
+    result = client.multi_read_tags(
+        tags=[tag],
+        start_time=start_time,
+        end_time=end_time,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.VAR,
+        get_status=True,
+    )
     pd.testing.assert_frame_equal(
         result, expected, check_dtype=False, check_names=False, check_freq=False
     )
@@ -358,6 +392,8 @@ def test_multi_read_tags_smartcache_miss(client: IMSClient, cache: SmartCache) -
     request_methods = []
 
     def record_response(response: Response, **kwargs: Any) -> None:
+        if response.request.method == "POST":
+            assert kwargs["timeout"] == (10, 600)
         request_methods.append(response.request.method)
 
     assert list(cache.iterkeys()) == []

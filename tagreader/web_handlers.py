@@ -309,7 +309,7 @@ class BaseHandlerWeb(ABC):
         if not self.session.verify:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-        res = self.session.post(url, json=json_str, headers=headers)
+        res = self.session.post(url, json=json_str, headers=headers, timeout=(10, 600))
         res.raise_for_status()
         return res
 
@@ -1198,9 +1198,10 @@ class PIHandlerWeb(BaseHandlerWeb):
         metadata: Optional[Dict[str, str]] = None,
         get_status: bool = False,
     ):
-        if len(tag_list) > 950:
+        request_count = sum(len(intervals) for intervals in tag_list.values())
+        if request_count > 950:
             raise RuntimeError(
-                f"ERROR: Trying to read too many tags ({len(tag_list)}). Server will return a HTTP 429 Too Many "
+                f"ERROR: Trying to send too many batch requests ({request_count}). Server will return a HTTP 429 Too Many "
                 f"Requests error. Max. is set to 950. Please split the request."
             )
 
@@ -1287,7 +1288,9 @@ class PIHandlerWeb(BaseHandlerWeb):
             df.index = pd.to_datetime(df.index, utc=True)
 
         if read_type == ReaderType.VAR:
-            df = df**2
+            for tag in tag_list:
+                if tag in df.columns:
+                    df[tag] = df[tag] ** 2
 
         df.index.name = "time"
 

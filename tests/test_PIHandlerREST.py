@@ -28,6 +28,24 @@ def pi_handler(cache: SmartCache) -> Generator[PIHandlerWeb, None, None]:
     yield h
 
 
+@pytest.mark.parametrize(  # type: ignore[misc]
+    ("tag_count", "interval_count"), [(951, 1), (1, 951), (2, 476)]
+)
+def test_read_multi_tag_limits_request_count(
+    pi_handler: PIHandlerWeb, tag_count: int, interval_count: int
+) -> None:
+    start = ensure_datetime_with_tz(START_TIME)
+    end = ensure_datetime_with_tz(STOP_TIME)
+    intervals = {
+        interval: {"start_time": start, "stop_time": end}
+        for interval in range(interval_count)
+    }
+    tags = {f"tag{tag_number}": intervals for tag_number in range(tag_count)}
+    with pytest.raises(RuntimeError, match="too many batch requests") as error:
+        pi_handler.read_multi_tag(tag_list=tags)
+    assert str(tag_count * interval_count) in str(error.value)
+
+
 def test_escape_chars() -> None:
     assert (
         PIHandlerWeb.escape('+-&|(){}[]^"~*:\\') == r"\+\-\&\|\(\)\{\}\[\]\^\"\~*\:\\"
