@@ -1,4 +1,5 @@
 from datetime import timedelta
+from inspect import signature
 from typing import Generator, Optional
 
 import pytest
@@ -19,8 +20,6 @@ def aspen_handler() -> Generator[AspenHandlerWeb, None, None]:
 
 
 def test_generate_search_query() -> None:
-    with pytest.raises(ValueError):
-        AspenHandlerWeb.generate_search_query(tag="ATCAI", desc=None, datasource=None)
     assert AspenHandlerWeb.generate_search_query(
         tag="ATCAI", datasource="source_name", desc=None, max=100
     ) == {
@@ -42,14 +41,23 @@ def test_generate_search_query() -> None:
     ) == {"datasource": "source_name", "tag": "ATCAI", "max": 100000, "getTrendable": 0}
 
 
+@pytest.mark.parametrize("datasource", [None, ""])  # type: ignore[misc]
+def test_generate_search_query_requires_datasource(datasource: Optional[str]) -> None:
+    with pytest.raises(ValueError) as error:
+        AspenHandlerWeb.generate_search_query(
+            tag="ATCAI", desc=None, datasource=datasource
+        )
+    assert str(error.value) == "Data source is required argument"
+
+
 @pytest.mark.parametrize(  # type: ignore[misc]
     ("tag", "desc", "message"),
     [
         (None, None, "Input tag is a required argument"),
         (None, "", "Input tag is a required argument"),
         (None, "Sine Input", "Input tag is a required argument"),
-        ("", None, "Either tag or desc must be provided."),
-        ("", "", "Either tag or desc must be provided."),
+        ("", None, "Input tag is a required argument"),
+        ("", "", "Input tag is a required argument"),
     ],
 )
 def test_search_requires_tag(
@@ -248,9 +256,8 @@ def test_generate_read_query_long_sample_time(aspen_handler: AspenHandlerWeb) ->
 
 def test_generate_sql_query(aspen_handler: AspenHandlerWeb) -> None:
     res = aspen_handler.generate_sql_query(
-        datasource=None,
-        connection_string="my_connection_stringing",
         query="myquery",
+        connection_string="my_connection_stringing",
         max_rows=9999,
     )
     expected = (
@@ -259,10 +266,9 @@ def test_generate_sql_query(aspen_handler: AspenHandlerWeb) -> None:
     )
     assert res == expected
     res = aspen_handler.generate_sql_query(
-        datasource="mydatasource",
         query="myquery",
+        datasource="mydatasource",
         max_rows=9999,
-        connection_string=None,
     )
     expected = (
         '<SQL t="SQLplus" ds="mydatasource" '
@@ -271,3 +277,8 @@ def test_generate_sql_query(aspen_handler: AspenHandlerWeb) -> None:
         "<![CDATA[myquery]]></SQL>"
     )
     assert res == expected
+
+
+def test_generate_sql_query_requires_query() -> None:
+    with pytest.raises(TypeError, match="query"):
+        signature(AspenHandlerWeb.generate_sql_query).bind(datasource="source_name")

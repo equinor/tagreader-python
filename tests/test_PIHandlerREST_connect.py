@@ -54,10 +54,10 @@ def client() -> Generator[IMSClient, None, None]:
 def pi_handler(cache: SmartCache) -> Generator[PIHandlerWeb, None, None]:
     h = PIHandlerWeb(
         datasource=SOURCE,
-        verify_ssl=bool(verify_ssl),
-        auth=None,
-        options={},
         url=None,
+        auth=None,
+        verify_ssl=bool(verify_ssl),
+        options={},
         cache=cache,
     )
     if not isinstance(h.web_id_cache, SmartCache):
