@@ -1,8 +1,10 @@
 import os
 from datetime import timedelta
-from typing import Generator
+from typing import Any, Generator
 
+import pandas as pd
 import pytest
+from requests import Response
 
 from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, list_sources
@@ -180,6 +182,76 @@ def test_read(client: IMSClient, read_type: str, size: int) -> None:
         assert df.shape == (size, 1) or df.shape == (size - 1, 1)
         assert df.index[0] >= ensure_datetime_with_tz(START_TIME)
         assert df.index[-1] <= ensure_datetime_with_tz(STOP_TIME)
+
+
+def test_multi_read_tags(client: IMSClient) -> None:
+    tags = [TAGS["Float32"], "SINUSOID"]
+    result = client.multi_read_tags(
+        tags=tags,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.INT,
+    )
+    expected = client.read(
+        tags=tags,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=ReaderType.INT,
+    )
+
+    assert result.shape == (61, 2)
+    assert list(result.columns) == tags
+    assert result.notna().any().all()
+    assert result.index.is_unique
+    assert result.index.is_monotonic_increasing
+    pd.testing.assert_frame_equal(
+        result, expected, check_dtype=False, check_names=False, check_freq=False
+    )
+
+
+def test_multi_read_tags_smartcache_miss(client: IMSClient, cache: SmartCache) -> None:
+    tags = [TAGS["Float32"], "SINUSOID"]
+    request_methods = []
+
+    def record_response(response: Response, **kwargs: Any) -> None:
+        request_methods.append(response.request.method)
+
+    assert list(cache.iterkeys()) == []
+    client.cache = cache
+    cache.enable_cache_statistics()
+    cache.stats(reset=True)
+    client.handler.session.hooks["response"].append(record_response)
+
+    try:
+        first = client.multi_read_tags(
+            tags=tags,
+            start_time=START_TIME,
+            end_time=STOP_TIME,
+            ts=SAMPLE_TIME,
+            read_type=ReaderType.INT,
+        )
+        assert first.shape == (61, 2)
+        assert first.notna().any().all()
+        assert "POST" in request_methods
+        assert cache.stats() == (0, len(tags))
+        assert len(list(cache.iterkeys())) == len(tags)
+        requests_after_first = len(request_methods)
+
+        second = client.multi_read_tags(
+            tags=tags,
+            start_time=START_TIME,
+            end_time=STOP_TIME,
+            ts=SAMPLE_TIME,
+            read_type=ReaderType.INT,
+        )
+        pd.testing.assert_frame_equal(second, first)
+        assert cache.stats() == (len(tags), len(tags))
+        assert len(request_methods) == requests_after_first
+    finally:
+        client.handler.session.hooks["response"].remove(record_response)
+        client.cache = None
 
 
 def test_read_with_status(client: IMSClient) -> None:
