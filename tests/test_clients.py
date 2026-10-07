@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 import pytest
-from requests.auth import AuthBase
+from requests.exceptions import InvalidSchema
 
 from tagreader.cache import SmartCache
 from tagreader.clients import IMSClient, get_missing_intervals, get_next_timeslice
@@ -15,7 +15,12 @@ def test_init_client_without_cache() -> None:
     assert not client.cache
 
 
-def test_multi_read_tags_smartcache_hits(cache: SmartCache) -> None:
+@pytest.mark.parametrize(  # type: ignore[misc]
+    "read_type", [ReaderType.INT, ReaderType.AVG, ReaderType.MAX]
+)
+def test_multi_read_tags_smartcache_hits(
+    cache: SmartCache, read_type: ReaderType
+) -> None:
     tags = ["tag1", "tag2"]
     sample_time = timedelta(seconds=60)
     cached_data = pd.DataFrame(
@@ -26,7 +31,7 @@ def test_multi_read_tags_smartcache_hits(cache: SmartCache) -> None:
         cache.store(
             df=cached_data[[tag]],
             tagname=tag,
-            read_type=ReaderType.INT,
+            read_type=read_type,
             ts=sample_time,
             get_status=False,
         )
@@ -36,7 +41,7 @@ def test_multi_read_tags_smartcache_hits(cache: SmartCache) -> None:
         datasource="cache-test",
         imstype=IMSType.PIWEBAPI,
         url="cache-only://pi",
-        auth=AuthBase(),
+        auth=(),
         verify_ssl=True,
         cache=cache,
         tz="Europe/Oslo",
@@ -44,18 +49,61 @@ def test_multi_read_tags_smartcache_hits(cache: SmartCache) -> None:
     cache.enable_cache_statistics()
     cache.stats(reset=True)
     expected = cached_data.tz_convert(client.tz)
+    end = expected.index[-1]
+    if read_type != ReaderType.INT:
+        end += sample_time
 
     try:
         for read_number in (1, 2):
             result = client.multi_read_tags(
                 tags=tags,
                 start_time=expected.index[0],
-                end_time=expected.index[-1],
+                end_time=end,
                 ts=60,
-                read_type=ReaderType.INT,
+                read_type=read_type,
             )
             pd.testing.assert_frame_equal(result, expected, check_dtype=False)
             assert cache.stats() == (len(tags) * read_number, 0)
+    finally:
+        client.handler.session.close()
+
+
+@pytest.mark.parametrize("read_type", [ReaderType.AVG, ReaderType.MAX])  # type: ignore[misc]
+def test_summary_cache_timestamp_mismatch_is_miss(
+    cache: SmartCache, read_type: ReaderType
+) -> None:
+    tag = "tag1"
+    start = pd.Timestamp("2020-04-01 09:05:00", tz="UTC")
+    sample_time = timedelta(seconds=60)
+    cached_data = pd.DataFrame(
+        {tag: [1.0, 2.0, 3.0, 4.0]},
+        index=pd.date_range(start + timedelta(seconds=30), periods=4, freq="60s"),
+    )
+    cache.store(
+        df=cached_data,
+        tagname=tag,
+        read_type=read_type,
+        ts=sample_time,
+        get_status=False,
+    )
+    cache[tag] = "cached-webid"
+    client = IMSClient(
+        datasource="cache-test",
+        imstype=IMSType.PIWEBAPI,
+        url="cache-only://pi",
+        auth=(),
+        verify_ssl=True,
+        cache=cache,
+    )
+    try:
+        with pytest.raises(InvalidSchema):
+            client.multi_read_tags(
+                tags=[tag],
+                start_time=start,
+                end_time=start + 4 * sample_time,
+                ts=60,
+                read_type=read_type,
+            )
     finally:
         client.handler.session.close()
 

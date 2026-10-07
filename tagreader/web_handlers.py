@@ -1207,6 +1207,7 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         urls = {}
         request_tags = {}
+        request_starts = {}
         for tag in tag_list:
             web_id = self.tag_to_web_id(tag)
             if not web_id:
@@ -1228,6 +1229,7 @@ class PIHandlerWeb(BaseHandlerWeb):
                 request_id = str(len(urls))
                 urls[request_id] = {"Method": "Get", "Resource": url}
                 request_tags[request_id] = tag
+                request_starts[request_id] = tag_list[tag][interval]["start_time"]
 
         headers = {"Content-Type": "Application/json", "X-Requested-With": ""}
         res = self.post(url=self.base_url + "/batch", json_str=urls, headers=headers)
@@ -1258,9 +1260,12 @@ class PIHandlerWeb(BaseHandlerWeb):
                     )
                 timestamps.append(sample["Timestamp"])
 
-            frames_by_tag.setdefault(tag, []).append(
-                pd.DataFrame(data, index=timestamps)
-            )
+            frame = pd.DataFrame(data, index=timestamps)
+            if read_type == ReaderType.MAX and not frame.empty:
+                frame.index = pd.to_datetime(frame.index, utc=True)
+                if frame.index[0] > request_starts[request_id]:
+                    frame.index = frame.index - sample_time
+            frames_by_tag.setdefault(tag, []).append(frame)
 
         frames = []
         for tag in tag_list:
@@ -1293,18 +1298,6 @@ class PIHandlerWeb(BaseHandlerWeb):
                     df[tag] = df[tag] ** 2
 
         df.index.name = "time"
-
-        # Correct weird bug in PI Web API where MAX timestamps end of interval while
-        # all the other summaries stamp start of interval by shifting all timestamps
-        # one interval down.
-        if read_type == ReaderType.MAX:
-            min_start_time = datetime.now(timezone.utc)
-            for tag in tag_list:
-                for interval in tag_list[tag]:
-                    if tag_list[tag][interval]["start_time"] < min_start_time:
-                        min_start_time = tag_list[tag][interval]["start_time"]
-            if df.index[0] > min_start_time:
-                df.index = df.index - sample_time
 
         return df
 

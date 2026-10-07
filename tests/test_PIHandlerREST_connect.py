@@ -1,6 +1,8 @@
+import json
 import os
 from datetime import timedelta
 from typing import Any, Generator
+from urllib.parse import parse_qs, urlsplit
 
 import pandas as pd
 import pytest
@@ -324,8 +326,12 @@ def test_multi_read_tags_with_status(client: IMSClient) -> None:
     )
 
 
+@pytest.mark.parametrize(  # type: ignore[misc]
+    ("read_type", "row_count"),
+    [(ReaderType.INT, 61), (ReaderType.AVG, 60), (ReaderType.MAX, 60)],
+)
 def test_multi_read_tags_multiple_missing_intervals(
-    client: IMSClient, cache: SmartCache
+    client: IMSClient, cache: SmartCache, read_type: ReaderType, row_count: int
 ) -> None:
     tag = TAGS["Float32"]
     sample_time = timedelta(seconds=SAMPLE_TIME)
@@ -334,47 +340,72 @@ def test_multi_read_tags_multiple_missing_intervals(
         start_time=START_TIME,
         end_time=STOP_TIME,
         ts=SAMPLE_TIME,
-        read_type=ReaderType.INT,
+        read_type=read_type,
     )
-    assert expected.shape == (61, 1)
+    assert expected.shape == (row_count, 1)
     assert expected[tag].notna().all()
     cached_data = pd.concat(
         [expected.iloc[:10], expected.iloc[20:30], expected.iloc[40:]]
     ).tz_convert("UTC")
-    assert (
-        len(
-            get_missing_intervals(
-                df=cached_data,
-                start=expected.index[0].to_pydatetime(),
-                end=expected.index[-1].to_pydatetime(),
-                ts=sample_time,
-                read_type=ReaderType.INT,
+    if read_type != ReaderType.MAX:
+        assert (
+            len(
+                get_missing_intervals(
+                    df=cached_data,
+                    start=expected.index[0].to_pydatetime(),
+                    end=expected.index[-1].to_pydatetime(),
+                    ts=sample_time,
+                    read_type=read_type,
+                )
             )
+            == 2
         )
-        == 2
-    )
     cache.store(
         df=cached_data,
         tagname=tag,
-        read_type=ReaderType.INT,
+        read_type=read_type,
         ts=sample_time,
         get_status=False,
     )
+    batch_queries = []
+
+    def record_batch_queries(response: Response, **kwargs: Any) -> None:
+        if response.request.method == "POST":
+            body = response.request.body
+            assert isinstance(body, (str, bytes))
+            batch_queries.append(
+                [
+                    parse_qs(urlsplit(request["Resource"]).query)
+                    for request in json.loads(body).values()
+                ]
+            )
+
     client.cache = cache
+    client.handler.session.hooks["response"].append(record_batch_queries)
     try:
         result = client.multi_read_tags(
             tags=[tag],
             start_time=START_TIME,
             end_time=STOP_TIME,
             ts=SAMPLE_TIME,
-            read_type=ReaderType.INT,
+            read_type=read_type,
         )
+        assert len(batch_queries) == 1
+        queries = batch_queries[0]
+        if read_type == ReaderType.INT:
+            assert len(queries) == 2
+        else:
+            assert len(queries) == 1
+            start = ensure_datetime_with_tz(START_TIME)
+            end = ensure_datetime_with_tz(STOP_TIME)
+            assert queries[0]["startTime"] == [PIHandlerWeb._time_to_UTC_string(start)]
+            assert queries[0]["endTime"] == [PIHandlerWeb._time_to_UTC_string(end)]
         pd.testing.assert_frame_equal(
             result, expected, check_dtype=False, check_names=False, check_freq=False
         )
         cached_result = cache.fetch(
             tagname=tag,
-            read_type=ReaderType.INT,
+            read_type=read_type,
             ts=sample_time,
             start=expected.index[0].to_pydatetime(),
             end=expected.index[-1].to_pydatetime(),
@@ -383,12 +414,34 @@ def test_multi_read_tags_multiple_missing_intervals(
         pd.testing.assert_frame_equal(
             cached_result, expected.tz_convert("UTC"), check_freq=False
         )
+        repeated = client.multi_read_tags(
+            tags=[tag],
+            start_time=START_TIME,
+            end_time=STOP_TIME,
+            ts=SAMPLE_TIME,
+            read_type=read_type,
+        )
+        pd.testing.assert_frame_equal(repeated, result, check_freq=False)
     finally:
+        client.handler.session.hooks["response"].remove(record_batch_queries)
         client.cache = None
 
 
-def test_multi_read_tags_smartcache_miss(client: IMSClient, cache: SmartCache) -> None:
+@pytest.mark.parametrize(  # type: ignore[misc]
+    ("read_type", "row_count"),
+    [(ReaderType.INT, 61), (ReaderType.AVG, 60), (ReaderType.MAX, 60)],
+)
+def test_multi_read_tags_smartcache_miss(
+    client: IMSClient, cache: SmartCache, read_type: ReaderType, row_count: int
+) -> None:
     tags = [TAGS["Float32"], "SINUSOID"]
+    expected = client.read(
+        tags=tags,
+        start_time=START_TIME,
+        end_time=STOP_TIME,
+        ts=SAMPLE_TIME,
+        read_type=read_type,
+    )
     request_methods = []
 
     def record_response(response: Response, **kwargs: Any) -> None:
@@ -408,9 +461,14 @@ def test_multi_read_tags_smartcache_miss(client: IMSClient, cache: SmartCache) -
             start_time=START_TIME,
             end_time=STOP_TIME,
             ts=SAMPLE_TIME,
-            read_type=ReaderType.INT,
+            read_type=read_type,
         )
-        assert first.shape == (61, 2)
+        if read_type != ReaderType.MAX:
+            assert first.shape == (row_count, 2)
+        assert first.shape == expected.shape
+        pd.testing.assert_frame_equal(
+            first, expected, check_dtype=False, check_names=False, check_freq=False
+        )
         assert first.notna().any().all()
         assert "POST" in request_methods
         assert cache.stats() == (0, len(tags))
@@ -422,11 +480,19 @@ def test_multi_read_tags_smartcache_miss(client: IMSClient, cache: SmartCache) -
             start_time=START_TIME,
             end_time=STOP_TIME,
             ts=SAMPLE_TIME,
-            read_type=ReaderType.INT,
+            read_type=read_type,
         )
         pd.testing.assert_frame_equal(second, first)
-        assert cache.stats() == (len(tags), len(tags))
-        assert len(request_methods) == requests_after_first
+        expected_grid = pd.date_range(
+            ensure_datetime_with_tz(START_TIME),
+            ensure_datetime_with_tz(STOP_TIME),
+            freq=f"{SAMPLE_TIME}s",
+        )
+        if expected.index.isin(expected_grid).all():
+            assert cache.stats() == (len(tags), len(tags))
+            assert len(request_methods) == requests_after_first
+        else:
+            assert len(request_methods) > requests_after_first
     finally:
         client.handler.session.hooks["response"].remove(record_response)
         client.cache = None
