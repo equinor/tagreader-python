@@ -34,7 +34,7 @@ dependencies = [
     "requests-kerberos>=0",
     "msal-bearer>=1.5.2",
     "diskcache>=5.6.1",
-    "pycryptodome>=3.20.0",
+    "pycryptodome>=3.24.1",
     "requests-ntlm>=1.1,<=2.0",
     "platformdirs>=4.3.7",
     "urllib3>=2.5.0" # To avoid security issue https://www.cve.org/CVERecord?id=CVE-2025-50182
