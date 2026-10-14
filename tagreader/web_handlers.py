@@ -282,10 +282,7 @@ class BaseHandlerWeb(ABC):
             res = self.session.get(
                 url,
                 params=params,
-                timeout=(
-                    None,
-                    timeout,
-                ),
+                timeout=(None, timeout),
             )  # Noqa. Read timeout, No connect timeout.
 
         res.raise_for_status()
@@ -307,6 +304,14 @@ class BaseHandlerWeb(ABC):
 
             txt = res.text.replace('"v":nan', '"v":NaN').replace('"v":-nan', '"v":NaN')
             return json.loads(txt)
+
+    def post(self, url, json_str=None, headers=None) -> requests.Response:
+        if not self.session.verify:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+        res = self.session.post(url, json=json_str, headers=headers)
+        res.raise_for_status()
+        return res
 
     def connect(self):
         if self.datasource == "":
@@ -1182,6 +1187,156 @@ class PIHandlerWeb(BaseHandlerWeb):
             df = df.drop(columns=["Good", "Questionable", "Substituted"])
 
         return df.rename(columns={"Value": tag, "Status": tag + "::status"})
+
+    def read_multi_tag(
+        self,
+        tag_list: dict,
+        start_time: Optional[pd.Timestamp] = None,
+        stop_time: Optional[pd.Timestamp] = None,
+        sample_time: Optional[Union[int, pd.Timestamp]] = None,
+        read_type: ReaderType = ReaderType.INTERPOLATED,
+        metadata: Optional[Dict[str, str]] = None,
+        get_status: bool = False,
+    ):
+        if len(tag_list) > 950:
+            raise RuntimeError(
+                f"ERROR: Trying to read too many tags ({len(tag_list)}). Server will return a HTTP 429 Too Many "
+                f"Requests error. Max. is set to 950. Please split the request."
+            )
+
+        urls = {}
+        for tag in tag_list:
+            web_id = self.tag_to_web_id(tag)
+            if not web_id:
+                return pd.DataFrame()
+
+            for interval in tag_list[tag]:
+                url, params = self.generate_read_query(
+                    tag=web_id,
+                    start=tag_list[tag][interval]["start_time"],
+                    end=tag_list[tag][interval]["stop_time"],
+                    sample_time=sample_time,
+                    read_type=read_type,
+                    metadata=metadata,
+                    get_status=get_status,
+                )
+
+                query = urllib.parse.urlencode(params)
+                url = f"{urljoin(self.base_url, url)}?{query}"
+                urls[tag] = {"Method": "Get", "Resource": url}
+
+        headers = {"Content-Type": "Application/json", "X-Requested-With": ""}
+        res = self.post(url=self.base_url + "/batch", json_str=urls, headers=headers)
+
+        df = pd.DataFrame()
+        data = {}
+        j = res.json()
+        for tag in j:
+            timestamps = []
+            data[tag] = []
+            if get_status:
+                data[f"{tag}::status"] = []
+
+            if read_type == ReaderType.SNAPSHOT:
+                if isinstance(j[tag]["Content"]["Value"], float):
+                    data[tag].append(j[tag]["Content"]["Value"])
+                else:
+                    data[tag].append(np.nan)
+
+                if get_status:
+                    data[tag + "::status"].append(
+                        j[tag]["Content"]["Questionable"]
+                        + 2 * (1 - j[tag]["Content"]["Good"])
+                        + 4 * j[tag]["Content"]["Substituted"]
+                    )
+
+                timestamps.append(j[tag]["Content"]["Timestamp"])
+                df_tag = pd.DataFrame(data, index=timestamps)
+                df = pd.concat([df, df_tag], axis=1)
+                data = {}
+                timestamps = []
+            elif read_type in [
+                ReaderType.INT,
+                ReaderType.INTERPOLATED,
+                ReaderType.INTERPOLATE,
+                ReaderType.RAW,
+            ]:
+                for item in j[tag]["Content"]["Items"]:
+                    if isinstance(item["Value"], float):
+                        data[tag].append(item["Value"])
+                    else:
+                        data[tag].append(np.nan)
+
+                    if get_status:
+                        data[tag + "::status"].append(
+                            item["Questionable"]
+                            + 2 * (1 - item["Good"])
+                            + 4 * item["Substituted"]
+                        )
+
+                    timestamps.append(item["Timestamp"])
+
+                df_tag = pd.DataFrame(data, index=timestamps)
+                df = pd.concat([df, df_tag], axis=1)
+                data = {}
+                timestamps = []
+            else:
+                for item in j[tag]["Content"]["Items"]:
+                    if isinstance(item["Value"]["Value"], float):
+                        data[tag].append(item["Value"]["Value"])
+                    else:
+                        data[tag].append(np.nan)
+
+                    if get_status:
+                        data[tag + "::status"].append(
+                            item["Value"]["Questionable"]
+                            + 2 * (1 - item["Value"]["Good"])
+                            + 4 * item["Value"]["Substituted"]
+                        )
+
+                    timestamps.append(item["Value"]["Timestamp"])
+
+                df_tag = pd.DataFrame(data, index=timestamps)
+                df = pd.concat([df, df_tag], axis=1)
+                data = {}
+                timestamps = []
+
+        # Can happen for RAW reads w/o data in interval
+        if df.empty:
+            return df
+
+        try:
+            if read_type == ReaderType.RAW or read_type == ReaderType.SNAPSHOT:
+                # Sub-second timestamps are common
+                df.index = pd.to_datetime(
+                    df.index, format="%Y-%m-%dT%H:%M:%S.%fZ", utc=True
+                )
+            else:
+                # Sub-second timestamps are uncommon
+                df.index = pd.to_datetime(
+                    df.index, format="%Y-%m-%dT%H:%M:%SZ", utc=True
+                )
+        except ValueError:
+            df.index = pd.to_datetime(df.index, utc=True)
+
+        if read_type == ReaderType.VAR:
+            df = df**2
+
+        df.index.name = "time"
+
+        # Correct weird bug in PI Web API where MAX timestamps end of interval while
+        # all the other summaries stamp start of interval by shifting all timestamps
+        # one interval down.
+        if read_type == ReaderType.MAX:
+            min_start_time = datetime.now(timezone.utc)
+            for tag in tag_list:
+                for interval in tag_list[tag]:
+                    if tag_list[tag][interval]["start_time"] < min_start_time:
+                        min_start_time = tag_list[tag][interval]["start_time"]
+            if df.index[0] > min_start_time:
+                df.index = df.index - sample_time
+
+        return df
 
     def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
         raise NotImplementedError
