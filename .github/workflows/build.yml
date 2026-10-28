@@ -34,7 +34,7 @@ jobs:
           sudo apt-get update && sudo apt-get install libkrb5-dev
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
