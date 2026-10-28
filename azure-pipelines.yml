@@ -22,9 +22,8 @@ steps:
   displayName: 'Use Python $(python.version)'
 
 - script: |
-    python -m pip install --upgrade pip pipx
-    pipx install poetry
-    poetry export -f requirements.txt --output requirements.txt
+    python -m pip install --upgrade pip uv
+    uv export --locked --format requirements-txt --no-dev --no-emit-project --output-file requirements.txt
     pip install -r requirements.txt
     pip install pytest pytest-azurepipelines pytest-cov
   displayName: 'Install dependencies'

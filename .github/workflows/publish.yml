@@ -15,26 +15,25 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.11'
+          python-version: '3.14'
 
       - name: Install Poetry
         run: |
           pipx install poetry
 
-      - name: Setup Python
-        uses: actions/setup-python@v7
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{matrix.python-version}}
-          cache: 'poetry'
-
-      - name: Check pyproject.toml validity
-        run: poetry check --no-interaction
+          enable-cache: true
 
       - name: Install deps
-        run: poetry install --no-interaction
+        run: uv sync --locked
+
+      - name: Build distributions
+        run: uv build
 
       - name: Publish to PyPI
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
         run: |
-          poetry publish --build
+          poetry publish
