@@ -33,10 +33,10 @@ the data to her Norwegian colleague with datestamps in Norwegian time. One way o
 ``` python
 import tagreader
 from datetime import datetime, timedelta
-from dateutil import tz
-c = tagreader.IMSClient("PINO", "pi", tz="US/Central")  # Force output data to Houston time
+from zoneinfo import ZoneInfo
+c = tagreader.IMSClient("PINO", "piwebapi", tz="US/Central")  # Force output data to Houston time
 c.connect()
-tzinfo = tz.gettz("America/Sao_Paulo")  # Generate timezone object for Rio local time
+tzinfo = ZoneInfo("America/Sao_Paulo")  # Generate timezone object for Rio local time
 event_time = datetime(2020, 7, 20, 15, 5, 0, tzinfo=tzinfo)
 start_time = event_time - timedelta(minutes=30)
 end_time = event_time + timedelta(minutes=10)

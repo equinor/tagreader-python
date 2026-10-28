@@ -1,41 +1,38 @@
 # Website
 
-This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
+This website uses [Docusaurus 3](https://docusaurus.io/) and is published at
+https://equinor.github.io/tagreader-python/.
+
+Run the following commands from the `documentation` directory. Use Node.js 24
+and Yarn Classic 1.22.19, matching the documentation workflow.
 
 ### Installation
 
-```
-$ yarn
+```shell
+npm install --global yarn@1.22.19
+yarn install --frozen-lockfile
 ```
 
 ### Local Development
 
-```
-$ yarn start
+```shell
+yarn start
 ```
 
 This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
 ### Build
 
-```
-$ yarn build
+```shell
+yarn typecheck
+yarn build
 ```
 
 This command generates static content into the `build` directory and can be served using any static contents hosting service.
 
 ### Deployment
 
-Using SSH:
-
-```
-$ USE_SSH=true yarn deploy
-```
-
-Not using SSH:
-
-```
-$ GIT_USER=<Your GitHub username> yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+The GitHub Actions workflow in `.github/workflows/docs.yaml` builds and pushes
+the site to `gh-pages`. It is called by the main-branch push workflow and can
+also be started manually from the Actions tab. GitHub Pages must serve the
+`gh-pages` branch from its root directory.

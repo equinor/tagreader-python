@@ -16,7 +16,7 @@ is no ongoing query.
 If, for any reason, you want to disable the cache, simply set it to the default value `None`.
 
 ``` python
-c = tagreader.IMSClient("PINO", "pi", cache=None)
+c = tagreader.IMSClient("PINO", "piwebapi", cache=None)
 c.connect()
 ```
 
@@ -24,9 +24,10 @@ If you want to cache data, we recommend using the provided SmartCache like this:
 
 ``` python
 from pathlib import Path
+import tagreader
 from tagreader.cache import SmartCache
 
-c = tagreader.IMSClient("PINO", "pi", cache=SmartCache(path=Path(".cache"))
+c = tagreader.IMSClient("PINO", "piwebapi", cache=SmartCache(path=Path(".cache")))
 c.connect()
 ```
 

@@ -22,22 +22,19 @@ The following input arguments are only relevant when calling `list_sources()` wi
 
 * `url` (optional): Path to server root, e.g. _"https://aspenone/ProcessData/AtProcessDataREST.dll"_ or
 _"https://piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` if
-* `imstype` is `piwebapi` or `aspenone` .
-* `verify_ssl` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
+`imstype` is `piwebapi` or `aspenone`.
+* `verify_ssl` (optional): Whether to verify the server certificate, or a path to a trusted CA bundle. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth objects
 that work with Equinor servers. If not connecting to an Equinor server, you may have to create your own auth.
 
-When called with `imstype` set to `pi` , `list_sources()` will search the registry at
-*HKEY_CURRENT_USER\Software\AspenTech\ADSA\Caches\AspenADSA\{username}* for available PI servers. Similarly,
-if called with `imstype` set to `ip21` , *HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PISystem\PI-SDK* will be searched
-for available IP.21 servers. Servers found through the registry are normally servers to which the user is authorized,
-and does not necessarily include all available data sources in the organization.
+The legacy `pi`, `ip21`, and `aspen` types selected ODBC clients and are no longer
+supported. Data sources are discovered through the REST service, not the Windows registry.
 
 **Example:**
 
 ``` python
 from tagreader import list_sources
-list_sources("ip21")
+list_sources("aspenone")
 list_sources("piwebapi")
 ```
 

@@ -20,8 +20,9 @@ interpretation between the server and the client object.
 
 Equinor root certificates are automatically added when using an Equinor Managed computer, which allow SSL verification.
 
-For non-Equinor users: If you run info SSL verification errors and prefer to not set `verify_ssl=False` ,
-you can try the procedure outlined [here](https://incognitjoe.github.io/adding-certs-to-requests.html).
+Keep certificate verification enabled. If your server uses a private certificate
+authority, pass the path to its trusted CA bundle as `verify_ssl="/path/to/ca-bundle.pem"`.
+Do not disable verification to work around an unknown certificate error.
 :::
 
 :::info ODBC support
@@ -50,7 +51,7 @@ should be necessary to supply when connecting to Equinor servers.
 
 * `url` (optional): Path to server root, e.g. _"https://aspenone/ProcessData/AtProcessDataREST.dll"_
 or _"https://piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype`.
-* `verify_ssl` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
+* `verify_ssl` (optional): Whether to verify the server certificate, or a path to a trusted CA bundle. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth object
 that works with Equinor servers.
 * `cache` (optional): [Cache](caching.md) data locally in order to avoid re-reading the same data multiple times.
@@ -79,8 +80,8 @@ c = tagreader.IMSClient(datasource="PER",
 c.connect()
 ```
 
-Connecting to some other AspenTech Web API URL using NTLM authentication instead of default Kerberos and ignoring the
-server's host certificate:
+Connecting to another AspenTech Web API URL using NTLM authentication instead of default Kerberos
+and a trusted private CA bundle:
 
 ``` python
 import getpass
@@ -92,7 +93,7 @@ c = tagreader.IMSClient(datasource="myplant",
                         url="https://api.mycompany.com/aspenone",
                         imstype="aspenone",
                         auth=auth,
-                        verify_ssl=False)
+                        verify_ssl="/path/to/ca-bundle.pem")
 c.connect()
 ```
 
@@ -137,7 +138,7 @@ Both timestamps can be left out when `read_type = ReaderType.SNAPSHOT` . However
 * `ts` : The interval between samples when querying interpolated or aggregated data. Ignored and can be left out when
 `read_type = ReaderType.SNAPSHOT` . **Default** 60 seconds.
 * `read_type` (optional): What kind of data to read. More info immediately below. **Default** Interpolated.
-* `get_status` (optonal): When set to `True` will fetch status information in addition to values. **Default** `False`.
+* `get_status` (optional): When set to `True` will fetch status information in addition to values. **Default** `False`.
 
 ## Selecting what to read
 
@@ -193,12 +194,11 @@ In an effort to unify the status value for all IMS types, the following schema b
 5: Suspect/Modified
 6: Bad/Modified
 
-The status value is obtained differently for the four IMS types:
+The status value is obtained differently for the two REST handlers:
 * Aspen Web API: Read directly from the `l` ("Level") field in the json output.
 * PI Web API: Calculated as `Questionable` + 2 * (1 - `Good`) + 4 * `Substituted`.
-negative for various reasons for being bad.
 
-For the two PI IMS types, it is assumed that `Questionable` is never `True` if `Good` is `False` or `status != 0`.
+For PI Web API, it is assumed that `Questionable` is never `True` if `Good` is `False`.
 This may be an incorrect assumption with resulting erroneous status value.
 
 In summary, here is the resulting status value from tagreader for different combinations of status field values from
