@@ -55,18 +55,18 @@ Pre-commit tests can be skipped on commits with `git commit --no-verify`.
 If you have to skip the pre-commit tests, you're probably doing something you're not supposed to, and whoever commits after you might have to fix your "mistakes". Consider updating the pre-commit hooks if your code is non-compliant.
 :::
 
-### Install Poetry
+### Install uv
 
-Poetry is used to manage Python package dependencies.
+uv is used to manage Python package dependencies and the project environment.
 
 ```shell
-$ pip install poetry
+$ pip install uv
 ```
 
-The installation instructions can be found [here](https://python-poetry.org/docs/#installation).
+The installation instructions can be found [here](https://docs.astral.sh/uv/getting-started/installation/).
 
 ### Install packages
 
 ```shell
-$ poetry install
+$ uv sync
 ```
