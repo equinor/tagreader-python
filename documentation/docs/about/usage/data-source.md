@@ -22,8 +22,8 @@ The following input arguments are only relevant when calling `list_sources()` wi
 
 * `url` (optional): Path to server root, e.g. _"https://aspenone/ProcessData/AtProcessDataREST.dll"_ or
 _"https://piwebapi/piwebapi"_. **Default**: Path to Equinor server corresponding to selected `imstype` if
-* `imstype` is `piwebapi` or `aspenone` .
-* `verify_ssl` (optional): Whether to verify SSL certificate sent from server. **Default**: `True`.
+`imstype` is `piwebapi` or `aspenone`.
+* `verify_ssl` (optional): Whether to verify the server certificate, or a path to a trusted CA bundle. **Default**: `True`.
 * `auth` (optional): Auth object to pass to the server for authentication. **Default**: Kerberos-based auth objects
 that work with Equinor servers. If not connecting to an Equinor server, you may have to create your own auth.
 

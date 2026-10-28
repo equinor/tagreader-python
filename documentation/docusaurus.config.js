@@ -12,10 +12,12 @@ export default {
   url: 'https://equinor.github.io',
   baseUrl: '/tagreader-python/',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.png',
   markdown: {
-    mermaid: true
+    mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: 'throw'
+    }
   },
   themes: [
     '@docusaurus/theme-mermaid'

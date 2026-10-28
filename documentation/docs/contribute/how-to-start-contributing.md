@@ -13,11 +13,11 @@ This document outlines the process to help get your contribution accepted.
 
 There are many ways to contribute:
 
-* Suggest [Features](https://github.com/equinor/awt/issues/new?assignees=&labels=type%3A+%3Abulb%3A+feature+request&template=feature-request.md&title=)
-* Suggest [Changes](https://github.com/equinor/awt/issues/new?assignees=&labels=type%3A+%3Awrench%3A+maintenance&template=code-maintenance.md&title=)
-* Report [Bugs](https://github.com/equinor/awt/issues/new?assignees=&labels=type%3A+%3Abug+bug&template=bug-report.md&title=)
+* Suggest [Features](https://github.com/equinor/tagreader-python/issues/new)
+* Suggest [Changes](https://github.com/equinor/tagreader-python/issues/new)
+* Report [Bugs](https://github.com/equinor/tagreader-python/issues/new)
 
-You can start by looking through the current [Issues](https://github.com/equinor/awt/issues).
+You can start by looking through the current [Issues](https://github.com/equinor/tagreader-python/issues).
 
 ## Workflow
 

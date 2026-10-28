@@ -8,23 +8,20 @@ Information Manufacturing Systems (IMS) systems. It is intended to be easy to us
 as possible to the backend historians.
 
 ## System requirements
-The only requirements are Python >= 3.8, with Windows, Linux or macOS.
+Tagreader requires Python 3.9.6 or newer on Windows, Linux, or macOS. Reading
+historian data also requires access to a PI Web API or AspenOne REST service and
+the appropriate authentication.
 
 ## Installation
 You can install tagreader directly into your project from pypi by using pip
 or another package manager.
 
-```shell"
+```shell
 pip install tagreader
 ```
 
-The following are required and will be installed:
-
-* pandas
-* requests
-* requests-kerberos
-* certifi
-* diskcache
+Dependencies are installed automatically. The complete requirements are maintained
+in [`pyproject.toml`](https://github.com/equinor/tagreader-python/blob/main/pyproject.toml).
 
 ## Usage
 Tagreader easy to use for both Equinor internal IMS services, and non-internal usage. For non-internal usage
@@ -35,18 +32,14 @@ you simply need to provide the corresponding IMS service URLs and IMSType. See [
 import tagreader
 c = tagreader.IMSClient("mysource", "aspenone")
 print(c.search("tag*"))
-df = c.read_tags(["tag1", "tag2"], "18.06.2020 08:00:00", "18.06.2020 09:00:00", 60)
+df = c.read(["tag1", "tag2"], "2020-06-18 08:00:00", "2020-06-18 09:00:00", 60)
 ```
 
-### Jupyter Notebook Quickstart
-Jupyter Notebook examples can be found in /examples. In order to run these examples, you need to install the
-optional dependencies.
+### Examples
 
-```shell
-pip install tagreader[notebooks]
-```
-
-The quickstart Jupyter Notebook can be found [here](https://github.com/equinor/tagreader-python/blob/main/examples/quickstart.ipynb)
+See the [quickstart script](https://github.com/equinor/tagreader-python/blob/main/examples/quickstart.py)
+for a runnable example. Tagreader can also be used from Jupyter; install Jupyter
+separately in your environment. There is no `notebooks` package extra in the current release.
 
 For more details, see the [Usage section](/docs/about/usage/basic-usage).
 
