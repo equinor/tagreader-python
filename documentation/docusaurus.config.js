@@ -2,7 +2,6 @@
 // Note: type annotations allow type checking and IDEs autocompletion
 
 import { themes } from 'prism-react-renderer';
-import simplePlantUML from '@akebifiky/remark-simple-plantuml'
 import math from 'remark-math';
 import katex from 'rehype-katex';
 
@@ -50,7 +49,7 @@ export default {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl:
             'https://github.com/equinor/tagreader-python/tree/main/documentation/',
-            remarkPlugins: [simplePlantUML, math],
+            remarkPlugins: [math],
             rehypePlugins: [katex],
         },
         blog: false,
