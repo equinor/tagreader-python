@@ -17,7 +17,14 @@
   ],
   "packages": {
     ".": {
-      "package-name": "tagreader"
+      "package-name": "tagreader",
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name.value == 'tagreader')].version"
+        }
+      ]
     }
   }
 }
