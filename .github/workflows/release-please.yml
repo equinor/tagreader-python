@@ -6,6 +6,7 @@ permissions:
   pull-requests: write
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -17,22 +18,10 @@ jobs:
     steps:
       - name: PyPI Release
         id: release
-        uses: google-github-actions/release-please-action@v4
+        uses: googleapis/release-please-action@v5
         with:
-          release-type: python
-          bump-minor-pre-major: true
-          changelog-types: >
-            [{"type":"build", "section":"📦 Build system","hidden":false},
-            {"type":"chore", "section":"🧹 Chores","hidden":false},
-            {"type":"ci", "section":"👷 CI/CD","hidden":false},
-            {"type":"docs","section":"📚 Documentation","hidden":false},
-            {"type":"feat","section":"✨ Features","hidden":false},
-            {"type":"fix","section":"🐛 Bug Fixes","hidden":false},
-            {"type":"perf", "section":"🏎️ Performance","hidden":false},
-            {"type":"refactor", "section":"🔨 Refactor","hidden":false},
-            {"type":"revert", "section":"⏪️ Revert","hidden":false},
-            {"type":"style","section":"💎 Style","hidden":false},
-            {"type":"test", "section":"🧪 Tests","hidden":false}]
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
