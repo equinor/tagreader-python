@@ -640,14 +640,14 @@ broker = ["pymsalruntime (>=0.20,<0.21) ; python_version >= \"3.9\" and platform
 
 [[package]]
 name = "msal-bearer"
-version = "1.5.2"
+version = "1.6.0"
 description = "Python package to get auth token for a msal client application using msal, msal-extensions and azure-identity."
 optional = false
 python-versions = "<4,>=3.9.2"
 groups = ["main"]
 files = [
-    {file = "msal_bearer-1.5.2-py3-none-any.whl", hash = "sha256:5a7833f8d632df0aa850a266d9df1356fd1438684e73237c884389a0edd06521"},
-    {file = "msal_bearer-1.5.2.tar.gz", hash = "sha256:1ac2bfa7067b6386137c1b1e210a8ab6cbb64143980fb5ff54223fce7b2cd448"},
+    {file = "msal_bearer-1.6.0-py3-none-any.whl", hash = "sha256:7a51a5ca7060bbb060d039c48ae82cb7ba09558f839f86d09c49a657867ad49e"},
+    {file = "msal_bearer-1.6.0.tar.gz", hash = "sha256:b6ee1d79e2d41ac7d06fdf90a405c6d0c3bb19c5946218a4c6225d8c05637a0f"},
 ]
 
 [package.dependencies]
@@ -1594,4 +1594,4 @@ typing-extensions = {version = ">=4.13.2", markers = "python_version < \"3.11\""
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9.6,<4.0.0"
-content-hash = "6b067e02c4bec3f7aecf0dd963ac60bd9e515f8b30213a2436fd1efa5272911b"
+content-hash = "56cd739b865b19ec26fcded0e066149c13a88dc0ae603bcdfd8468669ec29bc4"
