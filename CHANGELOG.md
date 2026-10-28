@@ -2,6 +2,13 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.3.1](https://github.com/equinor/tagreader-python/compare/v6.3.0...v6.3.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* futureproof pandas behaviour ([#507](https://github.com/equinor/tagreader-python/issues/507)) ([c420a51](https://github.com/equinor/tagreader-python/commit/c420a51d4d83c8c09174710097a0f20117196581))
+
 ## [6.3.0](https://github.com/equinor/tagreader-python/compare/v6.2.1...v6.3.0) (2026-10-06)
 
 
