@@ -2,6 +2,22 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.3.0](https://github.com/equinor/tagreader-python/compare/v6.2.1...v6.3.0) (2026-10-06)
+
+
+### Features
+
+* robustify reading time series data for tags with non-ascii tag name ([#493](https://github.com/equinor/tagreader-python/issues/493)) ([2dfd67f](https://github.com/equinor/tagreader-python/commit/2dfd67f1df616af3dd280a1f5ff13826a5c20233))
+
+
+### Bug Fixes
+
+* add validation for empty query and tag in AspenHandlerWeb and PIHandlerWeb ([#499](https://github.com/equinor/tagreader-python/issues/499)) ([6b8f171](https://github.com/equinor/tagreader-python/commit/6b8f17191d7218c5706ea66bd6fd9c800b2ad91e))
+* Aspen History queries for non-ascii tags by sending XML via POST body (UTF-8) ([#462](https://github.com/equinor/tagreader-python/issues/462)) ([3744a80](https://github.com/equinor/tagreader-python/commit/3744a804019dddd9079b6db0b17d0f182d60b202))
+* enhance error handling for tag validation in AspenHandlerWeb ([#497](https://github.com/equinor/tagreader-python/issues/497)) ([a0c3e97](https://github.com/equinor/tagreader-python/commit/a0c3e97970b2e7413d3a409d55a4d4cb7b4ad067))
+* improve datasource validation in functions ([#495](https://github.com/equinor/tagreader-python/issues/495)) ([8c1fa60](https://github.com/equinor/tagreader-python/commit/8c1fa60fb1fc0086133dc7067fa17fa8f7496acc))
+* prevent Aspen History query failure for tags with special characters ([3744a80](https://github.com/equinor/tagreader-python/commit/3744a804019dddd9079b6db0b17d0f182d60b202))
+
 ## [6.2.1](https://github.com/equinor/tagreader-python/compare/v6.2.0...v6.2.1) (2026-09-03)
 
 

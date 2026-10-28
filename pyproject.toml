@@ -1,6 +1,6 @@
 [project]
 name = "tagreader"
-version = "6.2.1"
+version = "6.3.0"
 description = "Tagreader is a Python package for reading trend data from the OSIsoft PI and Aspen Infoplus.21 IMS systems."
 authors = [
     { name = "Einar S. Idsø", email = "eiids@equinor.com" },
@@ -9,7 +9,7 @@ authors = [
 license = "MIT"
 readme = "README.md"
 keywords=["Aspen InfoPlus.21", "OSIsoft PI"]
-requires-python = ">=3.9.2,<4.0.0"
+requires-python = ">=3.9.6,<4.0.0"
 classifiers=[
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -28,13 +28,13 @@ classifiers=[
     "Topic :: Utilities",
 ]
 dependencies = [
-    "pandas>=1",
-    "certifi>=2024.12.14,<2026.0.0",
+    "pandas>=1.4.0,<4",
+    "certifi>=2024.12.14,<2026.10.24",
     "requests>=2.32.5",
     "requests-kerberos>=0",
-    "msal-bearer>=1.5.2",
+    "msal-bearer>=1.6.0",
     "diskcache>=5.6.1",
-    "pycryptodome>=3.20.0",
+    "pycryptodome>=4.1.0",
     "requests-ntlm>=1.1,<=2.0",
     "platformdirs>=4.3.7",
     "urllib3>=2.5.0" # To avoid security issue https://www.cve.org/CVERecord?id=CVE-2025-50182

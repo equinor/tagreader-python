@@ -727,13 +727,13 @@ class AspenHandlerWeb(BaseHandlerWeb):
         if get_status:
             # The "l" field maps 1:1 to ODBC status field values 0, 1, 2, 4, 5, 6
             df = (
-                pd.DataFrame.from_dict(data["data"][0]["samples"])
+                pd.DataFrame(data["data"][0]["samples"])
                 .drop(labels=["s", "V"], axis="columns")
                 .rename(columns={"t": "Timestamp", "v": "Value", "l": "Status"})
             )
         else:
             df = (
-                pd.DataFrame.from_dict(data["data"][0]["samples"])
+                pd.DataFrame(data["data"][0]["samples"])
                 .drop(labels=["l", "s", "V"], axis="columns")
                 .rename(columns={"t": "Timestamp", "v": "Value"})
             )
@@ -1110,7 +1110,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         data = self.fetch(url, params=params)
 
         if read_type == ReaderType.SNAPSHOT:
-            df = pd.DataFrame.from_dict([data])  # noqa
+            df = pd.DataFrame([data])
         else:
             # Summary (aggregated) data and DigitalSets return Value as dict
             df = pd.json_normalize(data=data, record_path="Items")

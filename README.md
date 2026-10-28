@@ -1,7 +1,3 @@
-⚠️ **Important:** **We are phasing out TagReader, and the code will no longer be maintained.**
-
-  For employees in Equinor we recommend using Omnia Timeseries
-
 # tagreader-python <!-- omit in toc -->
 
 ![GitHub Build Status](https://github.com/equinor/tagreader-python/workflows/Test/badge.svg)

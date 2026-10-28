@@ -12,15 +12,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.11", "3.13"]
         os: [windows-latest, ubuntu-latest, macos-latest]
+        exclude:
+          - python-version: "3.9"
+            os: ubuntu-latest
+        include:
+          - python-version: "3.9"
+            os: ubuntu-24.04
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
 
       - name: Install required Linux library for pykerberos
-        if: matrix.os == 'ubuntu-latest'
+        if: startsWith(matrix.os, 'ubuntu-')
         run: |
           sudo apt-get update && sudo apt-get install libkrb5-dev
 
