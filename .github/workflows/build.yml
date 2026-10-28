@@ -21,6 +21,9 @@ jobs:
           - python-version: "3.9"
             os: ubuntu-24.04
     runs-on: ${{ matrix.os }}
+    env:
+      # macOS system Python 3.9 is linked against LibreSSL, which urllib3 v2 warns about.
+      UV_MANAGED_PYTHON: "1"
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -38,6 +41,9 @@ jobs:
 
       - name: Install deps
         run: uv sync --locked
+
+      - name: Check Python TLS backend
+        run: uv run --locked python -c "import ssl, sys; print(sys.version); print(ssl.OPENSSL_VERSION); sys.exit('LibreSSL' in ssl.OPENSSL_VERSION)"
 
       - name: Run tests
         run: uv run --locked pytest
