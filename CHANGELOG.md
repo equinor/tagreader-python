@@ -2,6 +2,33 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.3.1](https://github.com/equinor/tagreader-python/compare/v6.3.0...v6.3.1) (2026-10-28)
+
+
+### 🧹 Chores
+
+* bump minimum python to 3.9.6 ([c420a51](https://github.com/equinor/tagreader-python/commit/c420a51d4d83c8c09174710097a0f20117196581))
+* convert to uv packaging ([#510](https://github.com/equinor/tagreader-python/issues/510)) ([cf4e617](https://github.com/equinor/tagreader-python/commit/cf4e617686877de8e2a9a6125bd80c8787c396d3))
+* **deps:** bump follow-redirects ([c38dd0d](https://github.com/equinor/tagreader-python/commit/c38dd0de32971d34bea13b52dfb76b46469b5c59))
+* **deps:** bump follow-redirects from 1.16.0 to 1.16.1 in /documentation in the npm_and_yarn group across 1 directory ([#503](https://github.com/equinor/tagreader-python/issues/503)) ([c38dd0d](https://github.com/equinor/tagreader-python/commit/c38dd0de32971d34bea13b52dfb76b46469b5c59))
+* **deps:** bump pycryptodome from 3.23.0 to 3.24.1 ([#501](https://github.com/equinor/tagreader-python/issues/501)) ([d0c22f2](https://github.com/equinor/tagreader-python/commit/d0c22f2a1a2080bf9bc0fb7dc054b321c57688a8))
+* **deps:** bump the npm_and_yarn group across 1 directory with 4 updates ([#500](https://github.com/equinor/tagreader-python/issues/500)) ([d80535b](https://github.com/equinor/tagreader-python/commit/d80535b79a6613eb905687893c4ada0a86c24eb9))
+* **deps:** bump the npm_and_yarn group across 1 directory with 5 updates ([#506](https://github.com/equinor/tagreader-python/issues/506)) ([b4a093e](https://github.com/equinor/tagreader-python/commit/b4a093ef8c57ca21b0e761a2bc298a4a31cc0a51))
+* **deps:** bump the npm_and_yarn group across 1 directory with 6 updates ([#491](https://github.com/equinor/tagreader-python/issues/491)) ([369eb92](https://github.com/equinor/tagreader-python/commit/369eb92ff46d27115da0842d2ed4fc9343489fc3))
+* pin pandas to &lt;4 to ensure a smooth transition ([c420a51](https://github.com/equinor/tagreader-python/commit/c420a51d4d83c8c09174710097a0f20117196581))
+* update dependencies ([#509](https://github.com/equinor/tagreader-python/issues/509)) ([2588424](https://github.com/equinor/tagreader-python/commit/258842443a6e45f4e24c788f311ed2ce5cd546b4))
+
+
+### 👷 CI/CD
+
+* python 3.9 is not supported on ubuntu &gt; 26 ([c420a51](https://github.com/equinor/tagreader-python/commit/c420a51d4d83c8c09174710097a0f20117196581))
+* refact release please ([#511](https://github.com/equinor/tagreader-python/issues/511)) ([aa66fa4](https://github.com/equinor/tagreader-python/commit/aa66fa4ae5de3be4653ce4759a77bb698a1694fa))
+
+
+### 🐛 Bug Fixes
+
+* futureproof pandas behaviour ([#507](https://github.com/equinor/tagreader-python/issues/507)) ([c420a51](https://github.com/equinor/tagreader-python/commit/c420a51d4d83c8c09174710097a0f20117196581))
+
 ## [6.3.0](https://github.com/equinor/tagreader-python/compare/v6.2.1...v6.3.0) (2026-10-06)
 
 
