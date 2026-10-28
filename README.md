@@ -1,6 +1,6 @@
 # tagreader-python <!-- omit in toc -->
 
-![GitHub Build Status](https://github.com/equinor/tagreader-python/workflows/Test/badge.svg)
+[![GitHub Build Status](https://github.com/equinor/tagreader-python/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/equinor/tagreader-python/actions/workflows/build.yml)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tagreader)
 ![PyPI](https://img.shields.io/pypi/v/tagreader)
 [![Downloads](https://pepy.tech/badge/tagreader)](https://pepy.tech/project/tagreader)
