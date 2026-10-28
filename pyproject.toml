@@ -9,7 +9,7 @@ authors = [
 license = "MIT"
 readme = "README.md"
 keywords=["Aspen InfoPlus.21", "OSIsoft PI"]
-requires-python = ">=3.9.2,<4.0.0"
+requires-python = ">=3.9.6,<4.0.0"
 classifiers=[
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -28,7 +28,7 @@ classifiers=[
     "Topic :: Utilities",
 ]
 dependencies = [
-    "pandas>=1",
+    "pandas>=1.4.0,<4",
     "certifi>=2024.12.14,<2026.0.0",
     "requests>=2.32.5",
     "requests-kerberos>=0",
