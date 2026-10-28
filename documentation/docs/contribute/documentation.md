@@ -15,9 +15,27 @@ While Docusaurus is rich on features, we use it mostly to host markdown pages. T
 
 ## Publishing
 
-We are using the GitHub Action [`publish-docs.yaml`](https://github.com/equinor/awt/blob/main/.github/workflows/publish-docs.yaml) to build and publish the documentation website. This action is run every time someone pushes to the `main` branch.
+The reusable [`docs.yaml`](https://github.com/equinor/tagreader-python/blob/main/.github/workflows/docs.yaml)
+workflow builds and publishes this site. It is called on pushes to `main` by
+[`on-push-main-branch.yml`](https://github.com/equinor/tagreader-python/blob/main/.github/workflows/on-push-main-branch.yml)
+and can also be started manually.
 
-This will check out the code, download the changelog from the `generate-changelog.yaml` action, and build the documentation. Then it will deploy the documentation (placed in the documentation/build/ folder) to GitHub Pages.
+It installs the dependencies pinned in `documentation/yarn.lock`, checks
+TypeScript, builds the site with Node.js 24, and pushes `documentation/build`
+to the `gh-pages` branch. It does not download a separately generated changelog.
+
+## Local checks
+
+From the `documentation` directory, using Node.js 24 and Yarn 1.22.19:
+
+```shell
+yarn install --frozen-lockfile
+yarn typecheck
+yarn build
+yarn start
+```
+
+Check changed pages in the local preview as well as running the production build.
 
 ## Initial settings
 

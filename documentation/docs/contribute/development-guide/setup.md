@@ -1,27 +1,30 @@
 # Setup
 
-```mdx-code-block
-import TabItem from '@theme/TabItem';
-import Tabs from '@theme/Tabs';
-```
-
 ## Prerequisites
 
-To work with the tagreader code you'll need to install:
+Install Git, Python 3.9.6 or newer, and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+The package's Python requirement and dependencies are defined in
+[`pyproject.toml`](https://github.com/equinor/tagreader-python/blob/main/pyproject.toml).
+Use the Python versions covered by the current CI workflows when checking compatibility.
 
-Python >=3.8 with the following packages:
+Tagreader supports PI Web API and AspenOne REST connections. ODBC clients and
+their proprietary drivers are not supported in current releases.
 
-* pandas >= 1.0.0
-* requests
-* requests-kerberos
-* certifi >= 2023.5.7
-* diskcache
-* pyodbc (If using ODBC connection)
+## Install the development environment
 
-:::info  ODBC Connection
-If using ODBC connections, you must also install proprietary drivers for PI ODBC and/or Aspen IP.21 SQLPlus. These
-drivers are only available for Microsoft Windows. Pyodbc will therefore not be installed for non-Windows systems.
-:::
+Clone the repository and install its locked dependencies, including development tools:
+
+```shell
+git clone https://github.com/equinor/tagreader-python.git
+cd tagreader-python
+uv sync --locked
+```
+
+Run tools with `uv run` so they use the project environment. On Linux, building
+the Kerberos dependency may require development headers, such as `libkrb5-dev`
+and a C compiler on Ubuntu. Access to a historian also requires the appropriate
+network connection, permissions, and authentication; installing the package does
+not grant access.
 
 ## Pre-commit
 
@@ -36,7 +39,7 @@ On commit locally, code is automatically formatted and checked for security vuln
 To initialize pre-commit in your local repository, run
 
 ```shell
-pre-commit install
+uv run pre-commit install
 ```
 
 This tells pre-commit to run for this repository on every commit.
@@ -46,7 +49,7 @@ This tells pre-commit to run for this repository on every commit.
 Pre-commit will run on every commit, but can also be run manually on all files:
 
 ```shell
-pre-commit run --all-files
+uv run pre-commit run --all-files
 ```
 
 Pre-commit tests can be skipped on commits with `git commit --no-verify`.
@@ -55,18 +58,7 @@ Pre-commit tests can be skipped on commits with `git commit --no-verify`.
 If you have to skip the pre-commit tests, you're probably doing something you're not supposed to, and whoever commits after you might have to fix your "mistakes". Consider updating the pre-commit hooks if your code is non-compliant.
 :::
 
-### Install uv
+## Next steps
 
-uv is used to manage Python package dependencies and the project environment.
-
-```shell
-$ pip install uv
-```
-
-The installation instructions can be found [here](https://docs.astral.sh/uv/getting-started/installation/).
-
-### Install packages
-
-```shell
-$ uv sync
-```
+See [Testing](testing.md) for offline and live-service checks, and
+[Upgrading](upgrading.md) for dependency and lockfile maintenance.

@@ -9,7 +9,7 @@ import katex from 'rehype-katex';
 export default {
   title: 'Tagreader',
   tagline: 'Tagreader.',
-  url: 'https://awt.app.radix.equinor.com/',
+  url: 'https://equinor.github.io',
   baseUrl: '/tagreader-python/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -24,7 +24,7 @@ export default {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'equinor', // Usually your GitHub org/username.
-  projectName: 'tagreader', // Usually your repo name.
+  projectName: 'tagreader-python', // Usually your repo name.
   deploymentBranch: 'gh-pages',
 
   // Even if you don't use internalization, you can use this field to set useful
@@ -109,7 +109,7 @@ export default {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/equinor/tagreader',
+                href: 'https://github.com/equinor/tagreader-python',
               },
               {
                 label: 'PyPi',

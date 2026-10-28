@@ -17,7 +17,7 @@ Here’s how the app is organized.
 
 ```
 ├── .github/ - GitHub Actions and more
-├── tagreader/ - The source code
+├── src/tagreader/ - The source code
 ├── tests/ - Tests
 │── documentation/ - Documentation
 └── ...

@@ -11,7 +11,7 @@ Two client methods have been created to fetch basic metadata for one or more tag
 Fetches the engineering unit(s) for the tag(s) provided. The argument `tags` can be either a single tagname as string,
 or a list of tagnames.
 
-### get_description()
+### get_descriptions()
 
 Fetches the description(s) for the tag(s) provided. The argument `tags` can be either a single tagname as string,
 or a list of tagnames.
