@@ -2,6 +2,25 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.3.2](https://github.com/equinor/tagreader-python/compare/v6.3.1...v6.3.2) (2026-10-29)
+
+
+### 🧹 Chores
+
+* update dependencies ([#515](https://github.com/equinor/tagreader-python/issues/515)) ([7a47a7f](https://github.com/equinor/tagreader-python/commit/7a47a7fec264679bff99eca6fb5f8b4872ef5753))
+* update README.md ([42f5678](https://github.com/equinor/tagreader-python/commit/42f5678079ff64f334cfd29165d8d9207de42023))
+
+
+### 👷 CI/CD
+
+* fix release-please and update linter ([b6eb7a6](https://github.com/equinor/tagreader-python/commit/b6eb7a62919197e45e4fdc662ae82fa99331ec87))
+* update workflows, test matrixes and versions, check for synchronized lock-file ([#516](https://github.com/equinor/tagreader-python/issues/516)) ([e4bf8f6](https://github.com/equinor/tagreader-python/commit/e4bf8f6f2fb01f706ad9be624aac5a228b684ff6))
+
+
+### 📚 Documentation
+
+* update ([#514](https://github.com/equinor/tagreader-python/issues/514)) ([3ec6104](https://github.com/equinor/tagreader-python/commit/3ec61044d945cae583ca6ace132e57867507f9b4))
+
 ## [6.3.1](https://github.com/equinor/tagreader-python/compare/v6.3.0...v6.3.1) (2026-10-28)
 
 
