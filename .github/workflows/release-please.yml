@@ -16,6 +16,17 @@ jobs:
     name: 🔖 Release Please
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.14'
+
+      - name: Check lockfile consistency
+        run: uv lock --check
+
       - name: PyPI Release
         id: release
         uses: googleapis/release-please-action@v5

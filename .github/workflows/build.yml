@@ -12,14 +12,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.11", "3.13"]
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        exclude:
-          - python-version: "3.9"
-            os: ubuntu-latest
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+        os: [windows-latest]
         include:
           - python-version: "3.9"
             os: ubuntu-24.04
+          - python-version: "3.15"
+            os: ubuntu-latest
+          - python-version: "3.9"
+            os: macos-latest
+          - python-version: "3.15"
+            os: macos-latest
     runs-on: ${{ matrix.os }}
     env:
       # macOS system Python 3.9 is linked against LibreSSL, which urllib3 v2 warns about.
