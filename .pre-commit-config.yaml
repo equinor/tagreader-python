@@ -1,4 +1,12 @@
 repos:
+  - repo: local
+    hooks:
+      - id: uv-lock
+        name: Sync uv.lock
+        entry: uv lock
+        language: system
+        files: ^(pyproject\.toml|uv\.lock)$
+        pass_filenames: false
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
