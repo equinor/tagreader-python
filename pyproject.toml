@@ -54,7 +54,7 @@ homepage = "https://github.com/equinor/tagreader-python"
 repository = "https://github.com/equinor/tagreader-python"
 
 [dependency-groups]
-dev = ["pre-commit>=3.0", "pytest>=7,<9"]
+dev = ["pre-commit>=3.0", "pytest>=7,<10"]
 
 [tool.uv]
 default-groups = "all"
