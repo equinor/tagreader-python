@@ -56,6 +56,23 @@ or _"https://piwebapi/piwebapi"_. **Default**: Path to Equinor server correspond
 that works with Equinor servers.
 * `cache` (optional): [Cache](caching.md) data locally in order to avoid re-reading the same data multiple times.
 
+For a PI Web API server that requires Basic Auth, set it once before creating the client. This setting applies only
+to PI Web API connections in the current Python process and is kept in memory; it is not persisted to a file.
+Basic Auth does not encrypt credentials, so use HTTPS and keep certificate verification enabled:
+
+``` python
+import getpass
+import tagreader
+from tagreader.web_handlers import set_basic_auth
+
+set_basic_auth(username="myuser", password=getpass.getpass())
+c = tagreader.IMSClient(
+    datasource="myplant",
+    imstype="piwebapi",
+)
+c.connect()
+```
+
 ## Connecting to data source
 
 After creating the client as described above, connect to the server with the `connect()` method.

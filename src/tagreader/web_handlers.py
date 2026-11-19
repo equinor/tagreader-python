@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import json
 import re
@@ -13,6 +14,7 @@ import pandas as pd
 import requests
 import urllib3
 from Crypto.Hash import MD4 as _MD4
+from requests.auth import AuthBase
 from requests_kerberos import OPTIONAL, HTTPKerberosAuth
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -54,7 +56,30 @@ def get_verify_ssl() -> Union[bool, str]:
     return "/etc/ssl/certs/ca-bundle.trust.crt"
 
 
-def get_auth_pi() -> HTTPKerberosAuth:
+class _CachedBasicAuth(AuthBase):
+    __slots__ = ("_authorization",)
+
+    def __init__(self, authorization: str):
+        self._authorization = authorization
+
+    def __call__(self, request: requests.PreparedRequest) -> requests.PreparedRequest:
+        request.headers["Authorization"] = self._authorization
+        return request
+
+
+_pi_basic_auth: Optional[_CachedBasicAuth] = None
+
+
+def set_basic_auth(username: str, password: str) -> None:
+    global _pi_basic_auth
+    credentials = username.encode("latin-1") + b":" + password.encode("latin-1")
+    authorization = "Basic " + base64.b64encode(credentials).decode("ascii")
+    _pi_basic_auth = _CachedBasicAuth(authorization)
+
+
+def get_auth_pi() -> Union[_CachedBasicAuth, HTTPKerberosAuth]:
+    if _pi_basic_auth is not None:
+        return _pi_basic_auth
     return HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
 
