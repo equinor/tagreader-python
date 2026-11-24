@@ -96,9 +96,9 @@ def test_list_sources_piwebapi() -> None:
         assert 3 <= len(r)
 
 
-def test_verify_connection(pi_handler: IMSClient) -> None:
-    assert pi_handler.verify_connection("PIMAM") is True  # type: ignore[attr-defined]
-    assert pi_handler.verify_connection("somerandomstuffhere") is False  # type: ignore[attr-defined]
+def test_verify_connection(pi_handler: PIHandlerWeb) -> None:
+    assert pi_handler.verify_connection("PIMAM") is True
+    assert pi_handler.verify_connection("somerandomstuffhere") is False
 
 
 def test_search_tag(client: IMSClient) -> None:
@@ -229,8 +229,8 @@ def test_read_invalid_data_mixed_with_valid_yields_nan_for_invalid(
         ts=600,
     )
     assert df.shape == (4, 1)
-    assert df[tag].iloc[[0, 1]].isna().all()  # type: ignore[call-overload]
-    assert df[tag].iloc[[2, 3]].notnull().all()  # type: ignore[call-overload]
+    assert df[tag].iloc[[0, 1]].isna().all()
+    assert df[tag].iloc[[2, 3]].notnull().all()
 
 
 def test_digitalread_yields_integers(client: IMSClient) -> None:
