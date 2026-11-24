@@ -77,14 +77,14 @@ def test_list_all_piwebapi_sources() -> None:
 
 def test_list_piwebapi_sources_uses_cache() -> None:
     url = "http://127.0.0.1:1/piwebapi-cache-test"
-    cached_sources = ["cached-source"]
+    cached_sources = {"cached-source": "cached-webid"}
     _piwebapi_sources_cache[url] = cached_sources
     try:
         res = list_piwebapi_sources(url=url, auth=None)
     finally:
         _piwebapi_sources_cache.pop(url, None)
 
-    assert res == cached_sources
+    assert res == list(cached_sources)
 
 
 def test_list_sources_piwebapi() -> None:

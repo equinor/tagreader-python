@@ -135,63 +135,11 @@ def list_aspenone_sources(
     return list(_aspenone_sources_cache[url])
 
 
-def _fetch_piwebapi_sources(
+def _fetch_piwebapi_source_map(
     url: str,
     auth: Any,
     verify_ssl: Optional[Union[bool, str]],
-) -> List[str]:
-    if verify_ssl is None:
-        verify_ssl = get_verify_ssl()
-
-    if verify_ssl is False:
-        urllib3.disable_warnings(InsecureRequestWarning)
-
-    url_ = urljoin(url, "dataservers")
-    res = requests.get(url_, auth=auth, verify=verify_ssl, timeout=300)
-
-    res.raise_for_status()
-    try:
-        source_list = [r["Name"] for r in res.json()["Items"]]
-        return source_list
-    except JSONDecodeError as e:
-        logger.error(f"Could not decode JSON response: {e}")
-
-    return []
-
-
-# Keyed on url only so default-auth calls share the cache regardless of auth or verify_ssl.
-_piwebapi_sources_cache: Dict[str, List[str]] = {}
-
-
-def list_piwebapi_sources(
-    url: Optional[str] = None,
-    auth: Optional[Any] = None,
-    verify_ssl: Optional[Union[bool, str]] = True,
-) -> List[str]:
-    if url is None:
-        url = get_url_pi()
-
-    if auth is not None:
-        return _fetch_piwebapi_sources(url, auth, verify_ssl)
-
-    if url not in _piwebapi_sources_cache:
-        url_sources = _fetch_piwebapi_sources(url, get_auth_pi(), verify_ssl)
-        if len(url_sources) > 0:
-            _piwebapi_sources_cache[url] = url_sources
-    return list(_piwebapi_sources_cache[url])
-
-
-def get_piwebapi_source_to_webid_dict(
-    url: Optional[str] = None,
-    auth: Optional[Any] = None,
-    verify_ssl: Optional[Union[bool, str]] = True,
-) -> List[str]:
-    if url is None:
-        url = get_url_pi()
-
-    if auth is None:
-        auth = get_auth_pi()
-
+) -> Dict[str, str]:
     if verify_ssl is None:
         verify_ssl = get_verify_ssl()
 
@@ -207,7 +155,38 @@ def get_piwebapi_source_to_webid_dict(
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
 
-    return []
+
+# Cache default-auth dataserver mappings by URL; explicit-auth calls bypass it.
+_piwebapi_sources_cache: Dict[str, Dict[str, str]] = {}
+
+
+def _get_piwebapi_source_map(
+    url: str,
+    auth: Optional[Any],
+    verify_ssl: Optional[Union[bool, str]],
+) -> Dict[str, str]:
+    if auth is not None:
+        return _fetch_piwebapi_source_map(url, auth, verify_ssl)
+
+    if url not in _piwebapi_sources_cache:
+        sources = _fetch_piwebapi_source_map(url, get_auth_pi(), verify_ssl)
+        if sources:
+            _piwebapi_sources_cache[url] = sources
+        else:
+            return {}
+
+    return dict(_piwebapi_sources_cache[url])
+
+
+def list_piwebapi_sources(
+    url: Optional[str] = None,
+    auth: Optional[Any] = None,
+    verify_ssl: Optional[Union[bool, str]] = True,
+) -> List[str]:
+    if url is None:
+        url = get_url_pi()
+
+    return list(_get_piwebapi_source_map(url, auth, verify_ssl))
 
 
 class BaseHandlerWeb(ABC):
@@ -309,7 +288,7 @@ class BaseHandlerWeb(ABC):
             return json.loads(txt)
 
     def connect(self):
-        if self.datasource == "":
+        if not self.datasource:
             raise ValueError("Datasource must be specified")
 
         try:
@@ -812,6 +791,7 @@ class PIHandlerWeb(BaseHandlerWeb):
     ):
         if url is None or url == "":
             url = get_url_pi()
+        self._uses_default_auth: bool = auth is None
         if auth is None:
             auth = get_auth_pi()
         super().__init__(
@@ -855,12 +835,11 @@ class PIHandlerWeb(BaseHandlerWeb):
             )
         )
 
-    @staticmethod
     def generate_search_params(
+        self,
         tag: Optional[str],
         desc: Optional[str],
         datasource: Optional[str],
-        auth: Optional[Any] = None,
     ) -> Dict[str, str]:
         q = []
         if tag is not None:
@@ -871,9 +850,11 @@ class PIHandlerWeb(BaseHandlerWeb):
         params = {"query": f"{query}"}
 
         if isinstance(datasource, str) and len(datasource) > 0:
-            params["dataserverwebid"] = (
-                f"{get_piwebapi_source_to_webid_dict(auth=auth)[datasource]}"
-            )
+            params["dataserverwebid"] = _get_piwebapi_source_map(
+                url=self.base_url,
+                auth=None if self._uses_default_auth else self.auth,
+                verify_ssl=self.session.verify,
+            )[datasource]
 
         return params
 
@@ -886,7 +867,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
         get_status: bool = False,
-    ) -> Tuple[str, Dict[str, str]]:
+    ) -> Tuple[str, Dict[str, Union[str, int]]]:
         if read_type in [
             ReaderType.COUNT,
             ReaderType.GOOD,
@@ -913,7 +894,7 @@ class PIHandlerWeb(BaseHandlerWeb):
             ReaderType.SHAPEPRESERVING: "plot",
         }.get(read_type, "summary")
         url = f"streams/{web_id}/{get_action}"
-        params = {}
+        params: Dict[str, Union[str, int]] = {}
 
         if read_type != ReaderType.SNAPSHOT:
             params["startTime"] = self._time_to_UTC_string(start)
@@ -939,23 +920,22 @@ class PIHandlerWeb(BaseHandlerWeb):
             params["summaryDuration"] = f"{seconds}s"
 
         if self._is_summary(read_type):
-            params["selectedFields"] = "Links;Items.Value.Timestamp;Items.Value.Value"
+            selected_fields = "Links;Items.Value.Timestamp;Items.Value.Value"
             if get_status:
-                params[
-                    "selectedFields"
-                ] += (
+                selected_fields += (
                     ";Items.Value.Good;Items.Value.Questionable;Items.Value.Substituted"
                 )
+            params["selectedFields"] = selected_fields
         elif read_type in [ReaderType.INT, ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
-            params["selectedFields"] = "Links;Items.Timestamp;Items.Value"
+            selected_fields = "Links;Items.Timestamp;Items.Value"
             if get_status:
-                params[
-                    "selectedFields"
-                ] += ";Items.Good;Items.Questionable;Items.Substituted"
+                selected_fields += ";Items.Good;Items.Questionable;Items.Substituted"
+            params["selectedFields"] = selected_fields
         elif read_type == ReaderType.SNAPSHOT:
-            params["selectedFields"] = "Timestamp;Value"
+            selected_fields = "Timestamp;Value"
             if get_status:
-                params["selectedFields"] += ";Good;Questionable;Substituted"
+                selected_fields += ";Good;Questionable;Substituted"
+            params["selectedFields"] = selected_fields
 
         if read_type == ReaderType.RAW:
             params["maxCount"] = self.max_rows
@@ -971,12 +951,11 @@ class PIHandlerWeb(BaseHandlerWeb):
         :return: True if data source exists, False if not.
         :rtype: Bool
         """
-        url = urljoin(self.base_url, "dataservers")
-        data = self.fetch(url)
-        for item in data["Items"]:
-            if item["Name"] == datasource:
-                return True
-        return False
+        return datasource in list_piwebapi_sources(
+            url=self.base_url,
+            auth=None if self._uses_default_auth else self.auth,
+            verify_ssl=self.session.verify,
+        )
 
     def search(
         self,
@@ -986,7 +965,9 @@ class PIHandlerWeb(BaseHandlerWeb):
         return_desc: bool = True,
     ) -> Union[List[Tuple[str, str]], List[str]]:
         params = self.generate_search_params(
-            tag=tag, desc=desc, datasource=self.datasource, auth=self.auth
+            tag=tag,
+            desc=desc,
+            datasource=self.datasource,
         )
         url = urljoin(self.base_url, "points", "search")
         done = False
@@ -1042,7 +1023,9 @@ class PIHandlerWeb(BaseHandlerWeb):
             return self.web_id_cache[tag]
 
         params = self.generate_search_params(
-            tag=tag, datasource=self.datasource, desc=None, auth=self.auth
+            tag=tag,
+            datasource=self.datasource,
+            desc=None,
         )
         url = urljoin(self.base_url, "points", "search")
         data = self.fetch(url, params=params)
