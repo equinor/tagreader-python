@@ -2,6 +2,29 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.3.3](https://github.com/equinor/tagreader-python/compare/v6.3.2...v6.3.3) (2026-11-24)
+
+
+### 🧹 Chores
+
+* bump deps ([#525](https://github.com/equinor/tagreader-python/issues/525)) ([b130194](https://github.com/equinor/tagreader-python/commit/b130194012a7d95d2d1e83a529247058dd82ca8b))
+* **deps:** bump certifi from 2026.10.23 to 2026.11.20 ([#523](https://github.com/equinor/tagreader-python/issues/523)) ([d4a615c](https://github.com/equinor/tagreader-python/commit/d4a615c27c05eb9506f56bfcc37825d262fd11ed))
+* **deps:** bump joi ([3659aec](https://github.com/equinor/tagreader-python/commit/3659aec5e81f6ad80e86c0caace9693615ab00c8))
+* **deps:** bump joi from 17.13.8 to 17.13.9 in /documentation in the npm_and_yarn group across 1 directory ([#518](https://github.com/equinor/tagreader-python/issues/518)) ([3659aec](https://github.com/equinor/tagreader-python/commit/3659aec5e81f6ad80e86c0caace9693615ab00c8))
+* **deps:** bump pycryptodome from 4.2.0 to 4.5.0 ([#522](https://github.com/equinor/tagreader-python/issues/522)) ([6c17596](https://github.com/equinor/tagreader-python/commit/6c17596ee4f98575e34ccd40b9e26801e07ff0b2))
+* **deps:** bump the npm_and_yarn group across 1 directory with 2 updates ([#524](https://github.com/equinor/tagreader-python/issues/524)) ([d987d77](https://github.com/equinor/tagreader-python/commit/d987d77a738a40a79c6260834704eccdf666081d))
+
+
+### 👷 CI/CD
+
+* dependabot configuration ([#520](https://github.com/equinor/tagreader-python/issues/520)) ([eaf5c72](https://github.com/equinor/tagreader-python/commit/eaf5c72270805798dab60b122c78cada4951e628))
+
+
+### 🐛 Bug Fixes
+
+* ensure same methods and cache are used for all pi source / webid lookup ([#519](https://github.com/equinor/tagreader-python/issues/519)) ([e7b2a5d](https://github.com/equinor/tagreader-python/commit/e7b2a5db461e7b5d64cd2b712b2f2b4d78454d85))
+* typing problems ([#527](https://github.com/equinor/tagreader-python/issues/527)) ([b48f07a](https://github.com/equinor/tagreader-python/commit/b48f07af7ee9c69d8214283289015cc65d60cfbd))
+
 ## [6.3.2](https://github.com/equinor/tagreader-python/compare/v6.3.1...v6.3.2) (2026-10-29)
 
 
