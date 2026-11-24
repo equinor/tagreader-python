@@ -336,7 +336,8 @@ class AspenHandlerWeb(BaseHandlerWeb):
             raise ValueError("Data source is required argument")
 
         # Aspen Web API expects single space instead of consecutive spaces.
-        tag = " ".join(tag.split())
+        if tag:
+            tag = " ".join(tag.split())
         params = {"datasource": datasource, "tag": tag, "max": max, "getTrendable": 0}
         return params
 
@@ -374,14 +375,14 @@ class AspenHandlerWeb(BaseHandlerWeb):
         }.get(read_type, -1)
 
         if read_type == ReaderType.SNAPSHOT:
+            end_snap = 0
             if end is not None:
                 use_current = 0
-                end = int(end.timestamp()) * 1000
+                end_snap = int(end.timestamp()) * 1000
             else:
                 use_current = 1
-                end = 0
 
-            query = f'<Q f="d" allQuotes="1" rt="{end}" uc="{use_current}">'
+            query = f'<Q f="d" allQuotes="1" rt="{end_snap}" uc="{use_current}">'
         else:
             query = '<Q f="d" allQuotes="1">'
 
@@ -656,6 +657,10 @@ class AspenHandlerWeb(BaseHandlerWeb):
         # so we need to limit the range. Note -1 because INT normally includes
         # both start and end time.
         if read_type == ReaderType.INT:
+            if start is None or end is None or sample_time is None:
+                raise ValueError(
+                    "Interpolated reads require start, end, and sample_time."
+                )
             end = min(end, start + sample_time * (self.max_rows - 1))
 
         tag_name, map_name = self.split_tagmap(tag)
@@ -885,6 +890,8 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         seconds = 0
         if read_type != ReaderType.SNAPSHOT:
+            if sample_time is None:
+                raise ValueError("Sample time must be provided for non-snapshot reads.")
             seconds = int(sample_time.total_seconds())
 
         get_action = {
@@ -897,6 +904,10 @@ class PIHandlerWeb(BaseHandlerWeb):
         params: Dict[str, Union[str, int]] = {}
 
         if read_type != ReaderType.SNAPSHOT:
+            if end is None:
+                raise ValueError("End time must be provided for non-snapshot reads.")
+            if start is None:
+                raise ValueError("Start time must be provided for non-snapshot reads.")
             params["startTime"] = self._time_to_UTC_string(start)
             params["endTime"] = self._time_to_UTC_string(end)
             params["timeZone"] = "UTC"
@@ -1153,7 +1164,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         # all the other summaries stamp start of interval by shifting all timestamps
         # one interval down.
         if read_type == ReaderType.MAX and df.index[0] > start:
-            df.index = df.index - sample_time
+            df.index = pd.DatetimeIndex(df.index) - sample_time
 
         if get_status:
             df["Status"] = (

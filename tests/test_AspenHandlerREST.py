@@ -1,6 +1,6 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from inspect import signature
-from typing import Generator, Optional
+from typing import Any, Generator, List, Optional
 
 import pytest
 
@@ -86,6 +86,47 @@ def test_read_tag_rejects_empty_tag_name(
             metadata={},
         )
     assert str(error.value) == (f"Input tag: {tag} returns no tag_name. Invalid input.")
+
+
+@pytest.mark.parametrize("missing", ["start", "end", "sample_time"])  # type: ignore[misc]
+def test_interpolated_read_requires_time_inputs(
+    aspen_handler: AspenHandlerWeb, missing: str
+) -> None:
+    start = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")
+    with pytest.raises(ValueError, match="require start, end, and sample_time"):
+        aspen_handler.read_tag(
+            tag="ATCAI",
+            start=None if missing == "start" else start,
+            end=None if missing == "end" else start + SAMPLE_TIME,
+            sample_time=None if missing == "sample_time" else SAMPLE_TIME,
+            read_type=ReaderType.INT,
+            metadata={},
+        )
+
+
+@pytest.mark.parametrize("intervals", [2, 5])  # type: ignore[misc]
+def test_interpolated_read_limits_end(
+    aspen_handler: AspenHandlerWeb, monkeypatch: pytest.MonkeyPatch, intervals: int
+) -> None:
+    start = utils.ensure_datetime_with_tz("2020-06-24 17:00:00")
+    requested_ends: List[datetime] = []
+    aspen_handler.max_rows = 4
+
+    def fake_generate_read_query(**kwargs: Any) -> str:
+        requested_ends.append(kwargs["end"])
+        return ""
+
+    monkeypatch.setattr(aspen_handler, "generate_read_query", fake_generate_read_query)
+    monkeypatch.setattr(aspen_handler, "fetch", lambda *args, **kwargs: {})
+    aspen_handler.read_tag(
+        tag="ATCAI",
+        start=start,
+        end=start + intervals * SAMPLE_TIME,
+        sample_time=SAMPLE_TIME,
+        read_type=ReaderType.INT,
+        metadata={},
+    )
+    assert requested_ends == [start + min(intervals, 3) * SAMPLE_TIME]
 
 
 def test_split_tagmap() -> None:

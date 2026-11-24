@@ -1,6 +1,7 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Generator, List, Optional, Union
 
+import pandas as pd
 import pytest
 import requests
 
@@ -192,6 +193,38 @@ def test_is_summary(pi_handler: PIHandlerWeb) -> None:
     assert not pi_handler._is_summary(ReaderType.GOOD)
     assert not pi_handler._is_summary(ReaderType.BAD)
     assert not pi_handler._is_summary(ReaderType.SNAPSHOT)
+
+
+@pytest.mark.parametrize(  # type: ignore[misc]
+    ("read_type", "timestamp", "expected"),
+    [
+        (ReaderType.MAX, "2020-04-01T11:06:00Z", "2020-04-01T11:05:00Z"),
+        (ReaderType.MAX, "2020-04-01T11:05:00Z", "2020-04-01T11:05:00Z"),
+        (ReaderType.AVG, "2020-04-01T11:06:00Z", "2020-04-01T11:06:00Z"),
+    ],
+)
+def test_summary_timestamp_alignment(
+    pi_handler: PIHandlerWeb,
+    monkeypatch: pytest.MonkeyPatch,
+    read_type: ReaderType,
+    timestamp: str,
+    expected: str,
+) -> None:
+    data = {"Items": [{"Value": {"Timestamp": timestamp, "Value": 42.0}}]}
+    monkeypatch.setattr(pi_handler, "fetch", lambda *args, **kwargs: data)
+    start = datetime(2020, 4, 1, 11, 5, tzinfo=timezone.utc)
+
+    result = pi_handler.read_tag(
+        tag="alreadyknowntag",
+        start=start,
+        end=start + timedelta(minutes=2),
+        sample_time=timedelta(minutes=1),
+        read_type=read_type,
+        metadata=None,
+    )
+
+    assert result.index.equals(pd.DatetimeIndex([expected], name="time"))
+    assert result["alreadyknowntag"].tolist() == [42.0]
 
 
 @pytest.mark.parametrize(  # type: ignore[misc]
