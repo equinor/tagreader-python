@@ -154,7 +154,6 @@ def _fetch_piwebapi_source_map(
         return {item["Name"]: item["WebId"] for item in res.json()["Items"]}
     except JSONDecodeError as e:
         logger.error(f"Could not decode JSON response: {e}")
-        raise ValueError("Could not decode PI Web API dataservers response") from e
 
 
 # Cache default-auth dataserver mappings by URL; explicit-auth calls bypass it.
@@ -289,7 +288,7 @@ class BaseHandlerWeb(ABC):
             return json.loads(txt)
 
     def connect(self):
-        if self.datasource == "":
+        if not self.datasource:
             raise ValueError("Datasource must be specified")
 
         try:
