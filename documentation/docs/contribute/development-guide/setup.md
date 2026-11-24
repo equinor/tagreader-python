@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-Install Git, Python 3.9.6 or newer, and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+Install Git, Python 3.9.25 or newer, and [uv](https://docs.astral.sh/uv/getting-started/installation/).
 The package's Python requirement and dependencies are defined in
 [`pyproject.toml`](https://github.com/equinor/tagreader-python/blob/main/pyproject.toml).
 Use the Python versions covered by the current CI workflows when checking compatibility.

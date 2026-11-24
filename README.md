@@ -11,7 +11,7 @@ as possible to the backend plant historians.
 
 ## Installation
 You can install tagreader directly into your project from pypi by using pip
-or another package manager. Supports Python version 3.9.2 and above.
+or another package manager. Requires Python version 3.9.25 or newer.
 
 ```shell
 pip install tagreader

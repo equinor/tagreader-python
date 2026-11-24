@@ -8,7 +8,7 @@ Information Manufacturing Systems (IMS) systems. It is intended to be easy to us
 as possible to the backend historians.
 
 ## System requirements
-Tagreader requires Python 3.9.6 or newer on Windows, Linux, or macOS. Reading
+Tagreader requires Python 3.9.25 or newer on Windows, Linux, or macOS. Reading
 historian data also requires access to a PI Web API or AspenOne REST service and
 the appropriate authentication.
 
