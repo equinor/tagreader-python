@@ -2,6 +2,13 @@
 
 This changelog is deprecated. All changes are documented under [releases](https://github.com/equinor/tagreader-python/releases).
 
+## [6.3.4](https://github.com/equinor/tagreader-python/compare/v6.3.3...v6.3.4) (2026-11-24)
+
+
+### 📚 Documentation
+
+* update Python version requirements to 3.9.25 ([a998072](https://github.com/equinor/tagreader-python/commit/a998072bb6caf2e1f900f4c2e563f34babc20032))
+
 ## [6.3.3](https://github.com/equinor/tagreader-python/compare/v6.3.2...v6.3.3) (2026-11-24)
 
 
