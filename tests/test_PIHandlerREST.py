@@ -8,6 +8,7 @@ from tagreader.cache import SmartCache
 from tagreader.utils import ReaderType, ensure_datetime_with_tz
 from tagreader.web_handlers import (
     PIHandlerWeb,
+    _get_piwebapi_source_map,
     _piwebapi_sources_cache,
     list_piwebapi_sources,
 )
@@ -166,7 +167,11 @@ def test_piwebapi_sources_and_webids_share_cached_response(
     )
     try:
         assert list_piwebapi_sources(url=url) == ["source-a"]
-        assert handler.get_piwebapi_source_to_webid_dict() == {"source-a": "webid-a"}
+        assert _get_piwebapi_source_map(
+            url=handler.base_url,
+            auth=None if handler._uses_default_auth else handler.auth,
+            verify_ssl=handler.session.verify,
+        ) == {"source-a": "webid-a"}
     finally:
         _piwebapi_sources_cache.pop(url, None)
 

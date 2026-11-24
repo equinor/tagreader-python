@@ -852,12 +852,10 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         if isinstance(datasource, str) and len(datasource) > 0:
             params["dataserverwebid"] = _get_piwebapi_source_map(
-            url=self.base_url,
-            auth=None if self._uses_default_auth else self.auth,
-            verify_ssl=self.session.verify,
-        )[
-                datasource
-            ]
+                url=self.base_url,
+                auth=None if self._uses_default_auth else self.auth,
+                verify_ssl=self.session.verify,
+            )[datasource]
 
         return params
 
@@ -945,13 +943,6 @@ class PIHandlerWeb(BaseHandlerWeb):
             params["maxCount"] = self.max_rows
 
         return url, params
-
-    def get_piwebapi_source_to_webid_dict(self) -> Dict[str, str]:
-        return _get_piwebapi_source_map(
-            url=self.base_url,
-            auth=None if self._uses_default_auth else self.auth,
-            verify_ssl=self.session.verify,
-        )
 
     def verify_connection(self, datasource: str) -> bool:
         """Connects to the URL and verifies that the provided data source exists.
