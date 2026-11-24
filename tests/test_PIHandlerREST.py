@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Any, Dict, Generator, List, Optional, Union
 
 import pytest
+import requests
 
 import tagreader.web_handlers as web_handlers
 from tagreader.cache import SmartCache
@@ -155,7 +156,7 @@ def test_piwebapi_sources_and_webids_share_cached_response(
         return Response()
 
     monkeypatch.setattr(web_handlers, "get_auth_pi", lambda: None)
-    monkeypatch.setattr(web_handlers.requests, "get", fake_get)
+    monkeypatch.setattr(requests, "get", fake_get)
     _piwebapi_sources_cache.pop(url, None)
     handler = PIHandlerWeb(
         datasource="source-a",

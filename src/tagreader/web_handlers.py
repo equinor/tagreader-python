@@ -867,7 +867,7 @@ class PIHandlerWeb(BaseHandlerWeb):
         read_type: ReaderType,
         metadata: Optional[Dict[str, str]],
         get_status: bool = False,
-    ) -> Tuple[str, Dict[str, str]]:
+    ) -> Tuple[str, Dict[str, Union[str, int]]]:
         if read_type in [
             ReaderType.COUNT,
             ReaderType.GOOD,
@@ -894,7 +894,7 @@ class PIHandlerWeb(BaseHandlerWeb):
             ReaderType.SHAPEPRESERVING: "plot",
         }.get(read_type, "summary")
         url = f"streams/{web_id}/{get_action}"
-        params = {}
+        params: Dict[str, Union[str, int]] = {}
 
         if read_type != ReaderType.SNAPSHOT:
             params["startTime"] = self._time_to_UTC_string(start)
@@ -920,23 +920,22 @@ class PIHandlerWeb(BaseHandlerWeb):
             params["summaryDuration"] = f"{seconds}s"
 
         if self._is_summary(read_type):
-            params["selectedFields"] = "Links;Items.Value.Timestamp;Items.Value.Value"
+            selected_fields = "Links;Items.Value.Timestamp;Items.Value.Value"
             if get_status:
-                params[
-                    "selectedFields"
-                ] += (
+                selected_fields += (
                     ";Items.Value.Good;Items.Value.Questionable;Items.Value.Substituted"
                 )
+            params["selectedFields"] = selected_fields
         elif read_type in [ReaderType.INT, ReaderType.RAW, ReaderType.SHAPEPRESERVING]:
-            params["selectedFields"] = "Links;Items.Timestamp;Items.Value"
+            selected_fields = "Links;Items.Timestamp;Items.Value"
             if get_status:
-                params[
-                    "selectedFields"
-                ] += ";Items.Good;Items.Questionable;Items.Substituted"
+                selected_fields += ";Items.Good;Items.Questionable;Items.Substituted"
+            params["selectedFields"] = selected_fields
         elif read_type == ReaderType.SNAPSHOT:
-            params["selectedFields"] = "Timestamp;Value"
+            selected_fields = "Timestamp;Value"
             if get_status:
-                params["selectedFields"] += ";Good;Questionable;Substituted"
+                selected_fields += ";Good;Questionable;Substituted"
+            params["selectedFields"] = selected_fields
 
         if read_type == ReaderType.RAW:
             params["maxCount"] = self.max_rows
