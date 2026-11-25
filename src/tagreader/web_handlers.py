@@ -808,38 +808,6 @@ class PIHandlerWeb(BaseHandlerWeb):
         self.max_rows = int(options.get("max_rows", 10000))
         self.web_id_cache = cache
 
-    @staticmethod
-    def _time_to_UTC_string(time: datetime) -> str:
-        return time.astimezone(timezone.utc).strftime("%d-%b-%y %H:%M:%S")
-
-    @staticmethod
-    def escape(s: str) -> str:
-        # https://techsupport.osisoft.com/Documentation/PI-Web-API/help/topics/search-queries.html
-        return s.translate(
-            str.maketrans(
-                {
-                    "+": r"\+",
-                    "-": r"\-",
-                    "&": r"\&",
-                    "|": r"\|",
-                    "(": r"\(",
-                    ")": r"\)",
-                    "{": r"\{",
-                    "}": r"\}",
-                    "[": r"\[",
-                    "]": r"\]",
-                    "^": r"\^",
-                    '"': r"\"",
-                    "~": r"\~",
-                    # Do not escape wildcard
-                    # "*": r"\*",
-                    ":": r"\:",
-                    "\\": r"\\",
-                    " ": r"\ ",
-                }
-            )
-        )
-
     def generate_search_params(
         self,
         tag: Optional[str],
@@ -848,9 +816,9 @@ class PIHandlerWeb(BaseHandlerWeb):
     ) -> Dict[str, str]:
         q = []
         if tag is not None:
-            q.extend([f"name:{PIHandlerWeb.escape(tag)}"])
+            q.extend([f"name:{PIHandlerWeb._escape(tag)}"])
         if desc is not None:
-            q.extend([f"description:{PIHandlerWeb.escape(desc)}"])
+            q.extend([f"description:{PIHandlerWeb._escape(desc)}"])
         query = " AND ".join(q)
         params = {"query": f"{query}"}
 
@@ -1059,19 +1027,6 @@ class PIHandlerWeb(BaseHandlerWeb):
             self.web_id_cache[tag] = web_id
         return web_id
 
-    @staticmethod
-    def _is_summary(read_type: ReaderType) -> bool:
-        if read_type in [
-            ReaderType.AVG,
-            ReaderType.MIN,
-            ReaderType.MAX,
-            ReaderType.RNG,
-            ReaderType.STD,
-            ReaderType.VAR,
-        ]:
-            return True
-        return False
-
     def read_tag(
         self,
         tag: str,
@@ -1098,8 +1053,65 @@ class PIHandlerWeb(BaseHandlerWeb):
         url = urljoin(self.base_url, url)
         data = self.fetch(url, params=params)
 
+        return self._parse_read_response(
+            data, tag, start, sample_time, read_type, get_status
+        )
+
+    def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
+        raise NotImplementedError
+
+    @staticmethod
+    def _escape(s: str) -> str:
+        # https://techsupport.osisoft.com/Documentation/PI-Web-API/help/topics/search-queries.html
+        return s.translate(
+            str.maketrans(
+                {
+                    "+": r"\+",
+                    "-": r"\-",
+                    "&": r"\&",
+                    "|": r"\|",
+                    "(": r"\(",
+                    ")": r"\)",
+                    "{": r"\{",
+                    "}": r"\}",
+                    "[": r"\[",
+                    "]": r"\]",
+                    "^": r"\^",
+                    '"': r"\"",
+                    "~": r"\~",
+                    # Do not escape wildcard
+                    # "*": r"\*",
+                    ":": r"\:",
+                    "\\": r"\\",
+                    " ": r"\ ",
+                }
+            )
+        )
+
+    @staticmethod
+    def _is_summary(read_type: ReaderType) -> bool:
+        if read_type in [
+            ReaderType.AVG,
+            ReaderType.MIN,
+            ReaderType.MAX,
+            ReaderType.RNG,
+            ReaderType.STD,
+            ReaderType.VAR,
+        ]:
+            return True
+        return False
+
+    @staticmethod
+    def _parse_read_response(
+        data: Dict[str, Any],
+        tag: str,
+        start: Optional[datetime],
+        sample_time: Optional[timedelta],
+        read_type: ReaderType,
+        get_status: bool = False,
+    ) -> pd.DataFrame:
         if read_type == ReaderType.SNAPSHOT:
-            df = pd.DataFrame([data])
+            df = pd.json_normalize([data])
         else:
             # Summary (aggregated) data and DigitalSets return Value as dict
             df = pd.json_normalize(data=data, record_path="Items")
@@ -1177,5 +1189,6 @@ class PIHandlerWeb(BaseHandlerWeb):
 
         return df.rename(columns={"Value": tag, "Status": tag + "::status"})
 
-    def query_sql(self, query: str, parse: bool = True) -> pd.DataFrame:
-        raise NotImplementedError
+    @staticmethod
+    def _time_to_UTC_string(time: datetime) -> str:
+        return time.astimezone(timezone.utc).strftime("%d-%b-%y %H:%M:%S")
